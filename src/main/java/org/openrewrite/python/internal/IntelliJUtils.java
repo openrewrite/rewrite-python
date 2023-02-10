@@ -37,10 +37,12 @@ import com.intellij.pom.tree.TreeAspect;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.PsiCachedValuesFactory;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistryImpl;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.CachedValuesManagerImpl;
@@ -589,11 +591,17 @@ public class IntelliJUtils {
         }
 
         public void print(ASTNode node) {
-            System.out.println(indent() +
-                    node + " [psi=" + node.getPsi().getClass().getSimpleName() +
-                    ", class=" + node.getClass().getSimpleName() +
-                    ", elementType=" + node.getElementType().getClass().getSimpleName() +
-                    "]");
+            StringBuilder output = new StringBuilder();
+            output.append(indent())
+                    .append(node)
+                    .append(" [psi=")
+                    .append(node.getPsi().getClass().getSimpleName());
+            if (node instanceof LeafPsiElement && !(node instanceof PsiWhiteSpace)) {
+                output.append(", text=`" + node.getText() + "`");
+            }
+            output.append("]");
+
+            System.out.println(output);
 
             depth++;
             for (ASTNode child : node.getChildren(null)) {
