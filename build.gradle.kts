@@ -13,7 +13,7 @@ dependencies {
     implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:latest.integration"))
     implementation("org.openrewrite:rewrite-java")
 
-    implementation(files("lib/intellij-python-plugin.jar"))
+    implementation(fileTree("lib") { include("*.jar") })
 
     testImplementation("org.assertj:assertj-core:latest.release")
     testImplementation("org.junit.jupiter:junit-jupiter-api:latest.release")

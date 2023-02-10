@@ -52,7 +52,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
 
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
 
-        visit(((CompilationUnit) sourceFile).getAnnotations(), p);
+//        visit(((CompilationUnit) sourceFile).getAnnotations(), p);
 
         for (JRightPadded<Import> imprt : cu.getPadding().getImports()) {
             visitRightPadded(imprt, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);

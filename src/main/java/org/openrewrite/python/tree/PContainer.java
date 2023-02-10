@@ -17,8 +17,9 @@ package org.openrewrite.python.tree;
 
 public class PContainer {
     public enum Location {
-        LIST_LITERAL_ELEMENTS(PSpace.Location.LIST_LITERAL_ELEMENTS, PRightPadded.Location.LIST_LITERAL_ELEMENT_SUFFIX),
-        WHEN_BRANCH_EXPRESSION(PSpace.Location.WHEN_BRANCH_EXPRESSION, PRightPadded.Location.WHEN_BRANCH_EXPRESSION);
+//        LIST_LITERAL_ELEMENTS(PSpace.Location.LIST_LITERAL_ELEMENTS, PRightPadded.Location.LIST_LITERAL_ELEMENT_SUFFIX),
+//        WHEN_BRANCH_EXPRESSION(PSpace.Location.WHEN_BRANCH_EXPRESSION, PRightPadded.Location.WHEN_BRANCH_EXPRESSION);
+        TMP(PSpace.Location.TOP_LEVEL_STATEMENT, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX);
 
         private final PSpace.Location beforeLocation;
         private final PRightPadded.Location elementLocation;
