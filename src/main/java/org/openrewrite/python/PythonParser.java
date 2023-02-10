@@ -26,8 +26,8 @@ import org.openrewrite.internal.EncodingDetectingInputStream;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.IntelliJUtils;
-import org.openrewrite.python.tree.P;
 import org.openrewrite.python.internal.PsiPythonMapper;
+import org.openrewrite.python.tree.P;
 import org.openrewrite.style.NamedStyles;
 
 import java.io.ByteArrayInputStream;
@@ -69,12 +69,9 @@ public class PythonParser implements Parser<P.CompilationUnit> {
     @Override
     public List<P.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
         return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
-            System.out.println("*** SOURCE FILE: " + sourceFile);
-
             EncodingDetectingInputStream is = sourceFile.getSource(ctx);
 
             ASTNode ast = IntelliJUtils.parsePythonSource(sourceFile, ctx);
-            System.out.println("*** Parsed AST: " + ast);
 
             return new PsiPythonMapper().mapFile(
                     sourceFile.getPath(),
