@@ -15,8 +15,8 @@
  */
 package org.openrewrite.python;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
+import com.jetbrains.python.psi.PyFile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.openrewrite.ExecutionContext;
@@ -71,13 +71,13 @@ public class PythonParser implements Parser<P.CompilationUnit> {
         return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
             EncodingDetectingInputStream is = sourceFile.getSource(ctx);
 
-            ASTNode ast = IntelliJUtils.parsePythonSource(sourceFile, ctx);
+            PyFile file = IntelliJUtils.parsePythonSource(sourceFile, ctx);
 
             return new PsiPythonMapper().mapFile(
                     sourceFile.getPath(),
                     is.getCharset().toString(),
                     is.isCharsetBomMarked(),
-                    (ASTWrapperPsiElement) ast.getPsi()
+                    file
             );
         }).collect(toList());
     }

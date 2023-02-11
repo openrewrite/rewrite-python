@@ -6,7 +6,6 @@ import com.intellij.ide.plugins.PluginUtilImpl;
 import com.intellij.ide.startup.impl.StartupManagerImpl;
 import com.intellij.lang.*;
 import com.intellij.lang.impl.PsiBuilderFactoryImpl;
-import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.mock.MockApplication;
 import com.intellij.mock.MockFileDocumentManagerImpl;
 import com.intellij.mock.MockProject;
@@ -18,13 +17,21 @@ import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.RoamingType;
 import com.intellij.openapi.components.SettingsCategory;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.EditorKind;
+import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.extensions.*;
 import com.intellij.openapi.extensions.impl.ExtensionPointImpl;
 import com.intellij.openapi.extensions.impl.ExtensionsAreaImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.impl.FileDocumentManagerBase;
 import com.intellij.openapi.fileTypes.*;
 import com.intellij.openapi.fileTypes.ex.FileTypeManagerEx;
 import com.intellij.openapi.options.*;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.impl.ProgressManagerImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.util.Computable;
@@ -34,29 +41,24 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.PomModel;
 import com.intellij.pom.core.impl.PomModelImpl;
 import com.intellij.pom.tree.TreeAspect;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiCachedValuesFactory;
 import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistryImpl;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.CachedValuesManager;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.CachedValuesManagerImpl;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.KeyedLazyInstance;
 import com.intellij.util.messages.MessageBus;
-import com.jetbrains.python.PythonDialectsTokenSetContributor;
-import com.jetbrains.python.PythonLanguage;
-import com.jetbrains.python.PythonParserDefinition;
-import com.jetbrains.python.PythonTokenSetContributor;
+import com.intellij.util.text.CharArrayCharSequence;
+import com.jetbrains.python.*;
 import com.jetbrains.python.documentation.doctest.PyDocstringTokenSetContributor;
 import com.jetbrains.python.parsing.PyParser;
 import com.jetbrains.python.psi.PyFile;
-import com.jetbrains.python.psi.PyFileElementType;
 import com.jetbrains.python.psi.PyPsiFacade;
 import com.jetbrains.python.psi.impl.PyPsiFacadeImpl;
 import com.jetbrains.python.psi.impl.PythonASTFactory;
@@ -66,11 +68,16 @@ import org.jetbrains.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Parser;
 import org.openrewrite.internal.EncodingDetectingInputStream;
+import org.picocontainer.ComponentAdapter;
 import org.picocontainer.MutablePicoContainer;
 
 import javax.swing.*;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 public class IntelliJUtils {
 
@@ -181,7 +188,7 @@ public class IntelliJUtils {
     }
 
 
-    public static ASTNode parsePythonSource(Parser.Input sourceFile, ExecutionContext ctx) {
+    public static PyFile parsePythonSource(Parser.Input sourceFile, ExecutionContext ctx) {
         Disposable mockDisposable = () -> {
         };
 
@@ -203,13 +210,19 @@ public class IntelliJUtils {
         MockPsiManager psiManager = new MockPsiManager(project);
         PsiFileFactoryImpl psiFileFactory = new PsiFileFactoryImpl(psiManager);
 
+//        ProjectCoreUtil.updateInternalTheOnlyProjectFieldTemporarily(project);
+
         MutablePicoContainer appContainer = app.getPicoContainer();
+        ComponentAdapter component = appContainer.getComponentAdapter(ProgressManager.class.getName());
+        if (component == null) {
+            appContainer.registerComponentInstance(ProgressManager.class.getName(), new ProgressManagerImpl());
+        }
         appContainer.registerComponentInstance(MessageBus.class, app.getMessageBus());
         appContainer.registerComponentInstance(SchemeManagerFactory.class, new MockSchemeManagerFactory());
-//        MockEditorFactory editorFactory = new MockEditorFactory();
-//        appContainer.registerComponentInstance(EditorFactory.class, editorFactory);
-//        app.registerService(FileDocumentManager.class, new MockFileDocumentManagerImpl(FileDocumentManagerBase.HARD_REF_TO_DOCUMENT_KEY,
-//                editorFactory::createDocument));
+        MockEditorFactory editorFactory = new MockEditorFactory();
+        appContainer.registerComponentInstance(EditorFactory.class, editorFactory);
+        app.registerService(FileDocumentManager.class, new MockFileDocumentManagerImpl(FileDocumentManagerBase.HARD_REF_TO_DOCUMENT_KEY,
+                editorFactory::createDocument));
         app.registerService(PluginUtil.class, new PluginUtilImpl());
         app.registerService(PsiBuilderFactory.class, new PsiBuilderFactoryImpl());
         app.registerService(DefaultASTFactory.class, new DefaultASTFactoryImpl());
@@ -246,20 +259,14 @@ public class IntelliJUtils {
 
         PyParser parser = new PyParser();
         EncodingDetectingInputStream is = sourceFile.getSource(ctx);
+        String sourceText = is.readFully();
 
-        PyFile file = null;
-        PsiBuilder psiBuilder = new PsiBuilderImpl(
-                project,
-                file,
-                parserDefinitions[0],
-                parserDefinitions[0].createLexer(project),
-                null,
-                is.readFully(),
-                null,
-                null
+        final FileViewProvider fileViewProvider = new SingleRootFileViewProvider(
+                psiManager,
+                new LightVirtualFile("test.py", PythonFileType.INSTANCE, sourceText)
         );
 
-        return parser.parse(PyFileElementType.INSTANCE, psiBuilder);
+        return (PyFile) fileViewProvider.getPsi(PythonLanguage.INSTANCE);
     }
 
     static class MockPsiDocumentManager extends PsiDocumentManager {
@@ -577,6 +584,191 @@ public class IntelliJUtils {
         public @Nullable FileType findFileTypeByName(@NotNull String fileTypeName) {
             return null;
         }
+    }
+
+    @SuppressWarnings("removal")
+    static class MockEditorFactory extends EditorFactory {
+        public Document createDocument(String text) {
+            return new DocumentImpl(text);
+        }
+
+        @Override
+        public Editor createEditor(@NotNull Document document) {
+            return null;
+        }
+
+        @Override
+        public Editor createViewer(@NotNull Document document) {
+            return null;
+        }
+
+        @Override
+        public Editor createEditor(@NotNull Document document, Project project) {
+            return null;
+        }
+
+        @Override
+        public Editor createEditor(@NotNull Document document, @Nullable Project project, @Nullable EditorKind kind) {
+            return null;
+        }
+
+        @Override
+        public Editor createEditor(@NotNull Document document, Project project, @NotNull VirtualFile file, boolean isViewer) {
+            return null;
+        }
+
+        @Override
+        public Editor createEditor(@NotNull Document document,
+                                   Project project,
+                                   @NotNull VirtualFile file,
+                                   boolean isViewer,
+                                   @NotNull EditorKind kind) {
+            return null;
+        }
+
+        @Override
+        public Editor createEditor(@NotNull final Document document, final Project project, @NotNull final FileType fileType, final boolean isViewer) {
+            return null;
+        }
+
+        @Override
+        public Editor createViewer(@NotNull Document document, Project project) {
+            return null;
+        }
+
+        @Override
+        public Editor createViewer(@NotNull Document document, @Nullable Project project, @Nullable EditorKind kind) {
+            return null;
+        }
+
+        @Override
+        public void releaseEditor(@NotNull Editor editor) {
+        }
+
+        @Override
+        public @NotNull Stream<Editor> editors(@NotNull Document document, @Nullable Project project) {
+            return Stream.empty();
+        }
+
+        @Override
+        public Editor @NotNull [] getAllEditors() {
+            return Editor.EMPTY_ARRAY;
+        }
+
+        @Override
+        public void addEditorFactoryListener(@NotNull EditorFactoryListener listener) {
+        }
+
+        @Override
+        public void addEditorFactoryListener(@NotNull EditorFactoryListener listener, @NotNull Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeEditorFactoryListener(@NotNull EditorFactoryListener listener) {
+        }
+
+        @Override
+        @NotNull
+        public EditorEventMulticaster getEventMulticaster() {
+            return new MockEditorEventMulticaster();
+        }
+
+        @Override
+        @NotNull
+        public Document createDocument(@NotNull CharSequence text) {
+            return new DocumentImpl(text);
+        }
+
+        @Override
+        @NotNull
+        public Document createDocument(char @NotNull [] text) {
+            return createDocument(new CharArrayCharSequence(text));
+        }
+
+        @Override
+        public void refreshAllEditors() {
+        }
+
+    }
+
+    @SuppressWarnings("removal")
+    static class MockEditorEventMulticaster implements EditorEventMulticaster {
+        public MockEditorEventMulticaster() {
+        }
+
+        @Override
+        public void addDocumentListener(@NotNull DocumentListener listener) {
+        }
+
+        @Override
+        public void addDocumentListener(@NotNull DocumentListener listener, @NotNull Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeDocumentListener(@NotNull DocumentListener listener) {
+        }
+
+        @Override
+        public void addEditorMouseListener(@NotNull EditorMouseListener listener) {
+        }
+
+        @Override
+        public void addEditorMouseListener(@NotNull final EditorMouseListener listener, @NotNull final Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeEditorMouseListener(@NotNull EditorMouseListener listener) {
+        }
+
+        @Override
+        public void addEditorMouseMotionListener(@NotNull EditorMouseMotionListener listener) {
+        }
+
+        @Override
+        public void addEditorMouseMotionListener(@NotNull EditorMouseMotionListener listener, @NotNull Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeEditorMouseMotionListener(@NotNull EditorMouseMotionListener listener) {
+        }
+
+        @Override
+        public void addCaretListener(@NotNull CaretListener listener) {
+        }
+
+        @Override
+        public void addCaretListener(@NotNull CaretListener listener, @NotNull Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeCaretListener(@NotNull CaretListener listener) {
+        }
+
+        @Override
+        public void addSelectionListener(@NotNull SelectionListener listener) {
+        }
+
+        @Override
+        public void addSelectionListener(@NotNull SelectionListener listener, @NotNull Disposable parentDisposable) {
+        }
+
+        @Override
+        public void removeSelectionListener(@NotNull SelectionListener listener) {
+        }
+
+        @Override
+        public void addVisibleAreaListener(@NotNull VisibleAreaListener listener) {
+        }
+
+        @Override
+        public void addVisibleAreaListener(@NotNull VisibleAreaListener listener, @NotNull Disposable parent) {
+
+        }
+
+        @Override
+        public void removeVisibleAreaListener(@NotNull VisibleAreaListener listener) {
+        }
+
     }
 
     public static class PsiPrinter {

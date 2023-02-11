@@ -1,6 +1,5 @@
 package org.openrewrite.python.internal;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -20,7 +19,7 @@ import static org.openrewrite.Tree.randomId;
 
 public class PsiPythonMapper {
 
-    public P.CompilationUnit mapFile(Path path, String charset, boolean isCharsetBomMarked, ASTWrapperPsiElement element) {
+    public P.CompilationUnit mapFile(Path path, String charset, boolean isCharsetBomMarked, PyFile element) {
         new IntelliJUtils.PsiPrinter().print(element.getNode());
         List<Statement> statements = new ArrayList<>();
         for (ASTNode child : element.getNode().getChildren(null)) {
@@ -76,6 +75,8 @@ public class PsiPythonMapper {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
+        } else if (element instanceof PyStringLiteralExpression) {
+            return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
             return mapTargetExpression((PyTargetExpression) element);
         }
@@ -135,6 +136,18 @@ public class PsiPythonMapper {
     public P.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
         Expression expression = mapExpression(element.getExpression());
         return new P.ExpressionStatement(UUID.randomUUID(), expression);
+    }
+
+    public J.Literal mapStringLiteral(PyStringLiteralExpression element) {
+        return new J.Literal(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                element.getStringValue(),
+                element.getText(),
+                Collections.emptyList(),
+                JavaType.Primitive.String
+        );
     }
 
     public J.Identifier mapTargetExpression(PyTargetExpression element) {
