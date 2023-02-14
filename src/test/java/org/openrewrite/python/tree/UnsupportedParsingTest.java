@@ -339,46 +339,14 @@ public class UnsupportedParsingTest implements RewriteTest {
         ));
     }
 
-    @Test
-    void eq_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x == y")
-        ));
-    }
+    //
+    //  MISC
+    //
 
     @Test
-    void neq_FAILS() {
+    void variableReference_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x != y")
+          python("x")
         ));
     }
-
-    @Test
-    void lt_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x < y")
-        ));
-    }
-
-    @Test
-    void lte_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x <= y")
-        ));
-    }
-
-    @Test
-    void gt_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x > y")
-        ));
-    }
-
-    @Test
-    void gte_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x >= y")
-        ));
-    }
-
 }

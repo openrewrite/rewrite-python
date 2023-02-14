@@ -96,6 +96,15 @@ public class PsiPythonMapper {
 
     private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
     static {
+        // Comparison
+        binaryOperatorTypeMappings.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
+        binaryOperatorTypeMappings.put(PyTokenTypes.LE, J.Binary.Type.LessThanOrEqual);
+        binaryOperatorTypeMappings.put(PyTokenTypes.GT, J.Binary.Type.GreaterThan);
+        binaryOperatorTypeMappings.put(PyTokenTypes.GE, J.Binary.Type.GreaterThanOrEqual);
+        binaryOperatorTypeMappings.put(PyTokenTypes.EQEQ, J.Binary.Type.Equal);
+        binaryOperatorTypeMappings.put(PyTokenTypes.NE, J.Binary.Type.NotEqual);
+
+        // Arithmetic
         binaryOperatorTypeMappings.put(PyTokenTypes.DIV, J.Binary.Type.Division);
         binaryOperatorTypeMappings.put(PyTokenTypes.MINUS, J.Binary.Type.Subtraction);
         binaryOperatorTypeMappings.put(PyTokenTypes.MULT, J.Binary.Type.Multiplication);
