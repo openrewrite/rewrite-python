@@ -71,7 +71,9 @@ public class PsiPythonMapper {
     }
 
     public Expression mapExpression(PyExpression element) {
-        if (element instanceof PyCallExpression) {
+        if (element instanceof PyBoolLiteralExpression) {
+            return mapBooleanLiteral((PyBoolLiteralExpression) element);
+        } else if (element instanceof PyCallExpression) {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
@@ -89,6 +91,18 @@ public class PsiPythonMapper {
             throw new RuntimeException("expected expression; found: " + element.getClass().getSimpleName());
         }
         return mapExpression((PyExpression) element);
+    }
+
+    public J.Literal mapBooleanLiteral(PyBoolLiteralExpression element) {
+        return new J.Literal(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                element.getValue(),
+                element.getText(),
+                Collections.emptyList(),
+                JavaType.Primitive.Boolean
+        );
     }
 
     public J.MethodInvocation mapCallExpression(PyCallExpression element) {
