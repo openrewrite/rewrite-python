@@ -12,28 +12,31 @@ import static org.openrewrite.python.Assertions.python;
 public class ParsingTest implements RewriteTest {
 
     @Test
-    void integerLiteral() {
-        rewriteRun(python("42"));
+    void variableReference() {
+        rewriteRun(
+          python("x")
+        );
     }
 
     @Test
-    void stringLiteralDoubleQuote() {
-        rewriteRun(python("\"hello world\""));
+    void variableReferenceNestedSpacing() {
+        rewriteRun(
+          python("x + y")
+        );
     }
 
     @Test
-    void stringLiteralDoubleQuoteWithEscape() {
-        rewriteRun(python("\"hello \\\"world\\\"\""));
+    void variableReferenceNestedSpacingLhs() {
+        rewriteRun(
+          python("x +y")
+        );
     }
 
     @Test
-    void stringLiteralSingleQuote() {
-        rewriteRun(python("'hello world'"));
-    }
-
-    @Test
-    void stringLiteralSingleQuoteWithEscape() {
-        rewriteRun(python("'hello \\'world\\''"));
+    void variableReferenceNestedSpacingRhs() {
+        rewriteRun(
+          python("x+ y")
+        );
     }
 
     @Test
