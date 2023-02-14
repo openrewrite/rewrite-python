@@ -343,10 +343,5 @@ public class UnsupportedParsingTest implements RewriteTest {
     //  MISC
     //
 
-    @Test
-    void variableReference_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x")
-        ));
-    }
+
 }

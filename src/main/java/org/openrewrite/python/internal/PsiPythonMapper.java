@@ -77,6 +77,8 @@ public class PsiPythonMapper {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
+        } else if (element instanceof PyReferenceExpression) {
+            return mapReferenceExpression((PyReferenceExpression) element);
         } else if (element instanceof PyStringLiteralExpression) {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
@@ -152,17 +154,8 @@ public class PsiPythonMapper {
         if (pyCallee instanceof PyReferenceExpression) {
             // e.g. `print(42)`
             PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
-            if (pyRefExpression.getQualifier() != null) {
-                throw new RuntimeException("unexpected reference qualification on call expression");
-            }
-            J.Identifier functionName = new J.Identifier(
-                    UUID.randomUUID(),
-                    whitespaceBefore(pyRefExpression),
-                    Markers.EMPTY,
-                    pyRefExpression.getName(),
-                    null,
-                    null
-            );
+            J.Identifier functionName = mapReferenceExpression(pyRefExpression);
+
             List<JRightPadded<Expression>> args = new ArrayList<>();
             for (PyExpression arg : element.getArgumentList().getArguments()) {
                 args.add(
@@ -226,6 +219,20 @@ public class PsiPythonMapper {
                 element.getText(),
                 Collections.emptyList(),
                 JavaType.Primitive.Long
+        );
+    }
+
+    public J.Identifier mapReferenceExpression(PyReferenceExpression element) {
+        if (element.getQualifier() != null) {
+            throw new RuntimeException("unexpected reference qualification");
+        }
+        return new J.Identifier(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                element.getName(),
+                null,
+                null
         );
     }
 

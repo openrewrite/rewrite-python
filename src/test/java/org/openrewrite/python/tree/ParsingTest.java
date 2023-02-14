@@ -12,6 +12,34 @@ import static org.openrewrite.python.Assertions.python;
 public class ParsingTest implements RewriteTest {
 
     @Test
+    void variableReference() {
+        rewriteRun(
+          python("x")
+        );
+    }
+
+    @Test
+    void variableReferenceNestedSpacing() {
+        rewriteRun(
+          python("x + y")
+        );
+    }
+
+    @Test
+    void variableReferenceNestedSpacingLhs() {
+        rewriteRun(
+          python("x +y")
+        );
+    }
+
+    @Test
+    void variableReferenceNestedSpacingRhs() {
+        rewriteRun(
+          python("x+ y")
+        );
+    }
+
+    @Test
     void variableDeclNoSpace() {
         rewriteRun(
           python("n=1")
