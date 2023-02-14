@@ -79,6 +79,8 @@ public class PsiPythonMapper {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
         } else if (element instanceof PyReferenceExpression) {
             return mapReferenceExpression((PyReferenceExpression) element);
+        } else if (element instanceof PySubscriptionExpression) {
+            return mapSubscription((PySubscriptionExpression) element);
         } else if (element instanceof PyStringLiteralExpression) {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
@@ -185,6 +187,28 @@ public class PsiPythonMapper {
     public P.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
         Expression expression = mapExpression(element.getExpression());
         return new P.ExpressionStatement(UUID.randomUUID(), expression);
+    }
+
+    public J.ArrayAccess mapSubscription(PySubscriptionExpression element) {
+        PyExpression pyTarget = element.getOperand();
+        PyExpression pyIndex = element.getIndexExpression();
+
+        Expression target = mapExpression(pyTarget);
+        Expression index = mapExpression(pyIndex);
+
+        return new J.ArrayAccess(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                target,
+                new J.ArrayDimension(
+                        UUID.randomUUID(),
+                        whitespaceAfter(pyTarget),
+                        Markers.EMPTY,
+                        JRightPadded.build(index).withAfter(whitespaceAfter(pyIndex))
+                ),
+                null
+        );
     }
 
     public J.Literal mapStringLiteral(PyStringLiteralExpression element) {

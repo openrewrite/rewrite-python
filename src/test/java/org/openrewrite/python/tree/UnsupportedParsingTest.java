@@ -62,13 +62,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
 
     @Test
-    void indexOperator_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x[0]")
-        ));
-    }
-
-    @Test
     void sliceOperator_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
           python("x[3:5]")

@@ -126,4 +126,33 @@ public class ParsingTest implements RewriteTest {
           python("list().copy()")
         ));
     }
+
+    @Test
+    void indexOperator() {
+        rewriteRun(
+          python("x[0]")
+        );
+    }
+
+    @Test
+    void indexOperatorSpaceBetween() {
+        rewriteRun(
+          python("x [0]")
+        );
+    }
+
+    @Test
+    void indexOperatorLeftSpace() {
+        rewriteRun(
+          python("x[ 0]")
+        );
+    }
+
+    @Test
+    void indexOperatorRightSpace() {
+        rewriteRun(
+          python("x[0 ]")
+        );
+    }
+
 }
