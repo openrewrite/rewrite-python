@@ -162,4 +162,40 @@ public class ParsingTest implements RewriteTest {
         );
     }
 
+    @Test
+    void ifStmt() {
+        rewriteRun(
+          python("""
+            if True:
+                pass
+            """)
+        );
+    }
+
+    @Test
+    void ifElseStmt() {
+        rewriteRun(
+          python("""
+            if True:
+                pass
+            else:
+                pass
+            """)
+        );
+    }
+
+    @Test
+    void ifElifElseStmt() {
+        rewriteRun(
+          python("""
+            if True:
+                pass
+            elif False:
+                pass
+            else:
+                pass
+            """)
+        );
+    }
+
 }

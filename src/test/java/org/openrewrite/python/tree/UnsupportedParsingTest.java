@@ -144,42 +144,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
 
     @Test
-    void if_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            """)
-        ));
-    }
-
-    @Test
-    void ifElse_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            else:
-                pass
-            """)
-        ));
-    }
-
-    @Test
-    void ifElifElse_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            elif False:
-                pass
-            else:
-                pass
-            """)
-        ));
-    }
-
-    @Test
     void forLoop_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
           python("""

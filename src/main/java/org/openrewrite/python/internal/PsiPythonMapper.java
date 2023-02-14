@@ -46,8 +46,12 @@ public class PsiPythonMapper {
             return mapAssignmentStatement((PyAssignmentStatement) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
+        } else if (element instanceof PyIfStatement) {
+            return mapIfStatement((PyIfStatement) element);
         } else if (element instanceof PyPassStatement) {
             return mapPassStatement((PyPassStatement) element);
+        } else if (element instanceof PyStatementList) {
+            return mapStatementList((PyStatementList) element);
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
@@ -70,11 +74,65 @@ public class PsiPythonMapper {
         );
     }
 
-    public Statement mapPassStatement(PyPassStatement element) {
+    public Statement mapIfStatement(PyIfStatement element) {
+        PyExpression pyIfCondition = element.getIfPart().getCondition();
+        PyStatementList pyIfBody = element.getIfPart().getStatementList();
+
+        Expression ifCondition = mapExpression(pyIfCondition);
+        Statement ifBody = mapStatement(pyIfBody);
+
+        // TODO handle elif
+
+        J.If.Else elsePart = null;
+        if (element.getElsePart() != null) {
+            PyStatementList pyElseBody = element.getElsePart().getStatementList();
+            elsePart = new J.If.Else(
+                    UUID.randomUUID(),
+                    whitespaceBefore(element.getElsePart()),
+                    Markers.EMPTY,
+                    JRightPadded.build(mapStatementList(pyElseBody))
+                            .withAfter(whitespaceAfter(pyElseBody))
+            );
+        }
+
+        return new J.If(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                new J.ControlParentheses<Expression>(
+                        UUID.randomUUID(),
+                        Space.EMPTY,
+                        Markers.EMPTY,
+                        JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
+                ),
+                JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
+                elsePart
+        );
+    }
+
+    public P.PassStatement mapPassStatement(PyPassStatement element) {
         return new P.PassStatement(
                 UUID.randomUUID(),
                 whitespaceBefore(element),
                 Markers.EMPTY
+        );
+    }
+
+    public Statement mapStatementList(PyStatementList element) {
+        PyStatement[] pyStatements = element.getStatements();
+        List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.length);
+        for (PyStatement pyStatement : pyStatements) {
+            Statement statement = mapStatement(pyStatement);
+            statements.add(JRightPadded.build(statement).withAfter(whitespaceAfter(pyStatement)));
+        }
+
+        return new J.Block(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                JRightPadded.build(false),
+                statements,
+                whitespaceAfter(element)
         );
     }
 
