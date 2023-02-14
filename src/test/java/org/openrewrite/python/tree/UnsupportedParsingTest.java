@@ -144,13 +144,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
 
     @Test
-    void pass_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("pass")
-        ));
-    }
-
-    @Test
     void if_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
           python("""

@@ -251,7 +251,7 @@ public interface P extends J {
         @Override
         public <Param> J acceptPython(PythonVisitor<Param> v, Param param) {
             J j = v.visit(getExpression(), param);
-            if(j instanceof ExpressionStatement) {
+            if (j instanceof ExpressionStatement) {
                 return j;
             } else if (j instanceof Expression) {
                 return withExpression((Expression) j);
@@ -287,6 +287,35 @@ public interface P extends J {
         @Override
         public <T extends J> T withType(@Nullable JavaType type) {
             return (T) withExpression(expression.withType(type));
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+    }
+
+    @ToString
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @AllArgsConstructor
+    final class PassStatement implements P, Statement {
+        @With
+        @Getter
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @Override
+        public <Param> J acceptPython(PythonVisitor<Param> v, Param param) {
+            return v.visitPassStatement(this, param);
         }
 
         @Transient

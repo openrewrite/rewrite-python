@@ -170,4 +170,12 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
             }
         }
     }
+
+    @Override
+    public J visitPassStatement(P.PassStatement pass, PrintOutputCapture<Param> p) {
+        beforeSyntax(pass, PSpace.Location.PASS_PREFIX, p);
+        p.append("pass");
+        afterSyntax(pass, p);
+        return pass;
+    }
 }

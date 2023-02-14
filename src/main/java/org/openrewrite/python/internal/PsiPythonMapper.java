@@ -46,6 +46,8 @@ public class PsiPythonMapper {
             return mapAssignmentStatement((PyAssignmentStatement) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
+        } else if (element instanceof PyPassStatement) {
+            return mapPassStatement((PyPassStatement) element);
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
@@ -65,6 +67,14 @@ public class PsiPythonMapper {
                 lhs,
                 JLeftPadded.build(rhs).withBefore(whitespaceBefore(pyRhs)),
                 null
+        );
+    }
+
+    public Statement mapPassStatement(PyPassStatement element) {
+        return new P.PassStatement(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY
         );
     }
 

@@ -12,6 +12,13 @@ import static org.openrewrite.python.Assertions.python;
 public class ParsingTest implements RewriteTest {
 
     @Test
+    void passStatement() {
+        rewriteRun(
+          python("pass")
+        );
+    }
+
+    @Test
     void variableReference() {
         rewriteRun(
           python("x")
