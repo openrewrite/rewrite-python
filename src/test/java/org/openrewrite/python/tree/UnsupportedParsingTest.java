@@ -282,39 +282,6 @@ public class UnsupportedParsingTest implements RewriteTest {
         ));
     }
 
-
-    //
-    //  ARITHMETIC OPERATORS
-    //
-
-    @Test
-    void addition_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x + y")
-        ));
-    }
-
-    @Test
-    void subtraction_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x - y")
-        ));
-    }
-
-    @Test
-    void multiplication_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x * y")
-        ));
-    }
-
-    @Test
-    void division_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x / y")
-        ));
-    }
-
     //
     //  BOOLEAN OPERATORS
     //

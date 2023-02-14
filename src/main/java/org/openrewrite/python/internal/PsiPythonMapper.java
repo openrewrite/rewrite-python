@@ -3,6 +3,7 @@ package org.openrewrite.python.internal;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.java.tree.*;
@@ -10,10 +11,7 @@ import org.openrewrite.marker.Markers;
 import org.openrewrite.python.tree.P;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.openrewrite.Tree.randomId;
 
@@ -71,7 +69,9 @@ public class PsiPythonMapper {
     }
 
     public Expression mapExpression(PyExpression element) {
-        if (element instanceof PyBoolLiteralExpression) {
+        if (element instanceof PyBinaryExpression) {
+            return mapBinaryExpression((PyBinaryExpression) element);
+        } else if (element instanceof PyBoolLiteralExpression) {
             return mapBooleanLiteral((PyBoolLiteralExpression) element);
         } else if (element instanceof PyCallExpression) {
             return mapCallExpression((PyCallExpression) element);
@@ -91,6 +91,39 @@ public class PsiPythonMapper {
             throw new RuntimeException("expected expression; found: " + element.getClass().getSimpleName());
         }
         return mapExpression((PyExpression) element);
+    }
+
+
+    private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
+    static {
+        binaryOperatorTypeMappings.put(PyTokenTypes.DIV, J.Binary.Type.Division);
+        binaryOperatorTypeMappings.put(PyTokenTypes.MINUS, J.Binary.Type.Subtraction);
+        binaryOperatorTypeMappings.put(PyTokenTypes.MULT, J.Binary.Type.Multiplication);
+        binaryOperatorTypeMappings.put(PyTokenTypes.PLUS, J.Binary.Type.Addition);
+    }
+
+    public J.Binary mapBinaryExpression(PyBinaryExpression element) {
+        Expression lhs = mapExpression(element.getLeftExpression());
+        Expression rhs = mapExpression(element.getRightExpression());
+        Space beforeOperatorSpace = whitespaceAfter(element.getLeftExpression());
+
+        PyElementType pyOperatorType = element.getOperator();
+        J.Binary.Type operatorType = binaryOperatorTypeMappings.get(pyOperatorType);
+
+        if (operatorType == null) {
+            throw new RuntimeException("unsupported binary expression operator: " + pyOperatorType);
+        }
+
+
+        return new J.Binary(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                lhs,
+                JLeftPadded.build(operatorType).withBefore(beforeOperatorSpace),
+                rhs,
+                null
+        );
     }
 
     public J.Literal mapBooleanLiteral(PyBoolLiteralExpression element) {
@@ -133,7 +166,7 @@ public class PsiPythonMapper {
             }
             return new J.MethodInvocation(
                     UUID.randomUUID(),
-                    Space.EMPTY,
+                    whitespaceBefore(element),
                     Markers.EMPTY,
                     null,
                     null,
@@ -165,11 +198,26 @@ public class PsiPythonMapper {
     }
 
     public J.Identifier mapTargetExpression(PyTargetExpression element) {
-        return new J.Identifier(UUID.randomUUID(), Space.EMPTY, Markers.EMPTY, element.getName(), null, null);
+        return new J.Identifier(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                element.getName(),
+                null,
+                null
+        );
     }
 
     public J.Literal mapNumericLiteral(PyNumericLiteralExpression element) {
-        return new J.Literal(UUID.randomUUID(), Space.EMPTY, Markers.EMPTY, element.getLongValue(), element.getText(), Collections.emptyList(), JavaType.Primitive.Long);
+        return new J.Literal(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                element.getLongValue(),
+                element.getText(),
+                Collections.emptyList(),
+                JavaType.Primitive.Long
+        );
     }
 
     private J.Identifier expectIdentifier(Expression expression) {
