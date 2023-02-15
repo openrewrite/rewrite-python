@@ -8,6 +8,7 @@ import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
+import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.P;
 
 import java.nio.file.Path;
@@ -46,6 +47,12 @@ public class PsiPythonMapper {
             return mapAssignmentStatement((PyAssignmentStatement) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
+        } else if (element instanceof PyIfStatement) {
+            return mapIfStatement((PyIfStatement) element);
+        } else if (element instanceof PyPassStatement) {
+            return mapPassStatement((PyPassStatement) element);
+        } else if (element instanceof PyStatementList) {
+            return mapStatementList((PyStatementList) element);
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
@@ -68,6 +75,114 @@ public class PsiPythonMapper {
         );
     }
 
+    public Statement mapIfStatement(PyIfStatement element) {
+        PyExpression pyIfCondition = element.getIfPart().getCondition();
+        PyStatementList pyIfBody = element.getIfPart().getStatementList();
+
+        if (pyIfCondition == null) {
+            throw new RuntimeException("if condition is null");
+        }
+
+        Expression ifCondition = mapExpression(pyIfCondition);
+        Statement ifBody = mapStatement(pyIfBody);
+        J.If.Else elsePart = mapElsePart(element, 0);
+
+        return new J.If(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                new J.ControlParentheses<Expression>(
+                        UUID.randomUUID(),
+                        Space.EMPTY,
+                        Markers.EMPTY,
+                        JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
+                ),
+                JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
+                elsePart
+        );
+    }
+
+    /**
+     * In Python, if/else alternatives are flattened into a single AST node.
+     * To be represented using the `J` classes, each `elif` branch needs to be
+     * transformed into an `else` containing a single `if` statement.
+     * <p>
+     * This method helps transform the original flattened structure into the
+     * recursive `J` representation.
+     */
+    private J.If.Else mapElsePart(PyIfStatement parent, int elifIndex) {
+        if (elifIndex < parent.getElifParts().length) {
+            PyIfPart pyElifPart = parent.getElifParts()[elifIndex];
+
+            PyExpression pyIfCondition = pyElifPart.getCondition();
+            PyStatementList pyIfBody = pyElifPart.getStatementList();
+
+            if (pyIfCondition == null) {
+                throw new RuntimeException("if condition is null");
+            }
+
+            Expression ifCondition = mapExpression(pyIfCondition);
+            Statement ifBody = mapStatement(pyIfBody);
+
+            J.If nestedIf = new J.If(
+                    UUID.randomUUID(),
+                    Space.EMPTY,
+                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    new J.ControlParentheses<Expression>(
+                            UUID.randomUUID(),
+                            Space.EMPTY,
+                            Markers.EMPTY,
+                            JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
+                    ),
+                    JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
+                    mapElsePart(parent, elifIndex + 1)
+            );
+            return new J.If.Else(
+                    UUID.randomUUID(),
+                    whitespaceBefore(pyElifPart),
+                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    JRightPadded.<Statement>build(nestedIf)
+            );
+        } else if (parent.getElsePart() != null) {
+            PyStatementList pyElseBody = parent.getElsePart().getStatementList();
+            return new J.If.Else(
+                    UUID.randomUUID(),
+                    whitespaceBefore(parent.getElsePart()),
+                    Markers.EMPTY,
+                    JRightPadded.build(mapStatementList(pyElseBody))
+                            .withAfter(whitespaceAfter(pyElseBody))
+            );
+        } else {
+            return null;
+        }
+    }
+
+    public P.PassStatement mapPassStatement(PyPassStatement element) {
+        return new P.PassStatement(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY
+        );
+    }
+
+    public Statement mapStatementList(PyStatementList element) {
+        PyStatement[] pyStatements = element.getStatements();
+        List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.length);
+        for (PyStatement pyStatement : pyStatements) {
+            Statement statement = mapStatement(pyStatement);
+            statements.add(JRightPadded.build(statement).withAfter(whitespaceAfter(pyStatement)));
+        }
+
+        return new J.Block(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                JRightPadded.build(false),
+                statements,
+                whitespaceAfter(element)
+        );
+    }
+
     public Expression mapExpression(PyExpression element) {
         if (element instanceof PyBinaryExpression) {
             return mapBinaryExpression((PyBinaryExpression) element);
@@ -79,6 +194,8 @@ public class PsiPythonMapper {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
         } else if (element instanceof PyReferenceExpression) {
             return mapReferenceExpression((PyReferenceExpression) element);
+        } else if (element instanceof PySubscriptionExpression) {
+            return mapSubscription((PySubscriptionExpression) element);
         } else if (element instanceof PyStringLiteralExpression) {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
@@ -97,6 +214,7 @@ public class PsiPythonMapper {
 
 
     private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
+
     static {
         // Comparison
         binaryOperatorTypeMappings.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
@@ -185,6 +303,28 @@ public class PsiPythonMapper {
     public P.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
         Expression expression = mapExpression(element.getExpression());
         return new P.ExpressionStatement(UUID.randomUUID(), expression);
+    }
+
+    public J.ArrayAccess mapSubscription(PySubscriptionExpression element) {
+        PyExpression pyTarget = element.getOperand();
+        PyExpression pyIndex = element.getIndexExpression();
+
+        Expression target = mapExpression(pyTarget);
+        Expression index = mapExpression(pyIndex);
+
+        return new J.ArrayAccess(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                target,
+                new J.ArrayDimension(
+                        UUID.randomUUID(),
+                        whitespaceAfter(pyTarget),
+                        Markers.EMPTY,
+                        JRightPadded.build(index).withAfter(whitespaceAfter(pyIndex))
+                ),
+                null
+        );
     }
 
     public J.Literal mapStringLiteral(PyStringLiteralExpression element) {

@@ -59,6 +59,13 @@ public class PythonVisitor<Param> extends JavaVisitor<Param> {
         throw new UnsupportedOperationException("Python has a different structure for its compilation unit. See P.CompilationUnit.");
     }
 
+    public J visitPassStatement(P.PassStatement ogPass, Param param) {
+        P.PassStatement pass = ogPass;
+        pass = pass.withPrefix(visitSpace(pass.getPrefix(), PSpace.Location.PASS_PREFIX, param));
+        pass = pass.withMarkers(visitMarkers(pass.getMarkers(), param));
+        return visitStatement(pass, param);
+    }
+
     public J visitBinary(Binary binary, Param param) {
         Binary b = binary;
         b = b.withPrefix(visitSpace(b.getPrefix(), PSpace.Location.BINARY_PREFIX, param));

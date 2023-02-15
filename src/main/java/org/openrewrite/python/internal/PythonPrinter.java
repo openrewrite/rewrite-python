@@ -26,6 +26,7 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
+import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.*;
 import org.openrewrite.python.tree.P.Binary;
 import org.openrewrite.python.tree.P.CompilationUnit;
@@ -81,6 +82,38 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
             } else {
                 return super.visit(tree, p);
             }
+        }
+
+        @Override
+        public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<Param> p) {
+            beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
+            visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, ":", p);
+            afterSyntax(controlParens, p);
+            return controlParens;
+        }
+
+        @Override
+        public J visitElse(J.If.Else elze, PrintOutputCapture<Param> p) {
+            beforeSyntax(elze, Space.Location.ELSE_PREFIX, p);
+            if (elze.getMarkers().findFirst(IsElIfBranch.class).isPresent()) {
+                // TODO (gary, 2023-02-14) this is a bit mad
+                p.append("el");
+            } else {
+                p.append("else:");
+            }
+            visitStatement(elze.getPadding().getBody(), JRightPadded.Location.IF_ELSE, p);
+            afterSyntax(elze, p);
+            return elze;
+        }
+
+        @Override
+        public J visitBlock(J.Block block, PrintOutputCapture<Param> p) {
+            // blocks in Python are just collections of statements with no additional formatting
+            beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
+            visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
+            visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
+            afterSyntax(block, p);
+            return block;
         }
     }
 
@@ -169,5 +202,13 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
                 p.append(suffixBetween);
             }
         }
+    }
+
+    @Override
+    public J visitPassStatement(P.PassStatement pass, PrintOutputCapture<Param> p) {
+        beforeSyntax(pass, PSpace.Location.PASS_PREFIX, p);
+        p.append("pass");
+        afterSyntax(pass, p);
+        return pass;
     }
 }

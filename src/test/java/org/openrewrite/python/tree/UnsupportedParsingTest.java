@@ -62,13 +62,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
 
     @Test
-    void indexOperator_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("x[0]")
-        ));
-    }
-
-    @Test
     void sliceOperator_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
           python("x[3:5]")
@@ -149,49 +142,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
     //  CONTROL FLOW
     //
-
-    @Test
-    void pass_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("pass")
-        ));
-    }
-
-    @Test
-    void if_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            """)
-        ));
-    }
-
-    @Test
-    void ifElse_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            else:
-                pass
-            """)
-        ));
-    }
-
-    @Test
-    void ifElifElse_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            if True:
-                pass
-            elif False:
-                pass
-            else:
-                pass
-            """)
-        ));
-    }
 
     @Test
     void forLoop_FAILS() {
