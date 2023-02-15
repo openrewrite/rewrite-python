@@ -8,6 +8,7 @@ import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
+import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.P;
 
 import java.nio.file.Path;
@@ -78,22 +79,13 @@ public class PsiPythonMapper {
         PyExpression pyIfCondition = element.getIfPart().getCondition();
         PyStatementList pyIfBody = element.getIfPart().getStatementList();
 
+        if (pyIfCondition == null) {
+            throw new RuntimeException("if condition is null");
+        }
+
         Expression ifCondition = mapExpression(pyIfCondition);
         Statement ifBody = mapStatement(pyIfBody);
-
-        // TODO handle elif
-
-        J.If.Else elsePart = null;
-        if (element.getElsePart() != null) {
-            PyStatementList pyElseBody = element.getElsePart().getStatementList();
-            elsePart = new J.If.Else(
-                    UUID.randomUUID(),
-                    whitespaceBefore(element.getElsePart()),
-                    Markers.EMPTY,
-                    JRightPadded.build(mapStatementList(pyElseBody))
-                            .withAfter(whitespaceAfter(pyElseBody))
-            );
-        }
+        J.If.Else elsePart = mapElsePart(element, 0);
 
         return new J.If(
                 UUID.randomUUID(),
@@ -108,6 +100,61 @@ public class PsiPythonMapper {
                 JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
                 elsePart
         );
+    }
+
+    /**
+     * In Python, if/else alternatives are flattened into a single AST node.
+     * To be represented using the `J` classes, each `elif` branch needs to be
+     * transformed into an `else` containing a single `if` statement.
+     * <p>
+     * This method helps transform the original flattened structure into the
+     * recursive `J` representation.
+     */
+    private J.If.Else mapElsePart(PyIfStatement parent, int elifIndex) {
+        if (elifIndex < parent.getElifParts().length) {
+            PyIfPart pyElifPart = parent.getElifParts()[elifIndex];
+
+            PyExpression pyIfCondition = pyElifPart.getCondition();
+            PyStatementList pyIfBody = pyElifPart.getStatementList();
+
+            if (pyIfCondition == null) {
+                throw new RuntimeException("if condition is null");
+            }
+
+            Expression ifCondition = mapExpression(pyIfCondition);
+            Statement ifBody = mapStatement(pyIfBody);
+
+            J.If nestedIf = new J.If(
+                    UUID.randomUUID(),
+                    Space.EMPTY,
+                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    new J.ControlParentheses<Expression>(
+                            UUID.randomUUID(),
+                            Space.EMPTY,
+                            Markers.EMPTY,
+                            JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
+                    ),
+                    JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
+                    mapElsePart(parent, elifIndex + 1)
+            );
+            return new J.If.Else(
+                    UUID.randomUUID(),
+                    whitespaceBefore(pyElifPart),
+                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    JRightPadded.<Statement>build(nestedIf)
+            );
+        } else if (parent.getElsePart() != null) {
+            PyStatementList pyElseBody = parent.getElsePart().getStatementList();
+            return new J.If.Else(
+                    UUID.randomUUID(),
+                    whitespaceBefore(parent.getElsePart()),
+                    Markers.EMPTY,
+                    JRightPadded.build(mapStatementList(pyElseBody))
+                            .withAfter(whitespaceAfter(pyElseBody))
+            );
+        } else {
+            return null;
+        }
     }
 
     public P.PassStatement mapPassStatement(PyPassStatement element) {
@@ -167,6 +214,7 @@ public class PsiPythonMapper {
 
 
     private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
+
     static {
         // Comparison
         binaryOperatorTypeMappings.put(PyTokenTypes.LT, J.Binary.Type.LessThan);

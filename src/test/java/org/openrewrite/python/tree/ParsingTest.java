@@ -198,4 +198,34 @@ public class ParsingTest implements RewriteTest {
         );
     }
 
+    @Test
+    void multiElifElseStmt() {
+        rewriteRun(
+          python("""
+            if True:
+                pass
+            elif False:
+                pass
+            elif True:
+                pass
+            else:
+                pass
+            """)
+        );
+    }
+
+    @Test
+    void multiElifStmt() {
+        rewriteRun(
+          python("""
+            if True:
+                pass
+            elif False:
+                pass
+            elif True:
+                pass
+            """)
+        );
+    }
+
 }
