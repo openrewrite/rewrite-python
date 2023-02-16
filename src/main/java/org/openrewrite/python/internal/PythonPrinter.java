@@ -85,6 +85,24 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
 
         @Override
+        public J visitClassDeclaration(J.ClassDeclaration classDecl, PrintOutputCapture<Param> p) {
+            beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
+            p.append("class");
+            visit(classDecl.getName(), p);
+            if (classDecl.getExtends() != null) {
+                p.append("(");
+                visitLeftPadded(classDecl.getPadding().getExtends(), JLeftPadded.Location.EXTENDS, p);
+                p.append(")");
+            }
+            p.append(":");
+
+
+            visit(classDecl.getBody(), p);
+            afterSyntax(classDecl, p);
+            return classDecl;
+        }
+
+        @Override
         public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<Param> p) {
             beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
             visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, ":", p);

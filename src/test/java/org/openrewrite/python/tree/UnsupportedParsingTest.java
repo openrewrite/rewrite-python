@@ -180,16 +180,6 @@ public class UnsupportedParsingTest implements RewriteTest {
     //
 
     @Test
-    void classDefinition_FAILS() {
-        Assertions.assertThrows(Throwable.class, () -> rewriteRun(
-          python("""
-            class Name:
-                pass
-            """)
-        ));
-    }
-
-    @Test
     void functionDefinition_FAILS() {
         Assertions.assertThrows(Throwable.class, () -> rewriteRun(
           python("""

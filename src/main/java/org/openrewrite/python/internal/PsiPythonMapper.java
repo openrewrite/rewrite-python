@@ -45,6 +45,8 @@ public class PsiPythonMapper {
     public Statement mapStatement(PsiElement element) {
         if (element instanceof PyAssignmentStatement) {
             return mapAssignmentStatement((PyAssignmentStatement) element);
+        } else if (element instanceof PyClass) {
+            return mapClassDeclarationStatement((PyClass) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
         } else if (element instanceof PyIfStatement) {
@@ -71,6 +73,59 @@ public class PsiPythonMapper {
                 Markers.EMPTY,
                 lhs,
                 JLeftPadded.build(rhs).withBefore(whitespaceBefore(pyRhs)),
+                null
+        );
+    }
+
+    public Statement mapClassDeclarationStatement(PyClass element) {
+        J.ClassDeclaration.Kind kind = new J.ClassDeclaration.Kind(
+                UUID.randomUUID(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                Collections.emptyList(),
+                J.ClassDeclaration.Kind.Type.Class
+        );
+
+        JLeftPadded<TypeTree> extendings = null;
+        {
+            PyArgumentList pyClassBase = element.getSuperClassExpressionList();
+            // if there are no children, there are no paren tokens
+            // otherwise we have to render e.g. `class Foo():` even without a base class
+            if (pyClassBase != null) {
+                if (element.getSuperClassExpressions().length > 0) {
+                    PyExpression firstBase = element.getSuperClassExpressions()[0];
+                    if (!(firstBase instanceof PyReferenceExpression)) {
+                        throw new RuntimeException("cannot support non-constant base classes");
+                    }
+                    J.Identifier baseIdentifier = mapReferenceExpression((PyReferenceExpression) firstBase)
+                            .withPrefix(whitespaceBefore(firstBase));
+                    extendings = JLeftPadded.<TypeTree>build(baseIdentifier);
+                } else {
+                    extendings = JLeftPadded.<TypeTree>build(
+                            new J.Empty(
+                                    UUID.randomUUID(),
+                                    whitespaceBefore(pyClassBase.getNode().getLastChildNode().getPsi()),
+                                    Markers.EMPTY
+                            )
+                    );
+                }
+            }
+        }
+
+        return new J.ClassDeclaration(
+                UUID.randomUUID(),
+                whitespaceBefore(element),
+                Markers.EMPTY,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                kind,
+                expectIdentifier(element.getNameNode()),
+                null,
+                null,
+                extendings,
+                null,
+                null,
+                mapStatementList(element.getStatementList()),
                 null
         );
     }
@@ -149,7 +204,7 @@ public class PsiPythonMapper {
                     UUID.randomUUID(),
                     whitespaceBefore(parent.getElsePart()),
                     Markers.EMPTY,
-                    JRightPadded.build(mapStatementList(pyElseBody))
+                    JRightPadded.<Statement>build(mapStatementList(pyElseBody))
                             .withAfter(whitespaceAfter(pyElseBody))
             );
         } else {
@@ -165,7 +220,7 @@ public class PsiPythonMapper {
         );
     }
 
-    public Statement mapStatementList(PyStatementList element) {
+    public J.Block mapStatementList(PyStatementList element) {
         PyStatement[] pyStatements = element.getStatements();
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.length);
         for (PyStatement pyStatement : pyStatements) {
@@ -370,7 +425,7 @@ public class PsiPythonMapper {
                 UUID.randomUUID(),
                 whitespaceBefore(element),
                 Markers.EMPTY,
-                element.getName(),
+                element.getText(),
                 null,
                 null
         );
@@ -381,6 +436,24 @@ public class PsiPythonMapper {
             return (J.Identifier) expression;
         }
         throw new RuntimeException("expected Identifier, but found: " + expression.getClass().getSimpleName());
+    }
+
+    private J.Identifier expectIdentifier(ASTNode node) {
+        if (node.getElementType() != PyTokenTypes.IDENTIFIER) {
+            throw new RuntimeException("expected Identifier, but node type was: " + node.getElementType());
+        }
+        return new J.Identifier(
+                UUID.randomUUID(),
+                whitespaceBefore(node.getPsi()),
+                Markers.EMPTY,
+                node.getText(),
+                null,
+                null
+        );
+    }
+
+    private J.Identifier expectIdentifier(PsiElement element) {
+        return expectIdentifier(element.getNode());
     }
 
     private static Space whitespaceBefore(PsiElement element) {
