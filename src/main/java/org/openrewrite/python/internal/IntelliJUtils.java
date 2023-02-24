@@ -197,7 +197,6 @@ public class IntelliJUtils {
 
         Registry.markAsLoaded();
 
-
         PluginDescriptor pluginDescriptor = new DefaultPluginDescriptor("io.moderne.test");
 
         registerExtensionPoint(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, PythonDialectsTokenSetContributor.class);

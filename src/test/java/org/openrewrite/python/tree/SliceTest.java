@@ -5,12 +5,12 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ParsingTest implements RewriteTest {
+public class SliceTest implements RewriteTest {
 
     @Test
-    void passStatement() {
+    void sliceOperator() {
         rewriteRun(
-          python("pass")
+          python("x[3:5]")
         );
     }
 }

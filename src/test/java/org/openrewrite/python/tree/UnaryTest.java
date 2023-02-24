@@ -5,12 +5,12 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ParsingTest implements RewriteTest {
+public class UnaryTest implements RewriteTest {
 
     @Test
-    void passStatement() {
+    void not() {
         rewriteRun(
-          python("pass")
+          python("not y")
         );
     }
 }

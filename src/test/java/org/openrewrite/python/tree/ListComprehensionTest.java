@@ -5,12 +5,12 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ParsingTest implements RewriteTest {
+public class ListComprehensionTest implements RewriteTest {
 
     @Test
-    void passStatement() {
+    void listComprehension() {
         rewriteRun(
-          python("pass")
+          python("[x for x in xs if x]")
         );
     }
 }

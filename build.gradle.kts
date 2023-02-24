@@ -13,6 +13,9 @@ dependencies {
     implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:latest.integration"))
     implementation("org.openrewrite:rewrite-java")
 
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
+
     implementation(fileTree("lib") { include("*.jar") })
 
     testImplementation("org.assertj:assertj-core:latest.release")

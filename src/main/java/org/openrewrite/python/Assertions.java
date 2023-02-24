@@ -16,6 +16,7 @@
 package org.openrewrite.python;
 
 
+import org.intellij.lang.annotations.Language;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.python.tree.P;
 import org.openrewrite.test.SourceSpec;
@@ -27,23 +28,23 @@ public class Assertions {
     private Assertions() {
     }
 
-    public static SourceSpecs python(@Nullable String before) {
+    public static SourceSpecs python(@Language("py") @Nullable String before) {
         return python(before, s -> {
         });
     }
 
-    public static SourceSpecs python(@Nullable String before, Consumer<SourceSpec<P.CompilationUnit>> spec) {
+    public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<P.CompilationUnit>> spec) {
         SourceSpec<P.CompilationUnit> python = new SourceSpec<>(P.CompilationUnit.class, null, PythonParser.builder(), before, null);
         spec.accept(python);
         return python;
     }
 
-    public static SourceSpecs python(@Nullable String before, String after) {
+    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after) {
         return python(before, after, s -> {
         });
     }
 
-    public static SourceSpecs python(@Nullable String before, String after,
+    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
                                      Consumer<SourceSpec<P.CompilationUnit>> spec) {
         SourceSpec<P.CompilationUnit> python = new SourceSpec<>(P.CompilationUnit.class, null, PythonParser.builder(), before, null);
         spec.accept(python);
