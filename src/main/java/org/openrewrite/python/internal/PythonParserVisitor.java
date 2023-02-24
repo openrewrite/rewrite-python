@@ -33,7 +33,6 @@ import static org.openrewrite.internal.StringUtils.indexOfNextNonWhitespace;
 import static org.openrewrite.java.tree.Space.EMPTY;
 import static org.openrewrite.java.tree.Space.format;
 
-@SuppressWarnings("DataFlowIssue")
 public class PythonParserVisitor {
     private final Path sourcePath;
 

@@ -133,6 +133,25 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
             afterSyntax(block, p);
             return block;
         }
+
+        @Override
+        public J visitUnary(J.Unary unary, PrintOutputCapture<Param> p) {
+            beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
+            switch (unary.getOperator()) {
+                case Not:
+                    p.append("not");
+                    break;
+                case Positive:
+                    p.append("+");
+                    break;
+                case Negative:
+                    p.append("-");
+                    break;
+            }
+            visit(unary.getExpression(), p);
+            afterSyntax(unary, p);
+            return unary;
+        }
     }
 
     protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<Param> p) {

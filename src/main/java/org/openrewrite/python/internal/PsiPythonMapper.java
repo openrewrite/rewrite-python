@@ -6,6 +6,7 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
+import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.marker.IsElIfBranch;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.openrewrite.Tree.randomId;
+import static org.openrewrite.marker.Markers.EMPTY;
 
 public class PsiPythonMapper {
 
@@ -30,7 +32,7 @@ public class PsiPythonMapper {
         return new P.CompilationUnit(
                 randomId(),
                 Space.EMPTY,
-                Markers.EMPTY,
+                EMPTY,
                 path,
                 FileAttributes.fromPath(path),
                 charset,
@@ -68,9 +70,9 @@ public class PsiPythonMapper {
         Expression rhs = mapExpression(pyRhs).withPrefix(whitespaceBefore(pyRhs));
 
         return new J.Assignment(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(pyLhs),
-                Markers.EMPTY,
+                EMPTY,
                 lhs,
                 JLeftPadded.build(rhs).withBefore(whitespaceBefore(pyRhs)),
                 null
@@ -79,9 +81,9 @@ public class PsiPythonMapper {
 
     public Statement mapClassDeclarationStatement(PyClass element) {
         J.ClassDeclaration.Kind kind = new J.ClassDeclaration.Kind(
-                UUID.randomUUID(),
+                randomId(),
                 Space.EMPTY,
-                Markers.EMPTY,
+                EMPTY,
                 Collections.emptyList(),
                 J.ClassDeclaration.Kind.Type.Class
         );
@@ -103,9 +105,9 @@ public class PsiPythonMapper {
                 } else {
                     extendings = JLeftPadded.<TypeTree>build(
                             new J.Empty(
-                                    UUID.randomUUID(),
+                                    randomId(),
                                     whitespaceBefore(pyClassBase.getNode().getLastChildNode().getPsi()),
-                                    Markers.EMPTY
+                                    EMPTY
                             )
                     );
                 }
@@ -113,9 +115,9 @@ public class PsiPythonMapper {
         }
 
         return new J.ClassDeclaration(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 Collections.emptyList(),
                 Collections.emptyList(),
                 kind,
@@ -143,13 +145,13 @@ public class PsiPythonMapper {
         J.If.Else elsePart = mapElsePart(element, 0);
 
         return new J.If(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 new J.ControlParentheses<Expression>(
-                        UUID.randomUUID(),
+                        randomId(),
                         Space.EMPTY,
-                        Markers.EMPTY,
+                        EMPTY,
                         JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
                 ),
                 JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
@@ -180,30 +182,30 @@ public class PsiPythonMapper {
             Statement ifBody = mapStatement(pyIfBody);
 
             J.If nestedIf = new J.If(
-                    UUID.randomUUID(),
+                    randomId(),
                     Space.EMPTY,
-                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    Markers.build(Collections.singletonList(new IsElIfBranch(randomId()))),
                     new J.ControlParentheses<Expression>(
-                            UUID.randomUUID(),
+                            randomId(),
                             Space.EMPTY,
-                            Markers.EMPTY,
+                            EMPTY,
                             JRightPadded.build(ifCondition).withAfter(whitespaceAfter(pyIfCondition))
                     ),
                     JRightPadded.build(ifBody).withAfter(whitespaceAfter(pyIfBody)),
                     mapElsePart(parent, elifIndex + 1)
             );
             return new J.If.Else(
-                    UUID.randomUUID(),
+                    randomId(),
                     whitespaceBefore(pyElifPart),
-                    Markers.build(Collections.singletonList(new IsElIfBranch(UUID.randomUUID()))),
+                    Markers.build(Collections.singletonList(new IsElIfBranch(randomId()))),
                     JRightPadded.<Statement>build(nestedIf)
             );
         } else if (parent.getElsePart() != null) {
             PyStatementList pyElseBody = parent.getElsePart().getStatementList();
             return new J.If.Else(
-                    UUID.randomUUID(),
+                    randomId(),
                     whitespaceBefore(parent.getElsePart()),
-                    Markers.EMPTY,
+                    EMPTY,
                     JRightPadded.<Statement>build(mapStatementList(pyElseBody))
                             .withAfter(whitespaceAfter(pyElseBody))
             );
@@ -214,9 +216,9 @@ public class PsiPythonMapper {
 
     public P.PassStatement mapPassStatement(PyPassStatement element) {
         return new P.PassStatement(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY
+                EMPTY
         );
     }
 
@@ -229,17 +231,20 @@ public class PsiPythonMapper {
         }
 
         return new J.Block(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 JRightPadded.build(false),
                 statements,
                 whitespaceAfter(element)
         );
     }
 
-    public Expression mapExpression(PyExpression element) {
-        if (element instanceof PyBinaryExpression) {
+    public Expression mapExpression(@Nullable PyExpression element) {
+        if (element == null) {
+            //noinspection DataFlowIssue
+            return null;
+        } else if (element instanceof PyBinaryExpression) {
             return mapBinaryExpression((PyBinaryExpression) element);
         } else if (element instanceof PyBoolLiteralExpression) {
             return mapBooleanLiteral((PyBoolLiteralExpression) element);
@@ -247,6 +252,8 @@ public class PsiPythonMapper {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
+        } else if (element instanceof PyPrefixExpression) {
+            return mapPrefixExpression((PyPrefixExpression) element);
         } else if (element instanceof PyReferenceExpression) {
             return mapReferenceExpression((PyReferenceExpression) element);
         } else if (element instanceof PySubscriptionExpression) {
@@ -270,6 +277,7 @@ public class PsiPythonMapper {
 
     private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
 
+    // FIXME don't use a map here -- use a switch statement computationally cheaper
     static {
         // Comparison
         binaryOperatorTypeMappings.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
@@ -298,11 +306,10 @@ public class PsiPythonMapper {
             throw new RuntimeException("unsupported binary expression operator: " + pyOperatorType);
         }
 
-
         return new J.Binary(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 lhs,
                 JLeftPadded.build(operatorType).withBefore(beforeOperatorSpace),
                 rhs,
@@ -310,11 +317,36 @@ public class PsiPythonMapper {
         );
     }
 
+    private Expression mapPrefixExpression(PyPrefixExpression element) {
+        PyElementType op = element.getOperator();
+        J.Unary.Type ot;
+        JavaType type = null;
+        if (op == PyTokenTypes.NOT_KEYWORD) {
+            ot = J.Unary.Type.Not;
+            type = JavaType.Primitive.Boolean;
+        } else if (op == PyTokenTypes.PLUS) {
+            ot = J.Unary.Type.Positive;
+        } else if (op == PyTokenTypes.MINUS) {
+            ot = J.Unary.Type.Negative;
+        } else {
+            System.err.println("WARNING: unhandled prefix expression of ot " + op);
+            return null;
+        }
+        return new J.Unary(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                JLeftPadded.build(ot),
+                mapExpression(element.getOperand()),
+                type
+        );
+    }
+
     public J.Literal mapBooleanLiteral(PyBoolLiteralExpression element) {
         return new J.Literal(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 element.getValue(),
                 element.getText(),
                 Collections.emptyList(),
@@ -329,24 +361,28 @@ public class PsiPythonMapper {
             PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
             J.Identifier functionName = mapReferenceExpression(pyRefExpression);
 
-            List<JRightPadded<Expression>> args = new ArrayList<>();
-            for (PyExpression arg : element.getArgumentList().getArguments()) {
-                args.add(
-                        new JRightPadded<>(
-                                mapExpression(arg).withPrefix(whitespaceBefore(arg)),
-                                whitespaceAfter(arg),
-                                Markers.EMPTY
-                        )
-                );
+            List<JRightPadded<Expression>> args = Collections.emptyList();
+            if (element.getArgumentList() != null) {
+                args = new ArrayList<>();
+                for (PyExpression arg : element.getArgumentList().getArguments()) {
+                    args.add(
+                            new JRightPadded<>(
+                                    mapExpression(arg).withPrefix(whitespaceBefore(arg)),
+                                    whitespaceAfter(arg),
+                                    EMPTY
+                            )
+                    );
+                }
             }
+
             return new J.MethodInvocation(
-                    UUID.randomUUID(),
+                    randomId(),
                     whitespaceBefore(element),
-                    Markers.EMPTY,
+                    EMPTY,
                     null,
                     null,
                     functionName,
-                    JContainer.build(Space.EMPTY, args, Markers.EMPTY),
+                    JContainer.build(Space.EMPTY, args, EMPTY),
                     null
             );
         } else {
@@ -357,7 +393,7 @@ public class PsiPythonMapper {
 
     public P.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
         Expression expression = mapExpression(element.getExpression());
-        return new P.ExpressionStatement(UUID.randomUUID(), expression);
+        return new P.ExpressionStatement(randomId(), expression);
     }
 
     public J.ArrayAccess mapSubscription(PySubscriptionExpression element) {
@@ -368,14 +404,14 @@ public class PsiPythonMapper {
         Expression index = mapExpression(pyIndex);
 
         return new J.ArrayAccess(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 target,
                 new J.ArrayDimension(
-                        UUID.randomUUID(),
+                        randomId(),
                         whitespaceAfter(pyTarget),
-                        Markers.EMPTY,
+                        EMPTY,
                         JRightPadded.build(index).withAfter(whitespaceAfter(pyIndex))
                 ),
                 null
@@ -384,9 +420,9 @@ public class PsiPythonMapper {
 
     public J.Literal mapStringLiteral(PyStringLiteralExpression element) {
         return new J.Literal(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 element.getStringValue(),
                 element.getText(),
                 Collections.emptyList(),
@@ -396,9 +432,9 @@ public class PsiPythonMapper {
 
     public J.Identifier mapTargetExpression(PyTargetExpression element) {
         return new J.Identifier(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 element.getName(),
                 null,
                 null
@@ -407,9 +443,9 @@ public class PsiPythonMapper {
 
     public J.Literal mapNumericLiteral(PyNumericLiteralExpression element) {
         return new J.Literal(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 element.getLongValue(),
                 element.getText(),
                 Collections.emptyList(),
@@ -422,9 +458,9 @@ public class PsiPythonMapper {
             throw new RuntimeException("unexpected reference qualification");
         }
         return new J.Identifier(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(element),
-                Markers.EMPTY,
+                EMPTY,
                 element.getText(),
                 null,
                 null
@@ -443,9 +479,9 @@ public class PsiPythonMapper {
             throw new RuntimeException("expected Identifier, but node type was: " + node.getElementType());
         }
         return new J.Identifier(
-                UUID.randomUUID(),
+                randomId(),
                 whitespaceBefore(node.getPsi()),
-                Markers.EMPTY,
+                EMPTY,
                 node.getText(),
                 null,
                 null
