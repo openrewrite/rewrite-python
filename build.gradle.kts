@@ -14,10 +14,11 @@ dependencies {
     implementation("org.openrewrite:rewrite-java")
 
     implementation(fileTree("lib") { include("*.jar") })
-    runtimeOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
     runtimeOnly("com.google.guava:guava:31.1-jre")
+    runtimeOnly("one.util:streamex:0.8.1")
 
     testImplementation("org.assertj:assertj-core:latest.release")
     testImplementation("org.junit.jupiter:junit-jupiter-api:latest.release")
