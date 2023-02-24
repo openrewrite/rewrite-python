@@ -13,8 +13,13 @@ import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.P;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.openrewrite.Tree.randomId;
 import static org.openrewrite.marker.Markers.EMPTY;
 
@@ -38,8 +43,8 @@ public class PsiPythonMapper {
                 charset,
                 isCharsetBomMarked,
                 null,
-                Collections.emptyList(),
-                Collections.emptyList(),
+                emptyList(),
+                emptyList(),
                 Space.EMPTY
         ).withStatements(statements);
     }
@@ -84,33 +89,36 @@ public class PsiPythonMapper {
                 randomId(),
                 Space.EMPTY,
                 EMPTY,
-                Collections.emptyList(),
+                emptyList(),
                 J.ClassDeclaration.Kind.Type.Class
         );
 
-        JLeftPadded<TypeTree> extendings = null;
-        {
-            PyArgumentList pyClassBase = element.getSuperClassExpressionList();
-            // if there are no children, there are no paren tokens
-            // otherwise we have to render e.g. `class Foo():` even without a base class
-            if (pyClassBase != null) {
-                if (element.getSuperClassExpressions().length > 0) {
-                    PyExpression firstBase = element.getSuperClassExpressions()[0];
-                    if (!(firstBase instanceof PyReferenceExpression)) {
+        JContainer<TypeTree> implementings = null;
+        PyArgumentList pyClassBase = element.getSuperClassExpressionList();
+        // if there are no children, there are no paren tokens
+        // otherwise we have to render e.g. `class Foo():` even without a base class
+        if (pyClassBase != null) {
+            if (element.getSuperClassExpressions().length > 0) {
+                List<JRightPadded<TypeTree>> superClasses = new ArrayList<>(element.getSuperClassExpressions().length);
+                PyExpression[] superClassExpressions = element.getSuperClassExpressions();
+                for (PyExpression superClass : superClassExpressions) {
+                    if (!(superClass instanceof PyReferenceExpression)) {
                         throw new RuntimeException("cannot support non-constant base classes");
                     }
-                    J.Identifier baseIdentifier = mapReferenceExpression((PyReferenceExpression) firstBase)
-                            .withPrefix(whitespaceBefore(firstBase));
-                    extendings = JLeftPadded.<TypeTree>build(baseIdentifier);
-                } else {
-                    extendings = JLeftPadded.<TypeTree>build(
-                            new J.Empty(
-                                    randomId(),
-                                    whitespaceBefore(pyClassBase.getNode().getLastChildNode().getPsi()),
-                                    EMPTY
-                            )
-                    );
+                    superClasses.add(JRightPadded.build((TypeTree) mapReferenceExpression((PyReferenceExpression) superClass)
+                                    .withPrefix(whitespaceBefore(superClass)))
+                            .withAfter(whitespaceAfter(superClass)));
                 }
+                implementings = JContainer.build(superClasses);
+            } else {
+                implementings = JContainer.build(singletonList(
+                        JRightPadded.build(
+                                new J.Empty(
+                                        randomId(),
+                                        whitespaceBefore(pyClassBase.getNode().getLastChildNode().getPsi()),
+                                        EMPTY
+                                )
+                        )));
             }
         }
 
@@ -118,14 +126,16 @@ public class PsiPythonMapper {
                 randomId(),
                 whitespaceBefore(element),
                 EMPTY,
-                Collections.emptyList(),
-                Collections.emptyList(),
+                emptyList(),
+                emptyList(),
                 kind,
                 expectIdentifier(element.getNameNode()),
                 null,
                 null,
-                extendings,
                 null,
+                implementings == null ?
+                        null :
+                        implementings.withBefore(whitespaceBefore(element.getSuperClassExpressionList())),
                 null,
                 mapStatementList(element.getStatementList()),
                 null
@@ -184,7 +194,7 @@ public class PsiPythonMapper {
             J.If nestedIf = new J.If(
                     randomId(),
                     Space.EMPTY,
-                    Markers.build(Collections.singletonList(new IsElIfBranch(randomId()))),
+                    Markers.build(singletonList(new IsElIfBranch(randomId()))),
                     new J.ControlParentheses<Expression>(
                             randomId(),
                             Space.EMPTY,
@@ -197,8 +207,8 @@ public class PsiPythonMapper {
             return new J.If.Else(
                     randomId(),
                     whitespaceBefore(pyElifPart),
-                    Markers.build(Collections.singletonList(new IsElIfBranch(randomId()))),
-                    JRightPadded.<Statement>build(nestedIf)
+                    Markers.build(singletonList(new IsElIfBranch(randomId()))),
+                    JRightPadded.build(nestedIf)
             );
         } else if (parent.getElsePart() != null) {
             PyStatementList pyElseBody = parent.getElsePart().getStatementList();
@@ -349,7 +359,7 @@ public class PsiPythonMapper {
                 EMPTY,
                 element.getValue(),
                 element.getText(),
-                Collections.emptyList(),
+                emptyList(),
                 JavaType.Primitive.Boolean
         );
     }
@@ -361,7 +371,7 @@ public class PsiPythonMapper {
             PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
             J.Identifier functionName = mapReferenceExpression(pyRefExpression);
 
-            List<JRightPadded<Expression>> args = Collections.emptyList();
+            List<JRightPadded<Expression>> args = emptyList();
             if (element.getArgumentList() != null) {
                 args = new ArrayList<>();
                 for (PyExpression arg : element.getArgumentList().getArguments()) {
@@ -425,7 +435,7 @@ public class PsiPythonMapper {
                 EMPTY,
                 element.getStringValue(),
                 element.getText(),
-                Collections.emptyList(),
+                emptyList(),
                 JavaType.Primitive.String
         );
     }
@@ -448,7 +458,7 @@ public class PsiPythonMapper {
                 EMPTY,
                 element.getLongValue(),
                 element.getText(),
-                Collections.emptyList(),
+                emptyList(),
                 JavaType.Primitive.Long
         );
     }
@@ -498,7 +508,7 @@ public class PsiPythonMapper {
             return Space.EMPTY;
         }
         if (previous instanceof PsiWhiteSpace) {
-            return Space.build(previous.getText(), Collections.emptyList());
+            return Space.build(previous.getText(), emptyList());
         }
         return Space.EMPTY;
     }
@@ -509,7 +519,7 @@ public class PsiPythonMapper {
             return Space.EMPTY;
         }
         if (previous instanceof PsiWhiteSpace) {
-            return Space.build(previous.getText(), Collections.emptyList());
+            return Space.build(previous.getText(), emptyList());
         }
         return Space.EMPTY;
     }

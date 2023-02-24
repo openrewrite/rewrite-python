@@ -20,6 +20,7 @@ import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaPrinter;
+import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.Import;
 import org.openrewrite.java.tree.Space.Location;
@@ -89,13 +90,12 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
             beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
             p.append("class");
             visit(classDecl.getName(), p);
-            if (classDecl.getExtends() != null) {
-                p.append("(");
-                visitLeftPadded(classDecl.getPadding().getExtends(), JLeftPadded.Location.EXTENDS, p);
-                p.append(")");
+            if (classDecl.getPadding().getImplements() != null) {
+                boolean omitParens = classDecl.getPadding().getImplements().getMarkers().findFirst(OmitParentheses.class).isPresent();
+                visitContainer(omitParens ? "" : "(", classDecl.getPadding().getImplements(), JContainer.Location.IMPLEMENTS,
+                        ",", omitParens ? "" : ")", p);
             }
             p.append(":");
-
 
             visit(classDecl.getBody(), p);
             afterSyntax(classDecl, p);
