@@ -451,6 +451,8 @@ public class PsiPythonMapper {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
+        } else if (element instanceof PyParenthesizedExpression) {
+            return mapParenthesizedExpression((PyParenthesizedExpression) element);
         } else if (element instanceof PyPrefixExpression) {
             return mapPrefixExpression((PyPrefixExpression) element);
         } else if (element instanceof PyReferenceExpression) {
@@ -464,6 +466,16 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Expression mapParenthesizedExpression(PyParenthesizedExpression element) {
+        return new J.Parentheses<>(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                JRightPadded.build(mapExpression(element.getContainedExpression()))
+                        .withAfter(whitespaceAfter(element.getContainedExpression()))
+        );
     }
 
     public Expression expectExpression(PsiElement element) {
