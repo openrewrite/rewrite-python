@@ -20,6 +20,18 @@ public class ForLoopTest implements RewriteTest {
     }
 
     @Test
+    void forLoopDestructuring() {
+        rewriteRun(
+          python(
+            """
+              for x, y in xs:
+                  pass
+              """
+          )
+        );
+    }
+
+    @Test
     void forLoopBreak() {
         rewriteRun(
           python(

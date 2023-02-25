@@ -136,6 +136,26 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitForEachLoop(J.ForEachLoop forEachLoop, PrintOutputCapture<P> p) {
+            beforeSyntax(forEachLoop, Space.Location.FOR_EACH_LOOP_PREFIX, p);
+            p.append("for");
+            visit(forEachLoop.getControl(), p);
+            visit(forEachLoop.getBody(), p);
+            afterSyntax(forEachLoop, p);
+            return forEachLoop;
+        }
+
+        @Override
+        public J visitForEachControl(J.ForEachLoop.Control control, PrintOutputCapture<P> p) {
+            beforeSyntax(control, Space.Location.FOR_EACH_CONTROL_PREFIX, p);
+            visitRightPadded(control.getPadding().getVariable(), JRightPadded.Location.FOREACH_VARIABLE, p);
+            p.append("in");
+            visitRightPadded(control.getPadding().getIterable(), JRightPadded.Location.FOREACH_ITERABLE, p);
+            afterSyntax(control, p);
+            return control;
+        }
+
+        @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             p.append("def");
@@ -144,6 +164,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(method.getBody(), p);
             afterSyntax(method, p);
             return method;
+        }
+
+        @Override
+        protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<P> p) {
+            if (paddedStat == null) {
+                return;
+            }
+            visit(paddedStat.getElement(), p);
+            visitSpace(paddedStat.getAfter(), location.getAfterLocation(), p);
         }
 
         @Override
@@ -159,18 +188,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 case Negative:
                     p.append("-");
                     break;
+                case Complement:
+                    p.append("~");
+                    break;
             }
             visit(unary.getExpression(), p);
             afterSyntax(unary, p);
             return unary;
-        }
-    }
-
-    protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<P> p) {
-        if (paddedStat != null) {
-            visit(paddedStat.getElement(), p);
-            visitSpace(paddedStat.getAfter(), location.getAfterLocation(), p);
-            visitMarkers(paddedStat.getMarkers(), p);
         }
     }
 

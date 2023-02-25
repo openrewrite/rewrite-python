@@ -15,11 +15,15 @@ import org.openrewrite.java.tree.*;
 import org.openrewrite.python.tree.Py;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 import static org.openrewrite.Tree.randomId;
 import static org.openrewrite.marker.Markers.EMPTY;
 
@@ -52,10 +56,16 @@ public class PsiPythonMapper {
     public Statement mapStatement(PsiElement element) {
         if (element instanceof PyAssignmentStatement) {
             return mapAssignmentStatement((PyAssignmentStatement) element);
+        } else if (element instanceof PyBreakStatement) {
+            return mapBreakStatement((PyBreakStatement) element);
+        } else if (element instanceof PyContinueStatement) {
+            return mapContinueStatement((PyContinueStatement) element);
         } else if (element instanceof PyClass) {
             return mapClassDeclarationStatement((PyClass) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
+        } else if (element instanceof PyForStatement) {
+            return mapForStatement((PyForStatement) element);
         } else if (element instanceof PyFunction) {
             return mapMethodDeclaration((PyFunction) element);
         } else if (element instanceof PyIfStatement) {
@@ -67,6 +77,113 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Statement mapContinueStatement(PyContinueStatement element) {
+        return new J.Continue(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                null
+        );
+    }
+
+    private Statement mapBreakStatement(PyBreakStatement element) {
+        return new J.Break(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                null
+        );
+    }
+
+    private Statement mapForStatement(PyForStatement element) {
+        PyForPart forPart = element.getForPart();
+        J.VariableDeclarations target;
+        if (forPart.getTarget() instanceof PyTupleExpression) {
+            target = mapTupleAsVariableDeclarations((PyTupleExpression) forPart.getTarget());
+        } else if (forPart.getTarget() instanceof PyTargetExpression) {
+            target = mapTargetExpressionAsVariableDeclarations((PyTargetExpression) forPart.getTarget());
+        } else {
+            System.err.println("WARNING: unhandled for loop target of type " + forPart.getTarget().getClass().getSimpleName());
+            return null;
+        }
+
+        return new J.ForEachLoop(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                new J.ForEachLoop.Control(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        JRightPadded.build(target)
+                                .withAfter(whitespaceBefore(forPart.getTarget().getNextSibling())),
+                        JRightPadded.build(mapExpression(forPart.getSource()))
+                ),
+                JRightPadded.build(mapBlock(forPart.getStatementList(),
+                        whitespaceBefore(findFirstPrevSibling(forPart.getStatementList(),
+                                e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON))))
+        );
+    }
+
+    private J.VariableDeclarations mapTargetExpressionAsVariableDeclarations(PyTargetExpression element) {
+        return new J.VariableDeclarations(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                emptyList(),
+                emptyList(),
+                null,
+                null,
+                emptyList(),
+                singletonList(
+                        JRightPadded.build(new J.VariableDeclarations.NamedVariable(
+                                randomId(),
+                                whitespaceBefore(element.getNameIdentifier()),
+                                EMPTY,
+                                new J.Identifier(
+                                        randomId(),
+                                        whitespaceBefore(element.getNameIdentifier()),
+                                        EMPTY,
+                                        requireNonNull(element.getName()),
+                                        null,
+                                        null
+                                ),
+                                emptyList(),
+                                null,
+                                null
+                        ))
+                )
+        );
+    }
+
+    private J.VariableDeclarations mapTupleAsVariableDeclarations(PyTupleExpression element) {
+        List<JRightPadded<J.VariableDeclarations.NamedVariable>> namedVariables = new ArrayList<>(element.getElements().length);
+        PyExpression[] elements = element.getElements();
+        for (PyExpression nv : elements) {
+            namedVariables.add(JRightPadded.build(new J.VariableDeclarations.NamedVariable(
+                    randomId(),
+                    whitespaceBefore(nv),
+                    EMPTY,
+                    mapIdentifier((PsiNamedElement) nv).withPrefix(Space.EMPTY),
+                    emptyList(),
+                    null,
+                    null
+            )).withAfter(whitespaceBefore(nv.getNextSibling())));
+        }
+
+        return new J.VariableDeclarations(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                emptyList(),
+                emptyList(),
+                null,
+                null,
+                emptyList(),
+                namedVariables
+        );
     }
 
     private Statement mapMethodDeclaration(PyFunction element) {
@@ -391,6 +508,8 @@ public class PsiPythonMapper {
             ot = J.Unary.Type.Positive;
         } else if (op == PyTokenTypes.MINUS) {
             ot = J.Unary.Type.Negative;
+        } else if (op == PyTokenTypes.TILDE) {
+            ot = J.Unary.Type.Complement;
         } else {
             System.err.println("WARNING: unhandled prefix expression of ot " + op);
             return null;

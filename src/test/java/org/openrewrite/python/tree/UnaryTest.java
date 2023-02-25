@@ -9,7 +9,7 @@ import static org.openrewrite.python.Assertions.python;
 public class UnaryTest implements RewriteTest {
 
     @ParameterizedTest
-    @ValueSource(strings = {"not ", "+", "-"})
+    @ValueSource(strings = {"not ", "+", "-", "~"})
     void unary(String op) {
         rewriteRun(
           python("%sy".formatted(op))
