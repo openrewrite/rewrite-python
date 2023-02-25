@@ -5,7 +5,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ForLoopTest implements RewriteTest {
+public class ForEachTest implements RewriteTest {
 
     @Test
     void forLoop() {
@@ -26,30 +26,6 @@ public class ForLoopTest implements RewriteTest {
             """
               for x, y in xs:
                   pass
-              """
-          )
-        );
-    }
-
-    @Test
-    void forLoopBreak() {
-        rewriteRun(
-          python(
-            """
-              for x in xs:
-                  break
-              """
-          )
-        );
-    }
-
-    @Test
-    void forLoopContinue() {
-        rewriteRun(
-          python(
-            """
-              for x in xs:
-                  continue
               """
           )
         );

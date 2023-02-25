@@ -74,9 +74,28 @@ public class PsiPythonMapper {
             return mapPassStatement((PyPassStatement) element);
         } else if (element instanceof PyStatementList) {
             return mapBlock((PyStatementList) element, Space.EMPTY);
+        } else if (element instanceof PyWhileStatement) {
+            return mapWhile((PyWhileStatement) element);
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Statement mapWhile(PyWhileStatement element) {
+        return new J.WhileLoop(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                new J.ControlParentheses<>(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        JRightPadded.build(mapExpression(element.getWhilePart().getCondition()))
+                ),
+                JRightPadded.build(mapBlock(element.getWhilePart().getStatementList(),
+                        whitespaceBefore(findFirstPrevSibling(element.getWhilePart().getStatementList(),
+                                e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON))))
+        );
     }
 
     private Statement mapContinueStatement(PyContinueStatement element) {
