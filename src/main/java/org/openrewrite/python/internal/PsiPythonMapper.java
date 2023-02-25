@@ -7,10 +7,10 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
+import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
-import org.openrewrite.marker.Markers;
-import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.Py;
 
 import java.nio.file.Path;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -62,7 +63,7 @@ public class PsiPythonMapper {
         } else if (element instanceof PyPassStatement) {
             return mapPassStatement((PyPassStatement) element);
         } else if (element instanceof PyStatementList) {
-            return mapStatementList((PyStatementList) element);
+            return mapBlock((PyStatementList) element, Space.EMPTY);
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
@@ -94,7 +95,7 @@ public class PsiPythonMapper {
                 J.ClassDeclaration.Kind.Type.Class
         );
 
-        JContainer<TypeTree> implementings = null;
+        JContainer<TypeTree> implementings;
         PyArgumentList pyClassBase = element.getSuperClassExpressionList();
         // if there are no children, there are no paren tokens
         // otherwise we have to render e.g. `class Foo():` even without a base class
@@ -123,6 +124,14 @@ public class PsiPythonMapper {
             }
         } else {
             implementings = JContainer.empty();
+            implementings = implementings.withMarkers(implementings.getMarkers().add(new OmitParentheses(randomId())));
+        }
+
+        Space blockPrefix = Space.EMPTY;
+        PsiElement beforeColon = findFirstPrevSibling(element.getStatementList(), e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON)
+                .getPrevSibling();
+        if((beforeColon instanceof PyArgumentList && element.getSuperClassExpressionList() == null) || beforeColon instanceof PsiWhiteSpace) {
+            blockPrefix = whitespaceBefore(beforeColon);
         }
 
         return new J.ClassDeclaration(
@@ -138,7 +147,7 @@ public class PsiPythonMapper {
                 null,
                 implementings.withBefore(whitespaceBefore(element.getSuperClassExpressionList())),
                 null,
-                mapStatementList(element.getStatementList()),
+                mapBlock(element.getStatementList(), blockPrefix),
                 null
         );
     }
@@ -159,7 +168,7 @@ public class PsiPythonMapper {
                 randomId(),
                 whitespaceBefore(element),
                 EMPTY,
-                new J.ControlParentheses<Expression>(
+                new J.ControlParentheses<>(
                         randomId(),
                         Space.EMPTY,
                         EMPTY,
@@ -195,8 +204,8 @@ public class PsiPythonMapper {
             J.If nestedIf = new J.If(
                     randomId(),
                     Space.EMPTY,
-                    Markers.build(singletonList(new IsElIfBranch(randomId()))),
-                    new J.ControlParentheses<Expression>(
+                    EMPTY,
+                    new J.ControlParentheses<>(
                             randomId(),
                             Space.EMPTY,
                             EMPTY,
@@ -208,7 +217,7 @@ public class PsiPythonMapper {
             return new J.If.Else(
                     randomId(),
                     whitespaceBefore(pyElifPart),
-                    Markers.build(singletonList(new IsElIfBranch(randomId()))),
+                    EMPTY,
                     JRightPadded.build(nestedIf)
             );
         } else if (parent.getElsePart() != null) {
@@ -217,7 +226,9 @@ public class PsiPythonMapper {
                     randomId(),
                     whitespaceBefore(parent.getElsePart()),
                     EMPTY,
-                    JRightPadded.<Statement>build(mapStatementList(pyElseBody))
+                    JRightPadded.<Statement>build(mapBlock(pyElseBody,
+                                    whitespaceBefore(findFirstPrevSibling(parent.getElsePart(),
+                                            e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON))))
                             .withAfter(whitespaceAfter(pyElseBody))
             );
         } else {
@@ -233,7 +244,7 @@ public class PsiPythonMapper {
         );
     }
 
-    public J.Block mapStatementList(PyStatementList element) {
+    public J.Block mapBlock(PyStatementList element, Space blockPrefix) {
         PyStatement[] pyStatements = element.getStatements();
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.length);
         for (PyStatement pyStatement : pyStatements) {
@@ -241,16 +252,30 @@ public class PsiPythonMapper {
             statements.add(JRightPadded.build(statement).withAfter(whitespaceAfter(pyStatement)));
         }
 
-//        if(element.getPrevSibling() != null && element.getPrevSibling().getPrevSibling() instanceof LeafPsiElement) {
-//            LeafPsiElement maybeColon = (LeafPsiElement) element.getPrevSibling().getPrevSibling();
+//        Space blockPrefix = Space.EMPTY;
+//        PsiElement e = element.getPrevSibling();
+//        boolean foundColon = false;
+//        // when the colon is preceded by an argument list (like in a ClassDeclaration) and that argument list
+//        // has omitted parentheses, the white space is actually BEFORE the argument list in PSI
+//        while (e != null) {
+//            if (!foundColon && e instanceof LeafPsiElement &&
+//                ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON) {
+//                foundColon = true;
+//            } else if (foundColon) {
+//                if (e instanceof PyArgumentList || e instanceof PsiWhiteSpace) {
+//                    blockPrefix = whitespaceBefore(e);
+//                }
+//                break;
+//            }
+//            e = e.getPrevSibling();
 //        }
 
         return new J.Block(
                 randomId(),
-                whitespaceBefore(element),
+                blockPrefix,
                 EMPTY,
                 JRightPadded.build(false),
-                statements,
+                ListUtils.mapFirst(statements, first -> first.withElement(first.getElement().withPrefix(whitespaceBefore(element)))),
                 whitespaceAfter(element)
         );
     }
@@ -503,11 +528,13 @@ public class PsiPythonMapper {
         );
     }
 
-    private J.Identifier expectIdentifier(PsiElement element) {
-        return expectIdentifier(element.getNode());
-    }
+    private static Space whitespaceBefore(@Nullable PsiElement element) {
+        if (element == null) {
+            return Space.EMPTY;
+        } else if (element instanceof PsiWhiteSpace) {
+            return Space.build(element.getText(), emptyList());
+        }
 
-    private static Space whitespaceBefore(PsiElement element) {
         PsiElement previous = element.getPrevSibling();
         if (previous == null) {
             return Space.EMPTY;
@@ -515,10 +542,17 @@ public class PsiPythonMapper {
         if (previous instanceof PsiWhiteSpace) {
             return Space.build(previous.getText(), emptyList());
         }
+
         return Space.EMPTY;
     }
 
-    private static Space whitespaceAfter(PsiElement element) {
+    private static Space whitespaceAfter(@Nullable PsiElement element) {
+        if (element == null) {
+            return Space.EMPTY;
+        } else if (element instanceof PsiWhiteSpace) {
+            return Space.build(element.getText(), emptyList());
+        }
+
         PsiElement previous = element.getNextSibling();
         if (previous == null) {
             return Space.EMPTY;
@@ -526,7 +560,18 @@ public class PsiPythonMapper {
         if (previous instanceof PsiWhiteSpace) {
             return Space.build(previous.getText(), emptyList());
         }
+
         return Space.EMPTY;
     }
 
+    private static PsiElement findFirstPrevSibling(PsiElement element, Predicate<PsiElement> match) {
+        PsiElement prev = element.getPrevSibling();
+        while (prev != null) {
+            if (match.test(prev)) {
+                return prev;
+            }
+            prev = prev.getPrevSibling();
+        }
+        throw new IllegalStateException("Expected to find a previous sibling match but found none");
+    }
 }

@@ -27,8 +27,10 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.marker.IsElIfBranch;
-import org.openrewrite.python.tree.*;
+import org.openrewrite.python.tree.PContainer;
+import org.openrewrite.python.tree.PRightPadded;
+import org.openrewrite.python.tree.PSpace;
+import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.Py.Binary;
 import org.openrewrite.python.tree.Py.CompilationUnit;
 
@@ -111,8 +113,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
             beforeSyntax(elze, Space.Location.ELSE_PREFIX, p);
-            if (elze.getMarkers().findFirst(IsElIfBranch.class).isPresent()) {
-                // TODO (gary, 2023-02-14) this is a bit mad
+            if (getCursor().getParentTreeCursor().getValue() instanceof J.If) {
                 p.append("el");
             } else {
                 p.append("else:");
