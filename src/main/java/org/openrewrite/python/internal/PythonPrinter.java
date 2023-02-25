@@ -105,7 +105,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<P> p) {
             beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
-            visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, ":", p);
+            visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, "", p);
             afterSyntax(controlParens, p);
             return controlParens;
         }
@@ -113,10 +113,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
             beforeSyntax(elze, Space.Location.ELSE_PREFIX, p);
-            if (getCursor().getParentTreeCursor().getValue() instanceof J.If) {
+            if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
+                elze.getBody() instanceof J.If) {
                 p.append("el");
             } else {
-                p.append("else:");
+                p.append("else");
             }
             visitStatement(elze.getPadding().getBody(), JRightPadded.Location.IF_ELSE, p);
             afterSyntax(elze, p);

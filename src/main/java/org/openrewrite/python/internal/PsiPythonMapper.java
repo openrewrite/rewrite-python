@@ -227,7 +227,7 @@ public class PsiPythonMapper {
                     whitespaceBefore(parent.getElsePart()),
                     EMPTY,
                     JRightPadded.<Statement>build(mapBlock(pyElseBody,
-                                    whitespaceBefore(findFirstPrevSibling(parent.getElsePart(),
+                                    whitespaceBefore(findFirstPrevSibling(parent.getElsePart().getStatementList(),
                                             e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON))))
                             .withAfter(whitespaceAfter(pyElseBody))
             );
