@@ -18,7 +18,7 @@ package org.openrewrite.python;
 
 import org.intellij.lang.annotations.Language;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.python.tree.P;
+import org.openrewrite.python.tree.Py;
 import org.openrewrite.test.SourceSpec;
 import org.openrewrite.test.SourceSpecs;
 
@@ -33,8 +33,8 @@ public class Assertions {
         });
     }
 
-    public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<P.CompilationUnit>> spec) {
-        SourceSpec<P.CompilationUnit> python = new SourceSpec<>(P.CompilationUnit.class, null, PythonParser.builder(), before, null);
+    public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<Py.CompilationUnit>> spec) {
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, null);
         spec.accept(python);
         return python;
     }
@@ -45,8 +45,8 @@ public class Assertions {
     }
 
     public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
-                                     Consumer<SourceSpec<P.CompilationUnit>> spec) {
-        SourceSpec<P.CompilationUnit> python = new SourceSpec<>(P.CompilationUnit.class, null, PythonParser.builder(), before, null);
+                                     Consumer<SourceSpec<Py.CompilationUnit>> spec) {
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, null);
         spec.accept(python);
         return python;
     }

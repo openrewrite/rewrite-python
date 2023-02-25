@@ -36,20 +36,20 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public interface P extends J {
+public interface Py extends J {
     @SuppressWarnings("unchecked")
     @Override
-    default <R extends Tree, Param> R accept(TreeVisitor<R, Param> v, Param p) {
+    default <R extends Tree, P> R accept(TreeVisitor<R, P> v, P p) {
         return (R) acceptPython(v.adapt(PythonVisitor.class), p);
     }
 
     @Override
-    default <Param> boolean isAcceptable(TreeVisitor<?, Param> v, Param p) {
+    default <P> boolean isAcceptable(TreeVisitor<?, P> v, P p) {
         return v.isAdaptableTo(PythonVisitor.class);
     }
 
     @Nullable
-    default <Param> J acceptPython(PythonVisitor<Param> v, Param p) {
+    default <P> J acceptPython(PythonVisitor<P> v, P p) {
         return v.defaultValue(this, p);
     }
 
@@ -64,7 +64,7 @@ public interface P extends J {
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class CompilationUnit implements P, JavaSourceFile, SourceFile {
+    final class CompilationUnit implements Py, JavaSourceFile, SourceFile {
         @Nullable
         @NonFinal
         transient SoftReference<TypesInUse> typesInUse;
@@ -125,7 +125,7 @@ public interface P extends J {
             return JRightPadded.getElements(imports);
         }
 
-        public P.CompilationUnit withImports(List<Import> imports) {
+        public Py.CompilationUnit withImports(List<Import> imports) {
             return getPadding().withImports(JRightPadded.withElements(this.imports, imports));
         }
 
@@ -135,7 +135,7 @@ public interface P extends J {
             return JRightPadded.getElements(statements);
         }
 
-        public P.CompilationUnit withStatements(List<Statement> statements) {
+        public Py.CompilationUnit withStatements(List<Statement> statements) {
             return getPadding().withStatements(JRightPadded.withElements(this.statements, statements));
         }
 
@@ -152,12 +152,12 @@ public interface P extends J {
                     .collect(Collectors.toList());
         }
 
-        public <Param> J acceptPython(PythonVisitor<Param> v, Param param) {
-            return v.visitJavaSourceFile(this, param);
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitJavaSourceFile(this, p);
         }
 
         @Override
-        public <Param> TreeVisitor<?, PrintOutputCapture<Param>> printer(Cursor cursor) {
+        public <P> TreeVisitor<?, PrintOutputCapture<P>> printer(Cursor cursor) {
             return new PythonPrinter<>();
         }
 
@@ -204,7 +204,7 @@ public interface P extends J {
 
         @RequiredArgsConstructor
         public static class Padding implements JavaSourceFile.Padding {
-            private final P.CompilationUnit t;
+            private final Py.CompilationUnit t;
 
             @Override
             public List<JRightPadded<Import>> getImports() {
@@ -212,8 +212,8 @@ public interface P extends J {
             }
 
             @Override
-            public P.CompilationUnit withImports(List<JRightPadded<Import>> imports) {
-                return t.imports == imports ? t : new P.CompilationUnit(t.id, t.prefix, t.markers, t.sourcePath, t.fileAttributes, t.charsetName, t.charsetBomMarked, null,
+            public Py.CompilationUnit withImports(List<JRightPadded<Import>> imports) {
+                return t.imports == imports ? t : new Py.CompilationUnit(t.id, t.prefix, t.markers, t.sourcePath, t.fileAttributes, t.charsetName, t.charsetBomMarked, null,
                         imports, t.statements, t.eof);
             }
 
@@ -221,8 +221,8 @@ public interface P extends J {
                 return t.statements;
             }
 
-            public P.CompilationUnit withStatements(List<JRightPadded<Statement>> statements) {
-                return t.statements == statements ? t : new P.CompilationUnit(t.id, t.prefix, t.markers, t.sourcePath,
+            public Py.CompilationUnit withStatements(List<JRightPadded<Statement>> statements) {
+                return t.statements == statements ? t : new Py.CompilationUnit(t.id, t.prefix, t.markers, t.sourcePath,
                         t.fileAttributes, t.charsetName, t.charsetBomMarked, t.checksum, t.imports, statements, t.eof);
             }
         }
@@ -232,7 +232,7 @@ public interface P extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @AllArgsConstructor
-    final class ExpressionStatement implements P, Expression, Statement {
+    final class ExpressionStatement implements Py, Expression, Statement {
         @With
         @Getter
         UUID id;
@@ -249,8 +249,8 @@ public interface P extends J {
         }
 
         @Override
-        public <Param> J acceptPython(PythonVisitor<Param> v, Param param) {
-            J j = v.visit(getExpression(), param);
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            J j = v.visit(getExpression(), p);
             if (j instanceof ExpressionStatement) {
                 return j;
             } else if (j instanceof Expression) {
@@ -300,7 +300,7 @@ public interface P extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @AllArgsConstructor
-    final class PassStatement implements P, Statement {
+    final class PassStatement implements Py, Statement {
         @With
         @Getter
         UUID id;
@@ -314,8 +314,8 @@ public interface P extends J {
         Markers markers;
 
         @Override
-        public <Param> J acceptPython(PythonVisitor<Param> v, Param param) {
-            return v.visitPassStatement(this, param);
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitPassStatement(this, p);
         }
 
         @Transient
@@ -330,11 +330,11 @@ public interface P extends J {
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Data
-    final class Binary implements P, Expression, TypedTree {
+    final class Binary implements Py, Expression, TypedTree {
 
         @Nullable
         @NonFinal
-        transient WeakReference<P.Binary.Padding> padding;
+        transient WeakReference<Py.Binary.Padding> padding;
 
         @With
         @EqualsAndHashCode.Include
@@ -349,13 +349,13 @@ public interface P extends J {
         @With
         Expression left;
 
-        JLeftPadded<P.Binary.Type> operator;
+        JLeftPadded<Py.Binary.Type> operator;
 
-        public P.Binary.Type getOperator() {
+        public Py.Binary.Type getOperator() {
             return operator.getElement();
         }
 
-        public P.Binary withOperator(P.Binary.Type operator) {
+        public Py.Binary withOperator(Py.Binary.Type operator) {
             return getPadding().withOperator(this.operator.withElement(operator));
         }
 
@@ -388,15 +388,15 @@ public interface P extends J {
             RangeTo
         }
 
-        public P.Binary.Padding getPadding() {
-            P.Binary.Padding p;
+        public Py.Binary.Padding getPadding() {
+            Py.Binary.Padding p;
             if (this.padding == null) {
-                p = new P.Binary.Padding(this);
+                p = new Py.Binary.Padding(this);
                 this.padding = new WeakReference<>(p);
             } else {
                 p = this.padding.get();
                 if (p == null || p.t != this) {
-                    p = new P.Binary.Padding(this);
+                    p = new Py.Binary.Padding(this);
                     this.padding = new WeakReference<>(p);
                 }
             }
@@ -405,14 +405,14 @@ public interface P extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final P.Binary t;
+            private final Py.Binary t;
 
-            public JLeftPadded<P.Binary.Type> getOperator() {
+            public JLeftPadded<Py.Binary.Type> getOperator() {
                 return t.operator;
             }
 
-            public P.Binary withOperator(JLeftPadded<P.Binary.Type> operator) {
-                return t.operator == operator ? t : new P.Binary(t.id, t.prefix, t.markers, t.left, operator, t.right, t.after, t.type);
+            public Py.Binary withOperator(JLeftPadded<Py.Binary.Type> operator) {
+                return t.operator == operator ? t : new Py.Binary(t.id, t.prefix, t.markers, t.left, operator, t.right, t.after, t.type);
             }
         }
     }

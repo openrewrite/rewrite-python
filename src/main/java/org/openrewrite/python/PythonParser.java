@@ -15,7 +15,6 @@
  */
 package org.openrewrite.python;
 
-import com.intellij.lang.ASTNode;
 import com.jetbrains.python.psi.PyFile;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.IntelliJUtils;
 import org.openrewrite.python.internal.PsiPythonMapper;
-import org.openrewrite.python.tree.P;
+import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
 
 import java.io.ByteArrayInputStream;
@@ -41,13 +40,13 @@ import java.util.stream.StreamSupport;
 import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class PythonParser implements Parser<P.CompilationUnit> {
+public class PythonParser implements Parser<Py.CompilationUnit> {
     private final List<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
 
     @Override
-    public List<P.CompilationUnit> parse(String... sources) {
+    public List<Py.CompilationUnit> parse(String... sources) {
         List<Input> inputs = new ArrayList<>(sources.length);
         for (int i = 0; i < sources.length; i++) {
             Path path = Paths.get("p" + i + ".py");
@@ -67,7 +66,7 @@ public class PythonParser implements Parser<P.CompilationUnit> {
     }
 
     @Override
-    public List<P.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
+    public List<Py.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
         return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
             EncodingDetectingInputStream is = sourceFile.getSource(ctx);
 
@@ -108,7 +107,7 @@ public class PythonParser implements Parser<P.CompilationUnit> {
         private final List<NamedStyles> styles = new ArrayList<>();
 
         public Builder() {
-            super(P.CompilationUnit.class);
+            super(Py.CompilationUnit.class);
         }
 
         public Builder logCompilationWarningsAndErrors(boolean logCompilationWarningsAndErrors) {

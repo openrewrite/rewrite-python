@@ -29,18 +29,18 @@ import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.IsElIfBranch;
 import org.openrewrite.python.tree.*;
-import org.openrewrite.python.tree.P.Binary;
-import org.openrewrite.python.tree.P.CompilationUnit;
+import org.openrewrite.python.tree.Py.Binary;
+import org.openrewrite.python.tree.Py.CompilationUnit;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param>> {
+public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
 
     @Override
-    public J visit(@Nullable Tree tree, PrintOutputCapture<Param> p) {
-        if (!(tree instanceof P)) {
+    public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
+        if (!(tree instanceof Py)) {
             // re-route printing to the java printer
             return delegate.visit(tree, p);
         } else {
@@ -49,7 +49,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
     }
 
     @Override
-    public J visitJavaSourceFile(JavaSourceFile sourceFile, PrintOutputCapture<Param> p) {
+    public J visitJavaSourceFile(JavaSourceFile sourceFile, PrintOutputCapture<P> p) {
         CompilationUnit cu = (CompilationUnit) sourceFile;
 
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
@@ -70,14 +70,14 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
     }
 
     @Override
-    public J visitBinary(Binary binary, PrintOutputCapture<Param> p) {
+    public J visitBinary(Binary binary, PrintOutputCapture<P> p) {
         return binary;
     }
 
-    private class PythonJavaPrinter extends JavaPrinter<Param> {
+    private class PythonJavaPrinter extends JavaPrinter<P> {
         @Override
-        public J visit(@Nullable Tree tree, PrintOutputCapture<Param> p) {
-            if (tree instanceof P) {
+        public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
+            if (tree instanceof Py) {
                 // re-route printing back up to python
                 return PythonPrinter.this.visit(tree, p);
             } else {
@@ -86,7 +86,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
 
         @Override
-        public J visitClassDeclaration(J.ClassDeclaration classDecl, PrintOutputCapture<Param> p) {
+        public J visitClassDeclaration(J.ClassDeclaration classDecl, PrintOutputCapture<P> p) {
             beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
             p.append("class");
             visit(classDecl.getName(), p);
@@ -95,15 +95,13 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
                 visitContainer(omitParens ? "" : "(", classDecl.getPadding().getImplements(), JContainer.Location.IMPLEMENTS,
                         ",", omitParens ? "" : ")", p);
             }
-            p.append(":");
-
             visit(classDecl.getBody(), p);
             afterSyntax(classDecl, p);
             return classDecl;
         }
 
         @Override
-        public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<Param> p) {
+        public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<P> p) {
             beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
             visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, ":", p);
             afterSyntax(controlParens, p);
@@ -111,7 +109,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
 
         @Override
-        public J visitElse(J.If.Else elze, PrintOutputCapture<Param> p) {
+        public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
             beforeSyntax(elze, Space.Location.ELSE_PREFIX, p);
             if (elze.getMarkers().findFirst(IsElIfBranch.class).isPresent()) {
                 // TODO (gary, 2023-02-14) this is a bit mad
@@ -125,9 +123,10 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
 
         @Override
-        public J visitBlock(J.Block block, PrintOutputCapture<Param> p) {
+        public J visitBlock(J.Block block, PrintOutputCapture<P> p) {
             // blocks in Python are just collections of statements with no additional formatting
             beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
+            p.append(":");
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
             visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
             afterSyntax(block, p);
@@ -135,7 +134,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
 
         @Override
-        public J visitUnary(J.Unary unary, PrintOutputCapture<Param> p) {
+        public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
             beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
                 case Not:
@@ -154,7 +153,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
     }
 
-    protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<Param> p) {
+    protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<P> p) {
         if (paddedStat != null) {
             visit(paddedStat.getElement(), p);
             visitSpace(paddedStat.getAfter(), location.getAfterLocation(), p);
@@ -165,11 +164,11 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
     private static final UnaryOperator<String> PYTHON_MARKER_WRAPPER =
             out -> "/*~~" + out + (out.isEmpty() ? "" : "~~") + ">*/";
 
-    private void beforeSyntax(P k, PSpace.Location loc, PrintOutputCapture<Param> p) {
+    private void beforeSyntax(Py k, PSpace.Location loc, PrintOutputCapture<P> p) {
         beforeSyntax(k.getPrefix(), k.getMarkers(), loc, p);
     }
 
-    private void beforeSyntax(Space prefix, Markers markers, @Nullable PSpace.Location loc, PrintOutputCapture<Param> p) {
+    private void beforeSyntax(Space prefix, Markers markers, @Nullable PSpace.Location loc, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
             p.append(p.getMarkerPrinter().beforePrefix(marker, new Cursor(getCursor(), marker), PYTHON_MARKER_WRAPPER));
         }
@@ -182,11 +181,11 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
     }
 
-    private void beforeSyntax(P python, Location loc, PrintOutputCapture<Param> p) {
+    private void beforeSyntax(Py python, Location loc, PrintOutputCapture<P> p) {
         beforeSyntax(python.getPrefix(), python.getMarkers(), loc, p);
     }
 
-    private void beforeSyntax(Space prefix, Markers markers, @Nullable Location loc, PrintOutputCapture<Param> p) {
+    private void beforeSyntax(Space prefix, Markers markers, @Nullable Location loc, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
             p.append(p.getMarkerPrinter().beforePrefix(marker, new Cursor(getCursor(), marker), PYTHON_MARKER_WRAPPER));
         }
@@ -199,28 +198,28 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         }
     }
 
-    private void afterSyntax(P python, PrintOutputCapture<Param> p) {
+    private void afterSyntax(Py python, PrintOutputCapture<P> p) {
         afterSyntax(python.getMarkers(), p);
     }
 
-    private void afterSyntax(Markers markers, PrintOutputCapture<Param> p) {
+    private void afterSyntax(Markers markers, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
             p.append(p.getMarkerPrinter().afterSyntax(marker, new Cursor(getCursor(), marker), PYTHON_MARKER_WRAPPER));
         }
     }
 
     @Override
-    public Space visitSpace(Space space, PSpace.Location loc, PrintOutputCapture<Param> p) {
+    public Space visitSpace(Space space, PSpace.Location loc, PrintOutputCapture<P> p) {
         return delegate.visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
     }
 
     @Override
-    public Space visitSpace(Space space, Space.Location loc, PrintOutputCapture<Param> p) {
+    public Space visitSpace(Space space, Space.Location loc, PrintOutputCapture<P> p) {
         return delegate.visitSpace(space, loc, p);
     }
 
     protected void visitContainer(String before, @Nullable JContainer<? extends J> container, PContainer.Location location,
-                                  String suffixBetween, @Nullable String after, PrintOutputCapture<Param> p) {
+                                  String suffixBetween, @Nullable String after, PrintOutputCapture<P> p) {
         if (container == null) {
             return;
         }
@@ -230,7 +229,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
         p.append(after == null ? "" : after);
     }
 
-    protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PRightPadded.Location location, String suffixBetween, PrintOutputCapture<Param> p) {
+    protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PRightPadded.Location location, String suffixBetween, PrintOutputCapture<P> p) {
         for (int i = 0; i < nodes.size(); i++) {
             JRightPadded<? extends J> node = nodes.get(i);
             visit(node.getElement(), p);
@@ -242,7 +241,7 @@ public class PythonPrinter<Param> extends PythonVisitor<PrintOutputCapture<Param
     }
 
     @Override
-    public J visitPassStatement(P.PassStatement pass, PrintOutputCapture<Param> p) {
+    public J visitPassStatement(Py.PassStatement pass, PrintOutputCapture<P> p) {
         beforeSyntax(pass, PSpace.Location.PASS_PREFIX, p);
         p.append("pass");
         afterSyntax(pass, p);
