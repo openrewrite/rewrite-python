@@ -2,6 +2,7 @@ package org.openrewrite.python.internal;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.jetbrains.python.PyTokenTypes;
@@ -14,10 +15,7 @@ import org.openrewrite.java.tree.*;
 import org.openrewrite.python.tree.Py;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
@@ -58,6 +56,8 @@ public class PsiPythonMapper {
             return mapClassDeclarationStatement((PyClass) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
+        } else if (element instanceof PyFunction) {
+            return mapMethodDeclaration((PyFunction) element);
         } else if (element instanceof PyIfStatement) {
             return mapIfStatement((PyIfStatement) element);
         } else if (element instanceof PyPassStatement) {
@@ -67,6 +67,29 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Statement mapMethodDeclaration(PyFunction element) {
+        return new J.MethodDeclaration(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                emptyList(),
+                emptyList(),
+                null,
+                null,
+                new J.MethodDeclaration.IdentifierWithAnnotations(
+                        mapIdentifier(element).withPrefix(whitespaceBefore(element.getNameIdentifier())),
+                        emptyList()
+                ),
+                JContainer.empty(),
+                null,
+                mapBlock(element.getStatementList(),
+                        whitespaceBefore(findFirstPrevSibling(element.getStatementList(),
+                                e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON))),
+                null,
+                null
+        );
     }
 
     public Statement mapAssignmentStatement(PyAssignmentStatement element) {
@@ -130,7 +153,7 @@ public class PsiPythonMapper {
         Space blockPrefix = Space.EMPTY;
         PsiElement beforeColon = findFirstPrevSibling(element.getStatementList(), e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON)
                 .getPrevSibling();
-        if((beforeColon instanceof PyArgumentList && element.getSuperClassExpressionList() == null) || beforeColon instanceof PsiWhiteSpace) {
+        if ((beforeColon instanceof PyArgumentList && element.getSuperClassExpressionList() == null) || beforeColon instanceof PsiWhiteSpace) {
             blockPrefix = whitespaceBefore(beforeColon);
         }
 
@@ -301,7 +324,7 @@ public class PsiPythonMapper {
         } else if (element instanceof PyStringLiteralExpression) {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
-            return mapTargetExpression((PyTargetExpression) element);
+            return mapIdentifier((PyTargetExpression) element);
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
@@ -470,7 +493,7 @@ public class PsiPythonMapper {
         );
     }
 
-    public J.Identifier mapTargetExpression(PyTargetExpression element) {
+    public J.Identifier mapIdentifier(PsiNamedElement element) {
         return new J.Identifier(
                 randomId(),
                 whitespaceBefore(element),

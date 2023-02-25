@@ -136,6 +136,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
+            beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
+            p.append("def");
+            visit(method.getName(), p);
+            visitContainer("(", method.getPadding().getParameters(), JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p);
+            visit(method.getBody(), p);
+            afterSyntax(method, p);
+            return method;
+        }
+
+        @Override
         public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
             beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
