@@ -225,6 +225,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitNewArray(J.NewArray newArray, PrintOutputCapture<P> p) {
+            beforeSyntax(newArray, Space.Location.NEW_ARRAY_PREFIX, p);
+            visitContainer("[", newArray.getPadding().getInitializer(), JContainer.Location.NEW_ARRAY_INITIALIZER, ",", "]", p);
+            afterSyntax(newArray, p);
+            return newArray;
+        }
+
+        @Override
         protected void visitStatement(@Nullable JRightPadded<Statement> paddedStat, JRightPadded.Location location, PrintOutputCapture<P> p) {
             if (paddedStat == null) {
                 return;

@@ -449,6 +449,8 @@ public class PsiPythonMapper {
             return mapCallExpression((PyCallExpression) element);
         } else if (element instanceof PyKeywordArgument) {
             return mapKeywordArgument((PyKeywordArgument) element);
+        } else if (element instanceof PyListLiteralExpression) {
+            return mapListLiteral((PyListLiteralExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
         } else if (element instanceof PyParenthesizedExpression) {
@@ -466,6 +468,23 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Expression mapListLiteral(PyListLiteralExpression element) {
+        List<JRightPadded<Expression>> exprs = new ArrayList<>(element.getElements().length);
+        for (PyExpression pyExpression : element.getElements()) {
+            exprs.add(JRightPadded.build(mapExpression(pyExpression))
+                    .withAfter(whitespaceAfter(pyExpression)));
+        }
+        return new J.NewArray(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                null,
+                emptyList(),
+                JContainer.build(exprs),
+                null
+        );
     }
 
     private Expression mapKeywordArgument(PyKeywordArgument element) {
