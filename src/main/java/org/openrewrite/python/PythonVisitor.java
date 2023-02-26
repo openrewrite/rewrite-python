@@ -22,9 +22,6 @@ import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.CompilationUnit;
 import org.openrewrite.python.tree.*;
-import org.openrewrite.python.tree.Py.Binary;
-
-import java.util.List;
 
 /**
  * Visit K types.
@@ -66,23 +63,6 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         pass = pass.withPrefix(visitSpace(pass.getPrefix(), PSpace.Location.PASS_PREFIX, p));
         pass = pass.withMarkers(visitMarkers(pass.getMarkers(), p));
         return visitStatement(pass, p);
-    }
-
-    public J visitBinary(Binary binary, P p) {
-        Binary b = binary;
-        b = b.withPrefix(visitSpace(b.getPrefix(), PSpace.Location.BINARY_PREFIX, p));
-        b = b.withMarkers(visitMarkers(b.getMarkers(), p));
-        Expression temp = (Expression) visitExpression(b, p);
-        if (!(temp instanceof Binary)) {
-            return temp;
-        } else {
-            b = (Binary) temp;
-        }
-        b = b.withLeft(visitAndCast(b.getLeft(), p));
-        b = b.getPadding().withOperator(visitLeftPadded(b.getPadding().getOperator(), PLeftPadded.Location.BINARY_OPERATOR, p));
-        b = b.withRight(visitAndCast(b.getRight(), p));
-        b = b.withType(visitType(b.getType(), p));
-        return b;
     }
 
     public <T> JRightPadded<T> visitRightPadded(@Nullable JRightPadded<T> right, PRightPadded.Location loc, P p) {

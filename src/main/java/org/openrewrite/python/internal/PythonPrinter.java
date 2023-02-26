@@ -27,8 +27,10 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.*;
-import org.openrewrite.python.tree.Py.Binary;
+import org.openrewrite.python.tree.PContainer;
+import org.openrewrite.python.tree.PRightPadded;
+import org.openrewrite.python.tree.PSpace;
+import org.openrewrite.python.tree.Py;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -61,24 +63,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         return cu;
     }
 
-    @Override
-    public J visitBinary(Binary binary, PrintOutputCapture<P> p) {
-        Binary b = binary;
-        b = b.withPrefix(visitSpace(b.getPrefix(), PSpace.Location.BINARY_PREFIX, p));
-        b = b.withMarkers(visitMarkers(b.getMarkers(), p));
-        Expression temp = (Expression) visitExpression(b, p);
-        if (!(temp instanceof Binary)) {
-            return temp;
-        } else {
-            b = (Binary) temp;
-        }
-        b = b.withLeft(visitAndCast(b.getLeft(), p));
-        b = b.getPadding().withOperator(visitLeftPadded(b.getPadding().getOperator(), PLeftPadded.Location.BINARY_OPERATOR, p));
-        b = b.withRight(visitAndCast(b.getRight(), p));
-        b = b.withType(visitType(b.getType(), p));
-        return b;
-    }
-
     private class PythonJavaPrinter extends JavaPrinter<P> {
         @Override
         public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
@@ -88,6 +72,77 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             } else {
                 return super.visit(tree, p);
             }
+        }
+
+        @Override
+        public J visitBinary(J.Binary binary, PrintOutputCapture<P> p) {
+            String keyword = "";
+            switch (binary.getOperator()) {
+                case Addition:
+                    keyword = "+";
+                    break;
+                case Subtraction:
+                    keyword = "-";
+                    break;
+                case Multiplication:
+                    keyword = "*";
+                    break;
+                case Division:
+                    keyword = "/";
+                    break;
+                case Modulo:
+                    keyword = "%";
+                    break;
+                case LessThan:
+                    keyword = "<";
+                    break;
+                case GreaterThan:
+                    keyword = ">";
+                    break;
+                case LessThanOrEqual:
+                    keyword = "<=";
+                    break;
+                case GreaterThanOrEqual:
+                    keyword = ">=";
+                    break;
+                case Equal:
+                    keyword = "==";
+                    break;
+                case NotEqual:
+                    keyword = "!=";
+                    break;
+                case BitAnd:
+                    keyword = "&";
+                    break;
+                case BitOr:
+                    keyword = "|";
+                    break;
+                case BitXor:
+                    keyword = "^";
+                    break;
+                case LeftShift:
+                    keyword = "<<";
+                    break;
+                case RightShift:
+                    keyword = ">>";
+                    break;
+                case UnsignedRightShift:
+                    keyword = ">>>";
+                    break;
+                case Or:
+                    keyword = "or";
+                    break;
+                case And:
+                    keyword = "and";
+                    break;
+            }
+            beforeSyntax(binary, Space.Location.BINARY_PREFIX, p);
+            visit(binary.getLeft(), p);
+            visitSpace(binary.getPadding().getOperator().getBefore(), Space.Location.BINARY_OPERATOR, p);
+            p.append(keyword);
+            visit(binary.getRight(), p);
+            afterSyntax(binary, p);
+            return binary;
         }
 
         @Override
