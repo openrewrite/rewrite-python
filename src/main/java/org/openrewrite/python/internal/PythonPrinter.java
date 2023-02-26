@@ -27,9 +27,9 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.PContainer;
-import org.openrewrite.python.tree.PRightPadded;
-import org.openrewrite.python.tree.PSpace;
+import org.openrewrite.python.tree.PyContainer;
+import org.openrewrite.python.tree.PyRightPadded;
+import org.openrewrite.python.tree.PySpace;
 import org.openrewrite.python.tree.Py;
 
 import java.util.List;
@@ -53,14 +53,32 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         Py.CompilationUnit cu = (Py.CompilationUnit) sourceFile;
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
         for (JRightPadded<Import> anImport : cu.getPadding().getImports()) {
-            visitRightPadded(anImport, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
+            visitRightPadded(anImport, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
         }
         for (JRightPadded<Statement> statement : cu.getPadding().getStatements()) {
-            visitRightPadded(statement, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
+            visitRightPadded(statement, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
         }
         visitSpace(cu.getEof(), Location.COMPILATION_UNIT_EOF, p);
         afterSyntax(cu, p);
         return cu;
+    }
+
+    @Override
+    public J visitDictLiteral(Py.DictLiteral dict, PrintOutputCapture<P> p) {
+        beforeSyntax(dict, PySpace.Location.DICT_LITERAL_PREFIX, p);
+        visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);
+        afterSyntax(dict, p);
+        return dict;
+    }
+
+    @Override
+    public J visitKeyValue(Py.KeyValue keyValue, PrintOutputCapture<P> p) {
+        beforeSyntax(keyValue, PySpace.Location.KEY_VALUE_PREFIX, p);
+        visitRightPadded(keyValue.getPadding().getKey(), PyRightPadded.Location.KEY_VALUE_KEY_SUFFIX, p);
+        p.append(':');
+        visit(keyValue.getValue(), p);
+        afterSyntax(keyValue, p);
+        return keyValue;
     }
 
     private class PythonJavaPrinter extends JavaPrinter<P> {
@@ -267,11 +285,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     private static final UnaryOperator<String> PYTHON_MARKER_WRAPPER =
             out -> "/*~~" + out + (out.isEmpty() ? "" : "~~") + ">*/";
 
-    private void beforeSyntax(Py k, PSpace.Location loc, PrintOutputCapture<P> p) {
+    private void beforeSyntax(Py k, PySpace.Location loc, PrintOutputCapture<P> p) {
         beforeSyntax(k.getPrefix(), k.getMarkers(), loc, p);
     }
 
-    private void beforeSyntax(Space prefix, Markers markers, @Nullable PSpace.Location loc, PrintOutputCapture<P> p) {
+    private void beforeSyntax(Space prefix, Markers markers, @Nullable PySpace.Location loc, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
             p.append(p.getMarkerPrinter().beforePrefix(marker, new Cursor(getCursor(), marker), PYTHON_MARKER_WRAPPER));
         }
@@ -312,7 +330,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public Space visitSpace(Space space, PSpace.Location loc, PrintOutputCapture<P> p) {
+    public Space visitSpace(Space space, PySpace.Location loc, PrintOutputCapture<P> p) {
         return delegate.visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
     }
 
@@ -321,7 +339,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         return delegate.visitSpace(space, loc, p);
     }
 
-    protected void visitContainer(String before, @Nullable JContainer<? extends J> container, PContainer.Location location,
+    protected void visitContainer(String before, @Nullable JContainer<? extends J> container, PyContainer.Location location,
                                   String suffixBetween, @Nullable String after, PrintOutputCapture<P> p) {
         if (container == null) {
             return;
@@ -332,7 +350,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         p.append(after == null ? "" : after);
     }
 
-    protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PRightPadded.Location location, String suffixBetween, PrintOutputCapture<P> p) {
+    protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PyRightPadded.Location location, String suffixBetween, PrintOutputCapture<P> p) {
         for (int i = 0; i < nodes.size(); i++) {
             JRightPadded<? extends J> node = nodes.get(i);
             visit(node.getElement(), p);
@@ -345,7 +363,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitPassStatement(Py.PassStatement pass, PrintOutputCapture<P> p) {
-        beforeSyntax(pass, PSpace.Location.PASS_PREFIX, p);
+        beforeSyntax(pass, PySpace.Location.PASS_PREFIX, p);
         p.append("pass");
         afterSyntax(pass, p);
         return pass;

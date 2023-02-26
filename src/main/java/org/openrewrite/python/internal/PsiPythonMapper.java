@@ -408,25 +408,6 @@ public class PsiPythonMapper {
             Statement statement = mapStatement(pyStatement);
             statements.add(JRightPadded.build(statement).withAfter(whitespaceAfter(pyStatement)));
         }
-
-//        Space blockPrefix = Space.EMPTY;
-//        PsiElement e = element.getPrevSibling();
-//        boolean foundColon = false;
-//        // when the colon is preceded by an argument list (like in a ClassDeclaration) and that argument list
-//        // has omitted parentheses, the white space is actually BEFORE the argument list in PSI
-//        while (e != null) {
-//            if (!foundColon && e instanceof LeafPsiElement &&
-//                ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON) {
-//                foundColon = true;
-//            } else if (foundColon) {
-//                if (e instanceof PyArgumentList || e instanceof PsiWhiteSpace) {
-//                    blockPrefix = whitespaceBefore(e);
-//                }
-//                break;
-//            }
-//            e = e.getPrevSibling();
-//        }
-
         return new J.Block(
                 randomId(),
                 blockPrefix,
@@ -447,6 +428,10 @@ public class PsiPythonMapper {
             return mapBooleanLiteral((PyBoolLiteralExpression) element);
         } else if (element instanceof PyCallExpression) {
             return mapCallExpression((PyCallExpression) element);
+        } else if (element instanceof PyDictLiteralExpression) {
+            return mapDictLiteralExpression((PyDictLiteralExpression) element);
+        } else if (element instanceof PyKeyValueExpression) {
+            return mapKeyValueExpression((PyKeyValueExpression) element);
         } else if (element instanceof PyKeywordArgument) {
             return mapKeywordArgument((PyKeywordArgument) element);
         } else if (element instanceof PyListLiteralExpression) {
@@ -468,6 +453,31 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Expression mapDictLiteralExpression(PyDictLiteralExpression element) {
+        List<JRightPadded<Py.KeyValue>> elements = new ArrayList<>(element.getElements().length);
+        for (PyKeyValueExpression e : element.getElements()) {
+            elements.add(JRightPadded.build(mapKeyValueExpression(e)).withAfter(whitespaceAfter(e)));
+        }
+        return new Py.DictLiteral(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                JContainer.build(elements),
+                null
+        );
+    }
+
+    private Py.KeyValue mapKeyValueExpression(PyKeyValueExpression element) {
+        return new Py.KeyValue(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                JRightPadded.build(mapExpression(element.getKey())).withAfter(whitespaceAfter(element.getKey())),
+                mapExpression(element.getValue()),
+                null
+        );
     }
 
     private Expression mapListLiteral(PyListLiteralExpression element) {

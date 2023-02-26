@@ -53,6 +53,35 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return c;
     }
 
+    public J visitKeyValue(Py.KeyValue keyValue, P p) {
+        Py.KeyValue e = keyValue;
+        e = e.withPrefix(visitSpace(e.getPrefix(), PySpace.Location.DICT_ENTRY, p));
+        Expression temp = (Expression) visitExpression(e, p);
+        if (!(temp instanceof Py.KeyValue)) {
+            return temp;
+        } else {
+            e = (Py.KeyValue) temp;
+        }
+        e = e.getPadding().withKey(visitRightPadded(e.getPadding().getKey(), PyRightPadded.Location.DICT_ENTRY_KEY, p));
+        e = e.withValue(visitAndCast(e.getValue(), p));
+        e = e.withType(visitType(e.getType(), p));
+        return e;
+    }
+
+    public J visitDictLiteral(Py.DictLiteral dict, P p) {
+        Py.DictLiteral d = dict;
+        d = d.withPrefix(visitSpace(d.getPrefix(), PySpace.Location.DICT_LITERAL_PREFIX, p));
+        d = d.withMarkers(visitMarkers(d.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(d, p);
+        if (!(temp instanceof Py.DictLiteral)) {
+            return temp;
+        } else {
+            d = (Py.DictLiteral) temp;
+        }
+        d = d.getPadding().withElements(visitContainer(d.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, p));
+        return d;
+    }
+
     @Override
     public J visitCompilationUnit(CompilationUnit cu, P p) {
         throw new UnsupportedOperationException("Python has a different structure for its compilation unit. See P.CompilationUnit.");
@@ -60,24 +89,24 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
 
     public J visitPassStatement(Py.PassStatement ogPass, P p) {
         Py.PassStatement pass = ogPass;
-        pass = pass.withPrefix(visitSpace(pass.getPrefix(), PSpace.Location.PASS_PREFIX, p));
+        pass = pass.withPrefix(visitSpace(pass.getPrefix(), PySpace.Location.PASS_PREFIX, p));
         pass = pass.withMarkers(visitMarkers(pass.getMarkers(), p));
         return visitStatement(pass, p);
     }
 
-    public <T> JRightPadded<T> visitRightPadded(@Nullable JRightPadded<T> right, PRightPadded.Location loc, P p) {
+    public <T> JRightPadded<T> visitRightPadded(@Nullable JRightPadded<T> right, PyRightPadded.Location loc, P p) {
         return super.visitRightPadded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p);
     }
 
-    public <T> JLeftPadded<T> visitLeftPadded(JLeftPadded<T> left, PLeftPadded.Location loc, P p) {
-        return super.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
-    }
+//    public <T> JLeftPadded<T> visitLeftPadded(JLeftPadded<T> left, PyLeftPadded.Location loc, P p) {
+//        return super.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
+//    }
 
-    public Space visitSpace(Space space, PSpace.Location loc, P p) {
+    public Space visitSpace(Space space, PySpace.Location loc, P p) {
         return visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
     }
 
-    public <J2 extends J> JContainer<J2> visitContainer(JContainer<J2> container, PContainer.Location loc, P p) {
+    public <J2 extends J> JContainer<J2> visitContainer(JContainer<J2> container, PyContainer.Location loc, P p) {
         return super.visitContainer(container, JContainer.Location.LANGUAGE_EXTENSION, p);
     }
 }

@@ -15,18 +15,15 @@
  */
 package org.openrewrite.python.tree;
 
-public class PRightPadded {
+public class PySpace {
     public enum Location {
-        TOP_LEVEL_STATEMENT_SUFFIX(PSpace.Location.TOP_LEVEL_STATEMENT);
-
-        private final PSpace.Location afterLocation;
-
-        Location(PSpace.Location afterLocation) {
-            this.afterLocation = afterLocation;
-        }
-
-        public PSpace.Location getAfterLocation() {
-            return afterLocation;
-        }
+        DICT_ENTRY,
+        DICT_ENTRY_KEY_SUFFIX,
+        DICT_LITERAL_ELEMENT_SUFFIX,
+        DICT_LITERAL_PREFIX,
+        KEY_VALUE_PREFIX,
+        KEY_VALUE_SUFFIX,
+        PASS_PREFIX,
+        TOP_LEVEL_STATEMENT
     }
 }

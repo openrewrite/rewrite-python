@@ -15,18 +15,21 @@
  */
 package org.openrewrite.python.tree;
 
-public class PLeftPadded {
+public class PyRightPadded {
     public enum Location {
-        BINARY_OPERATOR(PSpace.Location.BINARY_OPERATOR);
+        TOP_LEVEL_STATEMENT_SUFFIX(PySpace.Location.TOP_LEVEL_STATEMENT),
+        DICT_LITERAL_ELEMENT(PySpace.Location.DICT_LITERAL_ELEMENT_SUFFIX),
+        DICT_ENTRY_KEY(PySpace.Location.DICT_ENTRY_KEY_SUFFIX),
+        KEY_VALUE_KEY_SUFFIX(PySpace.Location.KEY_VALUE_SUFFIX);
 
-        private final PSpace.Location beforeLocation;
+        private final PySpace.Location afterLocation;
 
-        Location(PSpace.Location beforeLocation) {
-            this.beforeLocation = beforeLocation;
+        Location(PySpace.Location afterLocation) {
+            this.afterLocation = afterLocation;
         }
 
-        public PSpace.Location getBeforeLocation() {
-            return beforeLocation;
+        public PySpace.Location getAfterLocation() {
+            return afterLocation;
         }
     }
 }

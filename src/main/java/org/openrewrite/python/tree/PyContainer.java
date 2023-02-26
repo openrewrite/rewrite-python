@@ -15,25 +15,23 @@
  */
 package org.openrewrite.python.tree;
 
-public class PContainer {
+public class PyContainer {
     public enum Location {
-//        LIST_LITERAL_ELEMENTS(PSpace.Location.LIST_LITERAL_ELEMENTS, PRightPadded.Location.LIST_LITERAL_ELEMENT_SUFFIX),
-//        WHEN_BRANCH_EXPRESSION(PSpace.Location.WHEN_BRANCH_EXPRESSION, PRightPadded.Location.WHEN_BRANCH_EXPRESSION);
-        TMP(PSpace.Location.TOP_LEVEL_STATEMENT, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX);
+        DICT_LITERAL_ELEMENTS(PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT);
 
-        private final PSpace.Location beforeLocation;
-        private final PRightPadded.Location elementLocation;
+        private final PySpace.Location beforeLocation;
+        private final PyRightPadded.Location elementLocation;
 
-        Location(PSpace.Location beforeLocation, PRightPadded.Location elementLocation) {
+        Location(PySpace.Location beforeLocation, PyRightPadded.Location elementLocation) {
             this.beforeLocation = beforeLocation;
             this.elementLocation = elementLocation;
         }
 
-        public PSpace.Location getBeforeLocation() {
+        public PySpace.Location getBeforeLocation() {
             return beforeLocation;
         }
 
-        public PRightPadded.Location getElementLocation() {
+        public PyRightPadded.Location getElementLocation() {
             return elementLocation;
         }
     }

@@ -287,6 +287,7 @@ public interface Py extends J {
 
         @Override
         public <T extends J> T withType(@Nullable JavaType type) {
+            //noinspection unchecked
             return (T) withExpression(expression.withType(type));
         }
 
@@ -294,6 +295,165 @@ public interface Py extends J {
         @Override
         public CoordinateBuilder.Statement getCoordinates() {
             return new CoordinateBuilder.Statement(this);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class KeyValue implements Py, Expression, TypedTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        JRightPadded<Expression> key;
+
+        public Expression getKey() {
+            return key.getElement();
+        }
+
+        public KeyValue withKey(@Nullable Expression key) {
+            return getPadding().withKey(JRightPadded.withElement(this.key, key));
+        }
+
+        @Getter
+        @With
+        Expression value;
+
+        @Getter
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitKeyValue(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final KeyValue t;
+
+            @Nullable
+            public JRightPadded<Expression> getKey() {
+                return t.key;
+            }
+
+            public KeyValue withKey(@Nullable JRightPadded<Expression> key) {
+                return t.key == key ? t : new KeyValue(t.id, t.prefix, t.markers, key, t.value, t.type);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class DictLiteral implements Py, Expression, TypedTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        JContainer<KeyValue> elements;
+
+        public List<KeyValue> getElements() {
+            return elements.getElements();
+        }
+
+        public DictLiteral withElements(List<KeyValue> elements) {
+            return getPadding().withElements(JContainer.withElements(this.elements, elements));
+        }
+
+        @Getter
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitDictLiteral(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final DictLiteral t;
+
+            public JContainer<KeyValue> getElements() {
+                return t.elements;
+            }
+
+            public DictLiteral withElements(JContainer<KeyValue> elements) {
+                return t.elements == elements ? t : new DictLiteral(t.id, t.prefix, t.markers, elements, t.type);
+            }
         }
     }
 

@@ -15,25 +15,17 @@
  */
 package org.openrewrite.python.tree;
 
-public class PSpace {
-    public enum Location {
-        OBJECT_PREFIX,
-        BINARY_PREFIX,
-        BINARY_OPERATOR,
-        BINARY_SUFFIX,
-        FILE_ANNOTATION_SUFFIX,
-        FUNCTION_TYPE_RECEIVER,
-        IS_NULLABLE_PREFIX,
-        KSTRING_PREFIX,
-        LIST_LITERAL_PREFIX,
-        LIST_LITERAL_ELEMENTS,
-        LIST_LITERAL_ELEMENT_SUFFIX,
-        PASS_PREFIX,
-        KRETURN_PREFIX,
-        TOP_LEVEL_STATEMENT,
-        TYPE_REFERENCE_PREFIX,
-        WHEN_PREFIX,
-        WHEN_BRANCH_EXPRESSION,
-        WHEN_BRANCH_PREFIX
-    }
+public class PyLeftPadded {
+//    public enum Location {
+//
+//        private final PySpace.Location beforeLocation;
+//
+//        Location(PySpace.Location beforeLocation) {
+//            this.beforeLocation = beforeLocation;
+//        }
+//
+//        public PySpace.Location getBeforeLocation() {
+//            return beforeLocation;
+//        }
+//    }
 }
