@@ -235,7 +235,7 @@ public class PsiPythonMapper {
 
         return new J.Assignment(
                 randomId(),
-                whitespaceBefore(pyLhs),
+                whitespaceBefore(element),
                 EMPTY,
                 lhs,
                 JLeftPadded.build(rhs).withBefore(whitespaceBefore(pyRhs)),
