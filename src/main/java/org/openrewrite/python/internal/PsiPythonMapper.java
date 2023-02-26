@@ -70,6 +70,8 @@ public class PsiPythonMapper {
             return mapIfStatement((PyIfStatement) element);
         } else if (element instanceof PyPassStatement) {
             return mapPassStatement((PyPassStatement) element);
+        } else if (element instanceof PyReturnStatement) {
+            return mapReturnStatement((PyReturnStatement) element);
         } else if (element instanceof PyStatementList) {
             return mapBlock((PyStatementList) element, Space.EMPTY);
         } else if (element instanceof PyWhileStatement) {
@@ -77,6 +79,15 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private Statement mapReturnStatement(PyReturnStatement element) {
+        return new J.Return(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                mapExpression(element.getExpression())
+        );
     }
 
     private Statement mapWhile(PyWhileStatement element) {
