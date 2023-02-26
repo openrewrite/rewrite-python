@@ -24,6 +24,8 @@ import org.openrewrite.java.tree.J.CompilationUnit;
 import org.openrewrite.python.tree.*;
 import org.openrewrite.python.tree.Py.Binary;
 
+import java.util.List;
+
 /**
  * Visit K types.
  */

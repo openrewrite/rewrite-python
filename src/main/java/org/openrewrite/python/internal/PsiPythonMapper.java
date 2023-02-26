@@ -16,9 +16,7 @@ import org.openrewrite.python.tree.Py;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
@@ -449,6 +447,8 @@ public class PsiPythonMapper {
             return mapBooleanLiteral((PyBoolLiteralExpression) element);
         } else if (element instanceof PyCallExpression) {
             return mapCallExpression((PyCallExpression) element);
+        } else if (element instanceof PyKeywordArgument) {
+            return mapKeywordArgument((PyKeywordArgument) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
         } else if (element instanceof PyParenthesizedExpression) {
@@ -468,6 +468,25 @@ public class PsiPythonMapper {
         return null;
     }
 
+    private Expression mapKeywordArgument(PyKeywordArgument element) {
+        return new J.Assignment(
+                randomId(),
+                whitespaceBefore(element),
+                EMPTY,
+                new J.Identifier(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        requireNonNull(element.getKeyword()),
+                        null,
+                        null
+                ),
+                JLeftPadded.build(mapExpression(element.getValueExpression()))
+                        .withBefore(whitespaceBefore(element.getValueExpression())),
+                null
+        );
+    }
+
     private Expression mapParenthesizedExpression(PyParenthesizedExpression element) {
         return new J.Parentheses<>(
                 randomId(),
@@ -478,43 +497,40 @@ public class PsiPythonMapper {
         );
     }
 
-    public Expression expectExpression(PsiElement element) {
-        if (!(element instanceof PyExpression)) {
-            throw new RuntimeException("expected expression; found: " + element.getClass().getSimpleName());
-        }
-        return mapExpression((PyExpression) element);
-    }
-
-
-    private final static Map<PyElementType, J.Binary.Type> binaryOperatorTypeMappings = new HashMap<>();
-
-    // FIXME don't use a map here -- use a switch statement computationally cheaper
-    static {
-        // Comparison
-        binaryOperatorTypeMappings.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
-        binaryOperatorTypeMappings.put(PyTokenTypes.LE, J.Binary.Type.LessThanOrEqual);
-        binaryOperatorTypeMappings.put(PyTokenTypes.GT, J.Binary.Type.GreaterThan);
-        binaryOperatorTypeMappings.put(PyTokenTypes.GE, J.Binary.Type.GreaterThanOrEqual);
-        binaryOperatorTypeMappings.put(PyTokenTypes.EQEQ, J.Binary.Type.Equal);
-        binaryOperatorTypeMappings.put(PyTokenTypes.NE, J.Binary.Type.NotEqual);
-
-        // Arithmetic
-        binaryOperatorTypeMappings.put(PyTokenTypes.DIV, J.Binary.Type.Division);
-        binaryOperatorTypeMappings.put(PyTokenTypes.MINUS, J.Binary.Type.Subtraction);
-        binaryOperatorTypeMappings.put(PyTokenTypes.MULT, J.Binary.Type.Multiplication);
-        binaryOperatorTypeMappings.put(PyTokenTypes.PLUS, J.Binary.Type.Addition);
-    }
-
     public J.Binary mapBinaryExpression(PyBinaryExpression element) {
         Expression lhs = mapExpression(element.getLeftExpression());
         Expression rhs = mapExpression(element.getRightExpression());
         Space beforeOperatorSpace = whitespaceAfter(element.getLeftExpression());
 
+        J.Binary.Type operatorType;
         PyElementType pyOperatorType = element.getOperator();
-        J.Binary.Type operatorType = binaryOperatorTypeMappings.get(pyOperatorType);
-
-        if (operatorType == null) {
-            throw new RuntimeException("unsupported binary expression operator: " + pyOperatorType);
+        if (pyOperatorType == PyTokenTypes.LT) {
+            operatorType = J.Binary.Type.LessThan;
+        } else if (pyOperatorType == PyTokenTypes.LE) {
+            operatorType = J.Binary.Type.LessThanOrEqual;
+        } else if (pyOperatorType == PyTokenTypes.GT) {
+            operatorType = J.Binary.Type.GreaterThan;
+        } else if (pyOperatorType == PyTokenTypes.GE) {
+            operatorType = J.Binary.Type.GreaterThanOrEqual;
+        } else if (pyOperatorType == PyTokenTypes.EQEQ) {
+            operatorType = J.Binary.Type.Equal;
+        } else if (pyOperatorType == PyTokenTypes.NE) {
+            operatorType = J.Binary.Type.NotEqual;
+        } else if (pyOperatorType == PyTokenTypes.DIV) {
+            operatorType = J.Binary.Type.Division;
+        } else if (pyOperatorType == PyTokenTypes.MINUS) {
+            operatorType = J.Binary.Type.Subtraction;
+        } else if (pyOperatorType == PyTokenTypes.MULT) {
+            operatorType = J.Binary.Type.Multiplication;
+        } else if (pyOperatorType == PyTokenTypes.PLUS) {
+            operatorType = J.Binary.Type.Addition;
+        } else if (pyOperatorType == PyTokenTypes.OR_KEYWORD) {
+            operatorType = J.Binary.Type.Or;
+        } else if (pyOperatorType == PyTokenTypes.AND_KEYWORD) {
+            operatorType = J.Binary.Type.And;
+        } else {
+            System.err.println("WARNING: unhandled binary operator type " + pyOperatorType);
+            return null;
         }
 
         return new J.Binary(

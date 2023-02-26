@@ -27,12 +27,8 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.PContainer;
-import org.openrewrite.python.tree.PRightPadded;
-import org.openrewrite.python.tree.PSpace;
-import org.openrewrite.python.tree.Py;
+import org.openrewrite.python.tree.*;
 import org.openrewrite.python.tree.Py.Binary;
-import org.openrewrite.python.tree.Py.CompilationUnit;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -52,20 +48,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitJavaSourceFile(JavaSourceFile sourceFile, PrintOutputCapture<P> p) {
-        CompilationUnit cu = (CompilationUnit) sourceFile;
-
+        Py.CompilationUnit cu = (Py.CompilationUnit) sourceFile;
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
-
-//        visit(((CompilationUnit) sourceFile).getAnnotations(), p);
-
-        for (JRightPadded<Import> imprt : cu.getPadding().getImports()) {
-            visitRightPadded(imprt, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
+        for (JRightPadded<Import> anImport : cu.getPadding().getImports()) {
+            visitRightPadded(anImport, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
         }
-
         for (JRightPadded<Statement> statement : cu.getPadding().getStatements()) {
             visitRightPadded(statement, PRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
         }
-
         visitSpace(cu.getEof(), Location.COMPILATION_UNIT_EOF, p);
         afterSyntax(cu, p);
         return cu;
@@ -73,7 +63,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitBinary(Binary binary, PrintOutputCapture<P> p) {
-        return binary;
+        Binary b = binary;
+        b = b.withPrefix(visitSpace(b.getPrefix(), PSpace.Location.BINARY_PREFIX, p));
+        b = b.withMarkers(visitMarkers(b.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(b, p);
+        if (!(temp instanceof Binary)) {
+            return temp;
+        } else {
+            b = (Binary) temp;
+        }
+        b = b.withLeft(visitAndCast(b.getLeft(), p));
+        b = b.getPadding().withOperator(visitLeftPadded(b.getPadding().getOperator(), PLeftPadded.Location.BINARY_OPERATOR, p));
+        b = b.withRight(visitAndCast(b.getRight(), p));
+        b = b.withType(visitType(b.getType(), p));
+        return b;
     }
 
     private class PythonJavaPrinter extends JavaPrinter<P> {

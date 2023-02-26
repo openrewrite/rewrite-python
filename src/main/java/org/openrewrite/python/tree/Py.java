@@ -37,6 +37,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public interface Py extends J {
+
     @SuppressWarnings("unchecked")
     @Override
     default <R extends Tree, P> R accept(TreeVisitor<R, P> v, P p) {
@@ -383,8 +384,6 @@ public interface Py extends J {
         public enum Type {
             Contains,
             Get,
-            IdentityEquals,
-            IdentityNotEquals,
             RangeTo
         }
 

@@ -1,7 +1,6 @@
 package org.openrewrite.python.tree;
 
 import org.intellij.lang.annotations.Language;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -27,8 +26,6 @@ public class MethodInvocationTest implements RewriteTest {
         /*
             This appears as a `qualifier` on `PyReferenceExpression`.
             This should be straightforward to implement but isn't done.
-
-            —gary olsen, 2023-02-10
          */
         rewriteRun(python("int.bit_length(42)"));
     }
