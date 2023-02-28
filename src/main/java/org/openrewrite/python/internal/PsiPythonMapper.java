@@ -24,7 +24,6 @@ import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
-import org.openrewrite.Tree;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
@@ -34,7 +33,6 @@ import org.openrewrite.python.tree.Py;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
@@ -241,7 +239,7 @@ public class PsiPythonMapper {
                 emptyList(),
                 null,
                 new J.Empty(
-                        Tree.randomId(),
+                        randomId(),
                         whitespaceBefore(findToken(element, PyTokenTypes.DEF_KEYWORD)),
                         EMPTY
                 ),
@@ -350,7 +348,7 @@ public class PsiPythonMapper {
 
     public J.Annotation mapDecorator(PyDecorator pyDecorator) {
         J.Identifier name = new J.Identifier(
-                Tree.randomId(),
+                randomId(),
                 Space.EMPTY,
                 EMPTY,
                 expectSimpleName(pyDecorator.getQualifiedName()),
@@ -383,7 +381,7 @@ public class PsiPythonMapper {
 //            }
 //        }
         return new J.Annotation(
-                Tree.randomId(),
+                randomId(),
                 whitespaceBefore(pyDecorator),
                 EMPTY,
                 name,
@@ -715,7 +713,7 @@ public class PsiPythonMapper {
             return JContainer.build(singletonList(
                     JRightPadded.build(
                             new J.Empty(
-                                    Tree.randomId(),
+                                    randomId(),
                                     whitespaceBefore(findToken(pyArgumentList, PyTokenTypes.RPAR)),
                                     EMPTY
                             )
