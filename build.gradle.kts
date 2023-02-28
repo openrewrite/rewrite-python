@@ -1,26 +1,25 @@
 plugins {
-    id("org.openrewrite.build.language-library") version "latest.release"
-    java
+    id("org.openrewrite.build.recipe-library") version "latest.release"
+    id("org.openrewrite.build.shadow") version "latest.release"
 }
 group = "org.openrewrite"
 description = "Rewrite Python"
 
 task("printIntellijDependencies", JavaExec::class) {
-    main = "org.openrewrite.python.internal.CollectIntelliJDependencies"
+    mainClass.set("org.openrewrite.python.internal.CollectIntelliJDependencies")
     classpath = sourceSets["main"].runtimeClasspath
     jvmArgs = listOf("-verbose:class", "-XX:-OmitStackTraceInFastThrow", "-Xmx2G")
 }
 
+val latest = rewriteRecipe.rewriteVersion.get()
+val lib = fileTree("lib")
 dependencies {
-    annotationProcessor("org.projectlombok:lombok:latest.release")
-
     compileOnly("org.openrewrite:rewrite-test")
-    compileOnly("org.projectlombok:lombok:latest.release")
 
-    implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:latest.integration"))
+    implementation(platform("org.openrewrite:rewrite-bom:$latest"))
     implementation("org.openrewrite:rewrite-java")
+    implementation(lib)
 
-    implementation(fileTree("lib") { include("*.jar") })
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
@@ -33,4 +32,11 @@ dependencies {
     testImplementation("org.openrewrite:rewrite-test")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
+}
+
+val shadowJar = tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    from(lib)
+    dependencies {
+        include { _ -> false }
+    }
 }
