@@ -28,6 +28,7 @@ public class MethodInvocationTest implements RewriteTest {
     @ParameterizedTest
     //language=py
     @ValueSource(strings = {
+      "print()", "print( )",
       "print(42)", "print( 42 )", "print(1, 2, 3, 4)",
       "print( 1, 2, 3, 4 )", "print(1 , 2 , 3 , 4)",
       "print(1, 2, 3, 4, sep='+')"
