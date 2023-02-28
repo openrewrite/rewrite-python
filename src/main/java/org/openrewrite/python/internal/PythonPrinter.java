@@ -166,6 +166,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitClassDeclaration(J.ClassDeclaration classDecl, PrintOutputCapture<P> p) {
             beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
+            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            visit(classDecl.getLeadingAnnotations(), p);
+            visit(classDecl.getAnnotations().getKind().getAnnotations(), p);
+            visitSpace(classDecl.getAnnotations().getKind().getPrefix(), Space.Location.CLASS_KIND, p);
             p.append("class");
             visit(classDecl.getName(), p);
             if (classDecl.getPadding().getImplements() != null) {
@@ -234,6 +238,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
+            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            visit(method.getLeadingAnnotations(), p);
+            visit(method.getReturnTypeExpression(), p);
             p.append("def");
             visit(method.getName(), p);
             visitContainer("(", method.getPadding().getParameters(), JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p);

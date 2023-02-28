@@ -20,6 +20,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
@@ -32,6 +33,7 @@ import org.openrewrite.python.tree.Py;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
@@ -234,10 +236,14 @@ public class PsiPythonMapper {
                 randomId(),
                 whitespaceBefore(element),
                 EMPTY,
-                emptyList(),
+                mapDecoratorList(element.getDecoratorList()),
                 emptyList(),
                 null,
-                null,
+                new J.Empty(
+                        UUID.randomUUID(),
+                        whitespaceBefore(findToken(element, PyTokenTypes.DEF_KEYWORD)),
+                        EMPTY
+                ),
                 new J.MethodDeclaration.IdentifierWithAnnotations(
                         mapIdentifier(element).withPrefix(whitespaceBefore(element.getNameIdentifier())),
                         emptyList()
@@ -270,9 +276,10 @@ public class PsiPythonMapper {
     }
 
     public Statement mapClassDeclarationStatement(PyClass element) {
+        PsiElement classKeyword = findToken(element, PyTokenTypes.CLASS_KEYWORD);
         J.ClassDeclaration.Kind kind = new J.ClassDeclaration.Kind(
                 randomId(),
-                Space.EMPTY,
+                whitespaceBefore(classKeyword),
                 EMPTY,
                 emptyList(),
                 J.ClassDeclaration.Kind.Type.Class
@@ -310,6 +317,11 @@ public class PsiPythonMapper {
             implementings = implementings.withMarkers(implementings.getMarkers().add(new OmitParentheses(randomId())));
         }
 
+        List<J.Annotation> decorators = mapDecoratorList(element.getDecoratorList());
+        if (!decorators.isEmpty()) {
+            kind = kind.withAnnotations(decorators);
+        }
+
         Space blockPrefix = Space.EMPTY;
         PsiElement beforeColon = findFirstPrevSibling(element.getStatementList(), e -> e instanceof LeafPsiElement && ((LeafPsiElement) e).getElementType() == PyTokenTypes.COLON)
                 .getPrevSibling();
@@ -333,6 +345,61 @@ public class PsiPythonMapper {
                 mapBlock(element.getStatementList(), blockPrefix),
                 null
         );
+    }
+
+    public J.Annotation mapDecorator(PyDecorator pyDecorator) {
+        J.Identifier name = new J.Identifier(
+                UUID.randomUUID(),
+                Space.EMPTY,
+                EMPTY,
+                expectSimpleName(pyDecorator.getQualifiedName()),
+                null,
+                null
+        );
+
+        JContainer<Expression> arguments = mapArgumentList(pyDecorator.getArgumentList());
+
+//        PyArgumentList pyArgumentList = pyDecorator.getArgumentList();
+//        if (pyArgumentList != null) {
+//            if (pyArgumentList.getArguments().length == 0) {
+//                arguments = JContainer.build(singletonList(
+//                        JRightPadded.build(
+//                                new J.Empty(
+//                                        randomId(),
+//                                        whitespaceBefore(
+//                                                findKeyword(pyArgumentList, PyTokenTypes.RPAR)
+//                                        ),
+//                                        EMPTY
+//                                )
+//                        )
+//                ));
+//            } else {
+//                List<JRightPadded<Expression>> expressions = new ArrayList<>(pyArgumentList.getArguments().length);
+//                for (PyExpression expression : pyArgumentList.getArguments()) {
+//                    expressions.add(JRightPadded.build(mapExpression(expression)));
+//                }
+//                arguments = JContainer.build(expressions);
+//            }
+//        }
+        return new J.Annotation(
+                UUID.randomUUID(),
+                whitespaceBefore(pyDecorator),
+                EMPTY,
+                name,
+                arguments
+        );
+    }
+
+    public List<J.Annotation> mapDecoratorList(@Nullable PyDecoratorList pyDecoratorList) {
+        if (pyDecoratorList == null || pyDecoratorList.getDecorators().length == 0) {
+            return emptyList();
+        }
+        PyDecorator[] pyDecorators = pyDecoratorList.getDecorators();
+        List<J.Annotation> decorators = new ArrayList<>(pyDecorators.length);
+        for (PyDecorator pyDecorator : pyDecorators) {
+            decorators.add(mapDecorator(pyDecorator));
+        }
+        return decorators;
     }
 
     public Statement mapIfStatement(PyIfStatement element) {
@@ -638,26 +705,44 @@ public class PsiPythonMapper {
         );
     }
 
+    public JContainer<Expression> mapArgumentList(@Nullable PyArgumentList pyArgumentList) {
+        if (pyArgumentList == null) {
+            return null;
+        }
+
+        if (pyArgumentList.getArguments().length == 0) {
+            return JContainer.build(singletonList(
+                    JRightPadded.build(
+                            new J.Empty(
+                                    UUID.randomUUID(),
+                                    whitespaceBefore(findToken(pyArgumentList, PyTokenTypes.RPAR)),
+                                    EMPTY
+                            )
+                    )
+            ));
+        } else {
+            List<JRightPadded<Expression>> expressions = new ArrayList<>(
+                    pyArgumentList.getArguments().length
+            );
+            for (PyExpression arg : pyArgumentList.getArguments()) {
+                expressions.add(
+                        new JRightPadded<>(
+                                mapExpression(arg).withPrefix(whitespaceBefore(arg)),
+                                whitespaceAfter(arg),
+                                EMPTY
+                        )
+                );
+            }
+            return JContainer.build(expressions);
+        }
+    }
+
     public J.MethodInvocation mapCallExpression(PyCallExpression element) {
         PyExpression pyCallee = element.getCallee();
         if (pyCallee instanceof PyReferenceExpression) {
             // e.g. `print(42)`
             PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
             J.Identifier functionName = mapReferenceExpression(pyRefExpression);
-
-            List<JRightPadded<Expression>> args = emptyList();
-            if (element.getArgumentList() != null) {
-                args = new ArrayList<>();
-                for (PyExpression arg : element.getArgumentList().getArguments()) {
-                    args.add(
-                            new JRightPadded<>(
-                                    mapExpression(arg).withPrefix(whitespaceBefore(arg)),
-                                    whitespaceAfter(arg),
-                                    EMPTY
-                            )
-                    );
-                }
-            }
 
             return new J.MethodInvocation(
                     randomId(),
@@ -666,7 +751,7 @@ public class PsiPythonMapper {
                     null,
                     null,
                     functionName,
-                    JContainer.build(Space.EMPTY, args, EMPTY),
+                    mapArgumentList(element.getArgumentList()),
                     null
             );
         } else {
@@ -772,6 +857,13 @@ public class PsiPythonMapper {
         );
     }
 
+    private String expectSimpleName(QualifiedName qualifiedName) {
+        if (qualifiedName.getComponentCount() != 1) {
+            throw new UnsupportedOperationException("only simple names are supported; found: " + qualifiedName.toString());
+        }
+        return qualifiedName.getLastComponent();
+    }
+
     private static Space whitespaceBefore(@Nullable PsiElement element) {
         if (element == null) {
             return Space.EMPTY;
@@ -817,5 +909,13 @@ public class PsiPythonMapper {
             prev = prev.getPrevSibling();
         }
         throw new IllegalStateException("Expected to find a previous sibling match but found none");
+    }
+
+    private static @Nullable PsiElement findToken(PsiElement parent, PyElementType elementType) {
+        ASTNode node = parent.getNode().findChildByType(elementType);
+        if (node == null) {
+            return null;
+        }
+        return node.getPsi();
     }
 }
