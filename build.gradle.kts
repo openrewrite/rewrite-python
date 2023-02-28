@@ -1,8 +1,15 @@
 plugins {
     id("org.openrewrite.build.language-library") version "latest.release"
+    java
 }
 group = "org.openrewrite"
 description = "Rewrite Python"
+
+task("printIntellijDependencies", JavaExec::class) {
+    main = "org.openrewrite.python.internal.CollectIntelliJDependencies"
+    classpath = sourceSets["main"].runtimeClasspath
+    jvmArgs = listOf("-verbose:class", "-XX:-OmitStackTraceInFastThrow", "-Xmx2G")
+}
 
 dependencies {
     annotationProcessor("org.projectlombok:lombok:latest.release")

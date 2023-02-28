@@ -1,0 +1,297 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="python-plugin">
+    <output-path>$PROJECT_DIR$/out/artifacts/python_plugin</output-path>
+    <root id="archive" name="python-plugin.jar">
+      <element id="module-output" name="intellij.platform.core.impl" />
+      <element id="library" level="project" name="kotlin-stdlib" />
+      <element id="library" level="project" name="kotlinx-coroutines-jdk8" />
+      <element id="library" level="project" name="fastutil-min" />
+      <element id="library" level="project" name="aalto-xml" />
+      <element id="library" level="project" name="automaton" />
+      <element id="library" level="project" name="Guava" />
+      <element id="library" level="project" name="kotlinx-collections-immutable-jvm" />
+      <element id="module-output" name="intellij.platform.core" />
+      <element id="module-output" name="intellij.platform.util" />
+      <element id="library" level="project" name="Log4J" />
+      <element id="library" level="project" name="jetbrains-annotations" />
+      <element id="library" level="project" name="jna" />
+      <element id="library" level="project" name="OroMatcher" />
+      <element id="library" level="project" name="lz4-java" />
+      <element id="library" level="project" name="commons-compress" />
+      <element id="module-output" name="intellij.platform.util.jdom" />
+      <element id="library" level="project" name="Jaxen" />
+      <element id="module-output" name="intellij.platform.util.rt" />
+      <element id="library" level="project" name="jetbrains-annotations-java5" />
+      <element id="module-output" name="intellij.platform.util.classLoader" />
+      <element id="module-output" name="intellij.platform.util.rt.java8" />
+      <element id="module-output" name="intellij.platform.util.base" />
+      <element id="library" level="project" name="kotlinx-coroutines-debug" />
+      <element id="module-output" name="intellij.platform.util.diff" />
+      <element id="module-output" name="intellij.platform.util.xmlDom" />
+      <element id="library" level="project" name="NanoXML" />
+      <element id="module-output" name="intellij.platform.util.trove" />
+      <element id="library" level="module" name="trove" module-name="intellij.platform.util.trove" />
+      <element id="module-output" name="intellij.platform.extensions" />
+      <element id="module-output" name="intellij.python.community.plugin.impl" />
+      <element id="module-output" name="intellij.platform.lang" />
+      <element id="module-output" name="intellij.platform.ide" />
+      <element id="library" level="project" name="jcef" />
+      <element id="module-output" name="intellij.java.guiForms.rt" />
+      <element id="module-output" name="intellij.platform.resources.en" />
+      <element id="module-output" name="intellij.platform.icons" />
+      <element id="module-output" name="intellij.platform.projectModel" />
+      <element id="module-output" name="intellij.platform.jps.model" />
+      <element id="module-output" name="intellij.platform.concurrency" />
+      <element id="module-output" name="intellij.platform.workspaceModel.storage" />
+      <element id="library" level="project" name="kotlin-reflect" />
+      <element id="library" level="project" name="Objenesis" />
+      <element id="library" level="project" name="caffeine" />
+      <element id="library" level="project" name="Kryo5" />
+      <element id="module-output" name="intellij.platform.analysis" />
+      <element id="module-output" name="intellij.platform.editor" />
+      <element id="module-output" name="intellij.platform.indexing" />
+      <element id="module-output" name="intellij.platform.util.ui" />
+      <element id="library" level="project" name="batik-transcoder" />
+      <element id="library" level="project" name="imgscalr" />
+      <element id="library" level="project" name="xml-apis-ext" />
+      <element id="library" level="project" name="Java Compatibility" />
+      <element id="library" level="project" name="batik-codec" />
+      <element id="library" level="project" name="netty-buffer" />
+      <element id="library" level="project" name="mvstore" />
+      <element id="module-output" name="intellij.platform.util.ex" />
+      <element id="library" level="project" name="jcip" />
+      <element id="module-output" name="intellij.platform.util.zip" />
+      <element id="module-output" name="intellij.platform.core.ui" />
+      <element id="module-output" name="intellij.platform.ide.util.io" />
+      <element id="module-output" name="intellij.platform.codeStyle" />
+      <element id="module-output" name="intellij.platform.remote.core" />
+      <element id="library" level="project" name="Slf4j" />
+      <element id="library" level="project" name="slf4j-jdk14" />
+      <element id="module-output" name="intellij.platform.ide.core" />
+      <element id="library" level="project" name="kotlinx-serialization-core" />
+      <element id="library" level="project" name="kotlinx-serialization-json" />
+      <element id="module-output" name="intellij.platform.util.text.matching" />
+      <element id="module-output" name="intellij.platform.lang.core" />
+      <element id="module-output" name="intellij.platform.execution" />
+      <element id="module-output" name="intellij.platform.usageView" />
+      <element id="module-output" name="intellij.platform.statistics" />
+      <element id="library" level="project" name="gson" />
+      <element id="library" level="project" name="ap-validation" />
+      <element id="module-output" name="intellij.platform.statistics.uploader" />
+      <element id="module-output" name="intellij.platform.statistics.config" />
+      <element id="module-output" name="intellij.platform.ide.core.impl" />
+      <element id="library" level="project" name="icu4j" />
+      <element id="module-output" name="intellij.platform.analysis.impl" />
+      <element id="library" level="project" name="StreamEx" />
+      <element id="library" level="project" name="opentelemetry" />
+      <element id="module-output" name="intellij.platform.projectModel.impl" />
+      <element id="module-output" name="intellij.platform.jps.model.impl" />
+      <element id="module-output" name="intellij.platform.jps.model.serialization" />
+      <element id="module-output" name="intellij.platform.editor.ex" />
+      <element id="module-output" name="intellij.platform.indexing.impl" />
+      <element id="library" level="project" name="HdrHistogram" />
+      <element id="module-output" name="intellij.platform.diagnostic.telemetry" />
+      <element id="library" level="project" name="jackson" />
+      <element id="library" level="project" name="opentelemetry-extension-kotlin" />
+      <element id="library" level="project" name="ktor-client-cio" />
+      <element id="library" level="project" name="opentelemetry-exporter-otlp-common" />
+      <element id="module-output" name="intellij.platform.lvcs" />
+      <element id="module-output" name="intellij.platform.refactoring" />
+      <element id="module-output" name="intellij.platform.ml" />
+      <element id="module-output" name="intellij.platform.lang.impl" />
+      <element id="library" level="project" name="Velocity" />
+      <element id="library" level="project" name="commons-collections" />
+      <element id="library" level="project" name="cli-parser" />
+      <element id="library" level="project" name="swingx" />
+      <element id="library" level="project" name="commons-logging" />
+      <element id="library" level="project" name="org.codehaus.groovy:groovy" />
+      <element id="library" level="project" name="XStream" />
+      <element id="library" level="project" name="miglayout-swing" />
+      <element id="library" level="project" name="jackson-databind" />
+      <element id="library" level="project" name="jackson-module-kotlin" />
+      <element id="library" level="project" name="xz" />
+      <element id="library" level="project" name="pty4j" />
+      <element id="library" level="project" name="jackson-jr-objects" />
+      <element id="library" level="project" name="kotlinx-html-jvm" />
+      <element id="module-output" name="intellij.platform.boot" />
+      <element id="module-output" name="intellij.platform.ide.impl" />
+      <element id="library" level="project" name="commons-codec" />
+      <element id="library" level="project" name="CGLIB" />
+      <element id="library" level="project" name="winp" />
+      <element id="library" level="project" name="commons-imaging" />
+      <element id="library" level="project" name="http-client" />
+      <element id="library" level="project" name="imageio-tiff" />
+      <element id="library" level="project" name="netty-codec-http" />
+      <element id="library" level="project" name="error-prone-annotations" />
+      <element id="library" level="project" name="javax.activation" />
+      <element id="library" level="project" name="jaxb-api" />
+      <element id="library" level="project" name="jaxb-runtime" />
+      <element id="library" level="project" name="javax.annotation-api" />
+      <element id="library" level="module" name="byte-buddy-agent" module-name="intellij.platform.ide.impl" />
+      <element id="library" level="project" name="ASM" />
+      <element id="library" level="project" name="jsoup" />
+      <element id="library" level="project" name="org.codehaus.groovy:groovy-jsr223" />
+      <element id="library" level="project" name="org.codehaus.groovy:groovy-json" />
+      <element id="library" level="project" name="org.codehaus.groovy:groovy-templates" />
+      <element id="library" level="project" name="org.codehaus.groovy:groovy-xml" />
+      <element id="library" level="project" name="blockmap" />
+      <element id="library" level="project" name="classgraph" />
+      <element id="library" level="project" name="zip-signer" />
+      <element id="library" level="project" name="netty-handler-proxy" />
+      <element id="library" level="project" name="rhino" />
+      <element id="library" level="project" name="jgoodies-common" />
+      <element id="library" level="project" name="jgoodies-forms" />
+      <element id="library" level="project" name="jbr-api" />
+      <element id="library" level="project" name="jvm-native-trusted-roots" />
+      <element id="module-output" name="intellij.platform.workspaceModel.jps" />
+      <element id="module-output" name="intellij.platform.diff" />
+      <element id="module-output" name="intellij.platform.builtInServer.impl" />
+      <element id="module-output" name="intellij.xml" />
+      <element id="module-output" name="intellij.xml.psi" />
+      <element id="module-output" name="intellij.xml.analysis" />
+      <element id="module-output" name="intellij.xml.structureView" />
+      <element id="module-output" name="intellij.platform.debugger" />
+      <element id="module-output" name="intellij.platform.builtInServer" />
+      <element id="module-output" name="intellij.platform.ide.util.io.impl" />
+      <element id="library" level="project" name="proxy-vole" />
+      <element id="module-output" name="intellij.platform.ide.util.netty" />
+      <element id="module-output" name="intellij.platform.configurationStore.impl" />
+      <element id="library" level="project" name="snakeyaml-engine" />
+      <element id="module-output" name="intellij.platform.objectSerializer" />
+      <element id="library" level="project" name="ion" />
+      <element id="module-output" name="intellij.platform.objectSerializer.annotations" />
+      <element id="module-output" name="intellij.platform.serviceContainer" />
+      <element id="module-output" name="intellij.platform.credentialStore.ui" />
+      <element id="module-output" name="intellij.platform.credentialStore" />
+      <element id="library" level="project" name="bouncy-castle-provider" />
+      <element id="library" level="project" name="snakeyaml" />
+      <element id="library" level="module" name="dbus-java" module-name="intellij.platform.credentialStore" />
+      <element id="module-output" name="intellij.platform.dependenciesToolwindow" />
+      <element id="module-output" name="intellij.platform.externalSystem.impl" />
+      <element id="library" level="project" name="commons-cli" />
+      <element id="module-output" name="intellij.platform.externalSystem" />
+      <element id="module-output" name="intellij.platform.externalSystem.rt" />
+      <element id="module-output" name="intellij.platform.externalSystem.dependencyUpdater" />
+      <element id="module-output" name="intellij.platform.execution.impl" />
+      <element id="library" level="project" name="jediterm-core" />
+      <element id="library" level="project" name="jediterm-ui" />
+      <element id="module-output" name="intellij.platform.macro" />
+      <element id="module-output" name="intellij.platform.wsl.impl" />
+      <element id="library" level="project" name="ktor-network-tls" />
+      <element id="module-output" name="intellij.platform.testRunner" />
+      <element id="module-output" name="intellij.platform.diff.impl" />
+      <element id="module-output" name="intellij.platform.statistics.devkit" />
+      <element id="module-output" name="intellij.json" />
+      <element id="library" level="project" name="jsonpath" />
+      <element id="module-output" name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.spell.gec.engine.local" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.utils.common" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.common" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.tokenizer" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.langs" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.similarity" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.patterns" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.phonetics" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.detect" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.spell.hunspell.en" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.nlp.stemmer" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.model.gec" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.model.text" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="ai.grazie.model.common" module-name="intellij.spellchecker" />
+      <element id="library" level="module" name="java-string-similarity" module-name="intellij.spellchecker" />
+      <element id="library" level="project" name="lucene-core" />
+      <element id="library" level="project" name="lucene-analyzers-common" />
+      <element id="module-output" name="intellij.xml.dom" />
+      <element id="module-output" name="intellij.platform.resources" />
+      <element id="module-output" name="intellij.regexp" />
+      <element id="module-output" name="intellij.platform.codeStyle.impl" />
+      <element id="module-output" name="intellij.platform.rd.community" />
+      <element id="library" level="project" name="rd-core" />
+      <element id="library" level="project" name="rd-framework" />
+      <element id="library" level="project" name="rd-text" />
+      <element id="library" level="project" name="rd-swing" />
+      <element id="module-output" name="intellij.platform.elevation" />
+      <element id="library" level="project" name="grpc-core" />
+      <element id="module-output" name="intellij.platform.elevation.client" />
+      <element id="library" level="project" name="protobuf" />
+      <element id="library" level="project" name="grpc-stub" />
+      <element id="library" level="project" name="grpc-protobuf" />
+      <element id="library" level="project" name="grpc-kotlin-stub" />
+      <element id="module-output" name="intellij.platform.elevation.daemon" />
+      <element id="library" level="project" name="grpc-netty-shaded" />
+      <element id="module-output" name="intellij.platform.elevation.common" />
+      <element id="module-output" name="intellij.remoteDev.util" />
+      <element id="library" level="project" name="download-pgp-verifier" />
+      <element id="library" level="project" name="bouncy-castle-pgp" />
+      <element id="library" level="project" name="rd-gen" />
+      <element id="module-output" name="intellij.platform.feedback" />
+      <element id="library" level="project" name="kotlinx-datetime-jvm" />
+      <element id="module-output" name="intellij.platform.diagnostic" />
+      <element id="module-output" name="intellij.platform.tips" />
+      <element id="module-output" name="intellij.platform.usageView.impl" />
+      <element id="module-output" name="intellij.platform.structureView.impl" />
+      <element id="module-output" name="intellij.platform.tracing.rt" />
+      <element id="module-output" name="intellij.python.community.impl" />
+      <element id="library" level="project" name="XmlRPC" />
+      <element id="library" level="project" name="libthrift" />
+      <element id="library" level="module" name="completion-ranking-python" module-name="intellij.python.community.impl" />
+      <element id="library" level="module" name="ml-completion-prev-exprs-models" module-name="intellij.python.community.impl" />
+      <element id="library" level="module" name="tuweni-toml" module-name="intellij.python.community.impl" />
+      <element id="library" level="project" name="jsr305" />
+      <element id="library" level="project" name="jackson-dataformat-yaml" />
+      <element id="module-output" name="intellij.python.community" />
+      <element id="module-output" name="intellij.python.psi" />
+      <element id="module-output" name="intellij.python.pydev" />
+      <element id="module-output" name="intellij.platform.debugger.impl" />
+      <element id="module-output" name="intellij.platform.smRunner" />
+      <element id="library" level="project" name="tcServiceMessages" />
+      <element id="module-output" name="intellij.xml.psi.impl" />
+      <element id="library" level="project" name="Xerces" />
+      <element id="library" level="project" name="xml-resolver" />
+      <element id="module-output" name="intellij.platform.webSymbols" />
+      <element id="library" level="project" name="markdown4j" />
+      <element id="module-output" name="intellij.platform.vcs" />
+      <element id="module-output" name="intellij.platform.vcs.core" />
+      <element id="module-output" name="intellij.python.helpers" />
+      <element id="module-output" name="intellij.python.psi.impl" />
+      <element id="module-output" name="intellij.python.sdk" />
+      <element id="module-output" name="intellij.markdown" />
+      <element id="module-output" name="intellij.markdown.core" />
+      <element id="library" level="project" name="jetbrains.markdown" />
+      <element id="library" level="module" name="google.apis.api.services.drive" module-name="intellij.markdown.core" />
+      <element id="module-output" name="intellij.platform.markdown.utils" />
+      <element id="module-output" name="intellij.platform.langInjection" />
+      <element id="module-output" name="intellij.platform.images" />
+      <element id="module-output" name="intellij.platform.collaborationTools" />
+      <element id="module-output" name="intellij.platform.vcs.log.impl" />
+      <element id="library" level="project" name="kotlinx-coroutines-guava" />
+      <element id="module-output" name="intellij.platform.vcs.log" />
+      <element id="module-output" name="intellij.platform.vcs.log.graph" />
+      <element id="module-output" name="intellij.platform.vcs.log.graph.impl" />
+      <element id="module-output" name="intellij.platform.vcs.impl" />
+      <element id="library" level="project" name="microba" />
+      <element id="module-output" name="intellij.platform.sqlite" />
+      <element id="library" level="project" name="sqlite-native" />
+      <element id="module-output" name="intellij.platform.collaborationTools.auth" />
+      <element id="module-output" name="intellij.markdown.fenceInjection" />
+      <element id="module-output" name="intellij.xml.langInjection" />
+      <element id="module-output" name="intellij.xml.impl" />
+      <element id="library" level="module" name="XmlBeans" module-name="intellij.xml.impl" />
+      <element id="module-output" name="intellij.xml.analysis.impl" />
+      <element id="module-output" name="intellij.xml.structureView.impl" />
+      <element id="module-output" name="intellij.xpath" />
+      <element id="module-output" name="intellij.xpath.rt" />
+      <element id="module-output" name="intellij.xml.dom.impl" />
+      <element id="module-output" name="intellij.markdown.frontmatter" />
+      <element id="module-output" name="intellij.markdown.frontmatter.toml" />
+      <element id="module-output" name="intellij.toml" />
+      <element id="module-output" name="intellij.toml.core" />
+      <element id="module-output" name="intellij.toml.json" />
+      <element id="module-output" name="intellij.markdown.frontmatter.yaml" />
+      <element id="module-output" name="intellij.yaml" />
+      <element id="module-output" name="intellij.python.community.core.impl" />
+      <element id="module-output" name="intellij.python.community.plugin.minor" />
+      <element id="module-output" name="intellij.python.community.plugin" />
+    </root>
+  </artifact>
+</component>
