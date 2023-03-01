@@ -48,6 +48,21 @@ public class MethodDeclarationTest implements RewriteTest {
     }
 
     @Test
+    void methodDefinitionWithDocstring() {
+        rewriteRun(
+          python(
+            """
+              class Foo:
+                  def foo():
+                      \"""sa docstring comment\"""
+                      pass
+              """
+          )
+        );
+    }
+
+
+    @Test
     void decorator() {
         rewriteRun(
           python(

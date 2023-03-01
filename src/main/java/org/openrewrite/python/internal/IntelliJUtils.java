@@ -802,8 +802,8 @@ public class IntelliJUtils {
                     .append(node)
                     .append(" [psi=")
                     .append(node.getPsi().getClass().getSimpleName());
-            if (node instanceof LeafPsiElement && !(node instanceof PsiWhiteSpace)) {
-                output.append(", text=`" + node.getText() + "`");
+            if (node instanceof LeafPsiElement) {
+                output.append(", text=`" + node.getText().replace("\n", "\\n").replace("\t", "\\t") + "`");
             }
             output.append("]");
 
