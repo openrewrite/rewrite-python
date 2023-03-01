@@ -32,6 +32,19 @@ public abstract class PsiUtils {
         return node.getPsi();
     }
 
+    public static PsiElement findChildToken(PsiElement parent, PyElementType elementType) {
+        PsiElement found = maybeFindChildToken(parent, elementType);
+        if (found == null) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Expected to find a child node of type %s match but found none",
+                            elementType
+                    )
+            );
+        }
+        return found;
+    }
+
     public static @Nullable LeafPsiElement maybeFindPreviousSiblingToken(PsiElement element, PyElementType elementType) {
         while (element != null) {
             if (isLeafToken(element, elementType)) {
