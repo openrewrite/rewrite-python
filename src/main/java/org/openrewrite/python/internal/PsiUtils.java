@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.PyElementType;
 import org.openrewrite.internal.lang.Nullable;
 
@@ -13,6 +14,14 @@ public abstract class PsiUtils {
 
     public static boolean isHiddenElement(PsiElement element) {
         return element.getTextLength() == 0;
+    }
+
+    public static boolean isLeafToken(PsiElement element, PyElementType elementType) {
+        if (element instanceof LeafPsiElement) {
+            LeafPsiElement leaf = (LeafPsiElement) element;
+            return leaf.getElementType() == elementType;
+        }
+        return false;
     }
 
     public static @Nullable PsiElement maybeFindChildToken(PsiElement parent, PyElementType elementType) {
@@ -25,11 +34,8 @@ public abstract class PsiUtils {
 
     public static @Nullable LeafPsiElement maybeFindPreviousSiblingToken(PsiElement element, PyElementType elementType) {
         while (element != null) {
-            if (element instanceof LeafPsiElement) {
-                LeafPsiElement leaf = (LeafPsiElement) element;
-                if (leaf.getElementType() == elementType) {
-                    return leaf;
-                }
+            if (isLeafToken(element, elementType)) {
+                return (LeafPsiElement) element;
             }
             element = element.getPrevSibling();
         }
@@ -47,6 +53,22 @@ public abstract class PsiUtils {
             );
         }
         return found;
+    }
+
+    public static boolean matchesTokenSequence(PsiElement current, PyElementType... tokens) {
+        for (PyElementType token : tokens) {
+            if (current == null) {
+                return false;
+            }
+            if (!isLeafToken(current, token)) {
+                return false;
+            }
+            current = current.getNextSibling();
+            while (current instanceof PsiWhiteSpace) {
+                current = current.getNextSibling();
+            }
+        }
+        return true;
     }
 
     public static PsiElementCursor elementsBetween(@Nullable PsiElement begin, @Nullable PsiElement endInclusive) {

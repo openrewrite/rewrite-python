@@ -27,6 +27,7 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
+import org.openrewrite.python.marker.MagicMethodDesugar;
 import org.openrewrite.python.tree.PyContainer;
 import org.openrewrite.python.tree.PyRightPadded;
 import org.openrewrite.python.tree.PySpace;
@@ -34,6 +35,8 @@ import org.openrewrite.python.tree.Py;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
+
+import static java.util.Objects.requireNonNull;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
@@ -124,10 +127,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     keyword = ">=";
                     break;
                 case Equal:
-                    keyword = "==";
+                    keyword = "is";
                     break;
                 case NotEqual:
-                    keyword = "!=";
+                    keyword = "is not";
                     break;
                 case BitAnd:
                     keyword = "&";
@@ -194,7 +197,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
             beforeSyntax(elze, Space.Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
-                elze.getBody() instanceof J.If) {
+                    elze.getBody() instanceof J.If) {
                 p.append("el");
             } else {
                 p.append("else");
@@ -249,6 +252,68 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             return method;
         }
 
+        private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
+            String magicMethodName = method.getSimpleName();
+            if (method.getArguments().size() != 1) {
+                throw new IllegalStateException(String.format(
+                        "expected de-sugared magic method call `%s` to have exactly one argument; found %d",
+                        magicMethodName,
+                        method.getArguments().size()
+                ));
+            }
+
+            String operator = PythonOperatorLookup.operatorForMagicMethod(magicMethodName);
+            if (operator == null) {
+                throw new IllegalStateException(String.format(
+                        "expected method call `%s` to be a de-sugared operator, but it does not match known operators",
+                        magicMethodName
+                ));
+            }
+
+            if (negate) {
+                if (!operator.equals("in")) {
+                    throw new IllegalStateException(String.format(
+                            "found method call `%s` as a de-sugared operator, but it is marked as negated (which it does not support)",
+                            magicMethodName
+                    ));
+                }
+                operator = "not " + operator;
+            }
+
+            boolean reverseOperandOrder = PythonOperatorLookup.doesMagicMethodReverseOperands(magicMethodName);
+
+            Expression lhs = requireNonNull(method.getSelect());
+            Expression rhs = method.getArguments().get(0);
+
+            J.MethodInvocation.Padding padding = method.getPadding();
+            Space beforeOperator = requireNonNull(padding.getSelect()).getAfter();
+            Space afterOperator = rhs.getPrefix();
+
+            if (reverseOperandOrder) {
+                Expression tmp = lhs;
+                lhs = rhs;
+                rhs = tmp;
+            }
+
+            beforeSyntax(method, Space.Location.BINARY_PREFIX, p);
+            visit((Expression) lhs.withPrefix(Space.EMPTY), p);
+            visitSpace(beforeOperator, Space.Location.BINARY_OPERATOR, p);
+            p.append(operator);
+            visit((Expression) rhs.withPrefix(afterOperator), p);
+            afterSyntax(method, p);
+        }
+
+        @Override
+        public J visitMethodInvocation(J.MethodInvocation method, PrintOutputCapture<P> p) {
+            if (method.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
+                visitMagicMethodDesugar(method, false, p);
+                return method;
+            } else {
+                return super.visitMethodInvocation(method, p);
+            }
+        }
+
+
         @Override
         public J visitNewArray(J.NewArray newArray, PrintOutputCapture<P> p) {
             beforeSyntax(newArray, Space.Location.NEW_ARRAY_PREFIX, p);
@@ -268,6 +333,27 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
+            if (unary.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
+                if (unary.getOperator() != J.Unary.Type.Not) {
+                    throw new IllegalStateException(String.format(
+                            "found a unary operator (%s) marked as a magic method de-sugar, but only negation is supported",
+                            unary.getOperator()
+                    ));
+                }
+                Expression expression = unary.getExpression();
+                while (expression instanceof J.Parentheses) {
+                    expression = expression.unwrap();
+                }
+                if (!(expression instanceof J.MethodInvocation)) {
+                    throw new IllegalStateException(String.format(
+                            "found a unary operator (%s) marked as a magic method de-sugar, but its expression is not a magic method invocation",
+                            unary.getOperator()
+                    ));
+                }
+                visitMagicMethodDesugar((J.MethodInvocation) expression, true, p);
+                return unary;
+            }
+
             beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
                 case Not:
