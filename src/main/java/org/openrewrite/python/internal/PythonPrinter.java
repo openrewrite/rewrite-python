@@ -460,6 +460,28 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             afterSyntax(unary, p);
             return unary;
         }
+
+        @Override
+        public J visitImport(Import impoort, PrintOutputCapture<P> p) {
+            beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
+            if (impoort.getQualid().getSimpleName().equals("")) {
+                p.append("import");
+                visit(impoort.getQualid().getTarget(), p);
+            } else {
+                p.append("from");
+                visit(impoort.getQualid().getTarget(), p);
+                visitSpace(impoort.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
+                p.append("import");
+                visit(impoort.getQualid().getName(), p);
+            }
+            if (impoort.getAlias() != null) {
+                visitSpace(impoort.getPadding().getAlias().getBefore(), Space.Location.LANGUAGE_EXTENSION, p);
+                p.append("as");
+                visit(impoort.getAlias(), p);
+            }
+            afterSyntax(impoort, p);
+            return impoort;
+        }
     }
 
     private static final UnaryOperator<String> PYTHON_MARKER_WRAPPER =

@@ -16,51 +16,108 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 public class ImportTest implements RewriteTest {
 
-    @Test
-    void simpleImport() {
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "import math",
+      "import  math",
+    })
+    void simpleImport(String arg) {
         rewriteRun(
-          python("import math")
+          python(arg)
         );
     }
 
-    @Test
-    void localImport() {
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "import math as math2",
+      "import  math as math2",
+      "import math  as math2",
+      "import math as  math2",
+    })
+    void simpleImportAlias(String arg) {
         rewriteRun(
-          python("from . import foo")
+          python(arg)
         );
     }
 
-    @Test
-    void qualifiedImport() {
+
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "from . import foo",
+      "from  . import foo",
+      "from .  import foo",
+      "from . import  foo",
+      "from .mod import foo",
+      "from  .mod import foo",
+      "from .mod  import foo",
+      "from .mod import  foo",
+      "from ...mod import  foo",
+      "from ....mod import  foo",
+    })
+    void localImport(String arg) {
         rewriteRun(
-          python("from math import ceil")
+          python(arg)
         );
     }
 
-    @Test
-    void simpleImportAlias() {
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "from math import ceil",
+      "from  math import ceil",
+      "from math  import ceil",
+      "from math import  ceil",
+    })
+    void qualifiedImport(String arg) {
         rewriteRun(
-          python("import math as math2")
+          python(arg)
         );
     }
 
-    @Test
-    void localImportAlias() {
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "from . import foo as foo2",
+      "from  . import foo as foo2",
+      "from .  import foo as foo2",
+      "from . import  foo as foo2",
+      "from . import foo  as foo2",
+      "from . import foo as  foo2",
+    })
+    void localImportAlias(String arg) {
         rewriteRun(
-          python("from . import foo as foo2")
+          python(arg)
         );
     }
 
-    @Test
-    void qualifiedImportAlias() {
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "from math import sin, cos",
+      "from math import sin as sin2, cos",
+      "from math import sin as sin2, cos as cos2",
+      """
+        from math import (
+            sin, 
+            cos
+        )
+        """,
+    })
+    void multipleImport(String arg) {
         rewriteRun(
-          python("from math import ceil as ceil2")
+          python(arg)
         );
     }
+
 }

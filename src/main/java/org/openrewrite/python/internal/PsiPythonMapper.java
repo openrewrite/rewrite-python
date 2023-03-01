@@ -36,11 +36,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PyComment;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -88,10 +84,14 @@ public class PsiPythonMapper {
             return mapExpressionStatement((PyExpressionStatement) element);
         } else if (element instanceof PyForStatement) {
             return mapForStatement((PyForStatement) element);
+        } else if (element instanceof PyFromImportStatement) {
+            return mapFromImportStatement((PyFromImportStatement) element);
         } else if (element instanceof PyFunction) {
             return mapMethodDeclaration((PyFunction) element);
         } else if (element instanceof PyIfStatement) {
             return mapIfStatement((PyIfStatement) element);
+        } else if (element instanceof PyImportStatement) {
+            return mapImportStatement((PyImportStatement) element);
         } else if (element instanceof PyPassStatement) {
             return mapPassStatement((PyPassStatement) element);
         } else if (element instanceof PyReturnStatement) {
@@ -103,6 +103,148 @@ public class PsiPythonMapper {
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
+    }
+
+    private J.Import mapImportElements(PyImportStatementBase element, @Nullable Expression importSource) {
+        if (element.getImportElements().length != 1) {
+            throw new UnsupportedOperationException("no support for multi-import statements yet");
+        }
+        PyImportElement pyImportElement = element.getImportElements()[0];
+
+        PsiElement importKeyword = findChildToken(element, PyTokenTypes.IMPORT_KEYWORD);
+
+        Expression importNameExpr = mapExpression(requireNonNull(pyImportElement.getImportReferenceExpression()));
+        if (!(importNameExpr instanceof J.Identifier)) {
+            throw new UnsupportedOperationException("no support for qualified import targets in imports");
+        }
+        //  from math import ceil      or      import ceil
+        //                  ^^^^^                    ^^^^^
+        J.Identifier importName = (J.Identifier) importNameExpr.withPrefix(spaceAfter(importKeyword));
+
+
+        J.FieldAccess fieldAccess;
+        if (importSource == null) {
+            fieldAccess = new J.FieldAccess(
+                    randomId(),
+                    Space.EMPTY,
+                    EMPTY,
+                    importName,
+                    JLeftPadded.build(
+                                    new J.Identifier(randomId(), Space.EMPTY, EMPTY, "", null, null)
+                            )
+                            .withBefore(spaceBefore(importKeyword)),
+                    null
+            );
+        } else {
+            fieldAccess = new J.FieldAccess(
+                    randomId(),
+                    Space.EMPTY,
+                    EMPTY,
+                    importSource,
+                    JLeftPadded.build(importName)
+                            .withBefore(spaceBefore(importKeyword)),
+                    null
+            );
+        }
+
+        PyTargetExpression pyAlias = pyImportElement.getAsNameElement();
+        JLeftPadded<J.Identifier> alias = null;
+        if (pyAlias != null) {
+            PsiElement asKeyword = findChildToken(pyImportElement, PyTokenTypes.AS_KEYWORD);
+            J.Identifier aliasId = expectIdentifier(mapExpression(pyAlias));
+            alias = JLeftPadded.build(
+                    aliasId.withPrefix(spaceAfter(asKeyword))
+            ).withBefore(spaceBefore(asKeyword));
+        }
+
+        return new J.Import(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                JLeftPadded.build(false),
+                fieldAccess,
+                alias
+        );
+    }
+
+    private J.Import mapImportStatement(PyImportStatement element) {
+        return mapImportElements(element, null);
+    }
+
+    private J.Import mapFromImportStatement(PyFromImportStatement element) {
+        if (element.getImportElements().length != 1) {
+            throw new UnsupportedOperationException("no support for multi-import statements yet");
+        }
+        PsiElement fromKeyword = findChildToken(element, PyTokenTypes.FROM_KEYWORD);
+        Expression fromModuleExpr = element.getImportSource() == null ? null : mapReferenceExpression(element.getImportSource());
+
+        Expression fromModuleDots = null;
+        int relativeLevel = element.getRelativeLevel();
+        if (fromModuleExpr == null) {
+            relativeLevel++;
+        }
+        for (int i = 0; i < relativeLevel; i++) {
+            if (fromModuleDots == null) {
+                fromModuleDots = new J.Empty(randomId(), Space.EMPTY, EMPTY);
+            } else {
+                fromModuleDots = new J.FieldAccess(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        fromModuleDots,
+                        JLeftPadded.build(
+                                new J.Identifier(randomId(), Space.EMPTY, EMPTY, "", null, null)
+                        ),
+                        null
+                );
+            }
+        }
+
+        //  from math import ceil
+        //      ^^^^^
+        Expression importSource;
+        if (fromModuleDots == null && fromModuleExpr == null) {
+            throw new IllegalStateException("attempting to map import with no source");
+        }
+        if (fromModuleDots != null && fromModuleExpr == null) {
+            importSource = fromModuleDots;
+        } else if (fromModuleDots == null) {
+            importSource = fromModuleExpr;
+        } else {
+            importSource = fromModuleDots;
+            Stack<J.FieldAccess> fieldAccessStack = new Stack<>();
+            J.Identifier originalTarget = null;
+            while (originalTarget == null) {
+                if (fromModuleExpr instanceof J.FieldAccess) {
+                    J.FieldAccess fieldAccess = (J.FieldAccess) fromModuleExpr;
+                    fieldAccessStack.add(fieldAccess);
+                    fromModuleExpr = fieldAccess.getTarget();
+                } else if (fromModuleExpr instanceof J.Identifier) {
+                    originalTarget = (J.Identifier) fromModuleExpr;
+                } else {
+                    throw new IllegalStateException(String.format(
+                            "didn't expect a %s in an import qualifier",
+                            fromModuleExpr.getClass()
+                    ));
+                }
+            }
+            importSource = new J.FieldAccess(
+                    randomId(),
+                    Space.EMPTY,
+                    EMPTY,
+                    importSource,
+                    JLeftPadded.build(originalTarget),
+                    null
+            );
+            while (!fieldAccessStack.isEmpty()) {
+                J.FieldAccess oldFieldAccess = fieldAccessStack.pop();
+                importSource = oldFieldAccess.withTarget(importSource);
+            }
+        }
+        importSource = importSource.withPrefix(spaceAfter(fromKeyword));
+
+
+        return mapImportElements(element, importSource);
     }
 
     private Statement mapReturnStatement(PyReturnStatement element) {
@@ -891,7 +1033,7 @@ public class PsiPythonMapper {
         if (pyCallee instanceof PyReferenceExpression) {
             // e.g. `print(42)`
             PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
-            J.Identifier functionName = mapReferenceExpression(pyRefExpression);
+            J.Identifier functionName = expectIdentifier(mapReferenceExpression(pyRefExpression));
 
             return new J.MethodInvocation(
                     randomId(),
@@ -1037,16 +1179,27 @@ public class PsiPythonMapper {
         );
     }
 
-    public J.Identifier mapReferenceExpression(PyReferenceExpression element) {
-        if (element.getQualifier() != null) {
-            throw new RuntimeException("unexpected reference qualification");
+    public Expression mapReferenceExpression(PyReferenceExpression element) {
+        J.Identifier nameId = new J.Identifier(
+                randomId(),
+                spaceBefore(element.getNameElement().getPsi()),
+                EMPTY,
+                element.getName(),
+                null,
+                null
+        );
+
+        if (element.getQualifier() == null) {
+            return nameId.withPrefix(spaceBefore(element));
         }
-        return new J.Identifier(
+
+        return new J.FieldAccess(
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
-                element.getText(),
-                null,
+                mapExpression(element.getQualifier()),
+                JLeftPadded.build(nameId)
+                        .withBefore(spaceAfter(element.getQualifier())),
                 null
         );
     }
