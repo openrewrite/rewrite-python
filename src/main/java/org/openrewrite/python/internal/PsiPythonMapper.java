@@ -24,10 +24,13 @@ import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import org.openrewrite.FileAttributes;
+import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
+import org.openrewrite.python.marker.BuiltinDesugar;
+import org.openrewrite.python.marker.ImplicitNone;
 import org.openrewrite.python.marker.MagicMethodDesugar;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PyComment;
@@ -516,6 +519,8 @@ public class PsiPythonMapper {
             return mapKeywordArgument((PyKeywordArgument) element);
         } else if (element instanceof PyListLiteralExpression) {
             return mapListLiteral((PyListLiteralExpression) element);
+        } else if (element instanceof PyNoneLiteralExpression) {
+            return mapNoneLiteral((PyNoneLiteralExpression) element);
         } else if (element instanceof PyNumericLiteralExpression) {
             return mapNumericLiteral((PyNumericLiteralExpression) element);
         } else if (element instanceof PyParenthesizedExpression) {
@@ -524,6 +529,8 @@ public class PsiPythonMapper {
             return mapPrefixExpression((PyPrefixExpression) element);
         } else if (element instanceof PyReferenceExpression) {
             return mapReferenceExpression((PyReferenceExpression) element);
+        } else if (element instanceof PySliceExpression) {
+            return mapSliceExpression((PySliceExpression) element);
         } else if (element instanceof PySubscriptionExpression) {
             return mapSubscription((PySubscriptionExpression) element);
         } else if (element instanceof PyStringLiteralExpression) {
@@ -778,6 +785,18 @@ public class PsiPythonMapper {
         );
     }
 
+    public J.Literal mapNoneLiteral(PyNoneLiteralExpression element) {
+        return new J.Literal(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                null,
+                "null",
+                null,
+                JavaType.Primitive.Null
+        );
+    }
+
     public @Nullable JContainer<Expression> mapArgumentList(@Nullable PyArgumentList pyArgumentList) {
         if (pyArgumentList == null) {
             return null;
@@ -830,6 +849,75 @@ public class PsiPythonMapper {
     public Py.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
         Expression expression = mapExpression(element.getExpression());
         return new Py.ExpressionStatement(randomId(), expression);
+    }
+
+    public J.ArrayAccess mapSliceExpression(PySliceExpression element) {
+        PyExpression pyTarget = requireNonNull(element.getOperand());
+        PySliceItem pySlice = requireNonNull(element.getSliceItem());
+
+        J.Identifier builtins = new J.Identifier(randomId(), Space.EMPTY, EMPTY, "__builtins__", null, null);
+
+        List<@Nullable PyExpression> pyArgs = new ArrayList<>();
+        {
+            boolean lastPartWasColon = false;
+            for (ASTNode slicePartNode : pySlice.getNode().getChildren(null)) {
+                PsiElement slicePart = slicePartNode.getPsi();
+                if (slicePart instanceof PyExpression) {
+                    pyArgs.add((PyExpression) slicePart);
+                    lastPartWasColon = false;
+                } else {
+                    lastPartWasColon = true;
+                }
+            }
+            if (lastPartWasColon) {
+                pyArgs.add(null);
+            }
+        }
+
+        List<JRightPadded<Expression>> args = new ArrayList<>(pyArgs.size());
+        for (PyExpression pyExpression : pyArgs) {
+            if (pyExpression instanceof PyEmptyExpression || pyExpression == null) {
+                J.Literal none = new J.Literal(
+                        randomId(),
+                        spaceBefore(pyExpression),
+                        Markers.build(singletonList(new ImplicitNone(randomId()))),
+                        null,
+                        "null",
+                        null,
+                        JavaType.Primitive.Null
+                );
+                args.add(JRightPadded.<Expression>build(none).withAfter(spaceAfter(pyExpression)));
+            } else {
+                args.add(mapExpressionAsRightPadded(pyExpression));
+            }
+        }
+
+        args = ListUtils.mapLast(args, padded -> padded.withAfter(spaceAfter(pySlice)));
+
+        J.MethodInvocation sliceCall = new J.MethodInvocation(
+                randomId(),
+                Space.EMPTY,
+                Markers.build(singletonList(new BuiltinDesugar(randomId()))),
+                JRightPadded.build(builtins),
+                null,
+                new J.Identifier(randomId(), Space.EMPTY, EMPTY, "slice", null, null),
+                JContainer.build(args).withBefore(spaceBefore(pySlice)),
+                null
+        );
+
+        return new J.ArrayAccess(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                mapExpression(pyTarget),
+                new J.ArrayDimension(
+                        randomId(),
+                        spaceAfter(pyTarget),
+                        EMPTY,
+                        JRightPadded.build(sliceCall)
+                ),
+                null
+        );
     }
 
     public J.ArrayAccess mapSubscription(PySubscriptionExpression element) {

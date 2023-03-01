@@ -16,16 +16,26 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 public class SliceTest implements RewriteTest {
 
-    @Test
-    void sliceOperator() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      ":", "::", " :", ": ", " : ",
+      "1:2", "1:2:3",
+      "1 :2", "1: 2", "1 : 2",
+      "1:2:3",
+      "None:None", "None:None:None",
+      " None : None ", " None : None : None ",
+    })
+    void sliceOperator(String arg) {
         rewriteRun(
-          python("x[3:5]")
+          python("x[%s]".formatted(arg))
         );
     }
 }

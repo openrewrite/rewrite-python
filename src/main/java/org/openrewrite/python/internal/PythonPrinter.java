@@ -27,6 +27,8 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
+import org.openrewrite.python.marker.BuiltinDesugar;
+import org.openrewrite.python.marker.ImplicitNone;
 import org.openrewrite.python.marker.MagicMethodDesugar;
 import org.openrewrite.python.tree.PyContainer;
 import org.openrewrite.python.tree.PyRightPadded;
@@ -239,6 +241,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitLiteral(J.Literal literal, PrintOutputCapture<P> p) {
+            if (literal.getValue() == null) {
+                if (literal.getMarkers().findFirst(ImplicitNone.class).isPresent()) {
+                    super.visitLiteral(literal.withValueSource(""), p);
+                } else {
+                    super.visitLiteral(literal.withValueSource("None"), p);
+                }
+                return literal;
+            } else {
+                return super.visitLiteral(literal, p);
+            }
+        }
+
+        @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
@@ -303,10 +319,40 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             afterSyntax(method, p);
         }
 
+        private void visitBuiltinDesugar(J.MethodInvocation method, PrintOutputCapture<P> p) {
+            Expression select = method.getSelect();
+            if (!(select instanceof J.Identifier)) {
+                throw new IllegalStateException("expected builtin desugar to select from an Identifier");
+            } else if (!((J.Identifier) select).getSimpleName().equals("__builtins__")) {
+                throw new IllegalStateException("expected builtin desugar to select from __builtins__");
+            }
+
+            String builtinName = requireNonNull(method.getName()).getSimpleName();
+            switch (builtinName) {
+                case "slice":
+                    super.visitContainer(
+                            "",
+                            method.getPadding().getArguments(),
+                            JContainer.Location.LANGUAGE_EXTENSION,
+                            ":",
+                            "",
+                            p
+                    );
+                    return;
+                default:
+                    throw new IllegalStateException(
+                            String.format("builtin desugar doesn't support `%s`", builtinName)
+                    );
+            }
+        }
+
         @Override
         public J visitMethodInvocation(J.MethodInvocation method, PrintOutputCapture<P> p) {
             if (method.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
                 visitMagicMethodDesugar(method, false, p);
+                return method;
+            } else if (method.getMarkers().findFirst(BuiltinDesugar.class).isPresent()) {
+                visitBuiltinDesugar(method, p);
                 return method;
             } else {
                 return super.visitMethodInvocation(method, p);
