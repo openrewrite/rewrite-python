@@ -27,12 +27,17 @@ import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
+import org.openrewrite.marker.Markers;
+import org.openrewrite.python.marker.MagicMethodDesugar;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PyComment;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -614,49 +619,122 @@ public class PsiPythonMapper {
         );
     }
 
-    public J.Binary mapBinaryExpression(PyBinaryExpression element) {
-        Expression lhs = mapExpression(element.getLeftExpression());
-        Expression rhs = mapExpression(element.getRightExpression());
-        Space beforeOperatorSpace = spaceAfter(element.getLeftExpression());
+    private static final Map<PyElementType, String> binaryOperatorSpecialMethods;
 
-        J.Binary.Type operatorType;
-        PyElementType pyOperatorType = element.getOperator();
-        if (pyOperatorType == PyTokenTypes.LT) {
-            operatorType = J.Binary.Type.LessThan;
-        } else if (pyOperatorType == PyTokenTypes.LE) {
-            operatorType = J.Binary.Type.LessThanOrEqual;
-        } else if (pyOperatorType == PyTokenTypes.GT) {
-            operatorType = J.Binary.Type.GreaterThan;
-        } else if (pyOperatorType == PyTokenTypes.GE) {
-            operatorType = J.Binary.Type.GreaterThanOrEqual;
-        } else if (pyOperatorType == PyTokenTypes.EQEQ) {
-            operatorType = J.Binary.Type.Equal;
-        } else if (pyOperatorType == PyTokenTypes.NE) {
-            operatorType = J.Binary.Type.NotEqual;
-        } else if (pyOperatorType == PyTokenTypes.DIV) {
-            operatorType = J.Binary.Type.Division;
-        } else if (pyOperatorType == PyTokenTypes.MINUS) {
-            operatorType = J.Binary.Type.Subtraction;
-        } else if (pyOperatorType == PyTokenTypes.MULT) {
-            operatorType = J.Binary.Type.Multiplication;
-        } else if (pyOperatorType == PyTokenTypes.PLUS) {
-            operatorType = J.Binary.Type.Addition;
-        } else if (pyOperatorType == PyTokenTypes.OR_KEYWORD) {
-            operatorType = J.Binary.Type.Or;
-        } else if (pyOperatorType == PyTokenTypes.AND_KEYWORD) {
-            operatorType = J.Binary.Type.And;
-        } else {
-            System.err.println("WARNING: unhandled binary operator type " + pyOperatorType);
-            return null;
+    static {
+        Map<PyElementType, String> map = new HashMap<>();
+        map.put(PyTokenTypes.EQEQ, "__eq__");
+        map.put(PyTokenTypes.NE, "__ne__");
+        map.put(PyTokenTypes.IN_KEYWORD, "__contains__");
+        binaryOperatorSpecialMethods = Collections.unmodifiableMap(map);
+    }
+
+    private static final Map<PyElementType, J.Binary.Type> binaryOperatorMapping;
+
+    static {
+        Map<PyElementType, J.Binary.Type> map = new HashMap<>();
+        map.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
+        map.put(PyTokenTypes.LE, J.Binary.Type.LessThanOrEqual);
+        map.put(PyTokenTypes.GT, J.Binary.Type.GreaterThan);
+        map.put(PyTokenTypes.GE, J.Binary.Type.GreaterThanOrEqual);
+        map.put(PyTokenTypes.IS_KEYWORD, J.Binary.Type.Equal);
+        map.put(PyTokenTypes.DIV, J.Binary.Type.Division);
+        map.put(PyTokenTypes.MINUS, J.Binary.Type.Subtraction);
+        map.put(PyTokenTypes.MULT, J.Binary.Type.Multiplication);
+        map.put(PyTokenTypes.PLUS, J.Binary.Type.Addition);
+        map.put(PyTokenTypes.OR_KEYWORD, J.Binary.Type.Or);
+        map.put(PyTokenTypes.AND_KEYWORD, J.Binary.Type.And);
+        binaryOperatorMapping = Collections.unmodifiableMap(map);
+    }
+
+    public Expression mapBinaryExpression(PyBinaryExpression element) {
+        // if there are multiple tokens in the operator, `psiOperator` is just the *first* one
+        PsiElement psiOperator = requireNonNull(element.getPsiOperator());
+        if (matchesTokenSequence(psiOperator, PyTokenTypes.IS_KEYWORD, PyTokenTypes.NOT_KEYWORD)) {
+            return mapBinaryExpressionAsOperator(element, J.Binary.Type.NotEqual);
+        } else if (matchesTokenSequence(psiOperator, PyTokenTypes.NOT_KEYWORD, PyTokenTypes.IN_KEYWORD)) {
+            // a very special case, as there is no magic method for "not in"
+            // instead, wrap the "in" expression in a "not"
+            Expression containsMethodCall =
+                    mapBinaryExpressionAsMagicMethod(element, "__contains__").withPrefix(Space.EMPTY);
+            return new J.Unary(
+                    randomId(),
+                    spaceBefore(element),
+                    Markers.build(singletonList(new MagicMethodDesugar(randomId()))),
+                    JLeftPadded.build(J.Unary.Type.Not),
+                    new J.Parentheses<>(
+                            randomId(),
+                            Space.EMPTY,
+                            EMPTY,
+                            JRightPadded.build(containsMethodCall)
+                    ),
+                    null
+            );
         }
+
+        // TODO check that the operator is exactly one token long
+
+        PyElementType pyOperatorType = element.getOperator();
+
+        J.Binary.Type operatorType = binaryOperatorMapping.get(pyOperatorType);
+        if (operatorType != null) {
+            return mapBinaryExpressionAsOperator(element, operatorType);
+        }
+
+        String magicMethod = binaryOperatorSpecialMethods.get(pyOperatorType);
+        if (magicMethod != null) {
+            return mapBinaryExpressionAsMagicMethod(element, magicMethod);
+        }
+
+        throw new IllegalArgumentException("unsupported binary operator type " + pyOperatorType);
+    }
+
+    public Expression mapBinaryExpressionAsOperator(PyBinaryExpression element, J.Binary.Type operatorType) {
+        PyExpression lhs = requireNonNull(element.getLeftExpression());
+        PyExpression rhs = requireNonNull(element.getRightExpression());
+        Space beforeOperatorSpace = spaceAfter(element.getLeftExpression());
 
         return new J.Binary(
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
-                lhs,
+                mapExpression(lhs),
                 JLeftPadded.build(operatorType).withBefore(beforeOperatorSpace),
-                rhs,
+                mapExpression(rhs),
+                null
+        );
+    }
+
+    public Expression mapBinaryExpressionAsMagicMethod(PyBinaryExpression element, String magicMethod) {
+        boolean isReversed = PythonOperatorLookup.doesMagicMethodReverseOperands(magicMethod);
+        PyExpression originalLhs = element.getLeftExpression();
+        PyExpression originalRhs = element.getRightExpression();
+
+        PyExpression pyLhs = requireNonNull(isReversed ? element.getRightExpression() : element.getLeftExpression());
+        PyExpression pyRhs = requireNonNull(element.getOppositeExpression(pyLhs));
+
+        // The space around the operator is "owned" by the operator, regardless of where it came from.
+        Space beforeOperator = spaceAfter(originalLhs);
+        Space afterOperator = spaceBefore(originalRhs);
+
+        Expression lhs = mapExpression(pyLhs).withPrefix(Space.EMPTY);
+        Expression rhs = mapExpression(pyRhs).withPrefix(afterOperator);
+
+        JRightPadded<Expression> paddedLhs = JRightPadded.build(lhs).withAfter(beforeOperator);
+        JRightPadded<Expression> paddedRhs = JRightPadded.build(rhs);
+
+        return new J.MethodInvocation(
+                randomId(),
+                spaceBefore(element),
+                Markers.build(singletonList(new MagicMethodDesugar(randomId()))),
+                paddedLhs,
+                null,
+                new J.Identifier(randomId(), Space.EMPTY, EMPTY, magicMethod, null, null),
+                JContainer.build(
+                        Space.EMPTY,
+                        singletonList(paddedRhs),
+                        EMPTY
+                ),
                 null
         );
     }

@@ -52,4 +52,23 @@ public class BinaryTest implements RewriteTest {
     void booleanOperator(String op) {
         rewriteRun(python("x %s y".formatted(op)));
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "in", " in", "in ",
+      "not in", " not in", "not in ",
+      "==", " ==", "== "
+    })
+    void magicMethodOperatorSpacing(String op) {
+        rewriteRun(python("(x)%s(y)".formatted(op)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "not in", "not  in", " not  in", "not  in ",
+      "is not", "is  not", " is  not", "is  not "
+    })
+    void operatorInternalSpacing(String op) {
+        rewriteRun(python("(x)%s(y)".formatted(op)));
+    }
 }
