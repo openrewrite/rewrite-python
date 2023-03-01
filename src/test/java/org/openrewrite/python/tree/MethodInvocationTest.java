@@ -31,7 +31,8 @@ public class MethodInvocationTest implements RewriteTest {
       "print()", "print( )",
       "print(42)", "print( 42 )", "print(1, 2, 3, 4)",
       "print( 1, 2, 3, 4 )", "print(1 , 2 , 3 , 4)",
-      "print(1, 2, 3, 4, sep='+')"
+      "print(1, 2, 3, 4, sep='+')",
+      "print(1, 2, a=1, b=2)", "print(1, 2, a =1, b =2)", "print(1, 2, a= 1, b= 2)",
     })
     void print(@Language("py") String print) {
         rewriteRun(python(print));
