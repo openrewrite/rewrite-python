@@ -529,6 +529,8 @@ public class PsiPythonMapper {
             return mapPrefixExpression((PyPrefixExpression) element);
         } else if (element instanceof PyReferenceExpression) {
             return mapReferenceExpression((PyReferenceExpression) element);
+        } else if (element instanceof PySetLiteralExpression) {
+            return mapSetLiteral((PySetLiteralExpression) element);
         } else if (element instanceof PySliceExpression) {
             return mapSliceExpression((PySliceExpression) element);
         } else if (element instanceof PySubscriptionExpression) {
@@ -537,6 +539,8 @@ public class PsiPythonMapper {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
             return mapIdentifier((PyTargetExpression) element);
+        } else if (element instanceof PyTupleExpression) {
+            return mapTupleLiteral((PyTupleExpression) element);
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
@@ -589,10 +593,27 @@ public class PsiPythonMapper {
         );
     }
 
-    private Expression mapListLiteral(PyListLiteralExpression element) {
-        List<JRightPadded<Expression>> exprs = new ArrayList<>(element.getElements().length);
-        for (PyExpression pyExpression : element.getElements()) {
-            exprs.add(mapExpressionAsRightPadded(pyExpression));
+    private Expression mapSequenceExpressionAsArray(PySequenceExpression element) {
+        List<JRightPadded<Expression>> exprs;
+        if (element.getElements().length == 0) {
+            Space space = Space.EMPTY;
+            if (element.getNode().getChildren(null).length > 0) {
+                PsiElement lastChild = element.getNode().getLastChildNode().getPsi();
+                if (lastChild instanceof PsiWhiteSpace) {
+                    space = trailingSpace(element);
+                } else {
+                    space = spaceBefore(lastChild);
+                }
+            }
+            exprs = singletonList(JRightPadded.<Expression>build(
+                    new J.Empty(randomId(), Space.EMPTY, EMPTY)
+            ).withAfter(space));
+        } else {
+            exprs = new ArrayList<>(element.getElements().length);
+            for (PyExpression pyExpression : element.getElements()) {
+                System.err.println(pyExpression);
+                exprs.add(mapExpressionAsRightPadded(pyExpression));
+            }
         }
         return new J.NewArray(
                 randomId(),
@@ -601,6 +622,44 @@ public class PsiPythonMapper {
                 null,
                 emptyList(),
                 JContainer.build(exprs),
+                null
+        );
+    }
+
+    private Expression mapListLiteral(PyListLiteralExpression element) {
+        return mapSequenceExpressionAsArray(element);
+    }
+
+    private Expression mapSetLiteral(PySetLiteralExpression element) {
+        J.Identifier builtins = makeBuiltinsIdentifier();
+        JContainer<Expression> args = JContainer.build(singletonList(
+                JRightPadded.build(mapSequenceExpressionAsArray(element))
+        )).withBefore(spaceBefore(element));
+        return new J.MethodInvocation(
+                randomId(),
+                Space.EMPTY,
+                Markers.build(singletonList(new BuiltinDesugar(randomId()))),
+                JRightPadded.build(builtins),
+                null,
+                new J.Identifier(randomId(), Space.EMPTY, EMPTY, "set", null, null),
+                args,
+                null
+        );
+    }
+
+    private Expression mapTupleLiteral(PyTupleExpression element) {
+        J.Identifier builtins = makeBuiltinsIdentifier();
+        JContainer<Expression> args = JContainer.build(singletonList(
+                JRightPadded.build(mapSequenceExpressionAsArray(element))
+        )).withBefore(spaceBefore(element));
+        return new J.MethodInvocation(
+                randomId(),
+                Space.EMPTY,
+                Markers.build(singletonList(new BuiltinDesugar(randomId()))),
+                JRightPadded.build(builtins),
+                null,
+                new J.Identifier(randomId(), Space.EMPTY, EMPTY, "tuple", null, null),
+                args,
                 null
         );
     }
@@ -618,6 +677,10 @@ public class PsiPythonMapper {
     }
 
     private Expression mapParenthesizedExpression(PyParenthesizedExpression element) {
+        if (element.getContainedExpression() instanceof PyTupleExpression) {
+            return mapTupleLiteral((PyTupleExpression) element.getContainedExpression())
+                    .withPrefix(spaceBefore(element));
+        }
         return new J.Parentheses<>(
                 randomId(),
                 spaceBefore(element),
@@ -855,7 +918,7 @@ public class PsiPythonMapper {
         PyExpression pyTarget = requireNonNull(element.getOperand());
         PySliceItem pySlice = requireNonNull(element.getSliceItem());
 
-        J.Identifier builtins = new J.Identifier(randomId(), Space.EMPTY, EMPTY, "__builtins__", null, null);
+        J.Identifier builtins = makeBuiltinsIdentifier();
 
         List<@Nullable PyExpression> pyArgs = new ArrayList<>();
         {
@@ -1017,6 +1080,10 @@ public class PsiPythonMapper {
                 null,
                 null
         );
+    }
+
+    private J.Identifier makeBuiltinsIdentifier() {
+        return new J.Identifier(randomId(), Space.EMPTY, EMPTY, "__builtins__", null, null);
     }
 
     private String expectSimpleName(@Nullable QualifiedName qualifiedName) {

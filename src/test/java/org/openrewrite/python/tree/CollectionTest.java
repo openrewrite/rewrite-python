@@ -16,6 +16,8 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
@@ -43,10 +45,13 @@ public class CollectionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void tupleExpressionEmpty() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "()", "( )"
+    })
+    void tupleExpressionEmpty(String arg) {
         rewriteRun(
-          python("xs = ()")
+          python("xs = %s".formatted(arg))
         );
     }
 
@@ -58,13 +63,6 @@ public class CollectionTest implements RewriteTest {
         // (1, 2) => tuple
         rewriteRun(
           python("xs = (1,)")
-        );
-    }
-
-    @Test
-    void setExpression() {
-        rewriteRun(
-          python("xs = {1, 2, 3}")
         );
     }
 

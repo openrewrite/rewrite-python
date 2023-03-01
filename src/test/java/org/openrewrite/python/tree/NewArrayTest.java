@@ -16,19 +16,48 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 public class NewArrayTest implements RewriteTest {
 
-    @Test
-    void list() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "[]",
+      "[ ]",
+      "[1,2,3]",
+      "[1, 2, 3]",
+      "[ 1, 2, 3 ]",
+      "[ 1 , 2 , 3 ]",
+    })
+    void list(String arg) {
         rewriteRun(
           python(
             """
-              n = [1, 2, 3]
-              """
+              n = %s
+              """.formatted(arg)
+          )
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "{}",
+      "{ }",
+      "{1,2,3}",
+      "{1, 2, 3}",
+      "{ 1, 2, 3 }",
+      "{ 1 , 2 , 3 }",
+    })
+    void set(String arg) {
+        rewriteRun(
+          python(
+            """
+              n = %s
+              """.formatted(arg)
           )
         );
     }
