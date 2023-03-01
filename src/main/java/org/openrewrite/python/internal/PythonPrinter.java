@@ -327,6 +327,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 throw new IllegalStateException("expected builtin desugar to select from __builtins__");
             }
 
+            visitSpace(method.getPrefix(), Location.LANGUAGE_EXTENSION, p);
+
             String builtinName = requireNonNull(method.getName()).getSimpleName();
             switch (builtinName) {
                 case "slice":
@@ -339,6 +341,45 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                             p
                     );
                     return;
+                case "set":
+                case "tuple": {
+                    if (method.getArguments().size() != 1) {
+                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument", builtinName));
+                    }
+                    Expression arg = method.getArguments().get(0);
+                    if (!(arg instanceof J.NewArray)) {
+                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument, a J.NewArray", builtinName));
+                    }
+
+                    J.NewArray argList = (J.NewArray) arg;
+                    int argCount = 0;
+                    for (Expression argExpr : requireNonNull(argList.getInitializer())) {
+                        if (!(argExpr instanceof J.Empty)) {
+                            argCount++;
+                        }
+                    }
+
+                    System.err.println("size = " + argCount);
+
+                    String before, after;
+                    if (builtinName.equals("set")) {
+                        before = "{";
+                        after = "}";
+                    } else {
+                        before = "(";
+                        after = argCount == 1 ? ",)" : ")";
+                    }
+
+                    super.visitContainer(
+                            before,
+                            argList.getPadding().getInitializer(),
+                            JContainer.Location.LANGUAGE_EXTENSION,
+                            ",",
+                            after,
+                            p
+                    );
+                    return;
+                }
                 default:
                     throw new IllegalStateException(
                             String.format("builtin desugar doesn't support `%s`", builtinName)
