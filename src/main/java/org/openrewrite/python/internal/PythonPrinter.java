@@ -270,6 +270,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
             String magicMethodName = method.getSimpleName();
+
+            if (magicMethodName.equals("__call__")) {
+                beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
+                visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, p);
+                visitContainer("(", method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", ")", p);
+                afterSyntax(method, p);
+
+                return;
+            }
+
             if (method.getArguments().size() != 1) {
                 throw new IllegalStateException(String.format(
                         "expected de-sugared magic method call `%s` to have exactly one argument; found %d",
@@ -358,8 +368,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                             argCount++;
                         }
                     }
-
-                    System.err.println("size = " + argCount);
 
                     String before, after;
                     if (builtinName.equals("set")) {

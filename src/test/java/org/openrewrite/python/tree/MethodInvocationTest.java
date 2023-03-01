@@ -38,17 +38,51 @@ public class MethodInvocationTest implements RewriteTest {
         rewriteRun(python(print));
     }
 
-    @Test
-    void qualifiedTarget() {
-        /*
-            This appears as a `qualifier` on `PyReferenceExpression`.
-            This should be straightforward to implement but isn't done.
-         */
-        rewriteRun(python("int.bit_length(42)"));
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "int.bit_length(42)",
+      "int .bit_length(42)",
+      "int. bit_length(42)",
+      "int.bit_length (42)",
+      "int.bit_length( 42)",
+      "int.bit_length(42 )",
+    })
+    void qualifiedTarget(String arg) {
+        rewriteRun(python(arg));
     }
 
-    @Test
-    void methodInvocationOnExpressionTarget() {
-        rewriteRun(python("list().copy()"));
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "list().copy()",
+      "list() .copy()",
+      "list(). copy()",
+      "list().copy ()",
+      "list().copy( )",
+    })
+    void methodInvocationOnExpressionTarget(String arg) {
+        rewriteRun(python(arg));
+    }
+
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "(list().copy)()",
+      "(list().copy) ()",
+      "(list().copy)( )",
+      "(list().count)(1)",
+      "(list().count) (1)",
+      "(list().count)( 1)",
+      "(list().count)(1 )",
+      "(list().count)(1,2)",
+      "(list().count) (1,2)",
+      "(list().count)( 1,2)",
+      "(list().count)(1 ,2)",
+      "(list().count)(1, 2)",
+      "(list().count)(1,2 )",
+    })
+    void methodInvocationOnCallable(String arg) {
+        rewriteRun(python(arg));
     }
 }

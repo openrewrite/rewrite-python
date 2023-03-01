@@ -753,7 +753,6 @@ public class PsiPythonMapper {
         } else {
             exprs = new ArrayList<>(element.getElements().length);
             for (PyExpression pyExpression : element.getElements()) {
-                System.err.println(pyExpression);
                 exprs.add(mapExpressionAsRightPadded(pyExpression));
             }
         }
@@ -1008,7 +1007,7 @@ public class PsiPythonMapper {
         }
 
         if (pyArgumentList.getArguments().length == 0) {
-            return JContainer.build(singletonList(
+            return JContainer.<Expression>build(singletonList(
                     JRightPadded.build(
                             new J.Empty(
                                     randomId(),
@@ -1016,7 +1015,7 @@ public class PsiPythonMapper {
                                     EMPTY
                             )
                     )
-            ));
+            )).withBefore(spaceBefore(pyArgumentList));
         } else {
             List<JRightPadded<Expression>> expressions = new ArrayList<>(
                     pyArgumentList.getArguments().length
@@ -1024,31 +1023,59 @@ public class PsiPythonMapper {
             for (PyExpression arg : pyArgumentList.getArguments()) {
                 expressions.add(mapExpressionAsRightPadded(arg));
             }
-            return JContainer.build(expressions);
+            return JContainer.build(expressions).withBefore(spaceBefore(pyArgumentList));
         }
     }
 
     public J.MethodInvocation mapCallExpression(PyCallExpression element) {
-        PyExpression pyCallee = element.getCallee();
-        if (pyCallee instanceof PyReferenceExpression) {
-            // e.g. `print(42)`
-            PyReferenceExpression pyRefExpression = (PyReferenceExpression) pyCallee;
-            J.Identifier functionName = expectIdentifier(mapReferenceExpression(pyRefExpression));
+        // DO NOT USE `element.getCallee()`; it unwraps parentheses!
+        PyExpression pyCallee = (PyExpression)element.getFirstChild();
 
-            return new J.MethodInvocation(
+        Expression callee = mapExpression(pyCallee);
+        PyArgumentList pyArgumentList = element.getArgumentList();
+
+        Markers markers = EMPTY;
+        J.Identifier functionName;
+        @Nullable JRightPadded<Expression> select;
+
+        if (callee instanceof J.Identifier) {
+            // e.g. `print(42)`
+            functionName = (J.Identifier) callee;
+            select = null;
+        } else if (callee instanceof J.FieldAccess) {
+            // e.g. `math.sin(2)` or `(..complicated..).foo()`
+            J.FieldAccess fieldAccess = (J.FieldAccess) callee;
+            functionName = fieldAccess.getName();
+            select = JRightPadded.build(fieldAccess.getTarget())
+                    .withAfter(fieldAccess.getPadding().getName().getBefore());
+        } else {
+            // e.g. `(list([1,2,3]).count)(1)`
+            markers = Markers.build(singletonList(
+                    new MagicMethodDesugar(randomId())
+            ));
+            functionName = new J.Identifier(
                     randomId(),
-                    spaceBefore(element),
+                    Space.EMPTY,
                     EMPTY,
+                    "__call__",
                     null,
-                    null,
-                    functionName,
-                    requireNonNull(mapArgumentList(element.getArgumentList())),
                     null
             );
-        } else {
-            System.err.println("WARNING: unhandled call expression; callee is not a reference");
+            // don't include "after" space because it would duplicate the arg list prefix
+            select = JRightPadded.build(callee);
         }
-        return null;
+
+        return new J.MethodInvocation(
+                randomId(),
+                spaceBefore(element),
+                markers,
+                select,
+                null,
+                functionName,
+                requireNonNull(mapArgumentList(pyArgumentList))
+                        .withBefore(spaceBefore(pyArgumentList)),
+                null
+        );
     }
 
     public Py.ExpressionStatement mapExpressionStatement(PyExpressionStatement element) {
