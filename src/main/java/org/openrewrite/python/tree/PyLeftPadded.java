@@ -16,16 +16,17 @@
 package org.openrewrite.python.tree;
 
 public class PyLeftPadded {
-//    public enum Location {
-//
-//        private final PySpace.Location beforeLocation;
-//
-//        Location(PySpace.Location beforeLocation) {
-//            this.beforeLocation = beforeLocation;
-//        }
-//
-//        public PySpace.Location getBeforeLocation() {
-//            return beforeLocation;
-//        }
-//    }
+    public enum Location {
+        YIELD_FROM(PySpace.Location.YIELD_FROM_PREFIX);
+
+        private final PySpace.Location beforeLocation;
+
+        Location(PySpace.Location beforeLocation) {
+            this.beforeLocation = beforeLocation;
+        }
+
+        public PySpace.Location getBeforeLocation() {
+            return beforeLocation;
+        }
+    }
 }
