@@ -578,4 +578,62 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         afterSyntax(pass, p);
         return pass;
     }
+
+    @Override
+    public J visitComprehensionExpression(Py.ComprehensionExpression comp, PrintOutputCapture<P> p) {
+        beforeSyntax(comp, PySpace.Location.COMPREHENSION_PREFIX, p);
+        String open, close;
+        switch (comp.getKind()) {
+            case DICT:
+            case SET:
+                open = "{";
+                close = "}";
+                break;
+            case LIST:
+                open = "[";
+                close = "]";
+                break;
+            case GENERATOR:
+                open = "(";
+                close = ")";
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        p.append(open);
+        visit(comp.getResult(), p);
+        for (Py.ComprehensionExpression.Clause clause : comp.getClauses()) {
+            visitComprehensionClause(clause, p);
+        }
+        visitSpace(comp.getSuffix(), PySpace.Location.COMPREHENSION_SUFFIX, p);
+        p.append(close);
+
+        afterSyntax(comp, p);
+        return comp;
+    }
+
+    @Override
+    public J visitComprehensionClause(Py.ComprehensionExpression.Clause clause, PrintOutputCapture<P> p) {
+        visitSpace(clause.getPrefix(), PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p);
+        p.append("for");
+        visit(clause.getIteratorVariable(), p);
+        visitSpace(clause.getPadding().getIteratedList().getBefore(), PySpace.Location.COMPREHENSION_IN, p);
+        p.append("in");
+        visit(clause.getIteratedList(), p);
+        if (clause.getConditions() != null) {
+            for (Py.ComprehensionExpression.Condition condition : clause.getConditions()) {
+                visitComprehensionCondition(condition, p);
+            }
+        }
+        return clause;
+    }
+
+    @Override
+    public J visitComprehensionCondition(Py.ComprehensionExpression.Condition condition, PrintOutputCapture<P> p) {
+        visitSpace(condition.getPrefix(), PySpace.Location.COMPREHENSION_CONDITION_PREFIX, p);
+        p.append("if");
+        visit(condition.getExpression(), p);
+        return condition;
+    }
 }

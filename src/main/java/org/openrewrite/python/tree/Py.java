@@ -485,4 +485,162 @@ public interface Py extends J {
             return new CoordinateBuilder.Statement(this);
         }
     }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class ComprehensionExpression implements Py, Expression {
+
+        public enum Kind {
+            LIST, SET, DICT, GENERATOR
+        }
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Kind kind;
+
+        @With
+        @Getter
+        Expression result;
+
+        @Getter
+        @With
+        List<Clause> clauses;
+
+        @With
+        @Getter
+        Space suffix;
+
+        @Getter
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitComprehensionExpression(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+        @RequiredArgsConstructor
+        public final static class Condition implements Py {
+            @With
+            @Getter
+            @EqualsAndHashCode.Include
+            UUID id;
+
+            @With
+            @Getter
+            Space prefix;
+
+            @With
+            @Getter
+            Markers markers;
+
+            @With
+            @Getter
+            Expression expression;
+
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitComprehensionCondition(this, p);
+            }
+
+        }
+
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+        @RequiredArgsConstructor
+        @AllArgsConstructor(access = AccessLevel.PRIVATE)
+        public final static class Clause implements Py {
+            @Nullable
+            @NonFinal
+            transient WeakReference<Padding> padding;
+
+            @With
+            @Getter
+            @EqualsAndHashCode.Include
+            UUID id;
+
+            @With
+            @Getter
+            Space prefix;
+
+            @With
+            @Getter
+            Markers markers;
+
+            @With
+            @Getter
+            Expression iteratorVariable;
+
+            JLeftPadded<Expression> iteratedList;
+
+            @With
+            @Getter
+            @Nullable
+            List<Condition> conditions;
+
+            public Expression getIteratedList() {
+                return this.iteratedList.getElement();
+            }
+
+            public Clause withIteratedList(Expression expression) {
+                return this.getPadding().withIteratedList(this.iteratedList.withElement(expression));
+            }
+
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitComprehensionClause(this, p);
+            }
+
+            public Padding getPadding() {
+                Padding p;
+                if (this.padding == null) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                } else {
+                    p = this.padding.get();
+                    if (p == null || p.t != this) {
+                        p = new Padding(this);
+                        this.padding = new WeakReference<>(p);
+                    }
+                }
+                return p;
+            }
+
+            @RequiredArgsConstructor
+            public static class Padding {
+                private final Clause t;
+
+                public JLeftPadded<Expression> getIteratedList() {
+                    return t.iteratedList;
+                }
+
+                public Clause withIteratedList(JLeftPadded<Expression> iteratedList) {
+                    return t.iteratedList == iteratedList ? t : new Clause(t.id, t.prefix, t.markers, t.iteratorVariable, iteratedList, t.conditions);
+                }
+            }
+        }
+    }
 }

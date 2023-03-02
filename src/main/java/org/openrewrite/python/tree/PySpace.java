@@ -17,6 +17,11 @@ package org.openrewrite.python.tree;
 
 public class PySpace {
     public enum Location {
+        COMPREHENSION_CLAUSE_PREFIX,
+        COMPREHENSION_CONDITION_PREFIX,
+        COMPREHENSION_IN,
+        COMPREHENSION_PREFIX,
+        COMPREHENSION_SUFFIX,
         DICT_ENTRY,
         DICT_ENTRY_KEY_SUFFIX,
         DICT_LITERAL_ELEMENT_SUFFIX,
