@@ -643,4 +643,280 @@ public interface Py extends J {
             }
         }
     }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class AwaitExpression implements Py, Expression {
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Expression expression;
+
+        @With
+        @Getter
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitAwaitExpression(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class YieldExpression implements Py, Expression {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        JLeftPadded<Boolean> from;
+
+        List<JRightPadded<Expression>> expressions;
+
+        @With
+        @Getter
+        JavaType type;
+
+        public boolean isFrom() {
+            return this.from.getElement();
+        }
+
+        public YieldExpression withFrom(boolean from) {
+            return this.getPadding().withFrom(JLeftPadded.withElement(this.from, from));
+        }
+
+        public List<Expression> getExpressions() {
+            return JRightPadded.getElements(expressions);
+        }
+
+        public YieldExpression withExpressions(List<Expression> expressions) {
+            return this.getPadding().withExpressions(JRightPadded.withElements(this.expressions, expressions));
+        }
+
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitYieldExpression(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final YieldExpression t;
+
+            public JLeftPadded<Boolean> getFrom() {
+                return t.from;
+            }
+
+            public YieldExpression withFrom(JLeftPadded<Boolean> from) {
+                return from == t.from ? t : new YieldExpression(t.id, t.prefix, t.markers, from, t.expressions, t.type);
+            }
+
+
+            public List<JRightPadded<Expression>> getExpressions() {
+                return t.expressions;
+            }
+
+            public YieldExpression withExpressions(List<JRightPadded<Expression>> expressions) {
+                return expressions == t.expressions
+                        ? t
+                        : new YieldExpression(t.id, t.prefix, t.markers, t.from, expressions, t.type);
+            }
+        }
+
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class AssertStatement implements Py, Statement {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        List<JRightPadded<Expression>> expressions;
+
+        public List<Expression> getExpressions() {
+            return JRightPadded.getElements(expressions);
+        }
+
+        public AssertStatement withExpressions(List<Expression> expressions) {
+            return this.getPadding().withExpressions(JRightPadded.withElements(this.expressions, expressions));
+        }
+
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitAssertStatement(this, p);
+        }
+
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final AssertStatement t;
+
+            public List<JRightPadded<Expression>> getExpressions() {
+                return t.expressions;
+            }
+
+            public AssertStatement withExpressions(List<JRightPadded<Expression>> expressions) {
+                return expressions == t.expressions
+                        ? t
+                        : new AssertStatement(t.id, t.prefix, t.markers, expressions);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class DelStatement implements Py, Statement {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        List<JRightPadded<Expression>> targets;
+
+        public List<Expression> getTargets() {
+            return JRightPadded.getElements(targets);
+        }
+
+        public DelStatement withTargets(List<Expression> expressions) {
+            return this.getPadding().withTargets(JRightPadded.withElements(this.targets, expressions));
+        }
+
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitDelStatement(this, p);
+        }
+
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final DelStatement t;
+
+            public List<JRightPadded<Expression>> getTargets() {
+                return t.targets;
+            }
+
+            public DelStatement withTargets(List<JRightPadded<Expression>> expressions) {
+                return expressions == t.targets
+                        ? t
+                        : new DelStatement(t.id, t.prefix, t.markers, expressions);
+            }
+        }
+    }
+
 }

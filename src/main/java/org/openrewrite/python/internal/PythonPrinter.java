@@ -30,10 +30,7 @@ import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.BuiltinDesugar;
 import org.openrewrite.python.marker.ImplicitNone;
 import org.openrewrite.python.marker.MagicMethodDesugar;
-import org.openrewrite.python.tree.PyContainer;
-import org.openrewrite.python.tree.PyRightPadded;
-import org.openrewrite.python.tree.PySpace;
-import org.openrewrite.python.tree.Py;
+import org.openrewrite.python.tree.*;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -635,5 +632,58 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         p.append("if");
         visit(condition.getExpression(), p);
         return condition;
+    }
+
+    @Override
+    public J visitAwaitExpression(Py.AwaitExpression await, PrintOutputCapture<P> p) {
+        visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p);
+        p.append("await");
+        visit(await.getExpression(), p);
+        return await;
+    }
+
+    @Override
+    public J visitAssertStatement(Py.AssertStatement assrt, PrintOutputCapture<P> p) {
+        visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
+        p.append("assert");
+        visitRightPadded(
+                assrt.getPadding().getExpressions(),
+                PyRightPadded.Location.ASSERT_ELEMENT,
+                ",",
+                p
+        );
+        return assrt;
+    }
+
+    @Override
+    public J visitYieldExpression(Py.YieldExpression yield, PrintOutputCapture<P> p) {
+        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p);
+        p.append("yield");
+
+        if (yield.isFrom()) {
+            visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p);
+            p.append("from");
+        }
+
+        visitRightPadded(
+                yield.getPadding().getExpressions(),
+                PyRightPadded.Location.YIELD_ELEMENT,
+                ",",
+                p
+        );
+        return yield;
+    }
+
+    @Override
+    public J visitDelStatement(Py.DelStatement del, PrintOutputCapture<P> p) {
+        visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p);
+        p.append("del");
+        visitRightPadded(
+                del.getPadding().getTargets(),
+                PyRightPadded.Location.DEL_ELEMENT,
+                ",",
+                p
+        );
+        return del;
     }
 }

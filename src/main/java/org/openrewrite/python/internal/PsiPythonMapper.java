@@ -72,7 +72,9 @@ public class PsiPythonMapper {
     }
 
     public Statement mapStatement(PsiElement element) {
-        if (element instanceof PyAssignmentStatement) {
+        if (element instanceof PyAssertStatement) {
+            return mapAssertStatement((PyAssertStatement) element);
+        } else if (element instanceof PyAssignmentStatement) {
             return mapAssignmentStatement((PyAssignmentStatement) element);
         } else if (element instanceof PyBreakStatement) {
             return mapBreakStatement((PyBreakStatement) element);
@@ -80,6 +82,8 @@ public class PsiPythonMapper {
             return mapContinueStatement((PyContinueStatement) element);
         } else if (element instanceof PyClass) {
             return mapClassDeclarationStatement((PyClass) element);
+        } else if (element instanceof PyDelStatement) {
+            return mapDelStatement((PyDelStatement) element);
         } else if (element instanceof PyExpressionStatement) {
             return mapExpressionStatement((PyExpressionStatement) element);
         } else if (element instanceof PyForStatement) {
@@ -391,6 +395,15 @@ public class PsiPythonMapper {
         );
     }
 
+    public Statement mapAssertStatement(PyAssertStatement element) {
+        return new Py.AssertStatement(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                mapExpressionsAsRightPadded(element.getArguments())
+        );
+    }
+
     public Statement mapAssignmentStatement(PyAssignmentStatement element) {
         PyExpression pyLhs = element.getLeftHandSideExpression();
         PyExpression pyRhs = element.getAssignedValue();
@@ -510,6 +523,15 @@ public class PsiPythonMapper {
             decorators.add(mapDecorator(pyDecorator));
         }
         return decorators;
+    }
+
+    public Statement mapDelStatement(PyDelStatement element) {
+        return new Py.DelStatement(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                mapExpressionsAsRightPadded(element.getTargets())
+        );
     }
 
     public Statement mapIfStatement(PyIfStatement element) {
@@ -682,6 +704,8 @@ public class PsiPythonMapper {
             return mapIdentifier((PyTargetExpression) element);
         } else if (element instanceof PyTupleExpression) {
             return mapTupleLiteral((PyTupleExpression) element);
+        } else if (element instanceof PyYieldExpression) {
+            return mapYieldExpression((PyYieldExpression)element);
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
@@ -707,6 +731,20 @@ public class PsiPythonMapper {
     private JRightPadded<Expression> mapExpressionAsRightPadded(PyExpression pyExpression) {
         Expression expression = mapExpression(pyExpression);
         return JRightPadded.build(expression).withAfter(spaceAfter(pyExpression));
+    }
+
+    private List<JRightPadded<Expression>> mapExpressionsAsRightPadded(PyExpression[] pyExpressions) {
+        if (pyExpressions.length == 0) {
+            return emptyList();
+        }
+        List<JRightPadded<Expression>> expressions = new ArrayList<>(pyExpressions.length);
+        for (PyExpression pyExpression : pyExpressions) {
+            Expression expression = mapExpression(pyExpression);
+            expressions.add(
+                    JRightPadded.build(expression).withAfter(spaceAfter(pyExpression))
+            );
+        }
+        return expressions;
     }
 
     private Expression mapDictLiteralExpression(PyDictLiteralExpression element) {
@@ -750,10 +788,7 @@ public class PsiPythonMapper {
                     new J.Empty(randomId(), Space.EMPTY, EMPTY)
             ).withAfter(space));
         } else {
-            exprs = new ArrayList<>(element.getElements().length);
-            for (PyExpression pyExpression : element.getElements()) {
-                exprs.add(mapExpressionAsRightPadded(pyExpression));
-            }
+            exprs = mapExpressionsAsRightPadded(element.getElements());
         }
         return new J.NewArray(
                 randomId(),
@@ -864,6 +899,37 @@ public class PsiPythonMapper {
                 null,
                 new J.Identifier(randomId(), Space.EMPTY, EMPTY, "tuple", null, null),
                 args,
+                null
+        );
+    }
+
+    private Expression mapYieldExpression(PyYieldExpression element) {
+        JLeftPadded<Boolean> from;
+        if (element.isDelegating()) {
+            PsiElement fromKeyword = findChildToken(element, PyTokenTypes.FROM_KEYWORD);
+            from = JLeftPadded.build(true).withBefore(spaceBefore(fromKeyword));
+        } else {
+            from = JLeftPadded.build(false);
+        }
+
+        PyExpression pyExpression = requireNonNull(element.getExpression());
+        List<JRightPadded<Expression>> expressions;
+        if (pyExpression instanceof PyTupleExpression) {
+            expressions = mapExpressionsAsRightPadded(((PyTupleExpression) pyExpression).getElements());
+            expressions = ListUtils.mapFirst(
+                    expressions,
+                    expr -> expr.withElement(expr.getElement().withPrefix(spaceBefore(pyExpression)))
+            );
+        } else {
+            expressions = singletonList(mapExpressionAsRightPadded(pyExpression));
+        }
+
+        return new Py.YieldExpression(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                from,
+                expressions,
                 null
         );
     }
@@ -1015,6 +1081,17 @@ public class PsiPythonMapper {
 
     private Expression mapPrefixExpression(PyPrefixExpression element) {
         PyElementType op = element.getOperator();
+
+        if (op == PyTokenTypes.AWAIT_KEYWORD) {
+            return new Py.AwaitExpression(
+                    randomId(),
+                    spaceBefore(element),
+                    EMPTY,
+                    mapExpression(element.getOperand()),
+                    null
+            );
+        }
+
         J.Unary.Type ot;
         JavaType type = null;
         if (op == PyTokenTypes.NOT_KEYWORD) {
@@ -1080,12 +1157,7 @@ public class PsiPythonMapper {
                     )
             )).withBefore(spaceBefore(pyArgumentList));
         } else {
-            List<JRightPadded<Expression>> expressions = new ArrayList<>(
-                    pyArgumentList.getArguments().length
-            );
-            for (PyExpression arg : pyArgumentList.getArguments()) {
-                expressions.add(mapExpressionAsRightPadded(arg));
-            }
+            List<JRightPadded<Expression>> expressions = mapExpressionsAsRightPadded(pyArgumentList.getArguments());
             return JContainer.build(expressions).withBefore(spaceBefore(pyArgumentList));
         }
     }

@@ -6,6 +6,11 @@ This repository is a work-in-progress implementation of Rewrite Python language 
 
 This is largely based on the [Python grammar specification](https://docs.python.org/3/reference/grammar.html).
 
+### Resources
+
+- [Python Builtins](https://docs.python.org/3/library/functions.html), which are sometimes used to desugar syntax.
+- [Python Magic Methods (aka "dunders")](https://docs.python.org/3/library/operator.html), also used for desugaring. 
+
 ### Statements
 
 | Element                 | Status | Example                           | Mapping Notes                                                                       | Limitations                                       |
@@ -26,9 +31,9 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Import Statement        |   ⚠️   | <pre>from . import foo</pre>      | Implemented as `J.Import`.                                                          | No support for multiple imports in one statement. |
 | Raise Statement         |   ❌    |                                   |                                                                                     |                                                   |
 | Pass Statement          |   ✅    | <pre>pass</pre>                   | Implemented as `Py.PassStatement`.                                                  |                                                   |
-| Delete Statement        |   ❌    |                                   |                                                                                     |                                                   |
+| Delete Statement        |   ✅    | <pre>del x, y</pre>               | Implemented as `Py.DelStatement`.                                                   |                                                   |
 | Yield Statement         |   ❌    |                                   |                                                                                     |                                                   |
-| Assert Statement        |   ❌    |                                   |                                                                                     |                                                   |
+| Assert Statement        |   ✅    | <pre>assert x, y</pre>            | Implemented as `Py.Assert`.                                                         |                                                   |
 | Break Statement         |   ✅    | <pre>break</pre>                  |                                                                                     |                                                   |
 | Continue Statement      |   ✅    | <pre>continue</pre>               |                                                                                     |                                                   |
 | Global Statement        |   ❌    | <pre>global x</pre>               |                                                                                     |                                                   |
@@ -47,7 +52,8 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Set Comprehension       |   ✅    | <pre>{x for x in xs}</pre>        |                                                                                     |                                                   |
 | Dict Comprehension      |   ✅    | <pre>{x:x for x in xs}</pre>      |                                                                                     |                                                   |
 | Generator Comprehension |   ✅    | <pre>(x for x in xs)</pre>        |                                                                                     |                                                   |
-| Yield Expression        |   ❌    |                                   |                                                                                     |                                                   |
+| Yield Expression        |   ✅    | <pre>yield from x</pre>           | Implemented as `Py.YieldExpression`.                                                |                                                   |
+| Await Expression        |   ✅    | <pre>await x</pre>                | Implemented as `Py.AwaitExpression`.                                                |                                                   |
 | Bitwise Operators       |   ❌    |                                   |                                                                                     |                                                   |
 | Arithmetic Operators    |   ✅    |                                   |                                                                                     |                                                   |
 | Comparison Operators    |   ✅    |                                   | Non-Java comparisons are implemented using desugared magic methods (e.g. `__eq__`). |                                                   |

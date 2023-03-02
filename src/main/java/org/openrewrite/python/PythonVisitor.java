@@ -138,9 +138,9 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return super.visitRightPadded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p);
     }
 
-//    public <T> JLeftPadded<T> visitLeftPadded(JLeftPadded<T> left, PyLeftPadded.Location loc, P p) {
-//        return super.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
-//    }
+    public <T> JLeftPadded<T> visitLeftPadded(JLeftPadded<T> left, PyLeftPadded.Location loc, P p) {
+        return super.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
+    }
 
     public Space visitSpace(Space space, PySpace.Location loc, P p) {
         return visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
@@ -148,5 +148,74 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
 
     public <J2 extends J> JContainer<J2> visitContainer(JContainer<J2> container, PyContainer.Location loc, P p) {
         return super.visitContainer(container, JContainer.Location.LANGUAGE_EXTENSION, p);
+    }
+
+    public J visitAwaitExpression(Py.AwaitExpression ogAwait, P p) {
+        Py.AwaitExpression await = ogAwait;
+        await = await.withPrefix(visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p));
+        await = await.withMarkers(visitMarkers(await.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(await, p);
+        if (!(temp instanceof Py.AwaitExpression)) {
+            return temp;
+        } else {
+            await = (Py.AwaitExpression) temp;
+        }
+        await = await.withExpression(visitAndCast(await.getExpression(), p));
+        await = await.withType(visitType(await.getType(), p));
+        return await;
+    }
+
+    public J visitAssertStatement(Py.AssertStatement ogAssert, P p) {
+        Py.AssertStatement assrt = ogAssert;
+        assrt = assrt.withPrefix(visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p));
+        assrt = assrt.withMarkers(visitMarkers(assrt.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(assrt, p);
+        if (!(temp instanceof Py.AssertStatement)) {
+            return temp;
+        } else {
+            assrt = (Py.AssertStatement) temp;
+        }
+        assrt = assrt.getPadding().withExpressions(ListUtils.map(
+                assrt.getPadding().getExpressions(),
+                t -> visitRightPadded(t, PyRightPadded.Location.ASSERT_ELEMENT, p)
+        ));
+        return assrt;
+    }
+
+    public J visitYieldExpression(Py.YieldExpression ogYield, P p) {
+        Py.YieldExpression yield = ogYield;
+        yield = yield.withPrefix(visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p));
+        yield = yield.withMarkers(visitMarkers(yield.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(yield, p);
+        if (!(temp instanceof Py.YieldExpression)) {
+            return temp;
+        } else {
+            yield = (Py.YieldExpression) temp;
+        }
+        yield = yield.getPadding().withFrom(
+          visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p)
+        );
+        yield = yield.getPadding().withExpressions(ListUtils.map(
+                yield.getPadding().getExpressions(),
+                t -> visitRightPadded(t, PyRightPadded.Location.YIELD_ELEMENT, p)
+        ));
+        return yield;
+    }
+
+    public J visitDelStatement(Py.DelStatement ogDel, P p) {
+        Py.DelStatement del = ogDel;
+        del = del.withPrefix(visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p));
+        del = del.withMarkers(visitMarkers(del.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(del, p);
+        if (!(temp instanceof Py.DelStatement)) {
+            return temp;
+        } else {
+            del = (Py.DelStatement) temp;
+        }
+        del = del.getPadding().withTargets(ListUtils.map(
+                del.getPadding().getTargets(),
+                t -> visitRightPadded(t, PyRightPadded.Location.DEL_ELEMENT, p)
+        ));
+        return del;
     }
 }
