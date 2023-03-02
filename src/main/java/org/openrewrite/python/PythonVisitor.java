@@ -96,8 +96,42 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
 
     public J visitComprehensionExpression(Py.ComprehensionExpression ogComp, P p) {
         Py.ComprehensionExpression comp = ogComp;
-        // FIXME
-        return visitExpression(comp, p);
+        comp = comp.withPrefix(visitSpace(comp.getPrefix(), PySpace.Location.COMPREHENSION_PREFIX, p));
+        comp = comp.withMarkers(visitMarkers(comp.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(comp, p);
+        if (!(temp instanceof Py.ComprehensionExpression)) {
+            return temp;
+        } else {
+            comp = (Py.ComprehensionExpression) temp;
+        }
+        comp = comp.withResult(visitAndCast(comp.getResult(), p));
+        comp = comp.withClauses(ListUtils.map(
+                comp.getClauses(),
+                clause -> visitAndCast(clause, p)
+        ));
+        comp = comp.withSuffix(visitSpace(comp.getSuffix(), PySpace.Location.COMPREHENSION_SUFFIX, p));
+        comp = comp.withType(visitType(comp.getType(), p));
+        return comp;
+    }
+
+    public J visitComprehensionClause(Py.ComprehensionExpression.Clause ogClause, P p) {
+        Py.ComprehensionExpression.Clause clause = ogClause;
+        clause = clause.withPrefix(visitSpace(clause.getPrefix(), PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p));
+        clause = clause.withMarkers(visitMarkers(clause.getMarkers(), p));
+        clause = clause.withIteratorVariable(visitAndCast(clause.getIteratorVariable(), p));
+        clause = clause.withConditions(ListUtils.map(
+                clause.getConditions(),
+                condition -> visitAndCast(condition, p)
+        ));
+        return clause;
+    }
+
+    public J visitComprehensionCondition(Py.ComprehensionExpression.Condition ogCondition, P p) {
+        Py.ComprehensionExpression.Condition condition = ogCondition;
+        condition = condition.withPrefix(visitSpace(condition.getPrefix(), PySpace.Location.COMPREHENSION_CONDITION_PREFIX, p));
+        condition = condition.withMarkers(visitMarkers(condition.getMarkers(), p));
+        condition = condition.withExpression(visitAndCast(condition.getExpression(), p));
+        return condition;
     }
 
     public <T> JRightPadded<T> visitRightPadded(@Nullable JRightPadded<T> right, PyRightPadded.Location loc, P p) {

@@ -15,7 +15,6 @@
  */
 package org.openrewrite.python.tree;
 
-import com.jetbrains.python.psi.PyExpression;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -493,7 +492,7 @@ public interface Py extends J {
     final class ComprehensionExpression implements Py, Expression {
 
         public enum Kind {
-            LIST, SET, DICT
+            LIST, SET, DICT, GENERATOR
         }
 
         @With
@@ -519,7 +518,7 @@ public interface Py extends J {
 
         @Getter
         @With
-        List<Component> components;
+        List<Clause> clauses;
 
         @With
         @Getter
@@ -544,7 +543,7 @@ public interface Py extends J {
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
         @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
         @RequiredArgsConstructor
-        public final static class IfComponent implements Py {
+        public final static class Condition implements Py {
             @With
             @Getter
             @EqualsAndHashCode.Include
@@ -561,13 +560,19 @@ public interface Py extends J {
             @With
             @Getter
             Expression expression;
+
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitComprehensionCondition(this, p);
+            }
+
         }
 
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
         @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
         @RequiredArgsConstructor
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
-        public final static class Component implements Py {
+        public final static class Clause implements Py {
             @Nullable
             @NonFinal
             transient WeakReference<Padding> padding;
@@ -594,14 +599,19 @@ public interface Py extends J {
             @With
             @Getter
             @Nullable
-            List<IfComponent> conditions;
+            List<Condition> conditions;
 
             public Expression getIteratedList() {
                 return this.iteratedList.getElement();
             }
 
-            public Component withIteratedList(Expression expression) {
+            public Clause withIteratedList(Expression expression) {
                 return this.getPadding().withIteratedList(this.iteratedList.withElement(expression));
+            }
+
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitComprehensionClause(this, p);
             }
 
             public Padding getPadding() {
@@ -621,14 +631,14 @@ public interface Py extends J {
 
             @RequiredArgsConstructor
             public static class Padding {
-                private final Component t;
+                private final Clause t;
 
                 public JLeftPadded<Expression> getIteratedList() {
                     return t.iteratedList;
                 }
 
-                public Component withIteratedList(JLeftPadded<Expression> iteratedList) {
-                    return t.iteratedList == iteratedList ? t : new Component(t.id, t.prefix, t.markers, t.iteratorVariable, iteratedList, t.conditions);
+                public Clause withIteratedList(JLeftPadded<Expression> iteratedList) {
+                    return t.iteratedList == iteratedList ? t : new Clause(t.id, t.prefix, t.markers, t.iteratorVariable, iteratedList, t.conditions);
                 }
             }
         }

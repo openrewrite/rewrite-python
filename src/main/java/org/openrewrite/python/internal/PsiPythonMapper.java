@@ -767,16 +767,30 @@ public class PsiPythonMapper {
     }
 
     public Expression mapComprehensionElement(PyComprehensionElement element) {
-        List<Py.ComprehensionExpression.Component> components = new ArrayList<>();
+        Py.ComprehensionExpression.Kind kind;
+        if (element instanceof PyListCompExpression) {
+            kind = Py.ComprehensionExpression.Kind.LIST;
+        } else if (element instanceof PySetCompExpression) {
+            kind = Py.ComprehensionExpression.Kind.SET;
+        } else if (element instanceof PyDictCompExpression) {
+            kind = Py.ComprehensionExpression.Kind.DICT;
+        } else if (element instanceof PyGeneratorExpression) {
+            kind = Py.ComprehensionExpression.Kind.GENERATOR;
+        } else {
+            throw new IllegalArgumentException(String.format(
+               "unknown comprehension type: %s",
+               element.getNode().getElementType()
+            ));
+        }
+        List<Py.ComprehensionExpression.Clause> clauses = new ArrayList<>();
         for (PyComprehensionComponent ifOrFor : element.getComponents()) {
             if (ifOrFor instanceof PyComprehensionForComponent) {
-                System.err.println("MAPPING PyComprehensionForComponent");
                 PyComprehensionForComponent pyFor = ((PyComprehensionForComponent) ifOrFor);
                 PsiElement forKeyword = findPreviousSiblingToken(pyFor.getIteratorVariable() ,PyTokenTypes.FOR_KEYWORD);
                 PsiElement inKeyword = findPreviousSiblingToken(pyFor.getIteratedList(), PyTokenTypes.IN_KEYWORD);
                 Expression iteratorVariable = mapExpression(pyFor.getIteratorVariable());
                 Expression iteratedList = mapExpression(pyFor.getIteratedList());
-                components.add(new Py.ComprehensionExpression.Component(
+                clauses.add(new Py.ComprehensionExpression.Clause(
                         randomId(),
                         spaceBefore(forKeyword),
                         EMPTY,
@@ -785,18 +799,17 @@ public class PsiPythonMapper {
                         null
                 ));
             } else if (ifOrFor instanceof PyComprehensionIfComponent) {
-                System.err.println("MAPPING PyComprehensionIfComponent");
                 PyComprehensionIfComponent pyif = (PyComprehensionIfComponent) ifOrFor;
                 PsiElement ifKeyword = findPreviousSiblingToken(pyif.getTest(), PyTokenTypes.IF_KEYWORD);
-                Py.ComprehensionExpression.IfComponent condition = new Py.ComprehensionExpression.IfComponent(
+                Py.ComprehensionExpression.Condition condition = new Py.ComprehensionExpression.Condition(
                         randomId(),
                         spaceBefore(ifKeyword),
                         EMPTY,
                         mapExpression(pyif.getTest())
                 );
-                components = ListUtils.mapLast(
-                        components,
-                        component -> component.withConditions(ListUtils.concat(component.getConditions(), condition))
+                clauses = ListUtils.mapLast(
+                        clauses,
+                        clause -> clause.withConditions(ListUtils.concat(clause.getConditions(), condition))
                 );
             } else {
                 throw new IllegalStateException("expected comprehension component to be an `if` or a `for`");
@@ -809,9 +822,9 @@ public class PsiPythonMapper {
                 randomId(),
                 Space.EMPTY,
                 EMPTY,
-                Py.ComprehensionExpression.Kind.LIST,
+                kind,
                 mapExpression(element.getResultExpression()),
-                components,
+                clauses,
                 spaceBefore(closing),
                 null
         );

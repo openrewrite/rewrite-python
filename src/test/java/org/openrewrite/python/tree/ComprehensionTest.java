@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ListComprehensionTest implements RewriteTest {
+public class ComprehensionTest implements RewriteTest {
 
     @ParameterizedTest
     //language=py
@@ -40,6 +40,27 @@ public class ListComprehensionTest implements RewriteTest {
     void listComprehension(String arg) {
         rewriteRun(
           python(arg)
+        );
+    }
+
+    @Test
+    void setComprehension() {
+        rewriteRun(
+          python("{x for x in xs if x}")
+        );
+    }
+
+    @Test
+    void dictComprehension() {
+        rewriteRun(
+          python("{x:x for x in xs if x}")
+        );
+    }
+
+    @Test
+    void generatorComprehension() {
+        rewriteRun(
+          python("(x for x in xs if x)")
         );
     }
 }
