@@ -94,6 +94,12 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return visitStatement(pass, p);
     }
 
+    public J visitComprehensionExpression(Py.ComprehensionExpression ogComp, P p) {
+        Py.ComprehensionExpression comp = ogComp;
+        // FIXME
+        return visitExpression(comp, p);
+    }
+
     public <T> JRightPadded<T> visitRightPadded(@Nullable JRightPadded<T> right, PyRightPadded.Location loc, P p) {
         return super.visitRightPadded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p);
     }

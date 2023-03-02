@@ -107,7 +107,7 @@ public class PsiPythonMapper {
 
     private J.Import mapImportElements(PyImportStatementBase element, @Nullable Expression importSource) {
         if (element.getImportElements().length != 1) {
-            throw new UnsupportedOperationException("no support for multi-import statements yet");
+            System.err.println("no support for multi-import statements yet");
         }
         PyImportElement pyImportElement = element.getImportElements()[0];
 
@@ -172,9 +172,6 @@ public class PsiPythonMapper {
     }
 
     private J.Import mapFromImportStatement(PyFromImportStatement element) {
-        if (element.getImportElements().length != 1) {
-            throw new UnsupportedOperationException("no support for multi-import statements yet");
-        }
         PsiElement fromKeyword = findChildToken(element, PyTokenTypes.FROM_KEYWORD);
         Expression fromModuleExpr = element.getImportSource() == null ? null : mapReferenceExpression(element.getImportSource());
 
@@ -653,6 +650,8 @@ public class PsiPythonMapper {
             return mapBooleanLiteral((PyBoolLiteralExpression) element);
         } else if (element instanceof PyCallExpression) {
             return mapCallExpression((PyCallExpression) element);
+        } else if (element instanceof PyComprehensionElement) {
+            return mapComprehensionElement((PyComprehensionElement) element);
         } else if (element instanceof PyDictLiteralExpression) {
             return mapDictLiteralExpression((PyDictLiteralExpression) element);
         } else if (element instanceof PyKeyValueExpression) {
@@ -763,6 +762,57 @@ public class PsiPythonMapper {
                 null,
                 emptyList(),
                 JContainer.build(exprs),
+                null
+        );
+    }
+
+    public Expression mapComprehensionElement(PyComprehensionElement element) {
+        List<Py.ComprehensionExpression.Component> components = new ArrayList<>();
+        for (PyComprehensionComponent ifOrFor : element.getComponents()) {
+            if (ifOrFor instanceof PyComprehensionForComponent) {
+                System.err.println("MAPPING PyComprehensionForComponent");
+                PyComprehensionForComponent pyFor = ((PyComprehensionForComponent) ifOrFor);
+                PsiElement forKeyword = findPreviousSiblingToken(pyFor.getIteratorVariable() ,PyTokenTypes.FOR_KEYWORD);
+                PsiElement inKeyword = findPreviousSiblingToken(pyFor.getIteratedList(), PyTokenTypes.IN_KEYWORD);
+                Expression iteratorVariable = mapExpression(pyFor.getIteratorVariable());
+                Expression iteratedList = mapExpression(pyFor.getIteratedList());
+                components.add(new Py.ComprehensionExpression.Component(
+                        randomId(),
+                        spaceBefore(forKeyword),
+                        EMPTY,
+                        iteratorVariable,
+                        JLeftPadded.build(iteratedList).withBefore(spaceBefore(inKeyword)),
+                        null
+                ));
+            } else if (ifOrFor instanceof PyComprehensionIfComponent) {
+                System.err.println("MAPPING PyComprehensionIfComponent");
+                PyComprehensionIfComponent pyif = (PyComprehensionIfComponent) ifOrFor;
+                PsiElement ifKeyword = findPreviousSiblingToken(pyif.getTest(), PyTokenTypes.IF_KEYWORD);
+                Py.ComprehensionExpression.IfComponent condition = new Py.ComprehensionExpression.IfComponent(
+                        randomId(),
+                        spaceBefore(ifKeyword),
+                        EMPTY,
+                        mapExpression(pyif.getTest())
+                );
+                components = ListUtils.mapLast(
+                        components,
+                        component -> component.withConditions(ListUtils.concat(component.getConditions(), condition))
+                );
+            } else {
+                throw new IllegalStateException("expected comprehension component to be an `if` or a `for`");
+            }
+        }
+
+        PsiElement closing = element.getNode().getLastChildNode().getPsi();
+
+        return new Py.ComprehensionExpression(
+                randomId(),
+                Space.EMPTY,
+                EMPTY,
+                Py.ComprehensionExpression.Kind.LIST,
+                mapExpression(element.getResultExpression()),
+                components,
+                spaceBefore(closing),
                 null
         );
     }
@@ -1029,7 +1079,7 @@ public class PsiPythonMapper {
 
     public J.MethodInvocation mapCallExpression(PyCallExpression element) {
         // DO NOT USE `element.getCallee()`; it unwraps parentheses!
-        PyExpression pyCallee = (PyExpression)element.getFirstChild();
+        PyExpression pyCallee = (PyExpression) element.getFirstChild();
 
         Expression callee = mapExpression(pyCallee);
         PyArgumentList pyArgumentList = element.getArgumentList();

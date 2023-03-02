@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python.tree;
 
+import com.jetbrains.python.psi.PyExpression;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -483,6 +484,153 @@ public interface Py extends J {
         @Override
         public CoordinateBuilder.Statement getCoordinates() {
             return new CoordinateBuilder.Statement(this);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class ComprehensionExpression implements Py, Expression {
+
+        public enum Kind {
+            LIST, SET, DICT
+        }
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Kind kind;
+
+        @With
+        @Getter
+        Expression result;
+
+        @Getter
+        @With
+        List<Component> components;
+
+        @With
+        @Getter
+        Space suffix;
+
+        @Getter
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitComprehensionExpression(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+        @RequiredArgsConstructor
+        public final static class IfComponent implements Py {
+            @With
+            @Getter
+            @EqualsAndHashCode.Include
+            UUID id;
+
+            @With
+            @Getter
+            Space prefix;
+
+            @With
+            @Getter
+            Markers markers;
+
+            @With
+            @Getter
+            Expression expression;
+        }
+
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+        @RequiredArgsConstructor
+        @AllArgsConstructor(access = AccessLevel.PRIVATE)
+        public final static class Component implements Py {
+            @Nullable
+            @NonFinal
+            transient WeakReference<Padding> padding;
+
+            @With
+            @Getter
+            @EqualsAndHashCode.Include
+            UUID id;
+
+            @With
+            @Getter
+            Space prefix;
+
+            @With
+            @Getter
+            Markers markers;
+
+            @With
+            @Getter
+            Expression iteratorVariable;
+
+            JLeftPadded<Expression> iteratedList;
+
+            @With
+            @Getter
+            @Nullable
+            List<IfComponent> conditions;
+
+            public Expression getIteratedList() {
+                return this.iteratedList.getElement();
+            }
+
+            public Component withIteratedList(Expression expression) {
+                return this.getPadding().withIteratedList(this.iteratedList.withElement(expression));
+            }
+
+            public Padding getPadding() {
+                Padding p;
+                if (this.padding == null) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                } else {
+                    p = this.padding.get();
+                    if (p == null || p.t != this) {
+                        p = new Padding(this);
+                        this.padding = new WeakReference<>(p);
+                    }
+                }
+                return p;
+            }
+
+            @RequiredArgsConstructor
+            public static class Padding {
+                private final Component t;
+
+                public JLeftPadded<Expression> getIteratedList() {
+                    return t.iteratedList;
+                }
+
+                public Component withIteratedList(JLeftPadded<Expression> iteratedList) {
+                    return t.iteratedList == iteratedList ? t : new Component(t.id, t.prefix, t.markers, t.iteratorVariable, iteratedList, t.conditions);
+                }
+            }
         }
     }
 }

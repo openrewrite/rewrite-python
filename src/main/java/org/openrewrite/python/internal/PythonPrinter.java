@@ -578,4 +578,46 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         afterSyntax(pass, p);
         return pass;
     }
+
+    @Override
+    public J visitComprehensionExpression(Py.ComprehensionExpression comp, PrintOutputCapture<P> p) {
+        beforeSyntax(comp, /* FIXME */ PySpace.Location.PASS_PREFIX, p);
+        String open, close;
+        switch (comp.getKind()) {
+            case DICT:
+            case SET:
+                open = "{";
+                close = "}";
+                break;
+            case LIST:
+                open = "[";
+                close = "]";
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+
+        p.append(open);
+        visit(comp.getResult(), p);
+        for (Py.ComprehensionExpression.Component component : comp.getComponents()) {
+            visitSpace(component.getPrefix(), /* FIXME */ PySpace.Location.PASS_PREFIX, p);
+            p.append("for");
+            visit(component.getIteratorVariable(), p);
+            visitSpace(component.getPadding().getIteratedList().getBefore(), /* FIXME */ PySpace.Location.PASS_PREFIX, p);
+            p.append("in");
+            visit(component.getIteratedList(), p);
+            if (component.getConditions() != null) {
+                for (Py.ComprehensionExpression.IfComponent condition : component.getConditions()) {
+                    visitSpace(condition.getPrefix(), /* FIXME */ PySpace.Location.PASS_PREFIX, p);
+                    p.append("if");
+                    visit(condition.getExpression(), p);
+                }
+            }
+        }
+        visitSpace(comp.getSuffix(), /* FIXME */ PySpace.Location.PASS_PREFIX, p);
+        p.append(close);
+
+        afterSyntax(comp, p);
+        return comp;
+    }
 }
