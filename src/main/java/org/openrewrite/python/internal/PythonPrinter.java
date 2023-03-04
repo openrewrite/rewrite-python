@@ -20,6 +20,7 @@ import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaPrinter;
+import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.Import;
@@ -27,17 +28,22 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.marker.BuiltinDesugar;
-import org.openrewrite.python.marker.ImplicitNone;
-import org.openrewrite.python.marker.MagicMethodDesugar;
+import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
+import static org.openrewrite.python.marker.GroupedStatement.StatementGroup;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
+
+    private final static String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
+    private final static String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
+
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
 
     @Override
@@ -68,7 +74,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitDictLiteral(Py.DictLiteral dict, PrintOutputCapture<P> p) {
         beforeSyntax(dict, PySpace.Location.DICT_LITERAL_PREFIX, p);
-        visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);
+        if (dict.getElements().isEmpty()) {
+            p.append("{");
+            visitPythonExtraPadding(dict, PythonExtraPadding.Location.EMPTY_INITIALIZER, p);
+            p.append("}");
+        } else {
+            visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);
+        }
         afterSyntax(dict, p);
         return dict;
     }
@@ -159,7 +171,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(binary, Space.Location.BINARY_PREFIX, p);
             visit(binary.getLeft(), p);
             visitSpace(binary.getPadding().getOperator().getBefore(), Space.Location.BINARY_OPERATOR, p);
-            p.append(keyword);
+
+            int spaceIndex = keyword.indexOf(' ');
+            if (spaceIndex >= 0) {
+                p.append(keyword.substring(0, spaceIndex));
+                visitPythonExtraPadding(binary, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
+                p.append(keyword.substring(spaceIndex + 1));
+            } else {
+                p.append(keyword);
+            }
+
             visit(binary.getRight(), p);
             afterSyntax(binary, p);
             return binary;
@@ -210,11 +231,38 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public J visitBlock(J.Block block, PrintOutputCapture<P> p) {
             // blocks in Python are just collections of statements with no additional formatting
             beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
-            p.append(":");
+            if (getCursor().getParentTreeCursor().getValue() != Cursor.ROOT_VALUE) {
+                p.append(":");
+            }
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
             visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
             afterSyntax(block, p);
             return block;
+        }
+
+
+        @Override
+        protected void visitStatements(List<JRightPadded<Statement>> statements, JRightPadded.Location location, PrintOutputCapture<P> p) {
+            boolean inSingleLineStatementList = false;
+            @Nullable StatementGroup<Statement> statementGroup = null;
+            for (int i = 0; i < statements.size(); i++) {
+                JRightPadded<Statement> paddedStat = statements.get(i);
+                if (statementGroup == null || !statementGroup.containsIndex(i)) {
+                    statementGroup = GroupedStatement.findCurrentStatementGroup(statements, i);
+                    getCursor().putMessage(STATEMENT_GROUP_CURSOR_KEY, statementGroup == null ? null : statementGroup.getStatements());
+                }
+                getCursor().putMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY, statementGroup == null ? null : i - statementGroup.getFirstIndex());
+
+                if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
+                    if (inSingleLineStatementList) {
+                        p.append(";");
+                    }
+                    visitStatement(paddedStat, location, p);
+                    inSingleLineStatementList = !paddedStat.getAfter().getLastWhitespace().endsWith("\n");
+                } else {
+                    visit(paddedStat.getElement(), p);
+                }
+            }
         }
 
         @Override
@@ -300,7 +348,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                             magicMethodName
                     ));
                 }
-                operator = "not " + operator;
             }
 
             boolean reverseOperandOrder = PythonOperatorLookup.doesMagicMethodReverseOperands(magicMethodName);
@@ -321,6 +368,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(method, Space.Location.BINARY_PREFIX, p);
             visit((Expression) lhs.withPrefix(Space.EMPTY), p);
             visitSpace(beforeOperator, Space.Location.BINARY_OPERATOR, p);
+            if (negate) {
+                p.append("not");
+                visitPythonExtraPadding(method, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
+            }
             p.append(operator);
             visit((Expression) rhs.withPrefix(afterOperator), p);
             afterSyntax(method, p);
@@ -468,25 +519,88 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitImport(Import impoort, PrintOutputCapture<P> p) {
+            List<Import> statementGroup = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_CURSOR_KEY);
+            if (statementGroup != null) {
+                Integer statementGroupIndex = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY);
+                if (statementGroupIndex == null) {
+                    throw new IllegalStateException();
+                }
+                if (statementGroupIndex != statementGroup.size() - 1) {
+                    return impoort;
+                }
+            }
+
+            if (statementGroup == null) {
+                statementGroup = Collections.singletonList(impoort);
+            }
+
+            boolean hasNewline;
+            {
+                AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
+                ContainsNewlineVisitor hasNewlineVisitor = new ContainsNewlineVisitor();
+                for (Import inGroup : statementGroup) {
+                    inGroup.acceptJava(hasNewlineVisitor, hasNewlineHolder);
+                    if (hasNewlineHolder.get()) {
+                        break;
+                    }
+                }
+                hasNewline = hasNewlineHolder.get();
+            }
+
             beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
-            if (impoort.getQualid().getSimpleName().equals("")) {
+            boolean isFrom = impoort.getQualid().getSimpleName().equals("");
+            if (isFrom) {
                 p.append("import");
-                visit(impoort.getQualid().getTarget(), p);
             } else {
                 p.append("from");
                 visit(impoort.getQualid().getTarget(), p);
                 visitSpace(impoort.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
                 p.append("import");
-                visit(impoort.getQualid().getName(), p);
             }
-            if (impoort.getAlias() != null) {
-                visitSpace(impoort.getPadding().getAlias().getBefore(), Space.Location.LANGUAGE_EXTENSION, p);
-                p.append("as");
-                visit(impoort.getAlias(), p);
+
+            if (hasNewline) {
+                visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
+                p.append("(");
             }
+
+            for (int i = 0; i < statementGroup.size(); i++) {
+                Import inGroup = statementGroup.get(i);
+                if (i != 0) {
+                    p.append(",");
+                }
+                if (isFrom) {
+                    visit(inGroup.getQualid().getTarget(), p);
+                } else {
+                    visit(inGroup.getQualid().getName(), p);
+                }
+                if (inGroup.getAlias() != null) {
+                    visitSpace(inGroup.getPadding().getAlias().getBefore(), Space.Location.LANGUAGE_EXTENSION, p);
+                    p.append("as");
+                    visit(inGroup.getAlias(), p);
+                }
+            }
+
+            if (hasNewline) {
+                visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
+                p.append(")");
+            }
+
+
             afterSyntax(impoort, p);
             return impoort;
         }
+    }
+
+    private void visitPythonExtraPadding(Tree tree, PythonExtraPadding.Location loc, PrintOutputCapture<P> p) {
+        Space space = PythonExtraPadding.getOrDefault(tree, loc);
+        if (space == null) {
+            return;
+        }
+        visitSpace(
+                space,
+                Location.LANGUAGE_EXTENSION,
+                p
+        );
     }
 
     private static final UnaryOperator<String> PYTHON_MARKER_WRAPPER =
@@ -685,5 +799,25 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 p
         );
         return del;
+    }
+
+    private static class ContainsNewlineVisitor extends JavaVisitor<AtomicBoolean> {
+        @Override
+        public Space visitSpace(Space space, Location loc, AtomicBoolean hasNewline) {
+            space = super.visitSpace(space, loc, hasNewline);
+            if (space.getWhitespace().contains("\n")) {
+                hasNewline.set(true);
+            } else if (!space.getComments().isEmpty()) {
+                hasNewline.set(true);
+            }
+            return space;
+        }
+
+        @Override
+        public J visitImport(Import impoort, AtomicBoolean hasNewline) {
+            impoort = (Import) super.visitImport(impoort, hasNewline);
+            visitLeftPadded(impoort.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
+            return impoort;
+        }
     }
 }

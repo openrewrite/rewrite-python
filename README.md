@@ -16,7 +16,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Element                 | Status | Example                           | Mapping Notes                                                                       | Limitations                                       |
 |-------------------------|:------:|-----------------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------|
 | File                    |   ✅    |                                   |                                                                                     |                                                   |
-| Simple Statement List   |   ❌    | <pre>a = 1; b=a*2; print(b)</pre> |                                                                                     |                                                   |
+| Simple Statement List   |   ✅    | <pre>a = 1; b=a*2; print(b)</pre> |                                                                                     |                                                   |
 | Function Definition     |   ✅    |                                   |                                                                                     |                                                   |
 | If Statement            |   ✅    |                                   |                                                                                     |                                                   |
 | Class Definition        |   ✅    |                                   | Implemented as `J.ClassDeclaration`. Base classes are stored in `implementings`.    |                                                   |
@@ -28,7 +28,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Except Statement        |   ❌    |                                   |                                                                                     |                                                   |
 | Assignment Statement    |   ✅    |                                   |                                                                                     |                                                   |
 | Return Statement        |   ✅    | <pre>return x</pre>               |                                                                                     |                                                   |
-| Import Statement        |   ⚠️   | <pre>from . import foo</pre>      | Implemented as `J.Import`.                                                          | No support for multiple imports in one statement. |
+| Import Statement        |   ✅    | <pre>from . import foo</pre>      | Implemented as `J.Import`, with `GroupedStatement` markers.                         |  |
 | Raise Statement         |   ❌    |                                   |                                                                                     |                                                   |
 | Pass Statement          |   ✅    | <pre>pass</pre>                   | Implemented as `Py.PassStatement`.                                                  |                                                   |
 | Delete Statement        |   ✅    | <pre>del x, y</pre>               | Implemented as `Py.DelStatement`.                                                   |                                                   |
@@ -46,7 +46,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | None Literal            |   ✅    | <pre>None</pre>                   | Implemented as Java `null`.                                                         |                                                   |
 | List Literal            |   ✅    | <pre>[1, 2, 3]</pre>              | Implemented as `__builtins__.list` call.                                            |                                                   |
 | Set Literal             |   ✅    | <pre>{1, 2, 3}</pre>              | Implemented as `__builtins__.set` call.                                             |                                                   |
-| Dict Literal            |   ✅    | <pre>{1: 2, 3: 4}</pre>           |                                                                                     | Padding of empty dict literals is broken.         |
+| Dict Literal            |   ✅    | <pre>{1: 2, 3: 4}</pre>           |                                                                                     |         |
 | Tuple Literal           |   ✅    | <pre>(1, 2, 3)</pre>              | Implemented as `__builtins__.tuple` call.                                           |                                                   |
 | List Comprehension      |   ✅    | <pre>[x for x in xs]</pre>        |                                                                                     |                                                   |
 | Set Comprehension       |   ✅    | <pre>{x for x in xs}</pre>        |                                                                                     |                                                   |

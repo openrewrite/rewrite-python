@@ -29,9 +29,7 @@ import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
-import org.openrewrite.python.marker.BuiltinDesugar;
-import org.openrewrite.python.marker.ImplicitNone;
-import org.openrewrite.python.marker.MagicMethodDesugar;
+import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PyComment;
 
@@ -50,12 +48,8 @@ public class PsiPythonMapper {
     public Py.CompilationUnit mapFile(Path path, String charset, boolean isCharsetBomMarked, PyFile element) {
         new IntelliJUtils.PsiPrinter().print(element.getNode());
         List<Statement> statements = new ArrayList<>();
-        for (ASTNode child : element.getNode().getChildren(null)) {
-            Statement statement = mapStatement(child.getPsi());
-            if (statement != null) {
-                statements.add(statement);
-            }
-        }
+        statements.add(mapBlock(element, element.getStatements(), Space.EMPTY));
+
         return new Py.CompilationUnit(
                 randomId(),
                 Space.EMPTY,
@@ -71,63 +65,103 @@ public class PsiPythonMapper {
         ).withStatements(statements);
     }
 
-    public Statement mapStatement(PsiElement element) {
+    public Statement mapSingleStatement(PsiElement element) {
+        List<Statement> mapped = mapStatement(element);
+        if (mapped.size() != 1) {
+            throw new IllegalArgumentException("element mapped to more than one statement");
+        }
+        return mapped.get(0);
+    }
+
+    public List<Statement> mapStatement(PsiElement element) {
         if (element instanceof PyAssertStatement) {
-            return mapAssertStatement((PyAssertStatement) element);
+            return singletonList(mapAssertStatement((PyAssertStatement) element));
         } else if (element instanceof PyAssignmentStatement) {
-            return mapAssignmentStatement((PyAssignmentStatement) element);
+            return singletonList(mapAssignmentStatement((PyAssignmentStatement) element));
         } else if (element instanceof PyBreakStatement) {
-            return mapBreakStatement((PyBreakStatement) element);
+            return singletonList(mapBreakStatement((PyBreakStatement) element));
         } else if (element instanceof PyContinueStatement) {
-            return mapContinueStatement((PyContinueStatement) element);
+            return singletonList(mapContinueStatement((PyContinueStatement) element));
         } else if (element instanceof PyClass) {
-            return mapClassDeclarationStatement((PyClass) element);
+            return singletonList(mapClassDeclarationStatement((PyClass) element));
         } else if (element instanceof PyDelStatement) {
-            return mapDelStatement((PyDelStatement) element);
+            return singletonList(mapDelStatement((PyDelStatement) element));
         } else if (element instanceof PyExpressionStatement) {
-            return mapExpressionStatement((PyExpressionStatement) element);
+            return singletonList(mapExpressionStatement((PyExpressionStatement) element));
         } else if (element instanceof PyForStatement) {
-            return mapForStatement((PyForStatement) element);
+            return singletonList(mapForStatement((PyForStatement) element));
         } else if (element instanceof PyFromImportStatement) {
             return mapFromImportStatement((PyFromImportStatement) element);
         } else if (element instanceof PyFunction) {
-            return mapMethodDeclaration((PyFunction) element);
+            return singletonList(mapMethodDeclaration((PyFunction) element));
         } else if (element instanceof PyIfStatement) {
-            return mapIfStatement((PyIfStatement) element);
+            return singletonList(mapIfStatement((PyIfStatement) element));
         } else if (element instanceof PyImportStatement) {
             return mapImportStatement((PyImportStatement) element);
         } else if (element instanceof PyPassStatement) {
-            return mapPassStatement((PyPassStatement) element);
+            return singletonList(mapPassStatement((PyPassStatement) element));
         } else if (element instanceof PyReturnStatement) {
-            return mapReturnStatement((PyReturnStatement) element);
+            return singletonList(mapReturnStatement((PyReturnStatement) element));
         } else if (element instanceof PyStatementList) {
-            return mapBlock((PyStatementList) element, Space.EMPTY);
+            return singletonList(mapBlock((PyStatementList) element, Space.EMPTY));
         } else if (element instanceof PyWhileStatement) {
-            return mapWhile((PyWhileStatement) element);
+            return singletonList(mapWhile((PyWhileStatement) element));
         }
         System.err.println("WARNING: unhandled statement of type " + element.getClass().getSimpleName());
         return null;
     }
 
-    private J.Import mapImportElements(PyImportStatementBase element, @Nullable Expression importSource) {
-        if (element.getImportElements().length != 1) {
-            System.err.println("no support for multi-import statements yet");
+    private List<Statement> mapImportElements(PyImportStatementBase element, @Nullable Expression importSource) {
+        List<Statement> imports = new ArrayList<>(element.getImportElements().length);
+        for (PyImportElement pyImportElement : element.getImportElements()) {
+            imports.add(mapImportElement(pyImportElement, element, importSource));
         }
-        PyImportElement pyImportElement = element.getImportElements()[0];
+        if (imports.size() > 1) {
+            UUID groupId = randomId();
+            imports = ListUtils.map(
+                    imports,
+                    impoort -> impoort.withMarkers(impoort.getMarkers().add(new GroupedStatement(randomId(), groupId)))
+            );
+        }
 
-        PsiElement importKeyword = findChildToken(element, PyTokenTypes.IMPORT_KEYWORD);
+        PsiElement openParen = maybeFindChildToken(element, PyTokenTypes.LPAR);
+        PsiElement closeParen = maybeFindChildToken(element, PyTokenTypes.RPAR);
+        if (openParen != null && closeParen != null) {
+            imports = ListUtils.map(
+                    imports,
+                    statement -> {
+                        statement = PythonExtraPadding.set(
+                                statement,
+                                PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, spaceBefore(openParen)
+                        );
+                        statement = PythonExtraPadding.set(
+                                statement,
+                                PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, spaceBefore(closeParen)
+                        );
+                        return statement;
+                    }
+            );
+        }
 
-        Expression importNameExpr = mapExpression(requireNonNull(pyImportElement.getImportReferenceExpression()));
+        return imports;
+    }
+
+    private J.Import mapImportElement(PyImportElement element, PyImportStatementBase parent, @Nullable Expression importSource) {
+        PsiElement importKeyword = findChildToken(parent, PyTokenTypes.IMPORT_KEYWORD);
+
+        Expression importNameExpr = mapExpression(requireNonNull(element.getImportReferenceExpression()));
         if (!(importNameExpr instanceof J.Identifier)) {
             throw new UnsupportedOperationException("no support for qualified import targets in imports");
         }
+
         //  from math import ceil      or      import ceil
         //                  ^^^^^                    ^^^^^
-        J.Identifier importName = (J.Identifier) importNameExpr.withPrefix(spaceAfter(importKeyword));
+        J.Identifier importName = (J.Identifier) importNameExpr.withPrefix(spaceBefore(element));
 
 
         J.FieldAccess fieldAccess;
         if (importSource == null) {
+            // import ...
             fieldAccess = new J.FieldAccess(
                     randomId(),
                     Space.EMPTY,
@@ -140,6 +174,7 @@ public class PsiPythonMapper {
                     null
             );
         } else {
+            // from math import ...
             fieldAccess = new J.FieldAccess(
                     randomId(),
                     Space.EMPTY,
@@ -151,10 +186,10 @@ public class PsiPythonMapper {
             );
         }
 
-        PyTargetExpression pyAlias = pyImportElement.getAsNameElement();
+        PyTargetExpression pyAlias = element.getAsNameElement();
         JLeftPadded<J.Identifier> alias = null;
         if (pyAlias != null) {
-            PsiElement asKeyword = findChildToken(pyImportElement, PyTokenTypes.AS_KEYWORD);
+            PsiElement asKeyword = findChildToken(element, PyTokenTypes.AS_KEYWORD);
             J.Identifier aliasId = expectIdentifier(mapExpression(pyAlias));
             alias = JLeftPadded.build(
                     aliasId.withPrefix(spaceAfter(asKeyword))
@@ -163,7 +198,7 @@ public class PsiPythonMapper {
 
         return new J.Import(
                 randomId(),
-                spaceBefore(element),
+                Space.EMPTY,
                 EMPTY,
                 JLeftPadded.build(false),
                 fieldAccess,
@@ -171,11 +206,11 @@ public class PsiPythonMapper {
         );
     }
 
-    private J.Import mapImportStatement(PyImportStatement element) {
+    private List<Statement> mapImportStatement(PyImportStatement element) {
         return mapImportElements(element, null);
     }
 
-    private J.Import mapFromImportStatement(PyFromImportStatement element) {
+    private List<Statement> mapFromImportStatement(PyFromImportStatement element) {
         PsiElement fromKeyword = findChildToken(element, PyTokenTypes.FROM_KEYWORD);
         Expression fromModuleExpr = element.getImportSource() == null ? null : mapReferenceExpression(element.getImportSource());
 
@@ -542,7 +577,7 @@ public class PsiPythonMapper {
             throw new RuntimeException("if condition is null");
         }
 
-        Statement ifBody = mapStatement(pyIfBody);
+        Statement ifBody = mapSingleStatement(pyIfBody);
         J.If.Else elsePart = mapElsePart(element, 0);
 
         return new J.If(
@@ -574,7 +609,7 @@ public class PsiPythonMapper {
                 throw new RuntimeException("if condition is null");
             }
 
-            Statement ifBody = mapStatement(pyIfBody);
+            Statement ifBody = mapSingleStatement(pyIfBody);
 
             J.If nestedIf = new J.If(
                     randomId(),
@@ -611,16 +646,154 @@ public class PsiPythonMapper {
     }
 
     public J.Block mapBlock(PyStatementList element, Space blockPrefix) {
-        PyStatement[] pyStatements = element.getStatements();
-        List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.length);
+        return mapBlock(element, Arrays.asList(element.getStatements()), blockPrefix);
+    }
 
-        Space nextPrefix = spaceBefore(element);
+    public J.Block mapBlock(PsiElement container, List<PyStatement> pyStatements, Space blockPrefix) {
+        List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
+
+        final PyStatement finalPyStatementInBlock = pyStatements.get(pyStatements.size() - 1);
+
+        Space nextPrefix = spaceBefore(container);
         for (PyStatement pyStatement : pyStatements) {
-            Statement statement = mapStatement(pyStatement).withPrefix(nextPrefix);
+            List<Statement> mapped = mapStatement(pyStatement);
+
             // the PSI model stores end-of-line comments as *children* of the statement
             Space trailingSpace = trailingSpace(pyStatement);
-            statements.add(JRightPadded.build(statement).withAfter(trailingSpace));
-            nextPrefix = spaceAfter(pyStatement);
+            Space nextSpace = spaceAfter(pyStatement);
+
+            // this is typically null
+            PsiElement semicolon = maybeFindChildToken(pyStatement, PyTokenTypes.SEMICOLON);
+
+            // this is typically true
+            boolean isFollowedByNewline = nextSpace.getWhitespace().contains("\n");
+
+            boolean isFinalStatementInBlock = pyStatement == finalPyStatementInBlock;
+
+            /*
+              The semicolon is a more of a delimiter than a statement terminator.
+              If the final statement is ended by a semicolon, there's actually another (empty) statement
+              that follows it. This is not how the IntelliJ plugin parses the tree, so we fix it here.
+              This is critical for how statements are printed.
+            */
+            @Nullable JRightPadded<Statement> emptyStatement = null;
+            if (isFollowedByNewline) {
+                /*
+                  The tree will look something like this:
+
+                    block
+                      - (this statement)               <--- *** YOU ARE HERE ***
+                        - (this statement's contents)
+                        - PsiWhitespace(' ')           <--- where `trailingSpace` starts
+                        - `Py:END_OF_LINE_COMMENT`     <--- [1] where `trailingSpace` currently ends
+                      - PsiWhiteSpace('\n    ')        <--- [2] where `nextSpace` currently starts
+                      - statement        ^----------------- where `trailingSpace` should end and `nextSpace` should start
+                      ...
+
+                  We just need to [1] add up to the newline to the end of `trailingSpace`,
+                  and [2] strip up to the newline from the beginning of `nextSpace`.
+                */
+                String whitespaceToBreak = nextSpace.getWhitespace();
+                int newlineIndex = whitespaceToBreak.indexOf("\n");
+                String firstPart = whitespaceToBreak.substring(0, newlineIndex + 1);
+                String lastPart = whitespaceToBreak.substring(newlineIndex + 1);
+
+                trailingSpace = appendWhitespace(trailingSpace, firstPart);
+                nextSpace = nextSpace.withWhitespace(lastPart);
+            }
+
+            if (semicolon != null && (isFollowedByNewline || isFinalStatementInBlock)) {
+                /*
+                  We are on the final statement of a single-line list of statements, and the statement is terminated by
+                  a semicolon (which is not necessary for the final statement on a line).
+
+                  The tree will look something like this:
+
+                    block
+                      - statement
+                      - PsiWhiteSpace(\n)
+                      ...
+                      - PsiWhiteSpace(\n)
+                      - statement                      <--- multi-statement line starts here
+                        - ...
+                        - `Py:SEMICOLON`
+                      - PsiWhiteSpace(' ')
+                      - statement
+                        - ...
+                        - `Py:SEMICOLON`
+                      - PsiWhiteSpace(' ')             <--- where `nextPrefix` starts
+                      - (this statement)               <--- *** YOU ARE HERE ***
+                        - (this statement's contents)
+                        - PsiWhitespace(' ')           <--- [3] where `trailingSpace` should actually start
+                        - `Py:SEMICOLON`
+                        - PsiWhitespace(' ')           <--- [1] where the current `trailingSpace` starts
+                        - `Py:END_OF_LINE_COMMENT`              (should be where the empty statement's `trailingSpace` starts)
+                      - PsiWhiteSpace('\n')            <--- [2] where the empty statement's `trailingSpace` should end
+                      - statement
+                      ...
+
+                  So we need to [1] make an empty element and give it the current `trailingSpace` and [2] add a newline to it.
+                  Then, [3] use the space before the semicoloin as the current `trailingSpace`.
+                */
+                emptyStatement = new JRightPadded<>(
+                        new J.Empty(
+                                randomId(),
+                                Space.EMPTY,
+                                EMPTY
+                        ),
+                        trailingSpace,
+                        EMPTY
+                );
+                trailingSpace = spaceBefore(semicolon);
+            } else if (semicolon != null) {
+                /*
+                  We are on a statement inside (not at the end of) a single-line list of statements.
+
+                  The tree will look something like this:
+
+                    block
+                      - statement
+                      - PsiWhiteSpace(\n)
+                      ...
+                      - PsiWhiteSpace(\n)
+                      - statement                      <--- multi-statement line starts here
+                        - ...
+                        - `Py:SEMICOLON`
+                      - PsiWhiteSpace(' ')             <--- where `nextPrefix` starts
+                      - (this statement)               <--- *** YOU ARE HERE ***
+                        - (this statement's contents)
+                        - PsiWhitespace(' ')           <--- where `trailingSpace` should actually start
+                        - `Py:SEMICOLON`               <--- where the current `trailingSpace` tried to start
+                      - PsiWhiteSpace(' ')
+                      - final statement
+                        - ...
+                        - PsiWhitespace(' ')
+                        - `Py:SEMICOLON`
+                        - PsiWhitespace(' ')
+                        - `Py:END_OF_LINE_COMMENT`
+                      - PsiWhiteSpace('\n')
+                      - statement
+                      ...
+
+                  This case is simpler; all we need to do is change what we use for `trailingSpace`.
+                */
+                trailingSpace = spaceBefore(semicolon);
+            }
+
+            /*
+              There is usually only one statement returned.
+              In the unusual case that there's more than one, every statement gets the same padding.
+            */
+            for (Statement statement : mapped) {
+                statement = statement.withPrefix(nextPrefix);
+                statements.add(JRightPadded.build(statement).withAfter(trailingSpace));
+            }
+
+            if (emptyStatement != null) {
+                statements.add(emptyStatement);
+            }
+
+            nextPrefix = nextSpace;
         }
 
         return new J.Block(
@@ -629,7 +802,7 @@ public class PsiPythonMapper {
                 EMPTY,
                 JRightPadded.build(false),
                 statements,
-                spaceAfter(element)
+                spaceAfter(container)
         );
     }
 
@@ -705,7 +878,7 @@ public class PsiPythonMapper {
         } else if (element instanceof PyTupleExpression) {
             return mapTupleLiteral((PyTupleExpression) element);
         } else if (element instanceof PyYieldExpression) {
-            return mapYieldExpression((PyYieldExpression)element);
+            return mapYieldExpression((PyYieldExpression) element);
         }
         System.err.println("WARNING: unhandled expression of type " + element.getClass().getSimpleName());
         return null;
@@ -752,13 +925,21 @@ public class PsiPythonMapper {
         for (PyKeyValueExpression e : element.getElements()) {
             elements.add(JRightPadded.build(mapKeyValueExpression(e)).withAfter(spaceAfter(e)));
         }
-        return new Py.DictLiteral(
+        Expression literal = new Py.DictLiteral(
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
                 JContainer.build(elements),
                 null
         );
+        if (elements.isEmpty()) {
+            literal = PythonExtraPadding.set(
+                    literal,
+                    PythonExtraPadding.Location.EMPTY_INITIALIZER,
+                    spaceAfter(findChildToken(element, PyTokenTypes.LBRACE))
+            );
+        }
+        return literal;
     }
 
     private Py.KeyValue mapKeyValueExpression(PyKeyValueExpression element) {
@@ -813,15 +994,15 @@ public class PsiPythonMapper {
             kind = Py.ComprehensionExpression.Kind.GENERATOR;
         } else {
             throw new IllegalArgumentException(String.format(
-               "unknown comprehension type: %s",
-               element.getNode().getElementType()
+                    "unknown comprehension type: %s",
+                    element.getNode().getElementType()
             ));
         }
         List<Py.ComprehensionExpression.Clause> clauses = new ArrayList<>();
         for (PyComprehensionComponent ifOrFor : element.getComponents()) {
             if (ifOrFor instanceof PyComprehensionForComponent) {
                 PyComprehensionForComponent pyFor = ((PyComprehensionForComponent) ifOrFor);
-                PsiElement forKeyword = findPreviousSiblingToken(pyFor.getIteratorVariable() ,PyTokenTypes.FOR_KEYWORD);
+                PsiElement forKeyword = findPreviousSiblingToken(pyFor.getIteratorVariable(), PyTokenTypes.FOR_KEYWORD);
                 PsiElement inKeyword = findPreviousSiblingToken(pyFor.getIteratedList(), PyTokenTypes.IN_KEYWORD);
                 Expression iteratorVariable = mapExpression(pyFor.getIteratorVariable());
                 Expression iteratedList = mapExpression(pyFor.getIteratedList());
@@ -991,12 +1172,19 @@ public class PsiPythonMapper {
         // if there are multiple tokens in the operator, `psiOperator` is just the *first* one
         PsiElement psiOperator = requireNonNull(element.getPsiOperator());
         if (matchesTokenSequence(psiOperator, PyTokenTypes.IS_KEYWORD, PyTokenTypes.NOT_KEYWORD)) {
-            return mapBinaryExpressionAsOperator(element, J.Binary.Type.NotEqual);
+            return PythonExtraPadding.set(
+                    mapBinaryExpressionAsOperator(element, J.Binary.Type.NotEqual),
+                    PythonExtraPadding.Location.WITHIN_OPERATOR_NAME,
+                    spaceAfter(psiOperator)
+            );
         } else if (matchesTokenSequence(psiOperator, PyTokenTypes.NOT_KEYWORD, PyTokenTypes.IN_KEYWORD)) {
             // a very special case, as there is no magic method for "not in"
             // instead, wrap the "in" expression in a "not"
-            Expression containsMethodCall =
-                    mapBinaryExpressionAsMagicMethod(element, "__contains__").withPrefix(Space.EMPTY);
+            Expression containsMethodCall = PythonExtraPadding.set(
+                    mapBinaryExpressionAsMagicMethod(element, "__contains__").withPrefix(Space.EMPTY),
+                    PythonExtraPadding.Location.WITHIN_OPERATOR_NAME,
+                    spaceAfter(psiOperator)
+            );
             return new J.Unary(
                     randomId(),
                     spaceBefore(element),
@@ -1513,6 +1701,21 @@ public class PsiPythonMapper {
         }
 
         return Space.build(prefix, comments == null ? emptyList() : comments);
+    }
+
+    private static Space appendWhitespace(Space space, String whitespace) {
+        if (space.getComments().size() > 0) {
+            return space.withComments(
+                    ListUtils.mapFirst(
+                            space.getComments(),
+                            comment -> comment.withSuffix(comment.getSuffix() + whitespace)
+                    )
+            );
+        } else {
+            return space.withWhitespace(
+                    space.getWhitespace() + whitespace
+            );
+        }
     }
 
     private static boolean isWhitespaceOrComment(@Nullable PsiElement element) {
