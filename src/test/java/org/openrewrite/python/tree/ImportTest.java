@@ -104,9 +104,9 @@ public class ImportTest implements RewriteTest {
     @ParameterizedTest
     //language=py
     @ValueSource(strings = {
-      "from math import sin, cos",
-      "from math import sin as sin2, cos",
-      "from math import sin as sin2, cos as cos2",
+      "from math import sin, cos # stuff\n\n",
+      "from math import sin as sin2, cos\n",
+      "from math import sin as sin2, cos as cos2\n",
       """
         from math import (
             sin, 
