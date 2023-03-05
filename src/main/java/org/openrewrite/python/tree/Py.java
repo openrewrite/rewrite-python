@@ -543,7 +543,7 @@ public interface Py extends J {
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
         @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
         @RequiredArgsConstructor
-        public final static class Condition implements Py {
+        public static final class Condition implements Py {
             @With
             @Getter
             @EqualsAndHashCode.Include
@@ -572,7 +572,7 @@ public interface Py extends J {
         @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
         @RequiredArgsConstructor
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
-        public final static class Clause implements Py {
+        public static final class Clause implements Py {
             @Nullable
             @NonFinal
             transient WeakReference<Padding> padding;

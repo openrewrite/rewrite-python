@@ -19,6 +19,6 @@ public abstract class PythonOperatorLookup {
     }
 
     public static boolean doesMagicMethodReverseOperands(String method) {
-        return method.equals("__contains__");
+        return "__contains__".equals(method);
     }
 }

@@ -447,7 +447,9 @@ public class IntelliJUtils {
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof LanguageFileType)) return false;
+            if (!(obj instanceof LanguageFileType)) {
+                return false;
+            }
             return getLanguage().equals(((LanguageFileType) obj).getLanguage());
         }
     }
@@ -559,30 +561,45 @@ public class IntelliJUtils {
 
         @Override
         public @NotNull FileType getStdFileType(@NotNull String fileTypeName) {
-            if ("ARCHIVE".equals(fileTypeName)) return UnknownFileType.INSTANCE;
-            if ("PLAIN_TEXT".equals(fileTypeName)) return PlainTextFileType.INSTANCE;
-            if ("CLASS".equals(fileTypeName))
+            if ("ARCHIVE".equals(fileTypeName)) {
+                return UnknownFileType.INSTANCE;
+            }
+            if ("PLAIN_TEXT".equals(fileTypeName)) {
+                return PlainTextFileType.INSTANCE;
+            }
+            if ("CLASS".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.JavaClassFileType", fileTypeName);
-            if ("JAVA".equals(fileTypeName))
+            }
+            if ("JAVA".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.JavaFileType", fileTypeName);
-            if ("XML".equals(fileTypeName))
+            }
+            if ("XML".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.XmlFileType", fileTypeName);
-            if ("DTD".equals(fileTypeName))
+            }
+            if ("DTD".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.DTDFileType", fileTypeName);
-            if ("JSP".equals(fileTypeName))
+            }
+            if ("JSP".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.NewJspFileType", fileTypeName);
-            if ("JSPX".equals(fileTypeName))
+            }
+            if ("JSPX".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.JspxFileType", fileTypeName);
-            if ("HTML".equals(fileTypeName))
+            }
+            if ("HTML".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.HtmlFileType", fileTypeName);
-            if ("XHTML".equals(fileTypeName))
+            }
+            if ("XHTML".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.ide.highlighter.XHtmlFileType", fileTypeName);
-            if ("JavaScript".equals(fileTypeName))
+            }
+            if ("JavaScript".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.lang.javascript.JavaScriptFileType", fileTypeName);
-            if ("Properties".equals(fileTypeName))
+            }
+            if ("Properties".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.lang.properties.PropertiesFileType", fileTypeName);
-            if ("GUI_DESIGNER_FORM".equals(fileTypeName))
+            }
+            if ("GUI_DESIGNER_FORM".equals(fileTypeName)) {
                 return loadFileTypeSafe("com.intellij.uiDesigner.GuiFormFileType", fileTypeName);
+            }
             return new MockLanguageFileType(PlainTextLanguage.INSTANCE, fileTypeName.toLowerCase(Locale.ENGLISH));
         }
 
@@ -786,7 +803,7 @@ public class IntelliJUtils {
     }
 
     public static class PsiPrinter {
-        private int depth = 0;
+        private int depth;
 
         private String indent() {
             StringBuilder indent = new StringBuilder();
@@ -803,7 +820,7 @@ public class IntelliJUtils {
                     .append(" [psi=")
                     .append(node.getPsi().getClass().getSimpleName());
             if (node instanceof LeafPsiElement) {
-                output.append(", text=`" + node.getText().replace("\n", "\\n").replace("\t", "\\t") + "`");
+                output.append(", text=`").append(node.getText().replace("\n", "\\n").replace("\t", "\\t")).append("`");
             }
             output.append("]");
 

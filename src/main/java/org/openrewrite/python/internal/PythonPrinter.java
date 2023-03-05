@@ -41,8 +41,8 @@ import static org.openrewrite.python.marker.GroupedStatement.StatementGroup;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
-    private final static String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
-    private final static String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
+    private static final String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
+    private static final String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
 
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
 
@@ -316,7 +316,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
             String magicMethodName = method.getSimpleName();
 
-            if (magicMethodName.equals("__call__")) {
+            if ("__call__".equals(magicMethodName)) {
                 beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
                 visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, p);
                 visitContainer("(", method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", ")", p);
@@ -342,7 +342,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
 
             if (negate) {
-                if (!operator.equals("in")) {
+                if (!"in".equals(operator)) {
                     throw new IllegalStateException(String.format(
                             "found method call `%s` as a de-sugared operator, but it is marked as negated (which it does not support)",
                             magicMethodName
@@ -381,7 +381,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             Expression select = method.getSelect();
             if (!(select instanceof J.Identifier)) {
                 throw new IllegalStateException("expected builtin desugar to select from an Identifier");
-            } else if (!((J.Identifier) select).getSimpleName().equals("__builtins__")) {
+            } else if (!"__builtins__".equals(((J.Identifier) select).getSimpleName())) {
                 throw new IllegalStateException("expected builtin desugar to select from __builtins__");
             }
 
@@ -417,8 +417,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         }
                     }
 
-                    String before, after;
-                    if (builtinName.equals("set")) {
+                    String before;
+                    String after;
+                    if ("set".equals(builtinName)) {
                         before = "{";
                         after = "}";
                     } else {
@@ -548,7 +549,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
 
             beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
-            boolean isFrom = impoort.getQualid().getSimpleName().equals("");
+            boolean isFrom = "".equals(impoort.getQualid().getSimpleName());
             if (isFrom) {
                 p.append("import");
             } else {
@@ -693,7 +694,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitComprehensionExpression(Py.ComprehensionExpression comp, PrintOutputCapture<P> p) {
         beforeSyntax(comp, PySpace.Location.COMPREHENSION_PREFIX, p);
-        String open, close;
+        String open;
+        String close;
         switch (comp.getKind()) {
             case DICT:
             case SET:

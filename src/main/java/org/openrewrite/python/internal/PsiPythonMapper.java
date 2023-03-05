@@ -1001,7 +1001,7 @@ public class PsiPythonMapper {
         List<Py.ComprehensionExpression.Clause> clauses = new ArrayList<>();
         for (PyComprehensionComponent ifOrFor : element.getComponents()) {
             if (ifOrFor instanceof PyComprehensionForComponent) {
-                PyComprehensionForComponent pyFor = ((PyComprehensionForComponent) ifOrFor);
+                PyComprehensionForComponent pyFor = (PyComprehensionForComponent) ifOrFor;
                 PsiElement forKeyword = findPreviousSiblingToken(pyFor.getIteratorVariable(), PyTokenTypes.FOR_KEYWORD);
                 PsiElement inKeyword = findPreviousSiblingToken(pyFor.getIteratedList(), PyTokenTypes.IN_KEYWORD);
                 Expression iteratorVariable = mapExpression(pyFor.getIteratorVariable());
@@ -1704,7 +1704,7 @@ public class PsiPythonMapper {
     }
 
     private static Space appendWhitespace(Space space, String whitespace) {
-        if (space.getComments().size() > 0) {
+        if (!space.getComments().isEmpty()) {
             return space.withComments(
                     ListUtils.mapFirst(
                             space.getComments(),

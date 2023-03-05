@@ -103,7 +103,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
 
     public static class Builder extends Parser.Builder {
         private JavaTypeCache typeCache = new JavaTypeCache();
-        private boolean logCompilationWarningsAndErrors = false;
+        private boolean logCompilationWarningsAndErrors;
         private final List<NamedStyles> styles = new ArrayList<>();
 
         public Builder() {

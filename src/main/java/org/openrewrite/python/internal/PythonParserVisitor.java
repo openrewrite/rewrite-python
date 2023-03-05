@@ -42,7 +42,7 @@ public class PythonParserVisitor {
     private final Charset charset;
     private final boolean charsetBomMarked;
     private final ExecutionContext ctx;
-    private int cursor = 0;
+    private int cursor;
 
     private static final Pattern whitespaceSuffixPattern = Pattern.compile("\\s*[^\\s]+(\\s*)");
 
@@ -83,31 +83,26 @@ public class PythonParserVisitor {
                 if (source.length() - untilDelim.length() > delimIndex + 1) {
                     char c1 = source.charAt(delimIndex);
                     char c2 = source.charAt(delimIndex + 1);
-                    switch (c1) {
-                        case '/':
-                            switch (c2) {
-                                case '/':
-                                    inSingleLineComment = true;
-                                    delimIndex++;
-                                    break;
-                                case '*':
-                                    inMultiLineComment = true;
-                                    delimIndex++;
-                                    break;
-                            }
-                            break;
-                        case '*':
-                            if (c2 == '/') {
-                                inMultiLineComment = false;
-                                delimIndex += 2;
-                            }
-                            break;
+                    if (c1 == '/') {
+                        if (c2 == '/') {
+                            inSingleLineComment = true;
+                            delimIndex++;
+                        } else if (c2 == '*') {
+                            inMultiLineComment = true;
+                            delimIndex++;
+                        }
+                    } else if (c1 == '*') {
+                        if (c2 == '/') {
+                            inMultiLineComment = false;
+                            delimIndex += 2;
+                        }
                     }
                 }
 
                 if (!inMultiLineComment && !inSingleLineComment) {
-                    if (stop != null && source.charAt(delimIndex) == stop)
-                        return -1; // reached stop word before finding the delimiter
+                    if (stop != null && source.charAt(delimIndex) == stop) {
+                        return -1;
+                    } // reached stop word before finding the delimiter
 
                     if (source.startsWith(untilDelim, delimIndex)) {
                         break; // found it!
