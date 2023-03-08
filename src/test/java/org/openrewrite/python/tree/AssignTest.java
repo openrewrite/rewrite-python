@@ -16,12 +16,13 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 public class AssignTest implements RewriteTest {
-
     @Test
     void assignment() {
         rewriteRun(
@@ -30,6 +31,32 @@ public class AssignTest implements RewriteTest {
               j = 1
               k = 2
               """
+          )
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "+",
+      "-",
+      "*",
+      "@",
+      "/",
+      "%",
+      "&",
+      "|",
+      "^",
+      "<<",
+      ">>",
+      "**",
+      "//",
+    })
+    void assignmentOp(String op) {
+        rewriteRun(
+          python(
+            """
+              a %s= 3
+              """.formatted(op)
           )
         );
     }

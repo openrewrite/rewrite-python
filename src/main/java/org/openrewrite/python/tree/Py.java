@@ -89,6 +89,49 @@ public interface Py extends J {
         }
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class TypeHint implements Py, TypeTree {
+
+        public enum Kind {
+            RETURN_TYPE,
+            VARIABLE_TYPE,
+        }
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        @Getter
+        @With
+        Kind kind;
+
+        @Getter
+        @With
+        Expression expression;
+
+        @Getter
+        @With
+        JavaType type;
+
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitTypeHint(this, p);
+        }
+    }
+
+
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
@@ -1035,7 +1078,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
-    final class SpecialParameter implements Py, Expression {
+    final class SpecialParameter implements Py, TypeTree {
 
         public enum Kind {
             KWARGS,
@@ -1061,7 +1104,8 @@ public interface Py extends J {
 
         @With
         @Getter
-        Expression expression;
+        @Nullable
+        TypeHint typeHint;
 
         @With
         @Getter
@@ -1072,11 +1116,46 @@ public interface Py extends J {
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
             return v.visitSpecialParameter(this, p);
         }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class TypeHintedExpression implements Py, Expression {
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        TypeHint typeHint;
+
+        @With
+        @Getter
+        Expression expression;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitTypeHintedExpression(this, p);
+        }
 
         public CoordinateBuilder.Expression getCoordinates() {
             return new CoordinateBuilder.Expression(this);
         }
-
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

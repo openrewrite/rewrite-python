@@ -13,6 +13,12 @@ public abstract class PythonOperatorLookup {
                 return "!=";
             case "__contains__":
                 return "in";
+            case "__floordiv__":
+                return "//";
+            case "__pow__":
+                return "**";
+            case "__matmul__":
+                return "@";
             default:
                 return null;
         }
