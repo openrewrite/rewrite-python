@@ -68,14 +68,6 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     @Override
     public List<Py.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
         return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
-            String full = sourceFile.getSource(ctx).readFully();
-            System.err.println(
-                    "--\noriginal\n--\n"
-                            + "ends with newline? " + full.endsWith("\n")
-                            + "\n--\n"
-                            + full
-                            + "--"
-            );
             EncodingDetectingInputStream is = sourceFile.getSource(ctx);
             String sourceText = is.readFully();
 

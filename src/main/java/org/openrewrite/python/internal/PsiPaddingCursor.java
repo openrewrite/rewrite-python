@@ -50,7 +50,6 @@ public class PsiPaddingCursor {
     }
 
     private static State attachAfter(PsiElement element) {
-        System.err.println(">> attaching after " + previewElement(element));
         // in-order traversal, limited to not increase depth
         while (element.getNextSibling() == null) {
             if (element.getParent() == null) {
@@ -61,7 +60,6 @@ public class PsiPaddingCursor {
 
         element = element.getNextSibling();
         final State state = attachAt(element);
-        System.err.println(">>> ended at " + state.getSourceOffset() + " with a " + state.getClass().getSimpleName());
         return state;
     }
 
@@ -80,7 +78,6 @@ public class PsiPaddingCursor {
     }
 
     private static State attachAtTrailingSpaceWithin(PsiElement element) {
-        System.err.println(">> attaching to trailing space within " + previewElement(element));
         PsiElement child = element.getLastChild();
         if (child == null) {
             return attachAfter(element);
@@ -100,41 +97,15 @@ public class PsiPaddingCursor {
             }
         }
 
-        System.err.println(">>> ended at " + state.getSourceOffset() + " with a " + state.getClass().getSimpleName());
-
         return state;
     }
 
-    private static String previewElement(PsiElement element) {
-        String preview;
-        String fullText = element.getText();
-        if (fullText.length() == 0) {
-            preview = "<empty>";
-        } else if (fullText.length() < 15) {
-            preview = "\"" + fullText + "\"";
-        } else {
-            preview = "\"" + fullText.substring(0, 6) + "…" + fullText.substring(fullText.length() - 6) + "\"";
-        }
-        preview = preview.replace("\n", "⏎");
-
-        return String.format(
-                "{%s, %d, %s}",
-                element.getNode().getElementType(),
-                actualNodeOffset(element),
-                preview
-        );
-    }
-
     private static State attachAt(PsiElement element) {
-        System.err.println(">> attaching at " + previewElement(element));
         if (element instanceof PsiWhiteSpace) {
-            System.err.println(">>> it's whitespace; attaching as WhitespaceNext");
             return new State.WhitespaceNext((PsiWhiteSpace) element, 0);
         } else if (element instanceof PsiComment) {
-            System.err.println(">>> it's a comment; attaching as CommentNext");
             return new State.CommentNext((PsiComment) element);
         } else {
-            System.err.println(">>> it's non-padding; attaching as StoppedAtElement");
             return new State.StoppedAtElement(element);
         }
     }
@@ -293,21 +264,14 @@ public class PsiPaddingCursor {
     }
 
     public Space consumeRemaining() {
-        System.err.println();
-        System.err.println("> consumeRemaining @ " + state.getSourceOffset());
         AtomicReference<Space> acc = new AtomicReference<>(Space.EMPTY);
         while (state instanceof State.Consumable) {
-            System.err.println("> temp result: " + acc.get());
             state = ((State.Consumable) state).consume(acc);
         }
-        System.err.println("> result: " + acc.get());
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
         return acc.get();
     }
 
     public Space consumeRemainingAndExpect(PsiElement expectedNext) {
-        System.err.println("> (below will expect a " + expectedNext.getNode().getElementType() + ")");
         final Space space = consumeRemaining();
 
         final @Nullable Integer currentOffset = state.getSourceOffset();
@@ -331,9 +295,6 @@ public class PsiPaddingCursor {
     }
 
     public WithStatus<Space> consumeUntilNewlineWithStatus() {
-        System.err.println();
-        System.err.println("> consumeUntilNewline @ " + state.getSourceOffset());
-
         final AtomicReference<Space> acc = new AtomicReference<>(Space.EMPTY);
         while (state instanceof State.Consumable) {
             state = ((State.Consumable) state).consumeUntilNewline(acc);
@@ -342,9 +303,6 @@ public class PsiPaddingCursor {
             }
         }
         final boolean success = state instanceof State.FoundNewline;
-        System.err.println("> result: " + acc.get() + ", " + success);
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
         return new WithStatus<>(acc.get(), success);
     }
 
@@ -378,38 +336,22 @@ public class PsiPaddingCursor {
     }
 
     public void resetTo(PsiElement next) {
-        System.err.println();
-        System.err.println("> resetTo " + previewElement(next));
         assertDiscardable();
         this.state = attachAt(next);
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
     }
 
     public void resetToSpaceBefore(PsiElement elementAfterSpace) {
-        System.err.println();
-        System.err.println("> resetToSpaceBefore " + previewElement(elementAfterSpace));
         assertDiscardable();
         this.state = attachToSpaceBefore(elementAfterSpace);
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
     }
 
     public void resetToSpaceAfter(PsiElement next) {
-        System.err.println();
-        System.err.println("> resetToSpaceAfter " + previewElement(next));
         assertDiscardable();
         this.state = attachAfter(next);
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
     }
 
     public void resetToTrailingSpaceWithin(PsiElement within) {
-        System.err.println();
-        System.err.println("> resetToTrailingSpaceWithin " + previewElement(within));
         assertDiscardable();
         this.state = attachAtTrailingSpaceWithin(within);
-        System.err.println("> new state: " + this.state.getClass().getSimpleName() + " @ " + this.state.getSourceOffset());
-        System.err.println();
     }
 }

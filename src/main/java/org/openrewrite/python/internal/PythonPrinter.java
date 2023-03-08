@@ -66,17 +66,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         for (JRightPadded<Statement> statement : cu.getPadding().getStatements()) {
             visitRightPadded(statement, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
         }
-        System.err.format(
-                "END SPACE FOR FILE: [%s]\n", cu.getEof()
-        );
+
         visitSpace(cu.getEof(), Location.COMPILATION_UNIT_EOF, p);
         if (cu.getMarkers().findFirst(SuppressNewline.class).isPresent()) {
-            System.err.println("CHECKING FOR NEWLINE");
             if (p.out.charAt(p.out.length() - 1) == '\n') {
-                System.err.println("FOUND IT");
-                System.err.println("BEFORE:\n--\n" + p.out.toString() + "--");
                 p.out.setLength(p.out.length() - 1);
-                System.err.println("AFTER:\n--\n" + p.out.toString() + "--");
             }
         }
         afterSyntax(cu, p);
@@ -247,10 +241,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 p.append(":");
             }
 
-            System.err.format("PREFIX SPACE FOR BLOCK: [%s]\n", block.getPrefix());
             beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
-            System.err.format("END SPACE FOR BLOCK: [%s]\n", block.getEnd());
             visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
             afterSyntax(block, p);
             return block;
@@ -271,21 +263,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
                 if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
                     if (i != 0 && p.out.length() > 0 && p.out.charAt(p.out.length() - 1) != '\n') {
-                        System.err.format(
-                                "APPENDING SEMICOLON: [%s]\n",
-                                p.out.length() > 10
-                                        ? "…" + p.out.substring(p.out.length() - 10)
-                                        .replace("\n", "\\n")
-                                        .replace(" ", "·")
-                                        : p.out
-                        );
                         p.append(";");
                     }
-//                    if (inSingleLineStatementList) {
-//                        p.append(";");
-//                    }
                     visitStatement(paddedStat, location, p);
-//                    inSingleLineStatementList = !paddedStat.getAfter().getLastWhitespace().endsWith("\n");
                 } else {
                     visit(paddedStat.getElement(), p);
                 }
@@ -543,9 +523,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (paddedStat == null) {
                 return;
             }
-            System.err.format("PREFIX SPACE FOR %s: [%s]\n", paddedStat.getElement().getClass().getSimpleName(), paddedStat.getElement().getPrefix());
             visit(paddedStat.getElement(), p);
-            System.err.format("TRAILING STATEMENT SPACE FOR %s: [%s]\n", paddedStat.getElement().getClass().getSimpleName(), paddedStat.getAfter());
             visitSpace(paddedStat.getAfter(), location.getAfterLocation(), p);
         }
 

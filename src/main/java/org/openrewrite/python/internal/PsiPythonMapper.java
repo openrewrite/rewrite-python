@@ -59,15 +59,12 @@ public class PsiPythonMapper {
         PyFile pyFile = IntelliJUtils.parsePythonSource(sourceText);
         Py.CompilationUnit compilationUnit = mapFile(pyFile, path, charset, isCharsetBomMarked);
         if (addedNewline) {
-            System.err.println("ADDED NEWLINE");
             compilationUnit = compilationUnit.withMarkers(
                     compilationUnit.getMarkers().add(
                             new SuppressNewline(randomId())
                     )
             );
         }
-
-        System.err.println(TreeVisitingPrinter.printTreeAll(compilationUnit));
 
         return compilationUnit;
     }
@@ -103,29 +100,24 @@ public class PsiPythonMapper {
     }
 
     public List<Statement> mapStatement(PsiElement element, PsiPaddingCursor paddingCursor) {
-        System.err.format("MAPPING %s AT %d; CURSOR IS AT %d\n", element.getNode().getElementType(), element.getNode().getStartOffset(), paddingCursor.offsetInFile());
-        try {
-            if (element instanceof PyClass) {
-                return singletonList(mapClassDeclarationStatement((PyClass) element, paddingCursor));
-            } else if (element instanceof PyForStatement) {
-                return singletonList(mapForStatement((PyForStatement) element, paddingCursor));
-            } else if (element instanceof PyFunction) {
-                return singletonList(mapMethodDeclaration((PyFunction) element, paddingCursor));
-            } else if (element instanceof PyIfStatement) {
-                return singletonList(mapIfStatement((PyIfStatement) element, paddingCursor));
-            } else if (element instanceof PyMatchStatement) {
-                return singletonList(mapMatchStatement((PyMatchStatement) element, paddingCursor));
-            } else if (element instanceof PyTryExceptStatement) {
-                return singletonList(mapTry((PyTryExceptStatement) element, paddingCursor));
-            } else if (element instanceof PyWhileStatement) {
-                return singletonList(mapWhile((PyWhileStatement) element, paddingCursor));
-            } else if (element instanceof PyWithStatement) {
-                return singletonList(mapWithStatement((PyWithStatement) element, paddingCursor));
-            } else {
-                return mapSimpleStatement(element);
-            }
-        } finally {
-            System.err.format("AFTER STATEMENT AT %d, CURSOR IS AT %d\n", element.getNode().getStartOffset(), paddingCursor.offsetInFile());
+        if (element instanceof PyClass) {
+            return singletonList(mapClassDeclarationStatement((PyClass) element, paddingCursor));
+        } else if (element instanceof PyForStatement) {
+            return singletonList(mapForStatement((PyForStatement) element, paddingCursor));
+        } else if (element instanceof PyFunction) {
+            return singletonList(mapMethodDeclaration((PyFunction) element, paddingCursor));
+        } else if (element instanceof PyIfStatement) {
+            return singletonList(mapIfStatement((PyIfStatement) element, paddingCursor));
+        } else if (element instanceof PyMatchStatement) {
+            return singletonList(mapMatchStatement((PyMatchStatement) element, paddingCursor));
+        } else if (element instanceof PyTryExceptStatement) {
+            return singletonList(mapTry((PyTryExceptStatement) element, paddingCursor));
+        } else if (element instanceof PyWhileStatement) {
+            return singletonList(mapWhile((PyWhileStatement) element, paddingCursor));
+        } else if (element instanceof PyWithStatement) {
+            return singletonList(mapWithStatement((PyWithStatement) element, paddingCursor));
+        } else {
+            return mapSimpleStatement(element);
         }
     }
 
@@ -724,7 +716,6 @@ public class PsiPythonMapper {
         } else if (forPart.getTarget() instanceof PyTargetExpression) {
             target = mapTargetExpressionAsVariableDeclarations((PyTargetExpression) forPart.getTarget());
         } else {
-            System.err.println("WARNING: unhandled for loop target of type " + forPart.getTarget().getClass().getSimpleName());
             return null;
         }
 
@@ -1123,19 +1114,7 @@ public class PsiPythonMapper {
             PsiPaddingCursor paddingCursor,
             BiFunction<T, PsiPaddingCursor, List<? extends Statement>> mapFn
     ) {
-        System.err.format("MAPPING BLOCK AT %d, CURSOR IS AT %d\n", container.getNode().getStartOffset(), paddingCursor.offsetInFile());
-//        if (!isCompoundStatement(container)) {
-//            throw new IllegalArgumentException(String.format(
-//                    "Element of type %s cannot be mapped as a block because its type is not registered in " +
-//                            "`isCompoundStatement`. This method ensures that whitespace consumption rules " +
-//                            "are kept in sync when compound statements are nested.",
-//                    container.getNode().getElementType()
-//            ));
-//        }
-
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
-
-//        final PyStatement finalPyStatementInBlock = pyStatements.get(pyStatements.size() - 1);
 
         if (colonToken != null) {
             paddingCursor.resetToSpaceAfter(colonToken);
@@ -1173,7 +1152,6 @@ public class PsiPythonMapper {
                     after = paddingCursor.consumeUntilNewline();
                 }
             }
-
 
             /*
               There is usually only one statement returned.
@@ -2267,8 +2245,6 @@ public class PsiPythonMapper {
                 }
             }
         }
-
-        System.err.println(space);
 
         return new Space[]{space};
     }
