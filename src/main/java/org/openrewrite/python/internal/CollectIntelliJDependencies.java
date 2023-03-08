@@ -19,14 +19,12 @@ import com.intellij.psi.PsiElement;
 import com.jetbrains.python.psi.PyFile;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
-import org.openrewrite.Parser;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -57,17 +55,15 @@ public class CollectIntelliJDependencies {
             return;
         }
 
-        final Parser.Input input = new Parser.Input(file.toPath(), () -> {
-            try {
-                return new BufferedInputStream(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        byte[] data;
+        try {
+            data = Files.readAllBytes(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         final PyFile parsed = IntelliJUtils.parsePythonSource(
-                input,
-                executionContext
+            new String(data)
         );
 
         processNode(parsed);

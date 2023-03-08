@@ -218,4 +218,61 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         ));
         return del;
     }
+
+    public J visitExceptionType(Py.ExceptionType ogType, P p) {
+        Py.ExceptionType type = ogType;
+        type = type.withPrefix(visitSpace(type.getPrefix(), PySpace.Location.EXCEPTION_TYPE_PREFIX, p));
+        type = type.withMarkers(visitMarkers(type.getMarkers(), p));
+        type = type.withExpression(visitAndCast(type.getExpression(), p));
+        return type;
+    }
+
+    public J visitVariableScopeStatement(Py.VariableScopeStatement ogStmt, P p) {
+        Py.VariableScopeStatement stmt = ogStmt;
+        stmt = stmt.withPrefix(visitSpace(stmt.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p));
+        stmt = stmt.withMarkers(visitMarkers(stmt.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(stmt, p);
+        if (!(temp instanceof Py.VariableScopeStatement)) {
+            return temp;
+        } else {
+            stmt = (Py.VariableScopeStatement) temp;
+        }
+        stmt = stmt.getPadding().withNames(ListUtils.map(
+                stmt.getPadding().getNames(),
+                t -> visitRightPadded(t, PyRightPadded.Location.VARIABLE_SCOPE_ELEMENT, p)
+        ));
+        return stmt;
+    }
+
+    public J visitErrorFromExpression(Py.ErrorFromExpression ogExpr, P p) {
+        Py.ErrorFromExpression expr = ogExpr;
+        expr = expr.withPrefix(visitSpace(expr.getPrefix(), PySpace.Location.ERROR_FROM_PREFIX, p));
+        expr = expr.withMarkers(visitMarkers(expr.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(expr, p);
+        if (!(temp instanceof Py.ErrorFromExpression)) {
+            return temp;
+        } else {
+            expr = (Py.ErrorFromExpression) temp;
+        }
+        expr = expr.withError(visitAndCast(expr.getError(), p));
+        expr = expr.getPadding().withFrom(
+                visitLeftPadded(expr.getPadding().getFrom(), PyLeftPadded.Location.ERROR_FROM, p)
+        );
+        return expr;
+    }
+
+    public J visitMatchCasePattern(Py.MatchCase.Pattern pattern, P p) {
+        // FIXME
+        return pattern;
+    }
+
+    public J visitMatchCase(Py.MatchCase match, P p) {
+        // FIXME
+        return match;
+    }
+
+    public J visitSpecialParameter(Py.SpecialParameter specialParameter, P p) {
+        // FIXME
+        return specialParameter;
+    }
 }

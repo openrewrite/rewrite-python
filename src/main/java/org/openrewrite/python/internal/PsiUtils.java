@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.PyElementType;
 import org.openrewrite.internal.lang.Nullable;
 

@@ -33,11 +33,9 @@ public class WhitespaceTest implements RewriteTest {
       "; ",
       "\n",
       " \n",
-      "\n ",
       "# comment\n",
       " # comment\n",
       "# comment \n",
-      "# comment\n ",
     })
     public void testMultiStatement(String ending) {
         rewriteRun(python("print(42)%sprint(2)".formatted(ending)));
@@ -92,6 +90,19 @@ public class WhitespaceTest implements RewriteTest {
                 print(42); print(43) ;print(44)%s
                 print(42); print(43) ;print(44) ; 
             """.formatted(firstLineEnding)
+        ));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "", "\n", "\n\n", "\n\n\n"
+    })
+    public void testEOF(String eofSpace) {
+        rewriteRun(python(
+          """
+            print(1)
+            print(2)
+            print(3)%s""".formatted(eofSpace)
         ));
     }
 

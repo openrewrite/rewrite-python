@@ -26,6 +26,14 @@ public class PythonExtraPadding implements Marker {
 
     public enum Location {
         /**
+         * <pre>
+         *      if someCondition⇒❘ ❘⇐:
+         *          pass
+         * </pre>
+         */
+        BEFORE_COMPOUND_BLOCK_COLON(Space.EMPTY),
+
+        /**
          * Imports can optionally be wrapped in parens.
          *
          * <pre>
