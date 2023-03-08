@@ -69,21 +69,20 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     public List<Py.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
         return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
             EncodingDetectingInputStream is = sourceFile.getSource(ctx);
+            String sourceText = is.readFully();
 
-            PyFile file = IntelliJUtils.parsePythonSource(sourceFile, ctx);
-
-            return new PsiPythonMapper().mapFile(
+            return new PsiPythonMapper().mapSource(
+                    sourceText,
                     sourceFile.getPath(),
                     is.getCharset().toString(),
-                    is.isCharsetBomMarked(),
-                    file
+                    is.isCharsetBomMarked()
             );
         }).collect(toList());
     }
 
     @Override
     public boolean accept(Path path) {
-        return path.toString().endsWith(".kt");
+        return path.toString().endsWith(".py");
     }
 
     @Override

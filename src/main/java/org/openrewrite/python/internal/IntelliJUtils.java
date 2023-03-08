@@ -203,7 +203,7 @@ public class IntelliJUtils {
     }
 
 
-    public static PyFile parsePythonSource(Parser.Input sourceFile, ExecutionContext ctx) {
+    public static PyFile parsePythonSource(String sourceText) {
         Disposable mockDisposable = () -> {
         };
 
@@ -269,11 +269,6 @@ public class IntelliJUtils {
         project.registerService(PomModel.class, new PomModelImpl(project));
 
         Registry.markAsLoaded();
-
-
-        PyParser parser = new PyParser();
-        EncodingDetectingInputStream is = sourceFile.getSource(ctx);
-        String sourceText = is.readFully();
 
         final FileViewProvider fileViewProvider = new SingleRootFileViewProvider(
                 psiManager,

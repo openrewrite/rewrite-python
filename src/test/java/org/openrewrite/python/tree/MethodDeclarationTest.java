@@ -16,20 +16,30 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 public class MethodDeclarationTest implements RewriteTest {
 
-    @Test
-    void functionDefinition() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "",
+      "a",
+      "a, b",
+      "a, b, c=1",
+      "a, b, *args",
+      "a, b, *args, **kwargs",
+    })
+    void functionDefinition(String args) {
         rewriteRun(
           python(
             """
-              def foo():
+              def foo(%s):
                   pass
-              """
+              """.formatted(args)
           )
         );
     }
