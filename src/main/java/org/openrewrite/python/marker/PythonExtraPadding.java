@@ -11,6 +11,8 @@ import org.openrewrite.marker.Marker;
 import java.util.Collections;
 import java.util.UUID;
 
+import static java.util.Collections.emptyList;
+
 /**
  * For use as a last resort when Pyton elements semantically fit into the `J` scheme,
  * but lack the fields to store the necessary padding.
@@ -43,7 +45,7 @@ public class PythonExtraPadding implements Marker {
          *      )
          * </pre>
          */
-        IMPORT_PARENS_PREFIX(Space.build(" ", Collections.emptyList())),
+        IMPORT_PARENS_PREFIX(Space.build(" ", emptyList())),
 
         /**
          * Imports can optionally be wrapped in parens.
@@ -55,7 +57,7 @@ public class PythonExtraPadding implements Marker {
          *      ❘⇐)
          * </pre>
          */
-        IMPORT_PARENS_SUFFIX(Space.build("\n", Collections.emptyList())),
+        IMPORT_PARENS_SUFFIX(Space.build("\n", emptyList())),
 
         /**
          * Some Python operators have space within the operator itself.
@@ -65,7 +67,7 @@ public class PythonExtraPadding implements Marker {
          *          pass
          * </pre>
          */
-        WITHIN_OPERATOR_NAME(Space.build(" ", Collections.emptyList())),
+        WITHIN_OPERATOR_NAME(Space.build(" ", emptyList())),
 
         /**
          * Some Python containers (like dict literals) can have space between the initialization delimiters
@@ -103,6 +105,8 @@ public class PythonExtraPadding implements Marker {
     }
 
     public static <T extends Tree> T set(T tree, Location loc, Space space) {
+        if (space.equals(loc.defaultSpace)) return tree;
+
         PythonExtraPadding marker = new PythonExtraPadding(UUID.randomUUID(), loc, space);
         return tree.withMarkers(
                 tree.getMarkers().compute(

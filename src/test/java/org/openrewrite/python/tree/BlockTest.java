@@ -101,7 +101,6 @@ public class BlockTest implements RewriteTest {
     }
 
 
-
     @ParameterizedTest
     @ValueSource(strings = {"", "\n", "\n\n", "\n\n\n"})
     public void lineEndingLocations(String eof) {
@@ -118,4 +117,17 @@ public class BlockTest implements RewriteTest {
         );
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "for x in mylist: print(x)",
+      "def f(x): x = x + 1; return x",
+      "def f(x): x = x + 1 ; return x",
+      "def f(x): x = x + 1; return x;",
+      "def f(x): x = x + 1; return x ;",
+    })
+    public void oneLineBlocks(String code) {
+        rewriteRun(
+          python(code)
+        );
+    }
 }

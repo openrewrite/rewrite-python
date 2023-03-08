@@ -21,6 +21,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
@@ -28,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.java.TreeVisitingPrinter;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
@@ -105,7 +105,7 @@ public class PsiPythonMapper {
         } else if (element instanceof PyForStatement) {
             return singletonList(mapForStatement((PyForStatement) element, paddingCursor));
         } else if (element instanceof PyFunction) {
-            return singletonList(mapMethodDeclaration((PyFunction) element, paddingCursor));
+            return singletonList(mapFunction((PyFunction) element, paddingCursor));
         } else if (element instanceof PyIfStatement) {
             return singletonList(mapIfStatement((PyIfStatement) element, paddingCursor));
         } else if (element instanceof PyMatchStatement) {
@@ -122,7 +122,9 @@ public class PsiPythonMapper {
     }
 
     private List<Statement> mapSimpleStatement(PsiElement element) {
-        if (element instanceof PyAssertStatement) {
+        if (element instanceof PyAugAssignmentStatement) {
+            return singletonList(mapAugAssignmentStatement((PyAugAssignmentStatement) element));
+        } else if (element instanceof PyAssertStatement) {
             return singletonList(mapAssertStatement((PyAssertStatement) element));
         } else if (element instanceof PyAssignmentStatement) {
             return singletonList(mapAssignmentStatement((PyAssignmentStatement) element));
@@ -787,7 +789,7 @@ public class PsiPythonMapper {
         );
     }
 
-    private Statement mapMethodDeclaration(PyFunction element, PsiPaddingCursor paddingCursor) {
+    private Statement mapFunction(PyFunction element, PsiPaddingCursor paddingCursor) {
         PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
         List<JRightPadded<Statement>> params = new ArrayList<>(pyParameters.length);
         for (PyParameter pyParam : pyParameters) {
@@ -798,18 +800,35 @@ public class PsiPythonMapper {
             );
         }
 
+        List<J.Modifier> modifiers = new ArrayList<>();
+
+        PsiElement asyncToken = maybeFindChildToken(element, PyTokenTypes.ASYNC_KEYWORD);
+        if (asyncToken != null) {
+            modifiers.add(new J.Modifier(
+                    randomId(),
+                    spaceBefore(asyncToken),
+                    EMPTY,
+                    J.Modifier.Type.Async,
+                    emptyList()
+            ));
+        }
+
+        modifiers.add(new J.Modifier(
+                randomId(),
+                spaceBefore(findChildToken(element, PyTokenTypes.DEF_KEYWORD)),
+                EMPTY,
+                J.Modifier.Type.Default, // as in "def"
+                emptyList()
+        ));
+
         return new J.MethodDeclaration(
                 randomId(),
                 Space.EMPTY,
                 EMPTY,
                 mapDecoratorList(element.getDecoratorList()),
-                emptyList(),
+                modifiers,
                 null,
-                new J.Empty(
-                        randomId(),
-                        spaceBefore(maybeFindChildToken(element, PyTokenTypes.DEF_KEYWORD)),
-                        EMPTY
-                ),
+                mapTypeHintNullable(element.getAnnotation()),
                 new J.MethodDeclaration.IdentifierWithAnnotations(
                         mapIdentifier(element).withPrefix(spaceBefore(element.getNameIdentifier())),
                         emptyList()
@@ -823,64 +842,69 @@ public class PsiPythonMapper {
     }
 
     private Statement mapFunctionParameter(PyElement element) {
-        if (element instanceof PyNamedParameter) {
-            PyNamedParameter namedParameter = (PyNamedParameter) element;
-            J.Identifier identifier = expectIdentifier(namedParameter.getNameIdentifier());
-            JLeftPadded<Expression> defaultValue = null;
-            if (namedParameter.hasDefaultValue()) {
-                defaultValue = JLeftPadded.build(
-                        mapExpression(namedParameter.getDefaultValue())
-                ).withBefore(spaceBefore(namedParameter.getDefaultValue()));
-            }
-
-
-            if (namedParameter.isKeywordContainer()) {
-                return new Py.ExpressionStatement(
-                        randomId(),
-                        new Py.SpecialParameter(
-                                randomId(),
-                                spaceBefore(element),
-                                EMPTY,
-                                Py.SpecialParameter.Kind.KWARGS,
-                                identifier,
-                                null
-                        )
-                );
-            } else if (namedParameter.isPositionalContainer()) {
-                return new Py.ExpressionStatement(
-                        randomId(),
-                        new Py.SpecialParameter(
-                                randomId(),
-                                spaceBefore(element),
-                                EMPTY,
-                                Py.SpecialParameter.Kind.ARGS,
-                                identifier,
-                                null
-                        )
-                );
-            } else if (defaultValue == null) {
-                return new Py.ExpressionStatement(
-                        randomId(),
-                        identifier
-                );
-            } else {
-                return new Py.ExpressionStatement(
-                        randomId(),
-                        new J.Assignment(
-                                randomId(),
-                                Space.EMPTY,
-                                EMPTY,
-                                identifier,
-                                defaultValue,
-                                null
-                        )
-                );
-            }
-        } else {
+        if (!(element instanceof PyNamedParameter)) {
             throw new IllegalArgumentException(String.format(
-                    "can't treat " + element.getNode().getElementType() + " as a function parameter"
+                    "expected function parameter to be a NamedParameter; found: %s",
+                    element.getNode().getElementType()
             ));
         }
+
+        PyNamedParameter namedParameter = (PyNamedParameter) element;
+        J.Identifier identifier = expectIdentifier(namedParameter.getNameIdentifier());
+        JLeftPadded<Expression> defaultValue = null;
+        if (namedParameter.hasDefaultValue()) {
+            defaultValue = JLeftPadded.build(
+                    mapExpression(namedParameter.getDefaultValue())
+            ).withBefore(spaceBefore(namedParameter.getDefaultValue()));
+        }
+
+        TypeTree type;
+        {
+            Py.TypeHint typeHint = mapTypeHintNullable(namedParameter.getAnnotation());
+
+            if (namedParameter.isKeywordContainer()) {
+                type = new Py.SpecialParameter(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        Py.SpecialParameter.Kind.KWARGS,
+                        typeHint,
+                        null
+                );
+            } else if (namedParameter.isPositionalContainer()) {
+                type = new Py.SpecialParameter(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        Py.SpecialParameter.Kind.ARGS,
+                        typeHint,
+                        null
+                );
+            } else {
+                type = typeHint;
+            }
+        }
+
+        return new J.VariableDeclarations(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                emptyList(),
+                emptyList(),
+                type,
+                null,
+                emptyList(),
+                singletonList(JRightPadded.build(new J.VariableDeclarations.NamedVariable(
+                        randomId(),
+                        Space.EMPTY,
+                        EMPTY,
+                        identifier,
+                        emptyList(),
+                        defaultValue,
+                        null
+                )))
+        );
+
     }
 
     public Statement mapAssertStatement(PyAssertStatement element) {
@@ -892,11 +916,54 @@ public class PsiPythonMapper {
         );
     }
 
+    private static final Map<IElementType, J.AssignmentOperation.Type> augAssignmentOps;
+
+    static {
+        Map<PyElementType, J.AssignmentOperation.Type> map = new HashMap<>();
+        map.put(PyTokenTypes.PLUSEQ, J.AssignmentOperation.Type.Addition);
+        map.put(PyTokenTypes.MINUSEQ, J.AssignmentOperation.Type.Subtraction);
+        map.put(PyTokenTypes.MULTEQ, J.AssignmentOperation.Type.Multiplication);
+//        map.put(PyTokenTypes.ATEQ, UNSUPPORTED);
+        map.put(PyTokenTypes.DIVEQ, J.AssignmentOperation.Type.Division);
+        map.put(PyTokenTypes.PERCEQ, J.AssignmentOperation.Type.Modulo);
+        map.put(PyTokenTypes.ANDEQ, J.AssignmentOperation.Type.BitAnd);
+        map.put(PyTokenTypes.OREQ, J.AssignmentOperation.Type.BitOr);
+        map.put(PyTokenTypes.XOREQ, J.AssignmentOperation.Type.BitXor);
+        map.put(PyTokenTypes.LTLTEQ, J.AssignmentOperation.Type.LeftShift);
+        map.put(PyTokenTypes.GTGTEQ, J.AssignmentOperation.Type.RightShift);
+//        map.put(PyTokenTypes.EXPEQ, UNSUPPORTED);
+//        map.put(PyTokenTypes.FLOORDIVEQ, UNSUPPORTED);
+        augAssignmentOps = Collections.unmodifiableMap(map);
+    }
+
+
+    public Statement mapAugAssignmentStatement(PyAugAssignmentStatement element) {
+        PyExpression pyLhs = element.getTarget();
+        PyExpression pyRhs = element.getValue();
+
+        Expression lhs = mapExpression(pyLhs);
+        Expression rhs = mapExpression(pyRhs).withPrefix(spaceBefore(pyRhs));
+
+        IElementType pyOp = element.getOperation().getNode().getElementType();
+        J.AssignmentOperation.Type type = augAssignmentOps.get(pyOp);
+
+        return new J.AssignmentOperation(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                lhs,
+                JLeftPadded.build(type).withBefore(spaceAfter(pyLhs)),
+                rhs,
+                null
+        );
+    }
+
+
     public Statement mapAssignmentStatement(PyAssignmentStatement element) {
         PyExpression pyLhs = element.getLeftHandSideExpression();
         PyExpression pyRhs = element.getAssignedValue();
 
-        J.Identifier lhs = expectIdentifier(mapExpression(pyLhs));
+        Expression lhs = mapExpression(pyLhs);
         Expression rhs = mapExpression(pyRhs).withPrefix(spaceBefore(pyRhs));
 
         return new J.Assignment(
@@ -1128,11 +1195,19 @@ public class PsiPythonMapper {
             Space after;
             @Nullable JRightPadded<Statement> emptyStatement = null;
             if (paddingCursor.isPast(pyStatement)) {
-                // compound statement
+                // parsed a compound statement containing a block
                 after = Space.EMPTY;
             } else {
-                // simple statement
+                // inside a block, a simple statement like `x=1; y=2` has the semicolon is a child of the statement
                 PsiElement semicolon = maybeFindChildToken(pyStatement, PyTokenTypes.SEMICOLON);
+                if (semicolon == null) {
+                    // in single-line compound statements, like `def foo(x): return x;`, the parser stores the
+                    // semicolon as a sibling to the statement in the argument list
+                    PsiElement maybeSemicolon = nextSiblingSkipWhitespace(pyStatement);
+                    if (isLeafToken(maybeSemicolon, PyTokenTypes.SEMICOLON)) {
+                        semicolon = maybeSemicolon;
+                    }
+                }
                 if (semicolon != null) {
                     paddingCursor.resetToSpaceBefore(semicolon);
                     after = paddingCursor.consumeRemainingAndExpect(semicolon);
@@ -1258,7 +1333,7 @@ public class PsiPythonMapper {
         } else if (element instanceof PyStringLiteralExpression) {
             return mapStringLiteral((PyStringLiteralExpression) element);
         } else if (element instanceof PyTargetExpression) {
-            return mapIdentifier((PyTargetExpression) element);
+            return mapTargetExpression((PyTargetExpression) element);
         } else if (element instanceof PyTupleExpression) {
             return mapTupleLiteral((PyTupleExpression) element);
         } else if (element instanceof PyYieldExpression) {
@@ -1365,6 +1440,37 @@ public class PsiPythonMapper {
                 EMPTY,
                 kind,
                 children,
+                null
+        );
+    }
+
+    private @Nullable Py.TypeHint mapTypeHintNullable(@Nullable PyAnnotation element) {
+        if (element == null) return null;
+        return mapTypeHint(element);
+    }
+
+    private Py.TypeHint mapTypeHint(PyAnnotation element) {
+        Py.TypeHint.Kind kind;
+        {
+            IElementType kindToken = element.getNode().getFirstChildNode().getElementType();
+            if (kindToken == PyTokenTypes.RARROW) {
+                kind = Py.TypeHint.Kind.RETURN_TYPE;
+            } else if (kindToken == PyTokenTypes.COLON) {
+                kind = Py.TypeHint.Kind.VARIABLE_TYPE;
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "unrecognized type hint start token: %s",
+                        kindToken
+                ));
+            }
+        }
+
+        return new Py.TypeHint(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                kind,
+                mapExpression(element.getValue()),
                 null
         );
     }
@@ -1654,10 +1760,14 @@ public class PsiPythonMapper {
     private static final Map<PyElementType, String> binaryOperatorSpecialMethods;
 
     static {
+        // keep in sync with `PythonOperatorLookup`
         Map<PyElementType, String> map = new HashMap<>();
         map.put(PyTokenTypes.EQEQ, "__eq__");
         map.put(PyTokenTypes.NE, "__ne__");
+        map.put(PyTokenTypes.EXP, "__pow__");
+        map.put(PyTokenTypes.FLOORDIV, "__floordiv__");
         map.put(PyTokenTypes.IN_KEYWORD, "__contains__");
+        map.put(PyTokenTypes.AT, "__matmul__");
         binaryOperatorSpecialMethods = Collections.unmodifiableMap(map);
     }
 
@@ -1665,17 +1775,28 @@ public class PsiPythonMapper {
 
     static {
         Map<PyElementType, J.Binary.Type> map = new HashMap<>();
+
         map.put(PyTokenTypes.LT, J.Binary.Type.LessThan);
         map.put(PyTokenTypes.LE, J.Binary.Type.LessThanOrEqual);
         map.put(PyTokenTypes.GT, J.Binary.Type.GreaterThan);
         map.put(PyTokenTypes.GE, J.Binary.Type.GreaterThanOrEqual);
         map.put(PyTokenTypes.IS_KEYWORD, J.Binary.Type.Equal);
+
         map.put(PyTokenTypes.DIV, J.Binary.Type.Division);
         map.put(PyTokenTypes.MINUS, J.Binary.Type.Subtraction);
         map.put(PyTokenTypes.MULT, J.Binary.Type.Multiplication);
         map.put(PyTokenTypes.PLUS, J.Binary.Type.Addition);
+        map.put(PyTokenTypes.PERC, J.Binary.Type.Modulo);
+
         map.put(PyTokenTypes.OR_KEYWORD, J.Binary.Type.Or);
         map.put(PyTokenTypes.AND_KEYWORD, J.Binary.Type.And);
+
+        map.put(PyTokenTypes.AND, J.Binary.Type.BitAnd);
+        map.put(PyTokenTypes.OR, J.Binary.Type.BitOr);
+        map.put(PyTokenTypes.XOR, J.Binary.Type.BitXor);
+        map.put(PyTokenTypes.GTGT, J.Binary.Type.RightShift);
+        map.put(PyTokenTypes.LTLT, J.Binary.Type.LeftShift);
+
         binaryOperatorMapping = Collections.unmodifiableMap(map);
     }
 
@@ -2015,6 +2136,30 @@ public class PsiPythonMapper {
                 emptyList(),
                 JavaType.Primitive.String
         );
+    }
+
+    public Expression mapTargetExpression(PyTargetExpression element) {
+        Py.TypeHint typeHint = mapTypeHintNullable(element.getAnnotation());
+        J.Identifier identifier = new J.Identifier(
+                randomId(),
+                spaceBefore(element.getNameIdentifier()),
+                EMPTY,
+                requireNonNull(element.getName()),
+                null,
+                null
+        );
+        if (typeHint == null) {
+            return identifier.withPrefix(spaceBefore(element));
+        } else {
+            return new Py.TypeHintedExpression(
+                    randomId(),
+                    spaceBefore(element),
+                    EMPTY,
+                    typeHint,
+                    identifier,
+                    null
+            );
+        }
     }
 
     public J.Identifier mapIdentifier(PsiNamedElement element) {

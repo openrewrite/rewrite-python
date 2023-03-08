@@ -18,6 +18,7 @@ package org.openrewrite.python.tree;
 public class PyLeftPadded {
     public enum Location {
         ERROR_FROM(PySpace.Location.ERROR_FROM_SOURCE),
+        MATCH_CASE_GUARD(PySpace.Location.MATCH_CASE_GUARD),
         YIELD_FROM(PySpace.Location.YIELD_FROM_PREFIX);
 
         private final PySpace.Location beforeLocation;

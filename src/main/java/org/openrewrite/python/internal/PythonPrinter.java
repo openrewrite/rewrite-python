@@ -352,17 +352,61 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        protected void visitModifier(J.Modifier mod, PrintOutputCapture<P> p) {
+            String keyword = null;
+            switch (mod.getType()) {
+                case Default:
+                    keyword = "def";
+                    break;
+                case Async:
+                    keyword = "async";
+                    break;
+            }
+            if (keyword != null) {
+                visit(mod.getAnnotations(), p);
+                beforeSyntax(mod, Space.Location.MODIFIER_PREFIX, p);
+                p.append(keyword);
+                afterSyntax(mod, p);
+            }
+        }
+
+        @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
             visit(method.getLeadingAnnotations(), p);
-            visit(method.getReturnTypeExpression(), p);
-            p.append("def");
+            for (J.Modifier m : method.getModifiers()) {
+                visitModifier(m, p);
+            }
             visit(method.getName(), p);
             visitContainer("(", method.getPadding().getParameters(), JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p);
+            visit(method.getReturnTypeExpression(), p);
             visit(method.getBody(), p);
             afterSyntax(method, p);
             return method;
+        }
+
+        @Override
+        public J visitVariableDeclarations(J.VariableDeclarations multiVariable, PrintOutputCapture<P> p) {
+            beforeSyntax(multiVariable, Space.Location.VARIABLE_DECLARATIONS_PREFIX, p);
+            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            visit(multiVariable.getLeadingAnnotations(), p);
+            for (J.Modifier m : multiVariable.getModifiers()) {
+                visitModifier(m, p);
+            }
+
+            TypeTree type = multiVariable.getTypeExpression();
+            if (type instanceof Py.SpecialParameter) {
+                Py.SpecialParameter special = (Py.SpecialParameter) type;
+                visit(special, p);
+                type = special.getTypeHint();
+            }
+
+            visitRightPadded(multiVariable.getPadding().getVariables(), JRightPadded.Location.NAMED_VARIABLE, ",", p);
+            visit(type, p);
+
+            afterSyntax(multiVariable, p);
+            return multiVariable;
         }
 
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
@@ -1166,7 +1210,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 p.append("**");
                 break;
         }
-        visit(param.getExpression(), p);
         afterSyntax(param, p);
         return param;
     }
@@ -1189,5 +1232,30 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visitLeftPadded(impoort.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
             return impoort;
         }
+    }
+
+    @Override
+    public J visitTypeHint(Py.TypeHint type, PrintOutputCapture<P> p) {
+        beforeSyntax(type, PySpace.Location.TYPE_HINT_PREFIX, p);
+        switch (type.getKind()) {
+            case VARIABLE_TYPE:
+                p.append(":");
+                break;
+            case RETURN_TYPE:
+                p.append("->");
+                break;
+        }
+        visit(type.getExpression(), p);
+        afterSyntax(type, p);
+        return type;
+    }
+
+    @Override
+    public J visitTypeHintedExpression(Py.TypeHintedExpression expr, PrintOutputCapture<P> p) {
+        beforeSyntax(expr, PySpace.Location.TYPE_HINTED_EXPRESSION_PREFIX, p);
+        visit(expr.getExpression(), p);
+        visit(expr.getTypeHint(), p);
+        afterSyntax(expr, p);
+        return expr;
     }
 }

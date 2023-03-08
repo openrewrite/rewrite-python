@@ -27,6 +27,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Match Statement         |   ✅    |                                   |                                                                                     |                                                   |
 | Except Statement        |   ✅    |                                   |                                                                                     |                                                   |
 | Assignment Statement    |   ✅    |                                   |                                                                                     |                                                   |
+| Augment-Assignment      |   ✅    |                                   | Unsupported: `//`, `**`, `%`, `@`.                                                  |                                                   |
 | Return Statement        |   ✅    | <pre>return x</pre>               |                                                                                     |                                                   |
 | Import Statement        |   ✅    | <pre>from . import foo</pre>      | Implemented as `J.Import`, with `GroupedStatement` markers.                         |                                                   |
 | Raise Statement         |   ✅    |                                   |                                                                                     |                                                   |
@@ -39,7 +40,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Global Statement        |   ✅    | <pre>global x</pre>               | Implemented as `Py.VariableScopeStatement`.                                         |                                                   |
 | Nonlocal Statement      |   ✅    | <pre>nonlocal x</pre>             | Implemented as `Py.VariableScopeStatement`.                                         |                                                   |
 | Decorators              |   ✅    |                                   | Implemented as `J.Annotation`.                                                      | Does not support arbitrary expressions (PEP 614). |
-| Type Comments           |   ❌    |                                   |                                                                                     |                                                   |
+| Type Comments           |   ✅    |                                   |                                                                                     |                                                   |
 | Numeric Literal         |   ✅    |                                   |                                                                                     |                                                   |
 | String Literal          |   ✅    |                                   |                                                                                     |                                                   |
 | Boolean Literal         |   ✅    |                                   |                                                                                     |                                                   |
@@ -54,7 +55,7 @@ This is largely based on the [Python grammar specification](https://docs.python.
 | Generator Comprehension |   ✅    | <pre>(x for x in xs)</pre>        |                                                                                     |                                                   |
 | Yield Expression        |   ✅    | <pre>yield from x</pre>           | Implemented as `Py.YieldExpression`.                                                |                                                   |
 | Await Expression        |   ✅    | <pre>await x</pre>                | Implemented as `Py.AwaitExpression`.                                                |                                                   |
-| Bitwise Operators       |   ❌    |                                   |                                                                                     |                                                   |
+| Bitwise Operators       |   ✅    |                                   |                                                                                     |                                                   |
 | Arithmetic Operators    |   ✅    |                                   |                                                                                     |                                                   |
 | Comparison Operators    |   ✅    |                                   | Non-Java comparisons are implemented using desugared magic methods (e.g. `__eq__`). |                                                   |
 | Slices                  |   ✅    |                                   | Implemented using a desugared call to `__builtins__.slice`.                         |                                                   |
