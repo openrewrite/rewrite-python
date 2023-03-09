@@ -6,14 +6,14 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class AwaitTest implements RewriteTest {
+class AwaitTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-      "await x",
-      "await  x"
+            "await x",
+            "await  x"
     })
-    public void await(String arg) {
+    void await(String arg) {
         rewriteRun(python(arg));
     }
 

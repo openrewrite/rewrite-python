@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class BinaryTest implements RewriteTest {
+class BinaryTest implements RewriteTest {
 
     @ParameterizedTest
     //language=py

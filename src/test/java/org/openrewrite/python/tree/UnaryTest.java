@@ -21,7 +21,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class UnaryTest implements RewriteTest {
+class UnaryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"not ", "+", "-", "~"})

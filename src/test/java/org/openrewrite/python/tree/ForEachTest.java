@@ -20,7 +20,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ForEachTest implements RewriteTest {
+class ForEachTest implements RewriteTest {
 
     @Test
     void forLoop() {

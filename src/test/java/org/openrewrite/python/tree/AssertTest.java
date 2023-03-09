@@ -6,18 +6,18 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class AssertTest implements RewriteTest {
+class AssertTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-      "assert x",
-      "assert  x",
-      "assert x, y",
-      "assert  x, y",
-      "assert x , y",
-      "assert x,  y",
+            "assert x",
+            "assert  x",
+            "assert x, y",
+            "assert  x, y",
+            "assert x , y",
+            "assert x,  y",
     })
-    public void assert_(String arg) {
+    void assert_(String arg) {
         rewriteRun(python(arg));
     }
 

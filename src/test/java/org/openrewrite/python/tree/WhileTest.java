@@ -20,7 +20,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class WhileTest implements RewriteTest {
+class WhileTest implements RewriteTest {
 
     @Test
     void whileLoop() {

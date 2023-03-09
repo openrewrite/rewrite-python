@@ -21,7 +21,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ImportTest implements RewriteTest {
+class ImportTest implements RewriteTest {
 
     @ParameterizedTest
     //language=py

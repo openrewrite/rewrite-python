@@ -7,10 +7,10 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class AnnotationTest implements RewriteTest {
+class AnnotationTest implements RewriteTest {
 
     @Test
-    public void decoratorOnFunction() {
+    void decoratorOnFunction() {
         rewriteRun(python(
           """
             @dec
@@ -21,7 +21,7 @@ public class AnnotationTest implements RewriteTest {
     }
 
     @Test
-    public void decoratorOnClass() {
+    void decoratorOnClass() {
         rewriteRun(python(
           """
             @dec
@@ -32,7 +32,7 @@ public class AnnotationTest implements RewriteTest {
     }
 
     @Test
-    public void staticMethodDecoratorOnFunction() {
+    void staticMethodDecoratorOnFunction() {
         rewriteRun(python(
           """
             class C:
@@ -45,13 +45,13 @@ public class AnnotationTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(
-      strings = {
-        "", "()", "( )",
-        "(42)", "(42 )", "( 42 )",
-        "(1, 2)", "(1,2)", "(1, 2 )", "( 1, 2 )", "( 1, 2)"
-      }
+            strings = {
+                    "", "()", "( )",
+                    "(42)", "(42 )", "( 42 )",
+                    "(1, 2)", "(1,2)", "(1, 2 )", "( 1, 2 )", "( 1, 2)"
+            }
     )
-    public void decoratorArguments(String args) {
+    void decoratorArguments(String args) {
         rewriteRun(python(
           """
             @dec%s
@@ -63,11 +63,11 @@ public class AnnotationTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(
-      strings = {
-        "class C", "def m()"
-      }
+            strings = {
+                    "class C", "def m()"
+            }
     )
-    public void multipleDecorators(String args) {
+    void multipleDecorators(String args) {
         rewriteRun(python(
           """
             @decA

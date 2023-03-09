@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class AssignTest implements RewriteTest {
+class AssignTest implements RewriteTest {
     @Test
     void assignment() {
         rewriteRun(
