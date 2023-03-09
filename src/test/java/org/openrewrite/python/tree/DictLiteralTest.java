@@ -20,7 +20,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class DictLiteralTest implements RewriteTest {
+class DictLiteralTest implements RewriteTest {
 
     @Test
     void dictLiteral() {

@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class SliceTest implements RewriteTest {
+class SliceTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {

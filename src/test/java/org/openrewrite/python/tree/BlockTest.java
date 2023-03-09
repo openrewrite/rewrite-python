@@ -5,10 +5,10 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class BlockTest implements RewriteTest {
+class BlockTest implements RewriteTest {
 
     @Test
-    public void singleStatement() {
+    void singleStatement() {
         rewriteRun(python(
           """
             def f():
@@ -18,7 +18,7 @@ public class BlockTest implements RewriteTest {
     }
 
     @Test
-    public void singleStatementWithDocstring() {
+    void singleStatementWithDocstring() {
         rewriteRun(python(
           """
             def f():
@@ -29,7 +29,7 @@ public class BlockTest implements RewriteTest {
     }
 
     @Test
-    public void singleStatementWithTrailingComment() {
+    void singleStatementWithTrailingComment() {
         rewriteRun(python(
           """
             def f():
@@ -39,7 +39,7 @@ public class BlockTest implements RewriteTest {
     }
 
     @Test
-    public void multiStatementWithBlankLines() {
+    void multiStatementWithBlankLines() {
         rewriteRun(python(
           """
             def f():
@@ -53,7 +53,7 @@ public class BlockTest implements RewriteTest {
     }
 
     @Test
-    public void multiStatementWithTrailingComments() {
+    void multiStatementWithTrailingComments() {
         rewriteRun(python(
           """
             def f():
@@ -65,7 +65,7 @@ public class BlockTest implements RewriteTest {
     }
 
     @Test
-    public void multiStatementWithBetweenComments() {
+    void multiStatementWithBetweenComments() {
         rewriteRun(python(
           """
             def f():

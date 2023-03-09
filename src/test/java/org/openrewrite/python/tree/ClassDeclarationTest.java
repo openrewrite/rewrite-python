@@ -21,7 +21,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class ClassDeclarationTest implements RewriteTest {
+class ClassDeclarationTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {

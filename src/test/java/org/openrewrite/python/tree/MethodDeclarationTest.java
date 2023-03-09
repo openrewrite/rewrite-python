@@ -20,7 +20,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class MethodDeclarationTest implements RewriteTest {
+class MethodDeclarationTest implements RewriteTest {
 
     @Test
     void functionDefinition() {

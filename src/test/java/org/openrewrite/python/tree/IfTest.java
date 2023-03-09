@@ -20,7 +20,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class IfTest implements RewriteTest {
+class IfTest implements RewriteTest {
 
     @Test
     void ifStmt() {

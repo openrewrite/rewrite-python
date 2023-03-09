@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class CollectionTest implements RewriteTest {
+class CollectionTest implements RewriteTest {
 
     @Test
     void listExpression() {
