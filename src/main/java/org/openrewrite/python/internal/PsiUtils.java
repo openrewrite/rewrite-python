@@ -1,10 +1,10 @@
 package org.openrewrite.python.internal;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
-import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.PyElementType;
 import org.openrewrite.internal.lang.Nullable;
 
@@ -16,7 +16,7 @@ public abstract class PsiUtils {
         return element.getTextLength() == 0;
     }
 
-    public static boolean isLeafToken(PsiElement element, PyElementType elementType) {
+    public static boolean isLeafToken(@Nullable PsiElement element, PyElementType elementType) {
         if (element instanceof LeafPsiElement) {
             LeafPsiElement leaf = (LeafPsiElement) element;
             return leaf.getElementType() == elementType;
@@ -43,6 +43,16 @@ public abstract class PsiUtils {
             );
         }
         return found;
+    }
+
+    public static @Nullable PsiElement nextSiblingSkipWhitespace(@Nullable PsiElement element) {
+        if (element == null) return null;
+
+        do {
+            element = element.getNextSibling();
+        } while (element instanceof PsiWhiteSpace || element instanceof PsiComment);
+
+        return element;
     }
 
     public static @Nullable LeafPsiElement maybeFindPreviousSiblingToken(PsiElement element, PyElementType elementType) {

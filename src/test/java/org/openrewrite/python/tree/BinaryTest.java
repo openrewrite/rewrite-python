@@ -36,8 +36,14 @@ class BinaryTest implements RewriteTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"-", "+", "*", "/"})
+    @ValueSource(strings = {"-", "+", "*", "/", "//", "**", "%", "@"})
     void arithmeticOperator(String op) {
+        rewriteRun(python("1 %s 2".formatted(op)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"&", "|", "^", ">>", "<<"})
+    void bitwiseOperator(String op) {
         rewriteRun(python("1 %s 2".formatted(op)));
     }
 

@@ -60,6 +60,78 @@ public interface Py extends J {
         return getPrefix().getComments();
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @Data
+    final class ExceptionType implements Py, TypeTree {
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        @With
+        JavaType type;
+
+        @With
+        boolean isExceptionGroup;
+
+        @With
+        Expression expression;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitExceptionType(this, p);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class TypeHint implements Py, TypeTree {
+
+        public enum Kind {
+            RETURN_TYPE,
+            VARIABLE_TYPE,
+        }
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        @Getter
+        @With
+        Kind kind;
+
+        @Getter
+        @With
+        Expression expression;
+
+        @Getter
+        @With
+        JavaType type;
+
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitTypeHint(this, p);
+        }
+    }
+
+
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
@@ -781,6 +853,90 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class VariableScopeStatement implements Py, Statement {
+
+        public enum Kind {
+            GLOBAL,
+            NONLOCAL,
+        }
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Kind kind;
+
+        List<JRightPadded<J.Identifier>> names;
+
+        public List<J.Identifier> getNames() {
+            return JRightPadded.getElements(names);
+        }
+
+        public VariableScopeStatement withNames(List<J.Identifier> names) {
+            return this.getPadding().withNames(JRightPadded.withElements(this.names, names));
+        }
+
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitVariableScopeStatement(this, p);
+        }
+
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final VariableScopeStatement t;
+
+            public List<JRightPadded<J.Identifier>> getNames() {
+                return t.names;
+            }
+
+            public VariableScopeStatement withNames(List<JRightPadded<J.Identifier>> names) {
+                return names == t.names
+                        ? t
+                        : new VariableScopeStatement(t.id, t.prefix, t.markers, t.kind, names);
+            }
+        }
+
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class AssertStatement implements Py, Statement {
         @Nullable
         @NonFinal
@@ -919,4 +1075,357 @@ public interface Py extends J {
         }
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class SpecialParameter implements Py, TypeTree {
+
+        public enum Kind {
+            KWARGS,
+            ARGS,
+        }
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Kind kind;
+
+        @With
+        @Getter
+        @Nullable
+        TypeHint typeHint;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitSpecialParameter(this, p);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    final class TypeHintedExpression implements Py, Expression {
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        TypeHint typeHint;
+
+        @With
+        @Getter
+        Expression expression;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitTypeHintedExpression(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class ErrorFromExpression implements Py, Expression {
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Expression error;
+
+        JLeftPadded<Expression> from;
+
+        @With
+        @Getter
+        JavaType type;
+
+        public Expression getFrom() {
+            return from.getElement();
+        }
+
+        public ErrorFromExpression withFrom(Expression from) {
+            return this.getPadding().withFrom(this.from.withElement(from));
+        }
+
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitErrorFromExpression(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final ErrorFromExpression t;
+
+            public JLeftPadded<Expression> getFrom() {
+                return t.from;
+            }
+
+            public ErrorFromExpression withFrom(JLeftPadded<Expression> from) {
+                return from == t.from
+                        ? t
+                        : new ErrorFromExpression(t.id, t.prefix, t.markers, t.error, from, t.type);
+            }
+        }
+
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class MatchCase implements Py, Expression {
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Pattern pattern;
+
+        @Nullable
+        JLeftPadded<Expression> guard;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        public @Nullable Expression getGuard() {
+            return guard == null ? null : guard.getElement();
+        }
+
+        public MatchCase withGuard(Expression guard) {
+            return this.getPadding().withGuard(
+                    JLeftPadded.withElement(this.guard, guard)
+            );
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitMatchCase(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final MatchCase t;
+
+            public @Nullable JLeftPadded<Expression> getGuard() {
+                return t.guard;
+            }
+
+            public MatchCase withGuard(JLeftPadded<Expression> guard) {
+                return guard == t.guard
+                        ? t
+                        : new MatchCase(t.id, t.prefix, t.markers, t.pattern, guard, null);
+            }
+        }
+
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+        @RequiredArgsConstructor
+        @AllArgsConstructor(access = AccessLevel.PRIVATE)
+        public final static class Pattern implements Py, Expression {
+            public enum Kind {
+                AS,
+                CAPTURE,
+                CLASS,
+                DOUBLE_STAR,
+                GROUP,
+                KEY_VALUE,
+                KEYWORD,
+                LITERAL,
+                MAPPING,
+                OR,
+                SEQUENCE,
+                STAR,
+                VALUE,
+                WILDCARD,
+            }
+
+            @Nullable
+            @NonFinal
+            transient WeakReference<Padding> padding;
+
+            @With
+            @Getter
+            @EqualsAndHashCode.Include
+            UUID id;
+
+            @With
+            @Getter
+            Space prefix;
+
+            @With
+            @Getter
+            Markers markers;
+
+            @With
+            @Getter
+            Kind kind;
+
+            JContainer<Expression> children;
+
+            @With
+            @Getter
+            @Nullable
+            JavaType type;
+
+            public List<Expression> getChildren() {
+                return children.getElements();
+            }
+
+            public Pattern withChildren(List<Expression> children) {
+                return this.getPadding().withChildren(
+                        JContainer.withElements(this.children, children)
+                );
+            }
+
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitMatchCasePattern(this, p);
+            }
+
+            public CoordinateBuilder.Expression getCoordinates() {
+                return new CoordinateBuilder.Expression(this);
+            }
+
+            public Padding getPadding() {
+                Padding p;
+                if (this.padding == null) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                } else {
+                    p = this.padding.get();
+                    if (p == null || p.t != this) {
+                        p = new Padding(this);
+                        this.padding = new WeakReference<>(p);
+                    }
+                }
+                return p;
+            }
+
+
+            @RequiredArgsConstructor
+            public static class Padding {
+                private final Pattern t;
+
+                public JContainer<Expression> getChildren() {
+                    return t.children;
+                }
+
+                public Pattern withChildren(JContainer<Expression> children) {
+                    return children == t.children
+                            ? t
+                            : new Pattern(t.id, t.prefix, t.markers, t.kind, children, t.type);
+                }
+            }
+
+        }
+    }
 }

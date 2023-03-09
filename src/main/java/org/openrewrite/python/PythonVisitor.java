@@ -138,7 +138,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return super.visitRightPadded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p);
     }
 
-    public <T> JLeftPadded<T> visitLeftPadded(JLeftPadded<T> left, PyLeftPadded.Location loc, P p) {
+    public <T> JLeftPadded<T> visitLeftPadded(@Nullable JLeftPadded<T> left, PyLeftPadded.Location loc, P p) {
         return super.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
     }
 
@@ -217,5 +217,112 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
                 t -> visitRightPadded(t, PyRightPadded.Location.DEL_ELEMENT, p)
         ));
         return del;
+    }
+
+    public J visitExceptionType(Py.ExceptionType ogType, P p) {
+        Py.ExceptionType type = ogType;
+        type = type.withPrefix(visitSpace(type.getPrefix(), PySpace.Location.EXCEPTION_TYPE_PREFIX, p));
+        type = type.withMarkers(visitMarkers(type.getMarkers(), p));
+        type = type.withExpression(visitAndCast(type.getExpression(), p));
+        return type;
+    }
+
+    public J visitTypeHint(Py.TypeHint ogType, P p) {
+        Py.TypeHint type = ogType;
+        type = type.withPrefix(visitSpace(type.getPrefix(), PySpace.Location.EXCEPTION_TYPE_PREFIX, p));
+        type = type.withMarkers(visitMarkers(type.getMarkers(), p));
+        type = type.withExpression(visitAndCast(type.getExpression(), p));
+        return type;
+    }
+
+    public J visitVariableScopeStatement(Py.VariableScopeStatement ogStmt, P p) {
+        Py.VariableScopeStatement stmt = ogStmt;
+        stmt = stmt.withPrefix(visitSpace(stmt.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p));
+        stmt = stmt.withMarkers(visitMarkers(stmt.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(stmt, p);
+        if (!(temp instanceof Py.VariableScopeStatement)) {
+            return temp;
+        } else {
+            stmt = (Py.VariableScopeStatement) temp;
+        }
+        stmt = stmt.getPadding().withNames(ListUtils.map(
+                stmt.getPadding().getNames(),
+                t -> visitRightPadded(t, PyRightPadded.Location.VARIABLE_SCOPE_ELEMENT, p)
+        ));
+        return stmt;
+    }
+
+    public J visitErrorFromExpression(Py.ErrorFromExpression ogExpr, P p) {
+        Py.ErrorFromExpression expr = ogExpr;
+        expr = expr.withPrefix(visitSpace(expr.getPrefix(), PySpace.Location.ERROR_FROM_PREFIX, p));
+        expr = expr.withMarkers(visitMarkers(expr.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(expr, p);
+        if (!(temp instanceof Py.ErrorFromExpression)) {
+            return temp;
+        } else {
+            expr = (Py.ErrorFromExpression) temp;
+        }
+        expr = expr.withError(visitAndCast(expr.getError(), p));
+        expr = expr.getPadding().withFrom(
+                visitLeftPadded(expr.getPadding().getFrom(), PyLeftPadded.Location.ERROR_FROM, p)
+        );
+        return expr;
+    }
+
+    public J visitMatchCasePattern(Py.MatchCase.Pattern ogPattern, P p) {
+        Py.MatchCase.Pattern pattern = ogPattern;
+        pattern = pattern.withPrefix(visitSpace(pattern.getPrefix(), PySpace.Location.MATCH_PATTERN_PREFIX, p));
+        pattern = pattern.withMarkers(visitMarkers(pattern.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(pattern, p);
+        if (!(temp instanceof Py.MatchCase.Pattern)) {
+            return temp;
+        } else {
+            pattern = (Py.MatchCase.Pattern) temp;
+        }
+        pattern.withChildren(ListUtils.map(
+                pattern.getChildren(),
+                child -> (Expression)visitAndCast(child, p)
+        ));
+        return pattern;
+    }
+
+    public J visitMatchCase(Py.MatchCase ogMatch, P p) {
+        Py.MatchCase caze = ogMatch;
+        caze = caze.withPrefix(visitSpace(caze.getPrefix(), PySpace.Location.MATCH_CASE_PREFIX, p));
+        caze = caze.withMarkers(visitMarkers(caze.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(caze, p);
+        if (!(temp instanceof Py.MatchCase)) {
+            return temp;
+        } else {
+            caze = (Py.MatchCase) temp;
+        }
+        caze = caze.getPadding().withGuard(
+                visitLeftPadded(caze.getPadding().getGuard(),  PyLeftPadded.Location.MATCH_CASE_GUARD, p)
+        );
+        caze = caze.withPattern(visitAndCast(caze.getPattern(), p));
+        return caze;
+    }
+
+    public J visitSpecialParameter(Py.SpecialParameter ogParam, P p) {
+        Py.SpecialParameter param = ogParam;
+        param = param.withPrefix(visitSpace(param.getPrefix(), PySpace.Location.SPECIAL_PARAM_PREFIX, p));
+        param = param.withMarkers(visitMarkers(param.getMarkers(), p));
+        param = param.withTypeHint(visitAndCast(param.getTypeHint(), p));
+        return param;
+    }
+
+    public J visitTypeHintedExpression(Py.TypeHintedExpression ogExpr, P p) {
+        Py.TypeHintedExpression expr = ogExpr;
+        expr = expr.withPrefix(visitSpace(expr.getPrefix(), PySpace.Location.TYPE_HINTED_EXPRESSION_PREFIX, p));
+        expr = expr.withMarkers(visitMarkers(expr.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(expr, p);
+        if (!(temp instanceof Py.TypeHintedExpression)) {
+            return temp;
+        } else {
+            expr = (Py.TypeHintedExpression) temp;
+        }
+        expr = expr.withTypeHint(visitAndCast(expr.getTypeHint(), p));
+        expr = expr.withExpression(visitAndCast(expr.getExpression(), p));
+        return expr;
     }
 }

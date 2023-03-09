@@ -17,7 +17,8 @@ package org.openrewrite.python.tree;
 
 public class PyContainer {
     public enum Location {
-        DICT_LITERAL_ELEMENTS(PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT);
+        DICT_LITERAL_ELEMENTS(PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT),
+        MATCH_PATTERN_ELEMENTS(PySpace.Location.MATCH_PATTERN_ELEMENT_PREFIX, PyRightPadded.Location.MATCH_PATTERN_ELEMENT);
 
         private final PySpace.Location beforeLocation;
         private final PyRightPadded.Location elementLocation;
