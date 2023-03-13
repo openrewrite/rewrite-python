@@ -1,8 +1,10 @@
 package org.openrewrite.python.internal;
 
+import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.impl.source.tree.LeafElement;
 import lombok.Value;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
@@ -13,35 +15,10 @@ import org.openrewrite.python.tree.PyComment;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import static org.openrewrite.python.tree.PySpace.appendComment;
+import static org.openrewrite.python.tree.PySpace.appendWhitespace;
+
 public class PsiPaddingCursor {
-
-    private static Space appendWhitespace(Space space, String ws) {
-        if (ws.isEmpty()) {
-            return space;
-        } else if (space.getComments().isEmpty()) {
-            return space.withWhitespace(space.getWhitespace() + ws);
-        } else {
-            return space.withComments(ListUtils.mapLast(
-                    space.getComments(),
-                    lastComment -> lastComment.withSuffix(
-                            lastComment.getSuffix() + ws
-                    )
-            ));
-        }
-    }
-
-    private static Space appendComment(Space space, String comment) {
-        if (!comment.startsWith("#")) {
-            throw new IllegalArgumentException("comment should start with a hash");
-        }
-        if (comment.contains("\n")) {
-            throw new IllegalArgumentException("comment cannot contain newlines");
-        }
-        return space.withComments(ListUtils.concat(
-                space.getComments(),
-                new PyComment(comment.substring(1), "", Markers.EMPTY)
-        ));
-    }
 
     @Value
     public static class WithStatus<T> {
@@ -50,17 +27,12 @@ public class PsiPaddingCursor {
     }
 
     private static State attachAfter(PsiElement element) {
-        // in-order traversal, limited to not increase depth
-        while (element.getNextSibling() == null) {
-            if (element.getParent() == null) {
-                return new State.StoppedAtEOF(element.getContainingFile());
-            }
-            element = element.getParent();
+        ASTNode nextNode = nodeAfter(element.getNode());
+        if (nextNode == null) {
+            return new State.StoppedAtEOF(element.getContainingFile());
         }
 
-        element = element.getNextSibling();
-        final State state = attachAt(element);
-        return state;
+        return attachAt(nextNode.getPsi());
     }
 
     private static State attachToSpaceBefore(PsiElement element) {
@@ -101,12 +73,47 @@ public class PsiPaddingCursor {
     }
 
     private static State attachAt(PsiElement element) {
+        {
+            ASTNode node;
+            ASTNode next = element.getNode();
+            do {
+                node = next;
+                next = nextNodeInTraversal(node);
+            } while (next != null && next.getStartOffset() == node.getStartOffset());
+
+            element = node.getPsi();
+        }
         if (element instanceof PsiWhiteSpace) {
             return new State.WhitespaceNext((PsiWhiteSpace) element, 0);
         } else if (element instanceof PsiComment) {
             return new State.CommentNext((PsiComment) element);
         } else {
             return new State.StoppedAtElement(element);
+        }
+    }
+
+    private static @Nullable ASTNode nextNodeInTraversal(ASTNode node) {
+        if (node.getFirstChildNode() != null) {
+            return node.getFirstChildNode();
+        } else {
+            return nodeAfter(node);
+        }
+    }
+
+    private static @Nullable ASTNode nodeAfter(ASTNode node) {
+        if (node.getTreeNext() != null) {
+            return node.getTreeNext();
+        }
+
+        node = node.getTreeParent();
+        while (node != null && node.getTreeNext() == null) {
+            node = node.getTreeParent();
+        }
+
+        if (node == null) {
+            return null;
+        } else {
+            return node.getTreeNext();
         }
     }
 
@@ -272,6 +279,7 @@ public class PsiPaddingCursor {
     }
 
     public Space consumeRemainingAndExpect(PsiElement expectedNext) {
+        System.err.println("expecting: " + expectedNext.getText());
         final Space space = consumeRemaining();
 
         final @Nullable Integer currentOffset = state.getSourceOffset();

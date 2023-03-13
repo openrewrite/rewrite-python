@@ -15,6 +15,9 @@ public class PyComment implements Comment {
     String suffix;
 
     @With
+    boolean alignedToIndent;
+
+    @With
     Markers markers;
 
     @Override

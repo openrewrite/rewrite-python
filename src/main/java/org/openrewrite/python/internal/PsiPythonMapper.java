@@ -16,7 +16,6 @@
 package org.openrewrite.python.internal;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -34,7 +33,7 @@ import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.Py;
-import org.openrewrite.python.tree.PyComment;
+import org.openrewrite.python.tree.PySpace;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -46,6 +45,7 @@ import static java.util.Objects.requireNonNull;
 import static org.openrewrite.Tree.randomId;
 import static org.openrewrite.marker.Markers.EMPTY;
 import static org.openrewrite.python.internal.PsiUtils.*;
+import static org.openrewrite.python.tree.PySpace.appendWhitespace;
 
 public class PsiPythonMapper {
 
@@ -1186,10 +1186,23 @@ public class PsiPythonMapper {
         if (colonToken != null) {
             paddingCursor.resetToSpaceAfter(colonToken);
         }
+
         Space blockPrefix = paddingCursor.consumeUntilNewline();
+        String blockIndent = null;
+        String fullIndent = null;
 
         for (T pyStatement : pyStatements) {
             Space prefix = paddingCursor.consumeRemainingAndExpect(pyStatement);
+            if (blockIndent == null) {
+                final String containerIndent = findLeadingSpaceInTree(container).getIndent();
+                fullIndent = prefix.getIndent();
+                if (!fullIndent.startsWith(containerIndent)) {
+                    throw new IllegalStateException("expected full block indent to start with container indent");
+                }
+                blockIndent = fullIndent.substring(containerIndent.length());
+                blockPrefix = appendWhitespace(blockPrefix, "\n" + blockIndent);
+            }
+
             List<? extends Statement> mapped = mapFn.apply(pyStatement, paddingCursor);
 
             Space after;
@@ -1227,6 +1240,8 @@ public class PsiPythonMapper {
                     after = paddingCursor.consumeUntilNewline();
                 }
             }
+
+            prefix = PySpace.deindent(prefix, fullIndent);
 
             /*
               There is usually only one statement returned.
@@ -2270,175 +2285,4 @@ public class PsiPythonMapper {
         return qualifiedName.getLastComponent();
     }
 
-    /**
-     * Collects all continuous space (whitespace and comments) that immediately precedes an element as a sibling.
-     * This method will skip zero-length placeholder elements before looking for whitespace.
-     */
-    private static Space spaceBefore(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = element.getPrevSibling();
-        while (end != null && isHiddenElement(end)) {
-            end = end.getPrevSibling();
-        }
-        if (!isWhitespaceOrComment(end)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = end;
-        while (isWhitespaceOrComment(begin.getPrevSibling())) {
-            begin = begin.getPrevSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    /**
-     * Collects all continuous space (whitespace and comments) that immediately follows an element as a sibling.
-     * This method will skip zero-length placeholder elements before looking for whitespace.
-     */
-    private static Space spaceAfter(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = element.getNextSibling();
-        while (begin != null && isHiddenElement(begin)) {
-            begin = begin.getNextSibling();
-        }
-        if (!isWhitespaceOrComment(begin)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = begin;
-        while (isWhitespaceOrComment(end.getNextSibling())) {
-            end = end.getNextSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    /**
-     * Collects trailing space <b>inside</b> of an element.
-     * <p>
-     * The PSI model for some elements (including statements) stores whitespace following an element inside of that
-     * element, up to the first newline. This includes trailing comments.
-     */
-    private static Space trailingSpace(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = element.getLastChild();
-        if (!isWhitespaceOrComment(end)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = end;
-        while (isWhitespaceOrComment(begin.getPrevSibling())) {
-            begin = begin.getPrevSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    private static Space concatSpace(Space first, Space second) {
-        if (first.isEmpty()) return second;
-        if (second.isEmpty()) return first;
-
-        String whitespace = first.getWhitespace();
-        List<Comment> comments = first.getComments();
-        if (!second.getWhitespace().isEmpty()) {
-            comments = ListUtils.mapLast(
-                    comments,
-                    comment -> comment.withSuffix(
-                            comment.getSuffix() + second.getWhitespace()
-                    )
-            );
-        }
-        comments = ListUtils.concatAll(comments, second.getComments());
-
-        return Space.build(whitespace, comments);
-    }
-
-    private static Space[] splitSpaceAtFirst(Space space, String splitAt) {
-        final int whitespaceSplitIndex = space.getWhitespace().indexOf(splitAt);
-        if (whitespaceSplitIndex >= 0) {
-            Space before = Space.build(space.getWhitespace().substring(0, whitespaceSplitIndex + 1), emptyList());
-            Space after = space.withWhitespace(
-                    space.getWhitespace().substring(whitespaceSplitIndex + 1)
-            );
-            return new Space[]{before, after};
-        } else {
-            List<Comment> comments = space.getComments();
-            for (int commentIndex = 0; commentIndex < comments.size(); commentIndex++) {
-                Comment comment = comments.get(commentIndex);
-                final int commentSplitIndex = comment.getSuffix().indexOf(splitAt);
-                if (commentSplitIndex >= 0) {
-                    Space after = space.withComments(
-                            ListUtils.mapLast(
-                                    comments.subList(0, commentIndex + 1),
-                                    last -> last.withSuffix(last.getSuffix().substring(0, commentSplitIndex + 1))
-                            ));
-                    Space before = Space.build(
-                            comment.getSuffix().substring(commentSplitIndex + 1),
-                            comments.subList(commentIndex + 1, comments.size())
-                    );
-                    return new Space[]{before, after};
-                }
-            }
-        }
-
-        return new Space[]{space};
-    }
-
-    private static Space mergeSpace(PsiElement firstSpaceOrComment, PsiElement lastSpaceOrComment) {
-        PsiUtils.PsiElementCursor psiElementCursor = PsiUtils.elementsBetween(firstSpaceOrComment, lastSpaceOrComment);
-
-        final String prefix = psiElementCursor.consumeWhitespace();
-
-        List<Comment> comments = null;
-        while (!psiElementCursor.isPastEnd()) {
-            if (comments == null) {
-                comments = new ArrayList<>();
-            }
-            String commentText = psiElementCursor.consumeExpectingType(PsiComment.class).getText();
-            final String suffix = psiElementCursor.consumeWhitespace();
-
-            if (!commentText.startsWith("#")) {
-                throw new IllegalStateException(
-                        String.format(
-                                "expected Python comment to start with `#`; found: `%s`",
-                                commentText.charAt(0)
-                        )
-                );
-            }
-            commentText = commentText.substring(1);
-
-            comments.add(new PyComment(commentText, suffix, EMPTY));
-        }
-
-        return Space.build(prefix, comments == null ? emptyList() : comments);
-    }
-
-    private static Space appendWhitespace(Space space, String whitespace) {
-        if (!space.getComments().isEmpty()) {
-            return space.withComments(
-                    ListUtils.mapFirst(
-                            space.getComments(),
-                            comment -> comment.withSuffix(comment.getSuffix() + whitespace)
-                    )
-            );
-        } else {
-            return space.withWhitespace(
-                    space.getWhitespace() + whitespace
-            );
-        }
-    }
-
-    private static boolean isWhitespaceOrComment(@Nullable PsiElement element) {
-        return element instanceof PsiComment || element instanceof PsiWhiteSpace;
-    }
 }

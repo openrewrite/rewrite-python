@@ -38,9 +38,11 @@ import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 import static org.openrewrite.python.marker.GroupedStatement.StatementGroup;
+import static org.openrewrite.python.tree.PySpace.reindent;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
+    private static final String BLOCK_INDENT_KEY = "BLOCK_INDENT";
     private static final String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
     private static final String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
 
@@ -235,13 +237,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitBlock(J.Block block, PrintOutputCapture<P> p) {
-            // blocks in Python are just collections of statements with no additional formatting
-            if (getCursor().getParentTreeCursor().getValue() != Cursor.ROOT_VALUE) {
+            System.err.println("printing block with prefix: " + block.getPrefix());
+            String parentIndent;
+
+            if (getCursor().getParentTreeCursor().getValue() == Cursor.ROOT_VALUE) {
+                parentIndent = "";
+            } else {
+                parentIndent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
                 visitPythonExtraPadding(block, PythonExtraPadding.Location.BEFORE_COMPOUND_BLOCK_COLON, p);
                 p.append(":");
             }
 
-            beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
+            String blockIndent = block.getPrefix().getIndent();
+            String newIndent = parentIndent + blockIndent;
+            getCursor().putMessage(BLOCK_INDENT_KEY, newIndent);
+            Space withoutIndent = PySpace.stripIndent(block.getPrefix(), "\n" + blockIndent);
+
+            beforeSyntax(withoutIndent, block.getMarkers(), Space.Location.BLOCK_PREFIX, p);
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
             visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
             afterSyntax(block, p);
@@ -251,7 +263,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         protected void visitStatements(List<JRightPadded<Statement>> statements, JRightPadded.Location location, PrintOutputCapture<P> p) {
-            boolean inSingleLineStatementList = false;
+            final String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
             @Nullable StatementGroup<Statement> statementGroup = null;
             for (int i = 0; i < statements.size(); i++) {
                 JRightPadded<Statement> paddedStat = statements.get(i);
@@ -262,8 +274,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 getCursor().putMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY, statementGroup == null ? null : i - statementGroup.getFirstIndex());
 
                 if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
+                    System.err.println("printing statement with prefix: " + paddedStat.getElement().getPrefix());
                     if (i != 0 && p.out.length() > 0 && p.out.charAt(p.out.length() - 1) != '\n') {
                         p.append(";");
+                    } else if (indent != null) {
+                        Space prefix = reindent(
+                                paddedStat.getElement().getPrefix(),
+                                indent
+                        );
+                        paddedStat = paddedStat.withElement(paddedStat.getElement().withPrefix(prefix));
+                        System.err.println("\tnew indented prefix: " + paddedStat.getElement().getPrefix());
                     }
                     visitStatement(paddedStat, location, p);
                 } else {
