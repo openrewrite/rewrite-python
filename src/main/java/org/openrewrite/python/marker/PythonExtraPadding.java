@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.openrewrite.python.marker;
 
 import lombok.EqualsAndHashCode;
@@ -29,7 +44,7 @@ public class PythonExtraPadding implements Marker {
     public enum Location {
         /**
          * <pre>
-         *      if someCondition‚áí‚ùò ‚ùò‚áê:
+         *      if someCondition‚áí‚?ò ‚?ò‚á?:
          *          pass
          * </pre>
          */
@@ -39,7 +54,7 @@ public class PythonExtraPadding implements Marker {
          * Imports can optionally be wrapped in parens.
          *
          * <pre>
-         *      from math import‚áí‚ùò ‚ùò‚áê(
+         *      from math import‚áí‚?ò ‚?ò‚á?(
          *          sin,
          *          cos
          *      )
@@ -53,8 +68,8 @@ public class PythonExtraPadding implements Marker {
          * <pre>
          *      from math import (
          *          sin,
-         *          cos‚áí‚ùò
-         *      ‚ùò‚áê)
+         *          cos‚áí‚?ò
+         *      ‚?ò‚á?)
          * </pre>
          */
         IMPORT_PARENS_SUFFIX(Space.build("\n", emptyList())),
@@ -63,7 +78,7 @@ public class PythonExtraPadding implements Marker {
          * Some Python operators have space within the operator itself.
          *
          * <pre>
-         *      if x is‚áí‚ùò ‚ùò‚áênot y:
+         *      if x is‚áí‚?ò ‚?ò‚á?not y:
          *          pass
          * </pre>
          */
@@ -74,7 +89,7 @@ public class PythonExtraPadding implements Marker {
          * but lack the space for it in the model.
          *
          * <pre>
-         *      xs = {‚áí‚ùò ‚ùò‚áê}
+         *      xs = {‚áí‚?ò ‚?ò‚á?}
          * </pre>
          */
         EMPTY_INITIALIZER(Space.EMPTY);
