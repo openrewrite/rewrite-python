@@ -58,7 +58,6 @@ class ReindentationTest implements RewriteTest {
                         }
                     }
                 }
-                System.err.println(copied);
                 return block.withStatements(ListUtils.concatAll(
                   block.getStatements(),
                   copied

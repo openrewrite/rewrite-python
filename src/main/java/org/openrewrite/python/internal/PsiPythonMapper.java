@@ -100,7 +100,8 @@ public class PsiPythonMapper {
     }
 
     public Py.CompilationUnit mapFile(PyFile element, Path path, String charset, boolean isCharsetBomMarked) {
-        new IntelliJUtils.PsiPrinter().print(element.getNode());
+        // Uncomment when doing development if you want a PSI tree to print out
+        //   new IntelliJUtils.PsiPrinter().print(element.getNode());
         BlockContext ctx = BlockContext.root(element);
         List<Statement> statements = singletonList(
                 mapBlock(element, null, element.getStatements(), ctx)
@@ -857,9 +858,7 @@ public class PsiPythonMapper {
         ));
 
         Space firstModifierPrefix = ctx.nextStatementPrefix();
-        System.err.println("** firstModifierPrefix=" + firstModifierPrefix);
         modifiers = ListUtils.mapFirst(modifiers, mod -> mod.withPrefix(firstModifierPrefix));
-
 
         return new J.MethodDeclaration(
                 randomId(),

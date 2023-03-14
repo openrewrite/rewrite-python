@@ -225,6 +225,12 @@ public interface Py extends J {
                     .collect(Collectors.toList());
         }
 
+        @Override
+        public JavaSourceFile withClasses(List<ClassDeclaration> classes) {
+            // FIXME unsupported
+            return this;
+        }
+
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
             return v.visitJavaSourceFile(this, p);
         }
