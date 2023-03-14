@@ -812,7 +812,9 @@ public class IntelliJUtils {
             StringBuilder output = new StringBuilder();
             output.append(indent())
                     .append(node)
-                    .append(" [psi=")
+                    .append(" [start=")
+                    .append(node.getStartOffset())
+                    .append(", psi=")
                     .append(node.getPsi().getClass().getSimpleName());
             if (node instanceof LeafPsiElement) {
                 output.append(", text=`").append(node.getText().replace("\n", "\\n").replace("\t", "\\t")).append("`");

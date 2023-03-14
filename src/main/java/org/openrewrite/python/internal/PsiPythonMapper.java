@@ -16,7 +16,6 @@
 package org.openrewrite.python.internal;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiWhiteSpace;
@@ -25,6 +24,7 @@ import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
+import lombok.Value;
 import org.jetbrains.annotations.NotNull;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.ListUtils;
@@ -34,7 +34,7 @@ import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.Py;
-import org.openrewrite.python.tree.PyComment;
+import org.openrewrite.python.tree.PySpace;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -46,8 +46,38 @@ import static java.util.Objects.requireNonNull;
 import static org.openrewrite.Tree.randomId;
 import static org.openrewrite.marker.Markers.EMPTY;
 import static org.openrewrite.python.internal.PsiUtils.*;
+import static org.openrewrite.python.tree.PySpace.appendWhitespace;
+import static org.openrewrite.python.tree.PySpace.deindent;
 
 public class PsiPythonMapper {
+
+    @Value
+    public static class BlockContext {
+        String fullIndent;
+        PsiPaddingCursor paddingCursor;
+
+        public static BlockContext root(PyFile element) {
+            PsiPaddingCursor paddingCursor = new PsiPaddingCursor();
+            paddingCursor.resetTo(element.getNode().getFirstChildNode().getPsi());
+            return new BlockContext("", paddingCursor);
+        }
+
+        public Space nextStatementPrefix() {
+            return nextStatementPrefix(null);
+        }
+
+        public Space nextStatementPrefix(@Nullable PsiElement expected) {
+            Space prefix = expected == null
+                    ? paddingCursor.consumeRemaining()
+                    : paddingCursor.consumeRemainingAndExpect(expected);
+            return deindent(
+                    prefix,
+                    fullIndent,
+                    PySpace.IndentStartMode.LINE_START,
+                    PySpace.IndentEndMode.STATEMENT_START
+            );
+        }
+    }
 
     public Py.CompilationUnit mapSource(String sourceText, Path path, String charset, boolean isCharsetBomMarked) {
         boolean addedNewline = false;
@@ -71,10 +101,9 @@ public class PsiPythonMapper {
 
     public Py.CompilationUnit mapFile(PyFile element, Path path, String charset, boolean isCharsetBomMarked) {
         new IntelliJUtils.PsiPrinter().print(element.getNode());
-        PsiPaddingCursor paddingCursor = new PsiPaddingCursor();
-        paddingCursor.resetTo(element.getNode().getFirstChildNode().getPsi());
+        BlockContext ctx = BlockContext.root(element);
         List<Statement> statements = singletonList(
-                mapBlock(element, null, element.getStatements(), paddingCursor)
+                mapBlock(element, null, element.getStatements(), ctx)
         );
 
         Markers markers = EMPTY;
@@ -82,7 +111,7 @@ public class PsiPythonMapper {
             markers = Markers.build(singletonList(new SuppressNewline(randomId())));
         }
 
-        Space eof = paddingCursor.consumeRemainingAndExpectEOF();
+        Space eof = ctx.paddingCursor.consumeRemainingAndExpectEOF();
 
         return new Py.CompilationUnit(
                 randomId(),
@@ -99,23 +128,23 @@ public class PsiPythonMapper {
         ).withStatements(statements);
     }
 
-    public List<Statement> mapStatement(PsiElement element, PsiPaddingCursor paddingCursor) {
+    public List<Statement> mapStatement(PsiElement element, BlockContext ctx) {
         if (element instanceof PyClass) {
-            return singletonList(mapClassDeclarationStatement((PyClass) element, paddingCursor));
+            return singletonList(mapClassDeclarationStatement((PyClass) element, ctx));
         } else if (element instanceof PyForStatement) {
-            return singletonList(mapForStatement((PyForStatement) element, paddingCursor));
+            return singletonList(mapForStatement((PyForStatement) element, ctx));
         } else if (element instanceof PyFunction) {
-            return singletonList(mapFunction((PyFunction) element, paddingCursor));
+            return singletonList(mapFunction((PyFunction) element, ctx));
         } else if (element instanceof PyIfStatement) {
-            return singletonList(mapIfStatement((PyIfStatement) element, paddingCursor));
+            return singletonList(mapIfStatement((PyIfStatement) element, ctx));
         } else if (element instanceof PyMatchStatement) {
-            return singletonList(mapMatchStatement((PyMatchStatement) element, paddingCursor));
+            return singletonList(mapMatchStatement((PyMatchStatement) element, ctx));
         } else if (element instanceof PyTryExceptStatement) {
-            return singletonList(mapTry((PyTryExceptStatement) element, paddingCursor));
+            return singletonList(mapTry((PyTryExceptStatement) element, ctx));
         } else if (element instanceof PyWhileStatement) {
-            return singletonList(mapWhile((PyWhileStatement) element, paddingCursor));
+            return singletonList(mapWhile((PyWhileStatement) element, ctx));
         } else if (element instanceof PyWithStatement) {
-            return singletonList(mapWithStatement((PyWithStatement) element, paddingCursor));
+            return singletonList(mapWithStatement((PyWithStatement) element, ctx));
         } else {
             return mapSimpleStatement(element);
         }
@@ -403,18 +432,19 @@ public class PsiPythonMapper {
         );
     }
 
-    private Statement mapMatchStatement(PyMatchStatement element, PsiPaddingCursor paddingCursor) {
+    private Statement mapMatchStatement(PyMatchStatement element, BlockContext ctx) {
+        Space prefix = ctx.nextStatementPrefix(element);
         JRightPadded<Expression> subject = mapExpressionAsRightPadded(requireNonNull(element.getSubject()));
         J.Block block = this.mapBlock(
                 element,
                 findChildToken(element, PyTokenTypes.COLON),
                 element.getCaseClauses(),
-                paddingCursor,
-                (clause, cur) -> singletonList(mapCaseClause(clause, cur))
+                ctx,
+                (clause, innerCtx) -> singletonList(mapCaseClause(clause, innerCtx))
         );
         return new J.Switch(
                 randomId(),
-                Space.EMPTY,
+                prefix,
                 EMPTY,
                 new J.ControlParentheses<>(
                         randomId(),
@@ -426,8 +456,8 @@ public class PsiPythonMapper {
         );
     }
 
-    private Statement mapCaseClause(PyCaseClause element, PsiPaddingCursor paddingCursor) {
-        Space prefix = paddingCursor.consumeRemainingAndExpect(element);
+    private Statement mapCaseClause(PyCaseClause element, BlockContext ctx) {
+        Space prefix = ctx.nextStatementPrefix(element);
 
         JRightPadded<Expression> pattern;
         if (element.getGuardCondition() != null) {
@@ -446,7 +476,7 @@ public class PsiPythonMapper {
             pattern = mapExpressionAsRightPadded(requireNonNull(element.getPattern()));
         }
 
-        J.Block block = mapCompoundBlock(element, paddingCursor);
+        J.Block block = mapCompoundBlock(element, ctx);
         return new J.Case(
                 randomId(),
                 prefix,
@@ -459,10 +489,11 @@ public class PsiPythonMapper {
     }
 
 
-    private Statement mapWhile(PyWhileStatement element, PsiPaddingCursor paddingCursor) {
+    private Statement mapWhile(PyWhileStatement element, BlockContext ctx) {
+        Space prefix = ctx.nextStatementPrefix(element);
         return new J.WhileLoop(
                 randomId(),
-                spaceBefore(element),
+                prefix,
                 EMPTY,
                 new J.ControlParentheses<>(
                         randomId(),
@@ -470,19 +501,19 @@ public class PsiPythonMapper {
                         EMPTY,
                         JRightPadded.build(mapExpression(element.getWhilePart().getCondition()))
                 ),
-                JRightPadded.build(mapCompoundBlock(element.getWhilePart(), paddingCursor))
+                JRightPadded.build(mapCompoundBlock(element.getWhilePart(), ctx))
         );
     }
 
-    private Statement mapTry(PyTryExceptStatement element, PsiPaddingCursor paddingCursor) {
-        Space tryPrefix = paddingCursor.consumeRemainingAndExpect(element);
-        J.Block tryBlock = mapCompoundBlock(element.getTryPart(), paddingCursor);
+    private Statement mapTry(PyTryExceptStatement element, BlockContext ctx) {
+        Space tryPrefix = ctx.nextStatementPrefix(element);
+        J.Block tryBlock = mapCompoundBlock(element.getTryPart(), ctx);
 
         List<J.Try.Catch> catches = emptyList();
         if (element.getExceptParts().length > 0) {
             catches = new ArrayList<>(element.getExceptParts().length);
             for (PyExceptPart pyExceptPart : element.getExceptParts()) {
-                catches.add(mapExcept(pyExceptPart, paddingCursor));
+                catches.add(mapExcept(pyExceptPart, ctx));
             }
         }
 
@@ -510,12 +541,12 @@ public class PsiPythonMapper {
                 so this uniquely identifies the clause for printing, while statement
                 processing visitors will be unaffected.
              */
-            Space elsePrefix = paddingCursor.consumeRemainingAndExpect(element.getElsePart());
+            Space elsePrefix = ctx.nextStatementPrefix(element.getElsePart());
             tryBlock = tryBlock.getPadding().withStatements(
                     ListUtils.concat(
                             tryBlock.getPadding().getStatements(),
                             JRightPadded.<Statement>build(
-                                    mapCompoundBlock(element.getElsePart(), paddingCursor)
+                                    mapCompoundBlock(element.getElsePart(), ctx)
                             ).withAfter(elsePrefix)
                     )
             );
@@ -523,9 +554,9 @@ public class PsiPythonMapper {
 
         JLeftPadded<J.Block> finallie = null;
         if (element.getFinallyPart() != null) {
-            Space finallyPrefix = paddingCursor.consumeRemainingAndExpect(element.getFinallyPart());
+            Space finallyPrefix = ctx.nextStatementPrefix(element.getFinallyPart());
             finallie = JLeftPadded.build(
-                    mapCompoundBlock(element.getFinallyPart(), paddingCursor)
+                    mapCompoundBlock(element.getFinallyPart(), ctx)
             ).withBefore(finallyPrefix);
         }
 
@@ -540,8 +571,8 @@ public class PsiPythonMapper {
         );
     }
 
-    private J.Try.Catch mapExcept(PyExceptPart element, PsiPaddingCursor paddingCursor) {
-        Space exceptPrefix = paddingCursor.consumeRemainingAndExpect(element);
+    private J.Try.Catch mapExcept(PyExceptPart element, BlockContext ctx) {
+        Space exceptPrefix = ctx.nextStatementPrefix(element);
 
         List<JRightPadded<J.VariableDeclarations.NamedVariable>> parameters = emptyList();
         PyExpression pyExceptClass = element.getExceptClass();
@@ -609,11 +640,11 @@ public class PsiPythonMapper {
                                 )
                         )
                 ),
-                mapCompoundBlock(element, paddingCursor)
+                mapCompoundBlock(element, ctx)
         );
     }
 
-    private Statement mapWithStatement(PyWithStatement element, PsiPaddingCursor paddingCursor) {
+    private Statement mapWithStatement(PyWithStatement element, BlockContext ctx) {
         List<JRightPadded<J.Try.Resource>> resources = new ArrayList<>(element.getWithItems().length);
         /*
             Example code:
@@ -686,7 +717,7 @@ public class PsiPythonMapper {
                 Space.EMPTY,
                 EMPTY,
                 JContainer.build(resources),
-                mapCompoundBlock(element, paddingCursor),
+                mapCompoundBlock(element, ctx),
                 emptyList(),
                 null
         );
@@ -710,7 +741,8 @@ public class PsiPythonMapper {
         );
     }
 
-    private Statement mapForStatement(PyForStatement element, PsiPaddingCursor paddingCursor) {
+    private Statement mapForStatement(PyForStatement element, BlockContext ctx) {
+        Space prefix = ctx.nextStatementPrefix();
         PyForPart forPart = element.getForPart();
         J.VariableDeclarations target;
         if (forPart.getTarget() instanceof PyTupleExpression) {
@@ -723,7 +755,7 @@ public class PsiPythonMapper {
 
         return new J.ForEachLoop(
                 randomId(),
-                spaceBefore(element),
+                prefix,
                 EMPTY,
                 new J.ForEachLoop.Control(
                         randomId(),
@@ -733,7 +765,7 @@ public class PsiPythonMapper {
                                 .withAfter(spaceAfter(forPart.getTarget())),
                         JRightPadded.build(mapExpression(forPart.getSource()))
                 ),
-                JRightPadded.build(mapCompoundBlock(forPart, paddingCursor))
+                JRightPadded.build(mapCompoundBlock(forPart, ctx))
         );
     }
 
@@ -789,7 +821,9 @@ public class PsiPythonMapper {
         );
     }
 
-    private Statement mapFunction(PyFunction element, PsiPaddingCursor paddingCursor) {
+    private Statement mapFunction(PyFunction element, BlockContext ctx) {
+        List<J.Annotation> annotations = mapDecoratorList(element.getDecoratorList(), ctx);
+
         PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
         List<JRightPadded<Statement>> params = new ArrayList<>(pyParameters.length);
         for (PyParameter pyParam : pyParameters) {
@@ -813,19 +847,25 @@ public class PsiPythonMapper {
             ));
         }
 
+        PsiElement defToken = findChildToken(element, PyTokenTypes.DEF_KEYWORD);
         modifiers.add(new J.Modifier(
                 randomId(),
-                spaceBefore(findChildToken(element, PyTokenTypes.DEF_KEYWORD)),
+                spaceBefore(defToken),
                 EMPTY,
                 J.Modifier.Type.Default, // as in "def"
                 emptyList()
         ));
 
+        Space firstModifierPrefix = ctx.nextStatementPrefix();
+        System.err.println("** firstModifierPrefix=" + firstModifierPrefix);
+        modifiers = ListUtils.mapFirst(modifiers, mod -> mod.withPrefix(firstModifierPrefix));
+
+
         return new J.MethodDeclaration(
                 randomId(),
                 Space.EMPTY,
                 EMPTY,
-                mapDecoratorList(element.getDecoratorList()),
+                annotations,
                 modifiers,
                 null,
                 mapTypeHintNullable(element.getAnnotation()),
@@ -835,7 +875,7 @@ public class PsiPythonMapper {
                 ),
                 JContainer.build(params),
                 null,
-                mapCompoundBlock(element, paddingCursor),
+                mapCompoundBlock(element, ctx),
                 null,
                 null
         );
@@ -887,7 +927,7 @@ public class PsiPythonMapper {
 
         return new J.VariableDeclarations(
                 randomId(),
-                spaceBefore(element),
+                Space.EMPTY,
                 EMPTY,
                 emptyList(),
                 emptyList(),
@@ -976,13 +1016,17 @@ public class PsiPythonMapper {
         );
     }
 
-    public Statement mapClassDeclarationStatement(PyClass element, PsiPaddingCursor paddingCursor) {
-        PsiElement classKeyword = maybeFindChildToken(element, PyTokenTypes.CLASS_KEYWORD);
+    public Statement mapClassDeclarationStatement(PyClass element, BlockContext ctx) {
+        List<J.Annotation> decorators = mapDecoratorList(element.getDecoratorList(), ctx);
+
+        final Space kindPrefix = ctx.nextStatementPrefix(
+                findChildToken(element, PyTokenTypes.CLASS_KEYWORD)
+        );
         J.ClassDeclaration.Kind kind = new J.ClassDeclaration.Kind(
                 randomId(),
-                spaceBefore(classKeyword),
+                kindPrefix,
                 EMPTY,
-                emptyList(),
+                decorators,
                 J.ClassDeclaration.Kind.Type.Class
         );
 
@@ -1024,11 +1068,6 @@ public class PsiPythonMapper {
             );
         }
 
-        List<J.Annotation> decorators = mapDecoratorList(element.getDecoratorList());
-        if (!decorators.isEmpty()) {
-            kind = kind.withAnnotations(decorators);
-        }
-
         return new J.ClassDeclaration(
                 randomId(),
                 spaceBefore(element),
@@ -1042,7 +1081,7 @@ public class PsiPythonMapper {
                 null,
                 implementings.withBefore(spaceBefore(element.getSuperClassExpressionList())),
                 null,
-                mapCompoundBlock(element, paddingCursor),
+                mapCompoundBlock(element, ctx),
                 null
         );
     }
@@ -1061,21 +1100,37 @@ public class PsiPythonMapper {
 
         return new J.Annotation(
                 randomId(),
-                spaceBefore(pyDecorator),
+                Space.EMPTY,
                 EMPTY,
                 name,
                 arguments
         );
     }
 
-    public List<J.Annotation> mapDecoratorList(@Nullable PyDecoratorList pyDecoratorList) {
+    public List<J.Annotation> mapDecoratorList(@Nullable PyDecoratorList pyDecoratorList, BlockContext ctx) {
         if (pyDecoratorList == null || pyDecoratorList.getDecorators().length == 0) {
             return emptyList();
         }
         PyDecorator[] pyDecorators = pyDecoratorList.getDecorators();
         List<J.Annotation> decorators = new ArrayList<>(pyDecorators.length);
         for (PyDecorator pyDecorator : pyDecorators) {
-            decorators.add(mapDecorator(pyDecorator));
+            J.Annotation mapped = mapDecorator(pyDecorator);
+
+            Space prefix = ctx.nextStatementPrefix(pyDecorator);
+            mapped = mapped.withPrefix(prefix);
+
+            ctx.paddingCursor.resetToSpaceAfter(pyDecorator);
+            Space suffix = ctx.paddingCursor.consumeUntilExpectedNewline();
+            suffix = deindent(
+                    suffix,
+                    ctx.fullIndent,
+                    PySpace.IndentStartMode.AFTER_STATEMENT,
+                    PySpace.IndentEndMode.REST_OF_LINE
+            );
+
+            mapped = PythonExtraPadding.set(mapped, PythonExtraPadding.Location.AFTER_DECORATOR, suffix);
+
+            decorators.add(mapped);
         }
         return decorators;
     }
@@ -1089,14 +1144,14 @@ public class PsiPythonMapper {
         );
     }
 
-    public Statement mapIfStatement(PyIfStatement element, PsiPaddingCursor paddingCursor) {
+    public Statement mapIfStatement(PyIfStatement element, BlockContext ctx) {
         PyExpression pyIfCondition = element.getIfPart().getCondition();
         if (pyIfCondition == null) {
             throw new RuntimeException("if condition is null");
         }
 
-        Statement ifBody = mapCompoundBlock(element.getIfPart(), paddingCursor);
-        J.If.Else elsePart = mapElsePart(element, 0, paddingCursor);
+        Statement ifBody = mapCompoundBlock(element.getIfPart(), ctx);
+        J.If.Else elsePart = mapElsePart(element, 0, ctx);
 
         return new J.If(
                 randomId(),
@@ -1116,7 +1171,7 @@ public class PsiPythonMapper {
      * This method helps transform the original flattened structure into the
      * recursive `J` representation.
      */
-    private J.If.Else mapElsePart(PyIfStatement parent, int elifIndex, PsiPaddingCursor paddingCursor) {
+    private J.If.Else mapElsePart(PyIfStatement parent, int elifIndex, BlockContext ctx) {
         if (elifIndex < parent.getElifParts().length) {
             PyIfPart pyElifPart = parent.getElifParts()[elifIndex];
 
@@ -1125,9 +1180,9 @@ public class PsiPythonMapper {
                 throw new RuntimeException("if condition is null");
             }
 
-            Space prefix = paddingCursor.consumeRemainingAndExpect(pyElifPart);
-            J.Block thenPart = mapCompoundBlock(pyElifPart, paddingCursor);
-            J.If.Else elsePart = mapElsePart(parent, elifIndex + 1, paddingCursor);
+            Space prefix = ctx.nextStatementPrefix(pyElifPart);
+            J.Block thenPart = mapCompoundBlock(pyElifPart, ctx);
+            J.If.Else elsePart = mapElsePart(parent, elifIndex + 1, ctx);
 
             J.If nestedIf = new J.If(
                     randomId(),
@@ -1144,8 +1199,8 @@ public class PsiPythonMapper {
                     JRightPadded.build(nestedIf)
             );
         } else if (parent.getElsePart() != null) {
-            Space prefix = paddingCursor.consumeRemainingAndExpect(parent.getElsePart());
-            J.Block elsePart = mapCompoundBlock(parent.getElsePart(), paddingCursor);
+            Space prefix = ctx.nextStatementPrefix(parent.getElsePart());
+            J.Block elsePart = mapCompoundBlock(parent.getElsePart(), ctx);
             return new J.If.Else(
                     randomId(),
                     prefix,
@@ -1169,50 +1224,80 @@ public class PsiPythonMapper {
             PsiElement container,
             @Nullable PsiElement colonToken,
             List<T> pyStatements,
-            PsiPaddingCursor paddingCursor
+            BlockContext ctx
     ) {
-        return mapBlock(container, colonToken, pyStatements, paddingCursor, this::mapStatement);
+        return mapBlock(container, colonToken, pyStatements, ctx, this::mapStatement);
     }
 
     public <T extends PsiElement> J.Block mapBlock(
             PsiElement container,
             @Nullable PsiElement colonToken,
             List<T> pyStatements,
-            PsiPaddingCursor paddingCursor,
-            BiFunction<T, PsiPaddingCursor, List<? extends Statement>> mapFn
+            BlockContext outerCtx,
+            BiFunction<T, BlockContext, List<? extends Statement>> mapFn
     ) {
+        PsiPaddingCursor paddingCursor = outerCtx.paddingCursor;
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
 
         if (colonToken != null) {
             paddingCursor.resetToSpaceAfter(colonToken);
         }
+
         Space blockPrefix = paddingCursor.consumeUntilNewline();
+        BlockContext innerCtx;
+        String blockIndent;
 
+        {
+            Space firstPrefix = paddingCursor.withRollback(paddingCursor::consumeRemaining);
+            final String containerIndent = outerCtx.fullIndent;
+            final String fullIndent = firstPrefix.getIndent();
+            if (!fullIndent.startsWith(containerIndent)) {
+                throw new IllegalStateException("expected full block indent to start with container indent");
+            }
+            blockIndent = fullIndent.substring(containerIndent.length());
+            blockPrefix = appendWhitespace(blockPrefix, "\n" + blockIndent);
+
+            innerCtx = new BlockContext(fullIndent, paddingCursor);
+        }
+
+        boolean precededBySemicolon = false;
         for (T pyStatement : pyStatements) {
-            Space prefix = paddingCursor.consumeRemainingAndExpect(pyStatement);
-            List<? extends Statement> mapped = mapFn.apply(pyStatement, paddingCursor);
+            List<? extends Statement> mapped = mapFn.apply(pyStatement, innerCtx);
 
+            @Nullable Space prefix;
             Space after;
-            @Nullable JRightPadded<Statement> emptyStatement = null;
+            @Nullable JRightPadded<Statement> maybeEmptyStatement = null;
+            @Nullable PsiElement semicolon;
             if (paddingCursor.isPast(pyStatement)) {
                 // parsed a compound statement containing a block
+                prefix = null;
+                // the block must eventually contain a simple statement, so it's already newline-terminated
                 after = Space.EMPTY;
+                semicolon = null;
             } else {
-                // inside a block, a simple statement like `x=1; y=2` has the semicolon is a child of the statement
-                PsiElement semicolon = maybeFindChildToken(pyStatement, PyTokenTypes.SEMICOLON);
+                // parsed a simple statement.
+                prefix = paddingCursor.consumeRemainingAndExpect(pyStatement);
+
+                // a simple statement like `x=1; y=2` has the semicolon as a child of the statement
+                semicolon = maybeFindChildToken(pyStatement, PyTokenTypes.SEMICOLON);
+
+                // in single-line compound statements, like `def foo(x): return x;`, the parser stores the
+                // semicolon as a sibling to the statement in the argument list
                 if (semicolon == null) {
-                    // in single-line compound statements, like `def foo(x): return x;`, the parser stores the
-                    // semicolon as a sibling to the statement in the argument list
                     PsiElement maybeSemicolon = nextSiblingSkipWhitespace(pyStatement);
                     if (isLeafToken(maybeSemicolon, PyTokenTypes.SEMICOLON)) {
                         semicolon = maybeSemicolon;
                     }
                 }
+
                 if (semicolon != null) {
                     paddingCursor.resetToSpaceBefore(semicolon);
                     after = paddingCursor.consumeRemainingAndExpect(semicolon);
                     paddingCursor.resetToSpaceAfter(semicolon);
-                    emptyStatement = paddingCursor.consumeUntilNewlineOrReset(
+
+                    // if there is a newline following the semicolon, we need an empty statement.
+                    // semicolons are statement delimiters, not statement terminators.
+                    maybeEmptyStatement = paddingCursor.consumeUntilNewlineOrRollback(
                             newlineAfterSemicolon ->
                                     JRightPadded.<Statement>build(
                                             new J.Empty(
@@ -1226,6 +1311,15 @@ public class PsiPythonMapper {
                     paddingCursor.resetToTrailingSpaceWithin(pyStatement);
                     after = paddingCursor.consumeUntilNewline();
                 }
+
+                if (!precededBySemicolon) {
+                    prefix = PySpace.deindent(
+                            prefix,
+                            innerCtx.fullIndent,
+                            PySpace.IndentStartMode.LINE_START,
+                            PySpace.IndentEndMode.STATEMENT_START
+                    );
+                }
             }
 
             /*
@@ -1233,13 +1327,17 @@ public class PsiPythonMapper {
               In the unusual case that there's more than one, every statement gets the same padding.
             */
             for (Statement statement : mapped) {
-                statement = statement.withPrefix(prefix);
+                if (prefix != null) {
+                    statement = statement.withPrefix(prefix);
+                }
                 statements.add(JRightPadded.build(statement).withAfter(after));
             }
 
-            if (emptyStatement != null) {
-                statements.add(emptyStatement);
+            if (maybeEmptyStatement != null) {
+                statements.add(maybeEmptyStatement);
             }
+
+            precededBySemicolon = semicolon != null && maybeEmptyStatement == null;
         }
 
         Markers markers = EMPTY;
@@ -1273,12 +1371,12 @@ public class PsiPythonMapper {
      * <br/>
      * In general, if you want to map the body of a compound block, use this method.
      */
-    public J.Block mapCompoundBlock(PyStatementListContainer pyElement, PsiPaddingCursor paddingCursor) {
+    public J.Block mapCompoundBlock(PyStatementListContainer pyElement, BlockContext ctx) {
         return mapBlock(
                 pyElement,
                 findChildToken(pyElement, PyTokenTypes.COLON),
                 Arrays.asList(pyElement.getStatementList().getStatements()),
-                paddingCursor
+                ctx
         );
     }
 
@@ -2270,175 +2368,4 @@ public class PsiPythonMapper {
         return qualifiedName.getLastComponent();
     }
 
-    /**
-     * Collects all continuous space (whitespace and comments) that immediately precedes an element as a sibling.
-     * This method will skip zero-length placeholder elements before looking for whitespace.
-     */
-    private static Space spaceBefore(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = element.getPrevSibling();
-        while (end != null && isHiddenElement(end)) {
-            end = end.getPrevSibling();
-        }
-        if (!isWhitespaceOrComment(end)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = end;
-        while (isWhitespaceOrComment(begin.getPrevSibling())) {
-            begin = begin.getPrevSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    /**
-     * Collects all continuous space (whitespace and comments) that immediately follows an element as a sibling.
-     * This method will skip zero-length placeholder elements before looking for whitespace.
-     */
-    private static Space spaceAfter(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = element.getNextSibling();
-        while (begin != null && isHiddenElement(begin)) {
-            begin = begin.getNextSibling();
-        }
-        if (!isWhitespaceOrComment(begin)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = begin;
-        while (isWhitespaceOrComment(end.getNextSibling())) {
-            end = end.getNextSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    /**
-     * Collects trailing space <b>inside</b> of an element.
-     * <p>
-     * The PSI model for some elements (including statements) stores whitespace following an element inside of that
-     * element, up to the first newline. This includes trailing comments.
-     */
-    private static Space trailingSpace(@Nullable PsiElement element) {
-        if (element == null) {
-            return Space.EMPTY;
-        }
-
-        PsiElement end = element.getLastChild();
-        if (!isWhitespaceOrComment(end)) {
-            return Space.EMPTY;
-        }
-
-        PsiElement begin = end;
-        while (isWhitespaceOrComment(begin.getPrevSibling())) {
-            begin = begin.getPrevSibling();
-        }
-
-        return mergeSpace(begin, end);
-    }
-
-    private static Space concatSpace(Space first, Space second) {
-        if (first.isEmpty()) return second;
-        if (second.isEmpty()) return first;
-
-        String whitespace = first.getWhitespace();
-        List<Comment> comments = first.getComments();
-        if (!second.getWhitespace().isEmpty()) {
-            comments = ListUtils.mapLast(
-                    comments,
-                    comment -> comment.withSuffix(
-                            comment.getSuffix() + second.getWhitespace()
-                    )
-            );
-        }
-        comments = ListUtils.concatAll(comments, second.getComments());
-
-        return Space.build(whitespace, comments);
-    }
-
-    private static Space[] splitSpaceAtFirst(Space space, String splitAt) {
-        final int whitespaceSplitIndex = space.getWhitespace().indexOf(splitAt);
-        if (whitespaceSplitIndex >= 0) {
-            Space before = Space.build(space.getWhitespace().substring(0, whitespaceSplitIndex + 1), emptyList());
-            Space after = space.withWhitespace(
-                    space.getWhitespace().substring(whitespaceSplitIndex + 1)
-            );
-            return new Space[]{before, after};
-        } else {
-            List<Comment> comments = space.getComments();
-            for (int commentIndex = 0; commentIndex < comments.size(); commentIndex++) {
-                Comment comment = comments.get(commentIndex);
-                final int commentSplitIndex = comment.getSuffix().indexOf(splitAt);
-                if (commentSplitIndex >= 0) {
-                    Space after = space.withComments(
-                            ListUtils.mapLast(
-                                    comments.subList(0, commentIndex + 1),
-                                    last -> last.withSuffix(last.getSuffix().substring(0, commentSplitIndex + 1))
-                            ));
-                    Space before = Space.build(
-                            comment.getSuffix().substring(commentSplitIndex + 1),
-                            comments.subList(commentIndex + 1, comments.size())
-                    );
-                    return new Space[]{before, after};
-                }
-            }
-        }
-
-        return new Space[]{space};
-    }
-
-    private static Space mergeSpace(PsiElement firstSpaceOrComment, PsiElement lastSpaceOrComment) {
-        PsiUtils.PsiElementCursor psiElementCursor = PsiUtils.elementsBetween(firstSpaceOrComment, lastSpaceOrComment);
-
-        final String prefix = psiElementCursor.consumeWhitespace();
-
-        List<Comment> comments = null;
-        while (!psiElementCursor.isPastEnd()) {
-            if (comments == null) {
-                comments = new ArrayList<>();
-            }
-            String commentText = psiElementCursor.consumeExpectingType(PsiComment.class).getText();
-            final String suffix = psiElementCursor.consumeWhitespace();
-
-            if (!commentText.startsWith("#")) {
-                throw new IllegalStateException(
-                        String.format(
-                                "expected Python comment to start with `#`; found: `%s`",
-                                commentText.charAt(0)
-                        )
-                );
-            }
-            commentText = commentText.substring(1);
-
-            comments.add(new PyComment(commentText, suffix, EMPTY));
-        }
-
-        return Space.build(prefix, comments == null ? emptyList() : comments);
-    }
-
-    private static Space appendWhitespace(Space space, String whitespace) {
-        if (!space.getComments().isEmpty()) {
-            return space.withComments(
-                    ListUtils.mapFirst(
-                            space.getComments(),
-                            comment -> comment.withSuffix(comment.getSuffix() + whitespace)
-                    )
-            );
-        } else {
-            return space.withWhitespace(
-                    space.getWhitespace() + whitespace
-            );
-        }
-    }
-
-    private static boolean isWhitespaceOrComment(@Nullable PsiElement element) {
-        return element instanceof PsiComment || element instanceof PsiWhiteSpace;
-    }
 }

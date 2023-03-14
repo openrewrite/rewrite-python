@@ -46,7 +46,7 @@ public final class Assertions {
 
     public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
                                      Consumer<SourceSpec<Py.CompilationUnit>> spec) {
-        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, null);
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, s -> after);
         spec.accept(python);
         return python;
     }

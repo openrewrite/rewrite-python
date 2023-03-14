@@ -18,6 +18,7 @@ package org.openrewrite.python.internal;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
+import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.JavaVisitor;
@@ -38,13 +39,32 @@ import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 import static org.openrewrite.python.marker.GroupedStatement.StatementGroup;
+import static org.openrewrite.python.tree.PySpace.reindent;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
+    private static final String BLOCK_INDENT_KEY = "BLOCK_INDENT";
     private static final String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
     private static final String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
 
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
+
+    private static <T extends J> T reindentPrefix(Cursor cursor, T element) {
+        return element.withPrefix(reindentPrefix(cursor, element.getPrefix()));
+    }
+
+    private static Space reindentPrefix(Cursor cursor, Space space) {
+        String indent = cursor.getNearestMessage(BLOCK_INDENT_KEY);
+        if (indent == null) {
+            indent = "";
+        }
+        return reindent(
+                space,
+                indent,
+                PySpace.IndentStartMode.LINE_START,
+                PySpace.IndentEndMode.STATEMENT_START
+        );
+    }
 
     @Override
     public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
@@ -69,7 +89,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         visitSpace(cu.getEof(), Location.COMPILATION_UNIT_EOF, p);
         if (cu.getMarkers().findFirst(SuppressNewline.class).isPresent()) {
-            if (p.out.charAt(p.out.length() - 1) == '\n') {
+            if (lastCharIs(p, '\n')) {
                 p.out.setLength(p.out.length() - 1);
             }
         }
@@ -254,7 +274,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
             visit(classDecl.getLeadingAnnotations(), p);
             visit(classDecl.getAnnotations().getKind().getAnnotations(), p);
-            visitSpace(classDecl.getAnnotations().getKind().getPrefix(), Space.Location.CLASS_KIND, p);
+            visitSpace(
+                    reindentPrefix(getCursor(), classDecl.getAnnotations().getKind().getPrefix()),
+                    Space.Location.CLASS_KIND,
+                    p
+            );
             p.append("class");
             visit(classDecl.getName(), p);
             if (classDecl.getPadding().getImplements() != null) {
@@ -291,13 +315,22 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitBlock(J.Block block, PrintOutputCapture<P> p) {
-            // blocks in Python are just collections of statements with no additional formatting
-            if (getCursor().getParentTreeCursor().getValue() != Cursor.ROOT_VALUE) {
+            String parentIndent;
+
+            if (getCursor().getParentTreeCursor().getValue() == Cursor.ROOT_VALUE) {
+                parentIndent = "";
+            } else {
+                parentIndent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
                 visitPythonExtraPadding(block, PythonExtraPadding.Location.BEFORE_COMPOUND_BLOCK_COLON, p);
                 p.append(":");
             }
 
-            beforeSyntax(block, Space.Location.BLOCK_PREFIX, p);
+            String blockIndent = block.getPrefix().getIndent();
+            String newIndent = parentIndent + blockIndent;
+            getCursor().putMessage(BLOCK_INDENT_KEY, newIndent);
+            Space withoutIndent = PySpace.stripIndent(block.getPrefix(), "\n" + blockIndent);
+
+            beforeSyntax(withoutIndent, block.getMarkers(), Space.Location.BLOCK_PREFIX, p);
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
             visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
             afterSyntax(block, p);
@@ -307,8 +340,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         protected void visitStatements(List<JRightPadded<Statement>> statements, JRightPadded.Location location, PrintOutputCapture<P> p) {
-            boolean inSingleLineStatementList = false;
+            final String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
             @Nullable StatementGroup<Statement> statementGroup = null;
+            boolean isFirst = true;
             for (int i = 0; i < statements.size(); i++) {
                 JRightPadded<Statement> paddedStat = statements.get(i);
                 if (statementGroup == null || !statementGroup.containsIndex(i)) {
@@ -317,11 +351,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 }
                 getCursor().putMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY, statementGroup == null ? null : i - statementGroup.getFirstIndex());
 
+                Statement statement = paddedStat.getElement();
+                // anything with decorators
+                final boolean delegateReindentToElement =
+                        statement instanceof J.ClassDeclaration
+                        || statement instanceof J.MethodDeclaration;
+
                 if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
-                    if (i != 0 && p.out.length() > 0 && p.out.charAt(p.out.length() - 1) != '\n') {
+                    if (!isFirst && !lastCharIs(p, '\n')) {
                         p.append(";");
+                    } else if (indent != null && !delegateReindentToElement) {
+                        paddedStat = paddedStat.withElement(reindentPrefix(getCursor(), paddedStat.getElement()));
                     }
                     visitStatement(paddedStat, location, p);
+                    isFirst = false;
                 } else {
                     visit(paddedStat.getElement(), p);
                 }
@@ -431,7 +474,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
             visit(method.getLeadingAnnotations(), p);
-            for (J.Modifier m : method.getModifiers()) {
+            List<J.Modifier> modifiers = ListUtils.mapFirst(
+                    method.getModifiers(),
+                    mod -> reindentPrefix(getCursor(), mod)
+            );
+            for (J.Modifier m : modifiers) {
                 visitModifier(m, p);
             }
             visit(method.getName(), p);
@@ -625,6 +672,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
             visit(paddedStat.getElement(), p);
             visitSpace(paddedStat.getAfter(), location.getAfterLocation(), p);
+        }
+
+        @Override
+        public J visitAnnotation(J.Annotation annotation, PrintOutputCapture<P> p) {
+            J result = super.visitAnnotation(reindentPrefix(getCursor(), annotation), p);
+            visitPythonExtraPadding(
+                    annotation,
+                    PythonExtraPadding.Location.AFTER_DECORATOR,
+                    PySpace.IndentStartMode.AFTER_STATEMENT,
+                    PySpace.IndentEndMode.REST_OF_LINE,
+                    p
+            );
+            return result;
         }
 
         @Override
@@ -844,6 +904,26 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             afterSyntax(impoort, p);
             return impoort;
         }
+    }
+
+    private void visitPythonExtraPadding(
+            Tree tree,
+            PythonExtraPadding.Location loc,
+            PySpace.IndentStartMode startMode,
+            PySpace.IndentEndMode endMode,
+            PrintOutputCapture<P> p
+    ) {
+        String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
+        if (indent == null) {
+            indent = "";
+        }
+        Space space = PythonExtraPadding.getOrDefault(tree, loc);
+        space = reindent(space, indent, startMode, endMode);
+        visitSpace(
+                space,
+                Location.LANGUAGE_EXTENSION,
+                p
+        );
     }
 
     private void visitPythonExtraPadding(Tree tree, PythonExtraPadding.Location loc, PrintOutputCapture<P> p) {
@@ -1313,5 +1393,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         visit(expr.getTypeHint(), p);
         afterSyntax(expr, p);
         return expr;
+    }
+
+    private static boolean lastCharIs(PrintOutputCapture<?> p, char c) {
+        return p.out.length() != 0 && p.out.charAt(p.out.length() - 1) == c;
     }
 }

@@ -25,17 +25,17 @@ class WhitespaceTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "",
-            " ",
-            ";",
-            " ;",
-            "; ",
-            "\n",
-            " \n",
-            "\n ",
-            "# comment",
-            " # comment",
-            "# comment ",
+      "",
+      " ",
+      ";",
+      " ;",
+      "; ",
+      "\n",
+      " \n",
+      "\n ",
+      "# comment",
+      " # comment",
+      "# comment ",
     })
     void testSingleStatement(String ending) {
         rewriteRun(python("print(42)%s".formatted(ending)));
@@ -43,14 +43,14 @@ class WhitespaceTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            ";",
-            " ;",
-            "; ",
-            "\n",
-            " \n",
-            "# comment\n",
-            " # comment\n",
-            "# comment \n",
+      ";",
+      " ;",
+      "; ",
+      "\n",
+      " \n",
+      "# comment\n",
+      " # comment\n",
+      "# comment \n",
     })
     void testMultiStatement(String ending) {
         rewriteRun(python("print(42)%sprint(2)".formatted(ending)));
@@ -58,19 +58,19 @@ class WhitespaceTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "",
-            " ",
-            ";",
-            " ;",
-            "; ",
-            "\n",
-            " \n",
-            "\n ",
-            "# comment",
-            " # comment",
-            "# comment ",
-            "\n#comment\n",
-            "\n  #comment\n",
+      "",
+      " ",
+      ";",
+      " ;",
+      "; ",
+      "\n",
+      " \n",
+      "\n ",
+      "# comment",
+      " # comment",
+      "# comment ",
+      "\n#comment\n",
+      "\n  #comment\n",
     })
     void testSingleLineMultiStatement(String firstLineEnding) {
         rewriteRun(python(
@@ -84,19 +84,22 @@ class WhitespaceTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "",
-            " ",
-            ";",
-            " ;",
-            "; ",
-            "\n",
-            " \n",
-            "\n ",
-            "# comment",
-            " # comment",
-            "# comment ",
-            "\n#comment\n",
-            "\n  #comment\n",
+      "",
+      " ",
+      ";",
+      " ;",
+      "; ",
+      "\n",
+      " \n",
+      "\n ",
+      "# comment",
+      " # comment",
+      "# comment ",
+      "\n#comment\n",
+      "\n #comment\n",
+      "\n  #comment\n",
+      "\n   #comment\n",
+      "\n    #comment\n",
     })
     void testSingleLineMultiStatementInsideBlock(String firstLineEnding) {
         rewriteRun(python(
@@ -112,7 +115,7 @@ class WhitespaceTest implements RewriteTest {
     @ValueSource(strings = {
       "", "\n", "\n\n", "\n\n\n"
     })
-    public void testEOF(String eofSpace) {
+    void testEOF(String eofSpace) {
         rewriteRun(python(
           """
             print(1)
@@ -120,5 +123,4 @@ class WhitespaceTest implements RewriteTest {
             print(3)%s""".formatted(eofSpace)
         ));
     }
-
 }

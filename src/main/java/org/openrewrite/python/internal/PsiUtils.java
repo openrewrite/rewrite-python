@@ -22,6 +22,16 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.jetbrains.python.psi.PyElementType;
 import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.java.tree.Comment;
+import org.openrewrite.java.tree.Space;
+import org.openrewrite.python.tree.PyComment;
+import org.openrewrite.python.tree.PySpace;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static org.openrewrite.marker.Markers.EMPTY;
 
 public abstract class PsiUtils {
     private PsiUtils() {
@@ -45,6 +55,30 @@ public abstract class PsiUtils {
             return null;
         }
         return node.getPsi();
+    }
+
+    public static PsiElement findFirstChildToken(PsiElement parent, PyElementType elementType, PyElementType... otherElementTypes) {
+        PsiElement maybeMatch = maybeFindChildToken(parent, elementType);
+        for (PyElementType otherElementType : otherElementTypes) {
+            PsiElement maybeOtherMatch = maybeFindChildToken(parent, otherElementType);
+            if (maybeOtherMatch != null) {
+                if (maybeMatch == null || maybeMatch.getTextOffset() > maybeOtherMatch.getTextOffset()) {
+                    maybeMatch = maybeOtherMatch;
+                }
+            }
+        }
+
+        if (maybeMatch == null) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Expected to find a child node of type %s (+%d others) match but found none",
+                            elementType,
+                            otherElementTypes.length
+                    )
+            );
+        }
+
+        return maybeMatch;
     }
 
     public static PsiElement findChildToken(PsiElement parent, PyElementType elementType) {
@@ -80,6 +114,52 @@ public abstract class PsiUtils {
         return null;
     }
 
+    /**
+     * Finds the space immediately preceding the element in the document text.
+     * <br/>
+     * This is *not the same* as {@link #spaceBefore}, which only collects space from preceding sibling PSI nodes.
+     *<br/>
+     * This method will also look in preceding sibling nodes, but will also continue up the tree to parent nodes
+     * (and their preceding siblings) until either whitespace is found or the current text offset has changed.
+     */
+    public static Space findLeadingSpaceInTree(PsiElement current) {
+        List<PsiElement> spaceElements = null;
+        final int startOffset = current.getNode().getStartOffset();
+        do {
+            if (current.getPrevSibling() != null) {
+                current = current.getPrevSibling();
+            } else {
+                current = current.getParent();
+            }
+
+            if (isWhitespaceOrComment(current)) {
+                if (spaceElements == null) {
+                    spaceElements = new ArrayList<>();
+                }
+                spaceElements.add(current);
+            } else if (spaceElements != null) {
+                break;
+            }
+        } while (current != null && current.getNode().getStartOffset() == startOffset);
+
+        if (spaceElements == null) {
+            return Space.EMPTY;
+        }
+
+        final PySpace.SpaceBuilder builder = new PySpace.SpaceBuilder();
+        for (int i = spaceElements.size() - 1; i >= 0; i--) {
+            final PsiElement spaceOrComment = spaceElements.get(i);
+            if (current instanceof PsiComment) {
+                builder.addComment(spaceOrComment.getText());
+            } else if (current instanceof PsiWhiteSpace) {
+                builder.addWhitespace(spaceOrComment.getText());
+            } else {
+                throw new IllegalStateException("unexpected");
+            }
+        }
+        return builder.build();
+    }
+
     public static LeafPsiElement findPreviousSiblingToken(PsiElement element, PyElementType elementType) {
         LeafPsiElement found = maybeFindPreviousSiblingToken(element, elementType);
         if (found == null) {
@@ -107,6 +187,130 @@ public abstract class PsiUtils {
             }
         }
         return true;
+    }
+
+    public static PsiElement findSpaceStart(@Nullable PsiElement spaceElement) {
+        if (spaceElement == null) {
+            return null;
+        }
+        if (!isWhitespaceOrComment(spaceElement)) {
+            throw new IllegalArgumentException("expected whitespace element; found: " + spaceElement);
+        }
+        while (isWhitespaceOrComment(spaceElement.getPrevSibling())) {
+            spaceElement = spaceElement.getPrevSibling();
+        }
+        return spaceElement;
+    }
+
+    public static PsiElement findSpaceEnd(@Nullable PsiElement spaceElement) {
+        if (spaceElement == null) {
+            return null;
+        }
+        if (!isWhitespaceOrComment(spaceElement)) {
+            throw new IllegalArgumentException("expected whitespace element; found: " + spaceElement);
+        }
+        while (isWhitespaceOrComment(spaceElement.getNextSibling())) {
+            spaceElement = spaceElement.getNextSibling();
+        }
+        return spaceElement;
+    }
+
+    /**
+     * Collects all continuous space (whitespace and comments) that immediately precedes an element as a sibling.
+     * This method will skip zero-length placeholder elements before looking for whitespace.
+     */
+    public static Space spaceBefore(@Nullable PsiElement element) {
+        if (element == null) {
+            return Space.EMPTY;
+        }
+
+        PsiElement end = element.getPrevSibling();
+        while (end != null && isHiddenElement(end)) {
+            end = end.getPrevSibling();
+        }
+        if (!isWhitespaceOrComment(end)) {
+            return Space.EMPTY;
+        }
+
+        return mergeSpace(findSpaceStart(end), end);
+    }
+
+    /**
+     * Collects all continuous space (whitespace and comments) that immediately follows an element as a sibling.
+     * This method will skip zero-length placeholder elements before looking for whitespace.
+     */
+    public static Space spaceAfter(@Nullable PsiElement element) {
+        if (element == null) {
+            return Space.EMPTY;
+        }
+
+        PsiElement begin = element.getNextSibling();
+        while (begin != null && isHiddenElement(begin)) {
+            begin = begin.getNextSibling();
+        }
+        if (!isWhitespaceOrComment(begin)) {
+            return Space.EMPTY;
+        }
+
+        return mergeSpace(begin, findSpaceEnd(begin));
+    }
+
+    /**
+     * Collects trailing space <b>inside</b> of an element.
+     * <p>
+     * The PSI model for some elements (including statements) stores whitespace following an element inside of that
+     * element, up to the first newline. This includes trailing comments.
+     */
+    public static Space trailingSpace(@Nullable PsiElement element) {
+        if (element == null) {
+            return Space.EMPTY;
+        }
+
+        PsiElement end = element.getLastChild();
+        if (!isWhitespaceOrComment(end)) {
+            return Space.EMPTY;
+        }
+
+        PsiElement begin = end;
+        while (isWhitespaceOrComment(begin.getPrevSibling())) {
+            begin = begin.getPrevSibling();
+        }
+
+        return mergeSpace(begin, end);
+    }
+
+
+    public static Space mergeSpace(PsiElement firstSpaceOrComment, PsiElement lastSpaceOrComment) {
+        PsiUtils.PsiElementCursor psiElementCursor = PsiUtils.elementsBetween(firstSpaceOrComment, lastSpaceOrComment);
+
+        final String prefix = psiElementCursor.consumeWhitespace();
+
+        List<Comment> comments = null;
+        while (!psiElementCursor.isPastEnd()) {
+            if (comments == null) {
+                comments = new ArrayList<>();
+            }
+            String commentText = psiElementCursor.consumeExpectingType(PsiComment.class).getText();
+            final String suffix = psiElementCursor.consumeWhitespace();
+
+            if (!commentText.startsWith("#")) {
+                throw new IllegalStateException(
+                        String.format(
+                                "expected Python comment to start with `#`; found: `%s`",
+                                commentText.charAt(0)
+                        )
+                );
+            }
+            commentText = commentText.substring(1);
+
+            comments.add(new PyComment(commentText, suffix, false, EMPTY));
+        }
+
+        return Space.build(prefix, comments == null ? emptyList() : comments);
+    }
+
+    public static boolean isWhitespaceOrComment(@Nullable PsiElement element) {
+        return element instanceof PsiComment || element instanceof PsiWhiteSpace;
     }
 
     public static PsiElementCursor elementsBetween(@Nullable PsiElement begin, @Nullable PsiElement endInclusive) {

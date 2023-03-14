@@ -42,6 +42,21 @@ public class PythonExtraPadding implements Marker {
 
     public enum Location {
         /**
+         * The method and class models don't support right-padding of decorators.
+         * In Python, they're padded like statements and must be newline-terminated.
+         * It's more natural to store trailing padding (which is unusual) with the decorator
+         * rather than with the next sibling.
+         *
+         * <pre>
+         *      \@foo⇒❘ # a comment❘⇐
+         *      \@bar
+         *      def method():
+         *          pass
+         * </pre>
+         */
+        AFTER_DECORATOR(Space.build("\n", emptyList())),
+
+        /**
          * <pre>
          *      if someCondition⇒
          *          pass
@@ -109,7 +124,7 @@ public class PythonExtraPadding implements Marker {
         return null;
     }
 
-    public static @Nullable Space getOrDefault(Tree tree, Location loc) {
+    public static Space getOrDefault(Tree tree, Location loc) {
         @Nullable Space space = get(tree, loc);
         if (space == null) {
             return loc.defaultSpace;
