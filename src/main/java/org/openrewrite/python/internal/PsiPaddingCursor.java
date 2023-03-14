@@ -1,19 +1,31 @@
+/*
+ * Copyright 2023 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.openrewrite.python.internal;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
-import com.intellij.psi.impl.source.tree.LeafElement;
 import lombok.Value;
-import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.tree.Space;
-import org.openrewrite.marker.Markers;
-import org.openrewrite.python.tree.PyComment;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.openrewrite.python.tree.PySpace.appendComment;
 import static org.openrewrite.python.tree.PySpace.appendWhitespace;
@@ -127,7 +139,7 @@ public class PsiPaddingCursor {
         interface Consumable extends State {
             State consume(AtomicReference<Space> acc);
 
-            State consumeUntilNewline(AtomicReference<Space> acc);
+            State consumeUntilFound(AtomicReference<Space> acc, String search);
         }
 
         /**
@@ -161,16 +173,25 @@ public class PsiPaddingCursor {
             }
 
             @Override
-            public State consumeUntilNewline(AtomicReference<Space> acc) {
-                final String text = element.getText();
-                final int index = text.indexOf("\n", startIndex);
-                if (index < 0) {
+            public State consumeUntilFound(AtomicReference<Space> acc, String search) {
+                final String nextText = element.getText().substring(startIndex);
+                final String prevText = acc.get().getLastWhitespace();
+                final String combinedText = prevText + nextText;
+
+                final int startIndexInCombined = combinedText.indexOf(
+                        search,
+                        // take one char from `prevText` for each char of `search` except the last
+                        prevText.length() - (search.length() - 1)
+                );
+                if (startIndexInCombined < 0) {
                     return consume(acc);
                 } else {
-                    final String upToNewline = text.substring(startIndex, index + 1);
-                    acc.updateAndGet(space -> appendWhitespace(space, upToNewline));
+                    final int endIndexInCombined = startIndexInCombined + search.length();
+                    final int endIndexInNext = endIndexInCombined - prevText.length();
+                    final String upToMatch = nextText.substring(0, endIndexInNext);
+                    acc.updateAndGet(space -> appendWhitespace(space, upToMatch));
 
-                    return new FoundNewline(element, index);
+                    return new FoundMatch(element, endIndexInNext, search);
                 }
             }
 
@@ -191,7 +212,7 @@ public class PsiPaddingCursor {
             }
 
             @Override
-            public State consumeUntilNewline(AtomicReference<Space> acc) {
+            public State consumeUntilFound(AtomicReference<Space> acc, String search) {
                 return consume(acc);
             }
 
@@ -205,12 +226,13 @@ public class PsiPaddingCursor {
          * The cursor was searching for a newline and found it.
          */
         @Value
-        class FoundNewline implements State.Consumable {
-            PsiWhiteSpace whitespace;
-            int newlineIndex;
+        class FoundMatch implements State.Consumable {
+            PsiWhiteSpace matchEndedInWhitespace;
+            int matchEndIndexExclusive;
+            String search;
 
             private WhitespaceNext nextState() {
-                return new WhitespaceNext(whitespace, newlineIndex + 1);
+                return new WhitespaceNext(matchEndedInWhitespace, matchEndIndexExclusive);
             }
 
             @Override
@@ -219,13 +241,13 @@ public class PsiPaddingCursor {
             }
 
             @Override
-            public State consumeUntilNewline(AtomicReference<Space> acc) {
-                return nextState().consumeUntilNewline(acc);
+            public State consumeUntilFound(AtomicReference<Space> acc, String search) {
+                return nextState().consumeUntilFound(acc, search);
             }
 
             @Override
             public Integer getSourceOffset() {
-                return actualNodeOffset(whitespace) + newlineIndex;
+                return actualNodeOffset(matchEndedInWhitespace) + matchEndIndexExclusive - search.length();
             }
         }
 
@@ -270,6 +292,13 @@ public class PsiPaddingCursor {
         return offset > actualNodeOffset(element);
     }
 
+    public <T> T withRollback(Supplier<T> fn) {
+        final State prev = this.state;
+        T result = fn.get();
+        this.state = prev;
+        return result;
+    }
+
     public Space consumeRemaining() {
         AtomicReference<Space> acc = new AtomicReference<>(Space.EMPTY);
         while (state instanceof State.Consumable) {
@@ -279,38 +308,30 @@ public class PsiPaddingCursor {
     }
 
     public Space consumeRemainingAndExpect(PsiElement expectedNext) {
-        System.err.println("expecting: " + expectedNext.getText());
         final Space space = consumeRemaining();
-
-        final @Nullable Integer currentOffset = state.getSourceOffset();
-        final int expectedOffset = actualNodeOffset(expectedNext);
-        if (currentOffset == null || currentOffset != expectedOffset) {
-            throw new IllegalStateException(String.format(
-                    "did not stop (%d) where expected (%d)",
-                    currentOffset == null ? -1 : currentOffset,
-                    expectedOffset
-            ));
-        }
+        expectNext(expectedNext);
         return space;
     }
 
     public Space consumeRemainingAndExpectEOF() {
         final Space space = consumeRemaining();
-        if (!(state instanceof State.StoppedAtEOF)) {
-            throw new IllegalStateException("did not stop where expected (at eof)");
-        }
+        expectEOF();
         return space;
     }
 
     public WithStatus<Space> consumeUntilNewlineWithStatus() {
+        return consumeUntilFoundWithStatus("\n");
+    }
+
+    public WithStatus<Space> consumeUntilFoundWithStatus(String search) {
         final AtomicReference<Space> acc = new AtomicReference<>(Space.EMPTY);
         while (state instanceof State.Consumable) {
-            state = ((State.Consumable) state).consumeUntilNewline(acc);
-            if (state instanceof State.FoundNewline) {
+            state = ((State.Consumable) state).consumeUntilFound(acc, search);
+            if (state instanceof State.FoundMatch) {
                 break;
             }
         }
-        final boolean success = state instanceof State.FoundNewline;
+        final boolean success = state instanceof State.FoundMatch;
         return new WithStatus<>(acc.get(), success);
     }
 
@@ -318,9 +339,17 @@ public class PsiPaddingCursor {
         return consumeUntilNewlineWithStatus().value;
     }
 
-    public <T> @Nullable T consumeUntilNewlineOrReset(Function<Space, T> fn) {
+    public Space consumeUntilFound(String search) {
+        return consumeUntilFoundWithStatus(search).value;
+    }
+
+    public <T> @Nullable T consumeUntilNewlineOrRollback(Function<Space, T> fn) {
+        return consumeUntilFoundOrRollback("\n", fn);
+    }
+
+    public <T> @Nullable T consumeUntilFoundOrRollback(String search, Function<Space, T> fn) {
         final State initialState = state;
-        WithStatus<Space> result = consumeUntilNewlineWithStatus();
+        WithStatus<Space> result = consumeUntilFoundWithStatus(search);
         if (result.succeeded) {
             return fn.apply(result.value);
         } else {
@@ -330,9 +359,13 @@ public class PsiPaddingCursor {
     }
 
     public Space consumeUntilExpectedNewline() {
-        WithStatus<Space> withStatus = consumeUntilNewlineWithStatus();
+        return consumeUntilExpectedWhitespace("\n");
+    }
+
+    public Space consumeUntilExpectedWhitespace(String search) {
+        WithStatus<Space> withStatus = consumeUntilFoundWithStatus(search);
         if (!withStatus.succeeded) {
-            throw new IllegalStateException("did not find a newline as expected");
+            throw new IllegalStateException("did not find pattern as expected");
         }
         return withStatus.value;
     }
@@ -362,4 +395,23 @@ public class PsiPaddingCursor {
         assertDiscardable();
         this.state = attachAtTrailingSpaceWithin(within);
     }
+
+    public void expectNext(PsiElement expectedNext) {
+        final @Nullable Integer currentOffset = state.getSourceOffset();
+        final int expectedOffset = actualNodeOffset(expectedNext);
+        if (currentOffset == null || currentOffset != expectedOffset) {
+            throw new IllegalStateException(String.format(
+                    "did not stop (%d) where expected (%d)",
+                    currentOffset == null ? -1 : currentOffset,
+                    expectedOffset
+            ));
+        }
+    }
+
+    public void expectEOF() {
+        if (!(state instanceof State.StoppedAtEOF)) {
+            throw new IllegalStateException("did not stop where expected (at eof)");
+        }
+    }
+
 }

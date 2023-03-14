@@ -24,7 +24,6 @@ import org.openrewrite.marker.Markers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class PySpace {
 
@@ -127,63 +126,162 @@ public final class PySpace {
         return commentWithHash.substring(1);
     }
 
-    public static Space reindent(Space space, String indentWithoutNewline) {
-        if (space.getComments().isEmpty()) {
-            return space.withWhitespace(space.getWhitespace() + indentWithoutNewline);
+    public enum IndentStartMode {
+        LINE_START,
+        AFTER_STATEMENT,
+    }
+
+    public enum IndentEndMode {
+        STATEMENT_START,
+        REST_OF_LINE,
+    }
+
+    public static Space reindent(Space original, String indentWithoutNewline, IndentStartMode startMode, IndentEndMode endMode) {
+
+        if (indentWithoutNewline.contains("\n")) {
+            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, Collections.emptyList()));
         }
 
-        List<Comment> comments = new ArrayList<>(space.getComments());
-        boolean isAligned = true;
-        for (int i = space.getComments().size() - 1; i >= 0; i--) {
-            Comment comment = comments.get(i);
-            if (isAligned) {
-                comment = comment.withSuffix(comment.getSuffix() + indentWithoutNewline);
+        if (indentWithoutNewline.isEmpty()) {
+            return original;
+        }
+
+        switch (endMode) {
+            case REST_OF_LINE:
+                if (!original.getLastWhitespace().endsWith("\n")) {
+                    throw new IllegalStateException("expected statement suffix to end with a newline");
+                }
+                break;
+            case STATEMENT_START:
+                if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
+                    if (!original.getLastWhitespace().endsWith("\n")) {
+                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder");
+                    }
+                } else {
+                    if (!original.getLastWhitespace().isEmpty()) {
+                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder");
+                    }
+                }
+                break;
+        }
+
+        Space space = Space.build(original.getWhitespace(), Collections.emptyList());
+
+        List<Comment> originalComments = original.getComments();
+
+        if (original.getComments().isEmpty()) {
+            if (startMode == IndentStartMode.LINE_START && endMode == IndentEndMode.STATEMENT_START) {
+                if (original.getWhitespace().isEmpty() || original.getWhitespace().endsWith("\n")) {
+                    space = appendWhitespace(space, indentWithoutNewline);
+                }
             }
-            comments.set(i, comment);
-            isAligned = ((PyComment)comment).isAlignedToIndent();
+        } else {
+            for (int i = 0; i < originalComments.size(); i++) {
+                Comment originalComment = originalComments.get(i);
+                PyComment comment = (PyComment) originalComment;
+
+                if (comment.isAlignedToIndent() && (i != 0 || startMode == IndentStartMode.LINE_START)) {
+                    if (space.getLastWhitespace().isEmpty() || space.getLastWhitespace().endsWith("\n")) {
+                        space = appendWhitespace(space, indentWithoutNewline);
+                    }
+                }
+
+                space = space.withComments(ListUtils.concat(
+                        space.getComments(),
+                        comment
+                ));
+            }
+
+            if (endMode == IndentEndMode.STATEMENT_START) {
+                space = appendWhitespace(space, indentWithoutNewline);
+            }
         }
-        space = space.withComments(comments);
-        if (isAligned) {
-            space = space.withWhitespace(space.getWhitespace() + indentWithoutNewline);
-        }
+
         return space;
     }
 
-    public static Space deindent(Space space, String indentWithoutNewline) {
-        System.err.println("deindenting with: " + Space.build(indentWithoutNewline, Collections.emptyList()));
-        System.err.println("  before: " + space);
+    public static Space deindent(Space original, String indentWithoutNewline, IndentStartMode startMode, IndentEndMode endMode) {
+        if (indentWithoutNewline.contains("\n")) {
+            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, Collections.emptyList()));
+        }
 
-        AtomicBoolean isAligned = new AtomicBoolean();
-        String indentWithNewline = "\n" + indentWithoutNewline;
+        if (indentWithoutNewline.isEmpty()) {
+            return original;
+        }
 
-        isAligned.set(
-                space.getWhitespace().endsWith(indentWithNewline)
-                        || space.getWhitespace().equals(indentWithoutNewline)
-        );
-        if (isAligned.get()) {
-            space = space.withWhitespace(
-                    space.getWhitespace().substring(0, space.getWhitespace().length() - indentWithoutNewline.length())
+        final String indentWithNewline = "\n" + indentWithoutNewline;
+
+        switch (endMode) {
+            case REST_OF_LINE:
+                if (!original.getLastWhitespace().endsWith("\n")) {
+                    throw new IllegalStateException("expected statement suffix to end with a newline");
+                }
+                break;
+            case STATEMENT_START:
+                if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
+                    if (!original.getLastWhitespace().endsWith(indentWithNewline)) {
+                        throw new IllegalStateException("expected statement prefix to end with an indent");
+                    }
+                } else {
+                    if (!original.getLastWhitespace().equals(indentWithoutNewline)) {
+                        throw new IllegalStateException("expected statement prefix to end with an indent");
+                    }
+                }
+                break;
+        }
+
+        Space space;
+
+        boolean currentlyIndented;
+
+        if (startMode == IndentStartMode.LINE_START && original.getWhitespace().equals(indentWithoutNewline)) {
+            if (endMode == IndentEndMode.STATEMENT_START || !original.getComments().isEmpty()) {
+                currentlyIndented = true;
+                space = Space.EMPTY;
+            } else {
+                // weird coincidence; maybe not possible?
+                currentlyIndented = false;
+                space = Space.build(original.getWhitespace(), Collections.emptyList());
+            }
+        } else if (original.getWhitespace().endsWith(indentWithNewline)) {
+            currentlyIndented = true;
+            space = Space.build(
+                    original.getWhitespace().substring(
+                            // just keep the newline
+                            0, original.getWhitespace().length() - indentWithoutNewline.length()
+                    ),
+                    Collections.emptyList()
+            );
+        } else {
+            currentlyIndented = false;
+            space = Space.build(original.getWhitespace(), Collections.emptyList());
+        }
+
+        List<Comment> originalComments = original.getComments();
+        for (int i = 0; i < originalComments.size(); i++) {
+            Comment originalComment = originalComments.get(i);
+            PyComment comment = (PyComment) originalComment;
+            comment = comment.withAlignedToIndent(currentlyIndented);
+
+            final boolean isLastComment = i == originalComments.size() - 1;
+            if (!isLastComment || endMode == IndentEndMode.STATEMENT_START) {
+                currentlyIndented = comment.getSuffix().endsWith(indentWithNewline);
+                if (currentlyIndented) {
+                    comment = comment.withSuffix(
+                            comment.getSuffix().substring(
+                                    // just keep the newline
+                                    0, comment.getSuffix().length() - indentWithoutNewline.length()
+                            )
+                    );
+                }
+            } else {
+                currentlyIndented = false;
+            }
+            space = space.withComments(
+                    ListUtils.concat(space.getComments(), comment)
             );
         }
-        space = space.withComments(ListUtils.map(
-                space.getComments(),
-                comment -> {
-                    if (isAligned.get()) {
-                        comment = ((PyComment) comment).withAlignedToIndent(true);
-                    }
-                    isAligned.set(comment.getSuffix().endsWith(indentWithNewline));
-                    if (isAligned.get()) {
-                        comment = comment.withSuffix(
-                                comment.getSuffix().substring(0, comment.getSuffix().length() - indentWithNewline.length() + 1)
-                        );
-                    }
-                    return comment;
-                }
-        ));
-        System.err.println("  after: " + space);
-        if (!isAligned.get()) {
-            throw new IllegalStateException("expected statement prefix to end with block indent");
-        }
+
         return space;
     }
 

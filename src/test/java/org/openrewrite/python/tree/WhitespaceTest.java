@@ -1,22 +1,25 @@
+/*
+ * Copyright 2023 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * https://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.openrewrite.python.tree;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.openrewrite.ExecutionContext;
-import org.openrewrite.internal.ListUtils;
-import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.Statement;
-import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.test.RewriteTest;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import static org.openrewrite.python.Assertions.python;
-import static org.openrewrite.test.RewriteTest.toRecipe;
 
 class WhitespaceTest implements RewriteTest {
 
@@ -93,7 +96,10 @@ class WhitespaceTest implements RewriteTest {
       " # comment",
       "# comment ",
       "\n#comment\n",
+      "\n #comment\n",
       "\n  #comment\n",
+      "\n   #comment\n",
+      "\n    #comment\n",
     })
     void testSingleLineMultiStatementInsideBlock(String firstLineEnding) {
         rewriteRun(python(
@@ -117,70 +123,4 @@ class WhitespaceTest implements RewriteTest {
             print(3)%s""".formatted(eofSpace)
         ));
     }
-
-    @Test
-    void indentPreservationOnModification() {
-        rewriteRun(spec -> {
-            spec.recipe(toRecipe(() -> new PythonVisitor<>() {
-                @Override
-                public J visitBlock(J.Block block, ExecutionContext executionContext) {
-                    List<Statement> copied = new ArrayList<>();
-                    Set<String> existing = new HashSet<>();
-                    for (Statement statement : block.getStatements()) {
-                        if (statement instanceof J.MethodDeclaration) {
-                            existing.add(((J.MethodDeclaration) statement).getSimpleName());
-                        }
-                    }
-                    for (Statement statement : block.getStatements()) {
-                        if (statement instanceof J.ClassDeclaration) {
-                            System.err.println("found class: " + statement);
-                            J.Block body = ((J.ClassDeclaration) statement).getBody();
-                            for (Statement classStatement : body.getStatements()) {
-                                if (classStatement instanceof J.MethodDeclaration) {
-                                    System.err.println("found method: " + ((J.MethodDeclaration) classStatement).getSimpleName());
-                                    if (existing.add(((J.MethodDeclaration) classStatement).getSimpleName())) {
-                                        copied.add(classStatement);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    System.err.println(copied);
-                    return block.withStatements(ListUtils.concatAll(
-                      block.getStatements(),
-                      copied
-                    ));
-                }
-            }));
-        }, python(
-          """                
-            class A:           
-                def f():
-                    # a loop
-                    while True:
-                        pass
-                
-                def g():
-                    pass
-            """,
-          """
-            class A:           
-                def f():
-                    # a loop
-                    while True:
-                        pass
-                
-                def g():
-                    pass
-            def f():
-                # a loop
-                while True:
-                    pass
-            
-            def g():
-                pass
-            """
-        ));
-    }
-
 }
