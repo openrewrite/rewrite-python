@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the original author or authors.
+ * Copyright 2021 the original author or authors.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.util.UUID;
 import static java.util.Collections.emptyList;
 
 /**
- * For use as a last resort when Pyton elements semantically fit into the `J` scheme,
+ * For use as a last resort when Python elements semantically fit into the `J` scheme,
  * but lack the fields to store the necessary padding.
  */
 @Value
@@ -58,7 +58,7 @@ public class PythonExtraPadding implements Marker {
 
         /**
          * <pre>
-         *      if someCondition⇒❘ ❘⇐:
+         *      if someCondition⇒
          *          pass
          * </pre>
          */
@@ -68,7 +68,7 @@ public class PythonExtraPadding implements Marker {
          * Imports can optionally be wrapped in parens.
          *
          * <pre>
-         *      from math import⇒❘ ❘⇐(
+         *      from math import⇒
          *          sin,
          *          cos
          *      )
@@ -82,8 +82,8 @@ public class PythonExtraPadding implements Marker {
          * <pre>
          *      from math import (
          *          sin,
-         *          cos⇒❘
-         *      ❘⇐)
+         *          cos⇒
+         *      )
          * </pre>
          */
         IMPORT_PARENS_SUFFIX(Space.build("\n", emptyList())),
@@ -92,7 +92,7 @@ public class PythonExtraPadding implements Marker {
          * Some Python operators have space within the operator itself.
          *
          * <pre>
-         *      if x is⇒❘ ❘⇐not y:
+         *      if x is⇒ not y:
          *          pass
          * </pre>
          */
@@ -103,7 +103,7 @@ public class PythonExtraPadding implements Marker {
          * but lack the space for it in the model.
          *
          * <pre>
-         *      xs = {⇒❘ ❘⇐}
+         *      xs = {⇒ }
          * </pre>
          */
         EMPTY_INITIALIZER(Space.EMPTY);

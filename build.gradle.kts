@@ -40,3 +40,10 @@ val shadowJar = tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.Sha
         include { _ -> false }
     }
 }
+
+tasks.withType<Javadoc> {
+    options {
+        this as CoreJavadocOptions
+        addStringOption("Xdoclint:none", "-quiet")
+    }
+}

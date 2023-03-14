@@ -962,8 +962,8 @@ public class PsiPythonMapper {
         Map<PyElementType, J.AssignmentOperation.Type> map = new HashMap<>();
         map.put(PyTokenTypes.PLUSEQ, J.AssignmentOperation.Type.Addition);
         map.put(PyTokenTypes.MINUSEQ, J.AssignmentOperation.Type.Subtraction);
+        map.put(PyTokenTypes.ATEQ, J.AssignmentOperation.Type.MatrixMultiplication);
         map.put(PyTokenTypes.MULTEQ, J.AssignmentOperation.Type.Multiplication);
-//        map.put(PyTokenTypes.ATEQ, UNSUPPORTED);
         map.put(PyTokenTypes.DIVEQ, J.AssignmentOperation.Type.Division);
         map.put(PyTokenTypes.PERCEQ, J.AssignmentOperation.Type.Modulo);
         map.put(PyTokenTypes.ANDEQ, J.AssignmentOperation.Type.BitAnd);
@@ -971,8 +971,8 @@ public class PsiPythonMapper {
         map.put(PyTokenTypes.XOREQ, J.AssignmentOperation.Type.BitXor);
         map.put(PyTokenTypes.LTLTEQ, J.AssignmentOperation.Type.LeftShift);
         map.put(PyTokenTypes.GTGTEQ, J.AssignmentOperation.Type.RightShift);
-//        map.put(PyTokenTypes.EXPEQ, UNSUPPORTED);
-//        map.put(PyTokenTypes.FLOORDIVEQ, UNSUPPORTED);
+        map.put(PyTokenTypes.EXPEQ, J.AssignmentOperation.Type.Exponentiation);
+        map.put(PyTokenTypes.FLOORDIVEQ, J.AssignmentOperation.Type.FloorDivision);
         augAssignmentOps = Collections.unmodifiableMap(map);
     }
 
