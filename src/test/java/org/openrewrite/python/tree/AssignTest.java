@@ -15,7 +15,6 @@
  */
 package org.openrewrite.python.tree;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,23 +35,6 @@ class AssignTest implements RewriteTest {
         );
     }
 
-    @Disabled
-    @ParameterizedTest
-    @ValueSource(strings = {
-      "@",
-      "**",
-      "//",
-    })
-    void assignmentOpUnsupported(String op) {
-        rewriteRun(
-          python(
-            """
-              a %s= 3
-              """.formatted(op)
-          )
-        );
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {
       "+",
@@ -65,6 +47,9 @@ class AssignTest implements RewriteTest {
       "^",
       "<<",
       ">>",
+      "@",
+      "**",
+      "//",
     })
     void assignmentOp(String op) {
         rewriteRun(
