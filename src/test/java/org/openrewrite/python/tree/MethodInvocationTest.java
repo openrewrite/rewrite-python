@@ -84,4 +84,16 @@ class MethodInvocationTest implements RewriteTest {
     void methodInvocationOnCallable(String arg) {
         rewriteRun(python(arg));
     }
+
+    @ParameterizedTest
+    //language=py
+    @ValueSource(strings = {
+      "print(*x)",
+      "print(* x)",
+      "print(**x)",
+      "print(** x)",
+    })
+    void specialArg(String arg) {
+        rewriteRun(python(arg));
+    }
 }

@@ -25,6 +25,7 @@ public class WithTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings={
+      "A()",
       "A() as a",
       "A()  as a",
       "A() as  a",
@@ -38,7 +39,7 @@ public class WithTest implements RewriteTest {
       "A() as a, B() as  b",
       "A() as a, B() as b ",
     })
-    public void test(String vars) {
+    public void simple(String vars) {
         rewriteRun(python(
           """
             with %s:

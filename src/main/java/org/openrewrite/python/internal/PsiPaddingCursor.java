@@ -18,6 +18,7 @@ package org.openrewrite.python.internal;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiWhiteSpace;
 import lombok.Value;
 import org.openrewrite.internal.lang.Nullable;
@@ -276,8 +277,10 @@ public class PsiPaddingCursor {
     }
 
     private State state = State.Uninitialized.INSTANCE;
+    private final PsiFile file;
 
-    public PsiPaddingCursor() {
+    public PsiPaddingCursor(PsiFile file) {
+        this.file = file;
     }
 
     public @Nullable Integer offsetInFile() {
@@ -365,14 +368,14 @@ public class PsiPaddingCursor {
     public Space consumeUntilExpectedWhitespace(String search) {
         WithStatus<Space> withStatus = consumeUntilFoundWithStatus(search);
         if (!withStatus.succeeded) {
-            throw new IllegalStateException("did not find pattern as expected");
+            throw new IllegalStateException("did not find pattern as expected;\n" + printDebuggingMessage("STOPPED HERE"));
         }
         return withStatus.value;
     }
 
     private void assertDiscardable() {
         if (!(this.state instanceof State.Discardable)) {
-            throw new IllegalStateException("resetting would discard an active whitespace position");
+            throw new IllegalStateException("resetting would discard an active whitespace position;\n" + printDebuggingMessage("ATTEMPTED TO RESET HERE"));
         }
     }
 
@@ -401,17 +404,72 @@ public class PsiPaddingCursor {
         final int expectedOffset = actualNodeOffset(expectedNext);
         if (currentOffset == null || currentOffset != expectedOffset) {
             throw new IllegalStateException(String.format(
-                    "did not stop (%d) where expected (%d)",
+                    "did not stop (%d) where expected (%d);\n%s\n%s",
                     currentOffset == null ? -1 : currentOffset,
-                    expectedOffset
+                    expectedOffset,
+                    printDebuggingMessage("STOPPED HERE"),
+                    printDebuggingMessage("EXPECTED HERE", expectedOffset)
             ));
         }
     }
 
     public void expectEOF() {
         if (!(state instanceof State.StoppedAtEOF)) {
-            throw new IllegalStateException("did not stop where expected (at eof)");
+            throw new IllegalStateException(String.format(
+                    "did not stop where expected (at eof);\n%s",
+                    printDebuggingMessage("STOPPED HERE")
+            ));
         }
     }
 
+    private String printDebuggingMessage(String label) {
+        return printDebuggingMessage(label, state.getSourceOffset());
+    }
+
+    private String printDebuggingMessage(String label, @Nullable Integer offset) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("In file " + file.getName() + ":\n");
+        sb.append("--\n");
+        if (offset == null) {
+            sb.append("<null position>\n");
+        } else {
+            String text = this.file.getText();
+            final int lastNewlineBeforeHere = lastNewline(text, offset - 1);
+            final int nextNewline = nextNewline(text, offset);
+
+            final int previewStart = lastNewline(text, lastNewlineBeforeHere - 80);
+            final int previewEnd = nextNewline(text, nextNewline + 80);
+
+            if (previewStart < nextNewline) {
+                sb.append(text, previewStart, nextNewline + 1);
+            }
+            for (int i = 0; i < (offset - lastNewlineBeforeHere - 1); i++) {
+                sb.append(" ");
+            }
+            sb.append("^-------[ ").append(label).append(" ]\n");
+            if (nextNewline < previewEnd) {
+                sb.append(text, nextNewline + 1, previewEnd);
+            }
+        }
+        if (sb.charAt(sb.length() - 1) != '\n') {
+            sb.append("\n");
+        }
+        sb.append("--\n");
+        return sb.toString();
+    }
+
+    private static int nextNewline(String str, int afterPosition) {
+        if (afterPosition >= str.length() || afterPosition < 0) {
+            return str.length();
+        }
+        final int found = str.substring(afterPosition).indexOf("\n");
+        return found < 0 ? str.length() : afterPosition + found;
+    }
+
+    private static int lastNewline(String str, int beforePosition) {
+        if (beforePosition >= str.length() || beforePosition < 0) {
+            return 0;
+        }
+        return Math.max(0, str.substring(0, beforePosition).lastIndexOf("\n"));
+    }
 }

@@ -355,7 +355,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 // anything with decorators
                 final boolean delegateReindentToElement =
                         statement instanceof J.ClassDeclaration
-                        || statement instanceof J.MethodDeclaration;
+                                || statement instanceof J.MethodDeclaration;
 
                 if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
                     if (!isFirst && !lastCharIs(p, '\n')) {
@@ -414,6 +414,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
             afterSyntax(caze, p);
             return caze;
+        }
+
+        @Override
+        public J visitTernary(J.Ternary ternary, PrintOutputCapture<P> p) {
+            beforeSyntax(ternary, Space.Location.TERNARY_PREFIX, p);
+            visit(ternary.getTruePart(), p);
+            visitSpace(ternary.getPadding().getTruePart().getBefore(), Location.TERNARY_TRUE, p);
+            p.append("if");
+            visit(ternary.getCondition(), p);
+            visitLeftPadded("else", ternary.getPadding().getFalsePart(), JLeftPadded.Location.TERNARY_FALSE, p);
+            afterSyntax(ternary, p);
+            return ternary;
         }
 
         @Override
@@ -510,6 +522,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
             afterSyntax(multiVariable, p);
             return multiVariable;
+        }
+
+        @Override
+        public J visitVariable(J.VariableDeclarations.NamedVariable variable, PrintOutputCapture<P> p) {
+            beforeSyntax(variable, Space.Location.VARIABLE_PREFIX, p);
+            if (variable.getName().getSimpleName().isEmpty()) {
+                visit(variable.getInitializer(), p);
+            } else {
+                visit(variable.getName(), p);
+                visitLeftPadded("=", variable.getPadding().getInitializer(), JLeftPadded.Location.VARIABLE_INITIALIZER, p);
+            }
+            afterSyntax(variable, p);
+            return variable;
         }
 
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
@@ -732,9 +757,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
                     J.Assignment assignment = (J.Assignment) decl;
                     visit(assignment.getAssignment(), p);
-                    visitSpace(assignment.getPadding().getAssignment().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                    p.append("as");
-                    visit(assignment.getVariable(), p);
+                    if (!(assignment.getVariable() instanceof J.Empty)) {
+                        visitSpace(assignment.getPadding().getAssignment().getBefore(), Location.LANGUAGE_EXTENSION, p);
+                        p.append("as");
+                        visit(assignment.getVariable(), p);
+                    }
 
                     visitSpace(resource.getAfter(), Space.Location.TRY_RESOURCE_SUFFIX, p);
                 }
@@ -753,7 +780,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (elseBody != null) {
                 // padding is reversed for the `else` part because it's wrapped as though it were a normal statement,
                 // so its extra padding (which acts as JLeftPadding) is stored in a JRightPadding
-                visitSpace(elseBody.getAfter(), Location.LANGUAGE_EXTENSION, p);
+                visitSpace(reindentPrefix(getCursor(), elseBody.getAfter()), Location.LANGUAGE_EXTENSION, p);
                 p.append("else");
                 visit(elseBody.getElement(), p);
             }
@@ -903,6 +930,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
             afterSyntax(impoort, p);
             return impoort;
+        }
+
+        @Override
+        protected void beforeSyntax(Space prefix, Markers markers, @Nullable Location loc, PrintOutputCapture<P> p) {
+            if (loc != null) {
+                switch (loc) {
+                    case ELSE_PREFIX:
+                    case CATCH_PREFIX:
+                    case TRY_FINALLY:
+                        prefix = reindentPrefix(getCursor(), prefix);
+                        break;
+                }
+            }
+            super.beforeSyntax(prefix, markers, loc, p);
         }
     }
 
@@ -1348,6 +1389,35 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
         afterSyntax(param, p);
         return param;
+    }
+
+    @Override
+    public J visitSpecialArgument(Py.SpecialArgument arg, PrintOutputCapture<P> p) {
+        beforeSyntax(arg, PySpace.Location.SPECIAL_ARG_PREFIX, p);
+        switch (arg.getKind()) {
+            case ARGS:
+                p.append("*");
+                break;
+            case KWARGS:
+                p.append("**");
+                break;
+        }
+        visit(arg.getExpression(), p);
+        afterSyntax(arg, p);
+        return arg;
+    }
+
+    @Override
+    public J visitTrailingElseWrapper(Py.TrailingElseWrapper wrapper, PrintOutputCapture<P> p) {
+        visit(reindentPrefix(delegate.getCursor(), wrapper.getStatement()), p);
+        delegate.visitSpace(
+                reindentPrefix(delegate.getCursor(), wrapper.getPadding().getElseBlock().getBefore()),
+                Location.ELSE_PREFIX,
+                p
+        );
+        p.append("else");
+        visit(wrapper.getElseBlock(), p);
+        return wrapper;
     }
 
     private static class ContainsNewlineVisitor extends JavaVisitor<AtomicBoolean> {

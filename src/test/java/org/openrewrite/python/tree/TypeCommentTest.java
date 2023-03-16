@@ -92,5 +92,22 @@ public class TypeCommentTest implements RewriteTest {
         );
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+      ":str",
+      " :str",
+      ": str",
+      ":str ",
+    })
+    void variablesWithoutAssignment(String type) {
+        rewriteRun(
+          python(
+            """
+              x%s
+              """.formatted(type)
+          )
+        );
+    }
+
 
 }

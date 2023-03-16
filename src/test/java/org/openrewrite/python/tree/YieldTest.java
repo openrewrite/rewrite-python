@@ -25,15 +25,16 @@ class YieldTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "yield x",
-            "yield  x",
-            "yield x, y",
-            "yield  x, y",
-            "yield x , y",
-            "yield x,  y",
-            "yield from x",
-            "yield  from x",
-            "yield from  x",
+      "yield",
+      "yield x",
+      "yield  x",
+      "yield x, y",
+      "yield  x, y",
+      "yield x , y",
+      "yield x,  y",
+      "yield from x",
+      "yield  from x",
+      "yield from  x",
     })
     void yieldStatement(String arg) {
         rewriteRun(python(
@@ -46,15 +47,15 @@ class YieldTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "yield x",
-            "yield  x",
-            "yield x, y",
-            "yield  x, y",
-            "yield x , y",
-            "yield x,  y",
-            "yield from x",
-            "yield  from x",
-            "yield from  x",
+      "yield x",
+      "yield  x",
+      "yield x, y",
+      "yield  x, y",
+      "yield x , y",
+      "yield x,  y",
+      "yield from x",
+      "yield  from x",
+      "yield from  x",
     })
     void yieldExpression(String arg) {
         rewriteRun(python(

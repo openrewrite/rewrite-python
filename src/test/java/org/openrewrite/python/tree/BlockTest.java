@@ -145,4 +145,78 @@ class BlockTest implements RewriteTest {
           python(code)
         );
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      """
+        for x in xs:
+            pass
+        """,
+      """
+        for x in xs:
+            pass
+        else:
+            pass
+        """,
+      """
+        while True:
+            pass
+        """,
+      """
+        with stuff() as x:
+            pass
+        """,
+      """
+        if True:
+            pass
+        """,
+      """
+        if True:
+            pass
+        else:
+            pass
+        """,
+      """
+        if True:
+            pass
+        elif False:
+            pass
+        else:
+            pass
+        """,
+      """
+        try:
+            pass
+        except:
+            pass
+        """,
+      """
+        try:
+            pass
+        except:
+            pass
+        else:
+            pass
+        """,
+      """
+        try:
+            pass
+        except:
+            pass
+        else:
+            pass
+        finally:
+            pass
+        """,
+    })
+    public void nested(String block) {
+        rewriteRun(
+          python(
+            """
+              def f():
+                  %s
+              """.formatted(block.replace("\n", "\n    "))
+          )
+        );
+    }
 }
