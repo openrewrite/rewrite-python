@@ -113,7 +113,8 @@ public class SwitchTest implements RewriteTest {
       "",
       "a",
       "b, c",
-      "a, b=c"
+      "a, b=c",
+      "a, b=c, d=(e,f)",
     })
     void className(String args) {
         rewriteRun(
@@ -186,6 +187,19 @@ public class SwitchTest implements RewriteTest {
             """
               match x:
                 case (value.pattern):
+                    pass
+              """
+          )
+        );
+    }
+
+    @Test
+    void sequenceTarget() {
+        rewriteRun(
+          python(
+            """
+              match x, y:
+                case a, b:
                     pass
               """
           )

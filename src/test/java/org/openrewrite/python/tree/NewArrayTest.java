@@ -31,6 +31,8 @@ class NewArrayTest implements RewriteTest {
       "[1, 2, 3]",
       "[ 1, 2, 3 ]",
       "[ 1 , 2 , 3 ]",
+      "[1, *xs]",
+      "[1, *xs ]",
     })
     void list(String arg) {
         rewriteRun(
@@ -50,6 +52,9 @@ class NewArrayTest implements RewriteTest {
       "{1, 2, 3}",
       "{ 1, 2, 3 }",
       "{ 1 , 2 , 3 }",
+      "{1, *xs}",
+      "{1, * xs}",
+      "{1, *xs }",
     })
     void set(String arg) {
         rewriteRun(

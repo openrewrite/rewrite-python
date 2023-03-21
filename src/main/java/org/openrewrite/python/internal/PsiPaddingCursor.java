@@ -346,6 +346,10 @@ public class PsiPaddingCursor {
         return consumeUntilFoundWithStatus(search).value;
     }
 
+    public @Nullable Space consumeUntilNewlineOrRollback() {
+        return consumeUntilFoundOrRollback("\n", space -> space);
+    }
+
     public <T> @Nullable T consumeUntilNewlineOrRollback(Function<Space, T> fn) {
         return consumeUntilFoundOrRollback("\n", fn);
     }

@@ -54,12 +54,13 @@ public class PsiPythonMapper {
     @Value
     public static class BlockContext {
         String fullIndent;
+        boolean isInline;
         PsiPaddingCursor paddingCursor;
 
         public static BlockContext root(PyFile element) {
             PsiPaddingCursor paddingCursor = new PsiPaddingCursor(element);
             paddingCursor.resetTo(element.getNode().getFirstChildNode().getPsi());
-            return new BlockContext("", paddingCursor);
+            return new BlockContext("", false, paddingCursor);
         }
 
         public Space nextStatementPrefix() {
@@ -101,7 +102,7 @@ public class PsiPythonMapper {
 
     public Py.CompilationUnit mapFile(PyFile element, Path path, String charset, boolean isCharsetBomMarked) {
         // Uncomment when doing development if you want a PSI tree to print out
-        //   new IntelliJUtils.PsiPrinter().print(element.getNode());
+        new IntelliJUtils.PsiPrinter().print(element.getNode());
         BlockContext ctx = BlockContext.root(element);
         List<Statement> statements = singletonList(
                 mapBlock(element, null, element.getStatements(), ctx)
@@ -364,7 +365,7 @@ public class PsiPythonMapper {
                     Space.EMPTY,
                     EMPTY,
                     importSource,
-                    JLeftPadded.build((J.Identifier)importNameExpr)
+                    JLeftPadded.build((J.Identifier) importNameExpr)
                             .withBefore(spaceBefore(importKeyword)),
                     null
             );
@@ -1110,6 +1111,26 @@ public class PsiPythonMapper {
     public Statement mapAssignmentStatement(PyAssignmentStatement element) {
         PyExpression pyLhs = element.getLeftHandSideExpression();
         PyExpression pyRhs = element.getAssignedValue();
+        PsiElement equalsToken = findChildToken(element, PyTokenTypes.EQ);
+
+        Expression lhs = mapExpression(pyLhs);
+        JLeftPadded<Expression> rhs =
+                JLeftPadded.<Expression>build(mapExpression(pyRhs).withPrefix(spaceAfter(equalsToken)))
+                        .withBefore(spaceBefore(equalsToken));
+
+        return new J.Assignment(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                lhs,
+                rhs,
+                null
+        );
+    }
+
+    public Expression mapAssignmentExpression(PyAssignmentExpression element) {
+        PyExpression pyLhs = element.getTarget();
+        PyExpression pyRhs = element.getAssignedValue();
 
         Expression lhs = mapExpression(pyLhs);
         Expression rhs = mapExpression(pyRhs).withPrefix(spaceBefore(pyRhs));
@@ -1119,7 +1140,7 @@ public class PsiPythonMapper {
                 spaceBefore(element),
                 EMPTY,
                 lhs,
-                JLeftPadded.build(rhs).withBefore(spaceBefore(pyRhs)),
+                JLeftPadded.build(rhs).withBefore(spaceAfter(pyLhs)),
                 null
         );
     }
@@ -1346,21 +1367,31 @@ public class PsiPythonMapper {
             paddingCursor.resetToSpaceAfter(colonToken);
         }
 
-        Space blockPrefix = paddingCursor.consumeUntilNewline();
-        BlockContext innerCtx;
-        String blockIndent;
+        @Nullable Space blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();
+        if (colonToken == null) {
+            blockPrefix = paddingCursor.consumeRemaining();
+        }
 
-        {
+        BlockContext innerCtx;
+
+        if (blockPrefix == null) {
+            blockPrefix = Space.EMPTY;
+            innerCtx = new BlockContext("", true, paddingCursor);
+        } else {
             Space firstPrefix = paddingCursor.withRollback(paddingCursor::consumeRemaining);
             final String containerIndent = outerCtx.fullIndent;
             final String fullIndent = firstPrefix.getIndent();
             if (!fullIndent.startsWith(containerIndent)) {
-                throw new IllegalStateException("expected full block indent to start with container indent");
+                throw new IllegalStateException(String.format(
+                        "expected full block indent (%s) to start with container indent (%s)",
+                        Space.build(fullIndent, emptyList()),
+                        Space.build(containerIndent, emptyList())
+                ));
             }
-            blockIndent = fullIndent.substring(containerIndent.length());
+            String blockIndent = fullIndent.substring(containerIndent.length());
             blockPrefix = appendWhitespace(blockPrefix, "\n" + blockIndent);
 
-            innerCtx = new BlockContext(fullIndent, paddingCursor);
+            innerCtx = new BlockContext(fullIndent, false, paddingCursor);
         }
 
         boolean precededBySemicolon = false;
@@ -1498,7 +1529,9 @@ public class PsiPythonMapper {
                 return mapPattern((PyPattern) element);
             }
 
-            if (element instanceof PyBinaryExpression) {
+            if (element instanceof PyAssignmentExpression) {
+                return mapAssignmentExpression((PyAssignmentExpression) element);
+            } else if (element instanceof PyBinaryExpression) {
                 return mapBinaryExpression((PyBinaryExpression) element);
             } else if (element instanceof PyBoolLiteralExpression) {
                 return mapBooleanLiteral((PyBoolLiteralExpression) element);
@@ -1534,6 +1567,8 @@ public class PsiPythonMapper {
                 return mapSliceExpression((PySliceExpression) element);
             } else if (element instanceof PyStarArgument) {
                 return mapStarArgument((PyStarArgument) element);
+            } else if (element instanceof PyStarExpression) {
+                return mapStarExpression((PyStarExpression) element);
             } else if (element instanceof PySubscriptionExpression) {
                 return mapSubscription((PySubscriptionExpression) element);
             } else if (element instanceof PyStringLiteralExpression) {
@@ -1567,6 +1602,17 @@ public class PsiPythonMapper {
                 element.isKeyword()
                         ? Py.SpecialArgument.Kind.KWARGS
                         : Py.SpecialArgument.Kind.ARGS,
+                mapExpression(element.getLastChild()),
+                null
+        );
+    }
+
+    private Expression mapStarExpression(PyStarExpression element) {
+        return new Py.SpecialArgument(
+                randomId(),
+                spaceBefore(element),
+                EMPTY,
+                Py.SpecialArgument.Kind.ARGS,
                 mapExpression(element.getLastChild()),
                 null
         );
@@ -1657,9 +1703,16 @@ public class PsiPythonMapper {
                     mapExpressionsAsRightPadded(pattern.getChildren())
             );
         } else if (pattern instanceof PySequencePattern) {
-            kind = Py.MatchCase.Pattern.Kind.SEQUENCE;
+            PsiElement openToken = maybeFindFirstChildToken(pattern, PyTokenTypes.LBRACKET, PyTokenTypes.LPAR);
+            if (openToken == null) {
+                kind = Py.MatchCase.Pattern.Kind.SEQUENCE;
+            } else {
+                kind = openToken.getNode().getElementType() == PyTokenTypes.LBRACKET
+                        ? Py.MatchCase.Pattern.Kind.SEQUENCE_LIST
+                        : Py.MatchCase.Pattern.Kind.SEQUENCE_TUPLE;
+            }
             children = JContainer.build(
-                    spaceAfter(findChildToken(pattern, PyTokenTypes.LBRACKET)),
+                    spaceAfter(openToken),
                     mapExpressionsAsRightPadded(pattern.getChildren()),
                     EMPTY
             );
@@ -1934,14 +1987,22 @@ public class PsiPythonMapper {
     }
 
     private Expression mapTupleLiteral(PyTupleExpression element) {
+        Markers markers = Markers.build(singletonList(new BuiltinDesugar(randomId())));
+        if (
+                !(element.getParent() instanceof PyParenthesizedExpression)
+                        && maybeFindChildToken(element, PyTokenTypes.LPAR) == null
+        ) {
+            markers = markers.add(new OmitParentheses(randomId()));
+        }
+
         J.Identifier builtins = makeBuiltinsIdentifier();
         JContainer<Expression> args = JContainer.build(singletonList(
                 JRightPadded.build(mapSequenceExpressionAsArray(element))
         )).withBefore(spaceBefore(element));
         return new J.MethodInvocation(
                 randomId(),
-                Space.EMPTY,
-                Markers.build(singletonList(new BuiltinDesugar(randomId()))),
+                spaceBefore(element),
+                markers,
                 JRightPadded.build(builtins),
                 null,
                 new J.Identifier(randomId(), Space.EMPTY, EMPTY, "tuple", null, null),
@@ -1984,7 +2045,7 @@ public class PsiPythonMapper {
     }
 
     private Expression mapKeywordArgument(PyKeywordArgument element) {
-        return new J.Assignment(
+        return new Py.NamedArgument(
                 randomId(),
                 spaceBefore(element),
                 EMPTY,

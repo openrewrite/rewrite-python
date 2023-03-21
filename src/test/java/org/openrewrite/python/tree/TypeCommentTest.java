@@ -79,16 +79,15 @@ public class TypeCommentTest implements RewriteTest {
         );
     }
 
-    @Test
-    void variables() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "a: None = None",
+      "a = None",
+      "a: str = \"hello\""
+    })
+    void variables(String stmt) {
         rewriteRun(
-          python(
-            """
-              a: None = None
-              a = None
-              a: str = "hello"
-              """
-          )
+          python(stmt)
         );
     }
 

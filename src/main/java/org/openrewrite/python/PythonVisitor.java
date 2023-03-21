@@ -335,4 +335,9 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         // TODO
         return ogArg;
     }
+
+    public J visitNamedArgument(Py.NamedArgument ogArg, P p) {
+        // TODO
+        return ogArg;
+    }
 }

@@ -57,7 +57,7 @@ public abstract class PsiUtils {
         return node.getPsi();
     }
 
-    public static PsiElement findFirstChildToken(PsiElement parent, PyElementType elementType, PyElementType... otherElementTypes) {
+    public static @Nullable PsiElement maybeFindFirstChildToken(PsiElement parent, PyElementType elementType, PyElementType... otherElementTypes) {
         PsiElement maybeMatch = maybeFindChildToken(parent, elementType);
         for (PyElementType otherElementType : otherElementTypes) {
             PsiElement maybeOtherMatch = maybeFindChildToken(parent, otherElementType);
@@ -67,7 +67,11 @@ public abstract class PsiUtils {
                 }
             }
         }
+        return maybeMatch;
+    }
 
+    public static PsiElement findFirstChildToken(PsiElement parent, PyElementType elementType, PyElementType... otherElementTypes) {
+        @Nullable PsiElement maybeMatch = maybeFindFirstChildToken(parent, elementType, otherElementTypes);
         if (maybeMatch == null) {
             throw new IllegalStateException(
                     String.format(
