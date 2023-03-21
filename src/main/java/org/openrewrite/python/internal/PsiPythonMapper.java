@@ -1364,19 +1364,15 @@ public class PsiPythonMapper {
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
 
         @Nullable Space blockPrefix;
-        if (colonToken != null) {
-            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();;
-            paddingCursor.resetToSpaceAfter(colonToken);
-        } else {
-            blockPrefix = paddingCursor.consumeRemaining();
-        }
-
         BlockContext innerCtx;
 
-        if (blockPrefix == null) {
-            blockPrefix = Space.EMPTY;
-            innerCtx = new BlockContext("", true, paddingCursor);
-        } else {
+        if (colonToken != null) {
+            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();;
+            if (blockPrefix == null) {
+                blockPrefix = Space.EMPTY;
+            }
+            paddingCursor.resetToSpaceAfter(colonToken);
+
             Space firstPrefix = paddingCursor.withRollback(paddingCursor::consumeRemaining);
             final String containerIndent = outerCtx.fullIndent;
             final String fullIndent = firstPrefix.getIndent();
@@ -1391,6 +1387,9 @@ public class PsiPythonMapper {
             blockPrefix = appendWhitespace(blockPrefix, "\n" + blockIndent);
 
             innerCtx = new BlockContext(fullIndent, false, paddingCursor);
+        } else {
+            blockPrefix = appendWhitespace(paddingCursor.consumeRemaining(), "\n");
+            innerCtx = new BlockContext("", true, paddingCursor);
         }
 
         boolean precededBySemicolon = false;
