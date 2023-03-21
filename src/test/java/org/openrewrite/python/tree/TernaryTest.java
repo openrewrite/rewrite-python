@@ -21,48 +21,18 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-class NewArrayTest implements RewriteTest {
+public class TernaryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-      "[]",
-      "[ ]",
-      "[1,2,3]",
-      "[1, 2, 3]",
-      "[ 1, 2, 3 ]",
-      "[ 1 , 2 , 3 ]",
-      "[1, *xs]",
-      "[1, *xs ]",
+        "x = 3 if True else 1",
+        "x = 3  if True else 1",
+        "x = 3 if  True else 1",
+        "x = 3 if True  else 1",
+        "x = 3 if True else  1",
     })
-    void list(String arg) {
-        rewriteRun(
-          python(
-            """
-              n = %s
-              """.formatted(arg)
-          )
-        );
+    public void test(String expr) {
+        rewriteRun(python(expr));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-      "{}",
-      "{ }",
-      "{1,2,3}",
-      "{1, 2, 3}",
-      "{ 1, 2, 3 }",
-      "{ 1 , 2 , 3 }",
-      "{1, *xs}",
-      "{1, * xs}",
-      "{1, *xs }",
-    })
-    void set(String arg) {
-        rewriteRun(
-          python(
-            """
-              n = %s
-              """.formatted(arg)
-          )
-        );
-    }
 }

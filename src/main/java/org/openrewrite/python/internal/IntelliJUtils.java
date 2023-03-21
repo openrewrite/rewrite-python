@@ -203,7 +203,7 @@ public class IntelliJUtils {
     }
 
 
-    public static PyFile parsePythonSource(String sourceText) {
+    public static PyFile parsePythonSource(@Nullable String filename, String sourceText) {
         Disposable mockDisposable = () -> {
         };
 
@@ -270,9 +270,12 @@ public class IntelliJUtils {
 
         Registry.markAsLoaded();
 
+        if (filename == null) {
+            filename = "test.py";
+        }
         final FileViewProvider fileViewProvider = new SingleRootFileViewProvider(
                 psiManager,
-                new LightVirtualFile("test.py", PythonFileType.INSTANCE, sourceText)
+                new LightVirtualFile(filename, PythonFileType.INSTANCE, sourceText)
         );
 
         return (PyFile) fileViewProvider.getPsi(PythonLanguage.INSTANCE);

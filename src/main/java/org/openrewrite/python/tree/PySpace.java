@@ -149,17 +149,17 @@ public final class PySpace {
         switch (endMode) {
             case REST_OF_LINE:
                 if (!original.getLastWhitespace().endsWith("\n")) {
-                    throw new IllegalStateException("expected statement suffix to end with a newline");
+                    throw new IllegalStateException("expected statement suffix to end with a newline: " + original);
                 }
                 break;
             case STATEMENT_START:
                 if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
                     if (!original.getLastWhitespace().endsWith("\n")) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder");
+                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
                     }
                 } else {
                     if (!original.getLastWhitespace().isEmpty()) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder");
+                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
                     }
                 }
                 break;
@@ -324,12 +324,14 @@ public final class PySpace {
         COMPREHENSION_IN,
         COMPREHENSION_PREFIX,
         COMPREHENSION_SUFFIX,
+        NAMED_ARGUMENT_PREFIX,
         DEL_ELEMENT_SUFFIX,
         DEL_PREFIX,
         DICT_ENTRY,
         DICT_ENTRY_KEY_SUFFIX,
         DICT_LITERAL_ELEMENT_SUFFIX,
         DICT_LITERAL_PREFIX,
+        ELSE_WRAPPER_PREFIX,
         EXCEPTION_TYPE_PREFIX,
         ERROR_FROM_PREFIX,
         ERROR_FROM_SOURCE,
@@ -340,7 +342,9 @@ public final class PySpace {
         MATCH_PATTERN_PREFIX,
         MATCH_PATTERN_ELEMENT_PREFIX,
         MATCH_PATTERN_ELEMENT_SUFFIX,
+        NAMED_ARGUMENT,
         PASS_PREFIX,
+        SPECIAL_ARG_PREFIX,
         SPECIAL_PARAM_PREFIX,
         TOP_LEVEL_STATEMENT,
         TYPE_HINT_PREFIX,

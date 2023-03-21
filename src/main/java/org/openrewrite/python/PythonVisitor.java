@@ -325,4 +325,19 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         expr = expr.withExpression(visitAndCast(expr.getExpression(), p));
         return expr;
     }
+
+    public J visitTrailingElseWrapper(Py.TrailingElseWrapper ogWrapper, P p) {
+        // TODO
+        return ogWrapper;
+    }
+
+    public J visitSpecialArgument(Py.SpecialArgument ogArg, P p) {
+        // TODO
+        return ogArg;
+    }
+
+    public J visitNamedArgument(Py.NamedArgument ogArg, P p) {
+        // TODO
+        return ogArg;
+    }
 }

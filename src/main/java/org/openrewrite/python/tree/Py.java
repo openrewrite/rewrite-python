@@ -564,6 +564,84 @@ public interface Py extends J {
         }
     }
 
+    @ToString
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class TrailingElseWrapper implements Py, Statement {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Statement statement;
+
+        JLeftPadded<Block> elseBlock;
+
+        public Block getElseBlock() {
+            return elseBlock.getElement();
+        }
+
+        public TrailingElseWrapper withElseBlock(Block elseBlock) {
+            return this.getPadding().withElseBlock(JLeftPadded.withElement(this.elseBlock, elseBlock));
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitTrailingElseWrapper(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final TrailingElseWrapper t;
+
+            public JLeftPadded<Block> getElseBlock() {
+                return t.elseBlock;
+            }
+
+            public TrailingElseWrapper withElseBlock(JLeftPadded<Block> elseBlock) {
+                return t.elseBlock == elseBlock
+                        ? t :
+                        new TrailingElseWrapper(t.padding, t.id, t.prefix, t.markers, t.statement, elseBlock);
+            }
+        }
+    }
+
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
@@ -1127,6 +1205,126 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
+    final class SpecialArgument implements Py, Expression {
+
+        public enum Kind {
+            KWARGS,
+            ARGS,
+        }
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        Kind kind;
+
+        @With
+        @Getter
+        Expression expression;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitSpecialArgument(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class NamedArgument implements Py, Expression {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        @Getter
+        Space prefix;
+
+        @With
+        @Getter
+        Markers markers;
+
+        @With
+        @Getter
+        J.Identifier name;
+
+        JLeftPadded<Expression> value;
+
+        @With
+        @Getter
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitNamedArgument(this, p);
+        }
+
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final NamedArgument t;
+
+            public JLeftPadded<Expression> getValue() {
+                return t.value;
+            }
+
+            public NamedArgument withFrom(JLeftPadded<Expression> value) {
+                return value == t.value
+                        ? t
+                        : new NamedArgument(t.id, t.prefix, t.markers, t.name, value, t.type);
+            }
+        }
+    }
+
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
     final class TypeHintedExpression implements Py, Expression {
         @With
         @Getter
@@ -1349,6 +1547,8 @@ public interface Py extends J {
                 MAPPING,
                 OR,
                 SEQUENCE,
+                SEQUENCE_LIST,
+                SEQUENCE_TUPLE,
                 STAR,
                 VALUE,
                 WILDCARD,

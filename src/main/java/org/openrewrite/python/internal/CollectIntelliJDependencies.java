@@ -63,7 +63,8 @@ public class CollectIntelliJDependencies {
         }
 
         final PyFile parsed = IntelliJUtils.parsePythonSource(
-            new String(data)
+                file.getPath(),
+                new String(data)
         );
 
         processNode(parsed);

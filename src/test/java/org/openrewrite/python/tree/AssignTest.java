@@ -60,4 +60,21 @@ class AssignTest implements RewriteTest {
           )
         );
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "(a:=3)",
+      "(a :=3)",
+      "(a:= 3)",
+      "a[b:=1]",
+    })
+    void assignmentExpression(String expr) {
+        rewriteRun(
+          python(
+            """
+              %s
+              """.formatted(expr)
+          )
+        );
+    }
 }

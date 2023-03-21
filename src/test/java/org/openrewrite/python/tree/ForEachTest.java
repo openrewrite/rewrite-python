@@ -16,6 +16,8 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
@@ -34,12 +36,32 @@ class ForEachTest implements RewriteTest {
         );
     }
 
-    @Test
-    void forLoopDestructuring() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "x, y",
+      "x, (y, z)",
+      "(x, y)",
+      "(x, (y, z))"
+    })
+    void forLoopDestructuring(String vars) {
         rewriteRun(
           python(
             """
-              for x, y in xs:
+              for %s in xs:
+                  pass
+              """.formatted(vars)
+          )
+        );
+    }
+
+    @Test
+    void forLoopWithElse() {
+        rewriteRun(
+          python(
+            """
+              for x in xs:
+                  pass
+              else:
                   pass
               """
           )

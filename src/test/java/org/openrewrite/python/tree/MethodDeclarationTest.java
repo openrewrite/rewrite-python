@@ -32,6 +32,8 @@ class MethodDeclarationTest implements RewriteTest {
       "a, b, c=1",
       "a, b, *args",
       "a, b, *args, **kwargs",
+      "a, b, *args, **kwargs",
+      "a, b, *, c=1"
     })
     void functionDefinition(String args) {
         rewriteRun(

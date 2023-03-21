@@ -94,4 +94,20 @@ class AnnotationTest implements RewriteTest {
         ));
     }
 
+    @ParameterizedTest
+    @ValueSource(
+      strings = {
+        "class C", "def m()"
+      }
+    )
+    void qualifiedDecoratorName(String args) {
+        rewriteRun(python(
+          """
+            @a.qualified.name
+            %s:
+                pass
+            """.formatted(args)
+        ));
+    }
+
 }
