@@ -1363,21 +1363,16 @@ public class PsiPythonMapper {
         PsiPaddingCursor paddingCursor = outerCtx.paddingCursor;
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
 
-        if (colonToken != null) {
-            paddingCursor.resetToSpaceAfter(colonToken);
-        }
-
-        @Nullable Space blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();
-        if (colonToken == null) {
-            blockPrefix = paddingCursor.consumeRemaining();
-        }
-
+        @Nullable Space blockPrefix;
         BlockContext innerCtx;
 
-        if (blockPrefix == null) {
-            blockPrefix = Space.EMPTY;
-            innerCtx = new BlockContext("", true, paddingCursor);
-        } else {
+        if (colonToken != null) {
+            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();;
+            if (blockPrefix == null) {
+                blockPrefix = Space.EMPTY;
+            }
+            paddingCursor.resetToSpaceAfter(colonToken);
+
             Space firstPrefix = paddingCursor.withRollback(paddingCursor::consumeRemaining);
             final String containerIndent = outerCtx.fullIndent;
             final String fullIndent = firstPrefix.getIndent();
@@ -1392,6 +1387,9 @@ public class PsiPythonMapper {
             blockPrefix = appendWhitespace(blockPrefix, "\n" + blockIndent);
 
             innerCtx = new BlockContext(fullIndent, false, paddingCursor);
+        } else {
+            blockPrefix = appendWhitespace(paddingCursor.consumeRemaining(), "\n");
+            innerCtx = new BlockContext("", true, paddingCursor);
         }
 
         boolean precededBySemicolon = false;
@@ -2492,7 +2490,9 @@ public class PsiPythonMapper {
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
-                element.getLongValue(),
+                element.isIntegerLiteral()
+                        ? element.getLongValue()
+                        : element.getBigDecimalValue(),
                 element.getText(),
                 emptyList(),
                 JavaType.Primitive.Long

@@ -96,6 +96,7 @@ class ReindentationTest implements RewriteTest {
                 
                 def g():
                     pass
+            
             @decorator
             @anotherdec
             def f():

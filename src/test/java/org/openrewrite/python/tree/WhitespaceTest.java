@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python.tree;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
@@ -22,6 +23,17 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.python.Assertions.python;
 
 class WhitespaceTest implements RewriteTest {
+
+    @Test
+    void hashbang() {
+        rewriteRun(python(
+          """
+            #!/usr/bin/env python3.6
+            
+            print(42)
+            """
+        ));
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {
