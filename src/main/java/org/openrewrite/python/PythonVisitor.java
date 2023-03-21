@@ -193,7 +193,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
             yield = (Py.YieldExpression) temp;
         }
         yield = yield.getPadding().withFrom(
-          visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p)
+                visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p)
         );
         yield = yield.getPadding().withExpressions(ListUtils.map(
                 yield.getPadding().getExpressions(),
@@ -281,7 +281,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         }
         pattern.withChildren(ListUtils.map(
                 pattern.getChildren(),
-                child -> (Expression)visitAndCast(child, p)
+                child -> (Expression) visitAndCast(child, p)
         ));
         return pattern;
     }
@@ -297,7 +297,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
             caze = (Py.MatchCase) temp;
         }
         caze = caze.getPadding().withGuard(
-                visitLeftPadded(caze.getPadding().getGuard(),  PyLeftPadded.Location.MATCH_CASE_GUARD, p)
+                visitLeftPadded(caze.getPadding().getGuard(), PyLeftPadded.Location.MATCH_CASE_GUARD, p)
         );
         caze = caze.withPattern(visitAndCast(caze.getPattern(), p));
         return caze;
@@ -327,17 +327,48 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
     }
 
     public J visitTrailingElseWrapper(Py.TrailingElseWrapper ogWrapper, P p) {
-        // TODO
-        return ogWrapper;
+        Py.TrailingElseWrapper wrapper = ogWrapper;
+        wrapper = wrapper.withPrefix(visitSpace(wrapper.getPrefix(), PySpace.Location.TRAILING_ELSE_WRAPPER_PREFIX, p));
+        wrapper = wrapper.withMarkers(visitMarkers(wrapper.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(wrapper, p);
+        if (!(temp instanceof Py.TrailingElseWrapper)) {
+            return temp;
+        } else {
+            wrapper = (Py.TrailingElseWrapper) temp;
+        }
+        wrapper = wrapper.getPadding().withElseBlock(
+                visitLeftPadded(wrapper.getPadding().getElseBlock(), JLeftPadded.Location.LANGUAGE_EXTENSION, p)
+        );
+        return wrapper;
     }
 
     public J visitSpecialArgument(Py.SpecialArgument ogArg, P p) {
-        // TODO
-        return ogArg;
+        Py.SpecialArgument arg = ogArg;
+        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.SPECIAL_ARG_PREFIX, p));
+        arg = arg.withMarkers(visitMarkers(arg.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(arg, p);
+        if (!(temp instanceof Py.SpecialArgument)) {
+            return temp;
+        } else {
+            arg = (Py.SpecialArgument) temp;
+        }
+        arg = arg.withExpression(visitAndCast(arg.getExpression(), p));
+        arg = arg.withType(visitType(arg.getType(), p));
+        return arg;
     }
 
     public J visitNamedArgument(Py.NamedArgument ogArg, P p) {
-        // TODO
-        return ogArg;
+        Py.NamedArgument arg = ogArg;
+        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.NAMED_ARGUMENT_PREFIX, p));
+        arg = arg.withMarkers(visitMarkers(arg.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(arg, p);
+        if (!(temp instanceof Py.NamedArgument)) {
+            return temp;
+        } else {
+            arg = (Py.NamedArgument) temp;
+        }
+        arg = arg.withName(visitAndCast(arg.getName(), p));
+        arg = arg.withType(visitType(arg.getType(), p));
+        return arg;
     }
 }
