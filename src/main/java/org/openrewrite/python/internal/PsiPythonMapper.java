@@ -1363,12 +1363,11 @@ public class PsiPythonMapper {
         PsiPaddingCursor paddingCursor = outerCtx.paddingCursor;
         List<JRightPadded<Statement>> statements = new ArrayList<>(pyStatements.size());
 
+        @Nullable Space blockPrefix;
         if (colonToken != null) {
+            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();;
             paddingCursor.resetToSpaceAfter(colonToken);
-        }
-
-        @Nullable Space blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();
-        if (colonToken == null) {
+        } else {
             blockPrefix = paddingCursor.consumeRemaining();
         }
 
@@ -2492,7 +2491,9 @@ public class PsiPythonMapper {
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
-                element.getLongValue(),
+                element.isIntegerLiteral()
+                        ? element.getLongValue()
+                        : element.getBigDecimalValue(),
                 element.getText(),
                 emptyList(),
                 JavaType.Primitive.Long

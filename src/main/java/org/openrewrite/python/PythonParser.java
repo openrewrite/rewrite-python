@@ -84,6 +84,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
                         is.isCharsetBomMarked()
                 ));
             } catch (Throwable t) {
+                System.err.println("\tError: " + t);
                 ctx.parseFailure(input, relativeTo, this, t);
                 ctx.getOnError().accept(t);
             }

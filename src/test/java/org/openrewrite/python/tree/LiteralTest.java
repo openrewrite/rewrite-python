@@ -27,7 +27,8 @@ class LiteralTest implements RewriteTest {
     @ParameterizedTest
     //language=py
     @ValueSource(strings = {
-      "None", "True", "False", "42.2", "42", "\"hello world\"",
+      "None", "True", "False", "42.2", "42", "123456789.123456789E123456789",
+      "\"hello world\"",
       "\"hello \\\"world\\\"\"", "'hello world'",
       "'hello \\'world\\''"
     })
