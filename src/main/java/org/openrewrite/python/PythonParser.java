@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.Parser;
+import org.openrewrite.SourceFile;
 import org.openrewrite.internal.EncodingDetectingInputStream;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
@@ -28,6 +29,7 @@ import org.openrewrite.python.internal.IntelliJUtils;
 import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
+import org.openrewrite.tree.ParsingExecutionContextView;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -66,18 +68,28 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     }
 
     @Override
-    public List<Py.CompilationUnit> parseInputs(Iterable<Input> sources, @Nullable Path relativeTo, ExecutionContext ctx) {
-        return StreamSupport.stream(sources.spliterator(), false).map(sourceFile -> {
-            EncodingDetectingInputStream is = sourceFile.getSource(ctx);
+    public List<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ogCtx) {
+        ParsingExecutionContextView ctx = ParsingExecutionContextView.view(ogCtx);
+        List<Py.CompilationUnit> mapped = new ArrayList<>();
+
+        for (Input input : inputs) {
+            EncodingDetectingInputStream is = input.getSource(ctx);
             String sourceText = is.readFully();
 
-            return new PsiPythonMapper().mapSource(
-                    sourceText,
-                    sourceFile.getPath(),
-                    is.getCharset().toString(),
-                    is.isCharsetBomMarked()
-            );
-        }).collect(toList());
+            try {
+                mapped.add(new PsiPythonMapper().mapSource(
+                        sourceText,
+                        input.getPath(),
+                        is.getCharset().toString(),
+                        is.isCharsetBomMarked()
+                ));
+            } catch (Throwable t) {
+                ctx.parseFailure(input, relativeTo, this, t);
+                ctx.getOnError().accept(t);
+            }
+        }
+
+        return mapped;
     }
 
     @Override
