@@ -102,7 +102,7 @@ public class PsiPythonMapper {
 
     public Py.CompilationUnit mapFile(PyFile element, Path path, String charset, boolean isCharsetBomMarked) {
         // Uncomment when doing development if you want a PSI tree to print out
-        new IntelliJUtils.PsiPrinter().print(element.getNode());
+        //  new IntelliJUtils.PsiPrinter().print(element.getNode());
         BlockContext ctx = BlockContext.root(element);
         List<Statement> statements = singletonList(
                 mapBlock(element, null, element.getStatements(), ctx)
@@ -1732,8 +1732,9 @@ public class PsiPythonMapper {
             kind = Py.MatchCase.Pattern.Kind.WILDCARD;
             children = JContainer.empty();
         } else {
-            System.err.println("WARNING: unhandled pattern of type " + pattern.getClass().getSimpleName());
-            return null;
+            throw new IllegalArgumentException(
+                    String.format("unhandled case pattern of type %s", pattern.getClass().getSimpleName())
+            );
         }
 
         return new Py.MatchCase.Pattern(
@@ -2236,8 +2237,9 @@ public class PsiPythonMapper {
         } else if (op == PyTokenTypes.TILDE) {
             ot = J.Unary.Type.Complement;
         } else {
-            System.err.println("WARNING: unhandled prefix expression of ot " + op);
-            return null;
+            throw new IllegalArgumentException(
+                    String.format("unhandled prefix expression with type %s", op)
+            );
         }
         return new J.Unary(
                 randomId(),
