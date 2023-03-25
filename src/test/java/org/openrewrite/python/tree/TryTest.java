@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class TryTest implements RewriteTest {
+class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @CsvSource(textBlock = """
@@ -43,7 +43,7 @@ public class TryTest implements RewriteTest {
       "" ,       "*TypeError"
       "" ,       " *TypeError"
     """, quoteCharacter = '"')
-    public void tryExcept(String afterTry, String afterExcept) {
+    void tryExcept(String afterTry, String afterExcept) {
         rewriteRun(python(
           """
             try%s:
@@ -60,7 +60,7 @@ public class TryTest implements RewriteTest {
       " TypeError "          , " OSError"
       " TypeError"          , " OSError "
     """, quoteCharacter = '"')
-    public void tryMultiExcept(String afterFirstExcept, String afterSecondExcept) {
+    void tryMultiExcept(String afterFirstExcept, String afterSecondExcept) {
         rewriteRun(python(
           """
             try:
@@ -75,7 +75,7 @@ public class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    public void tryFinally(String afterFinally) {
+    void tryFinally(String afterFinally) {
         rewriteRun(python(
           """
             try:
@@ -88,7 +88,7 @@ public class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    public void tryExceptFinally(String afterFinally) {
+    void tryExceptFinally(String afterFinally) {
         rewriteRun(python(
           """
             try:
@@ -103,7 +103,7 @@ public class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    public void testElse(String afterElse) {
+    void testElse(String afterElse) {
         rewriteRun(python(
           """
             try:

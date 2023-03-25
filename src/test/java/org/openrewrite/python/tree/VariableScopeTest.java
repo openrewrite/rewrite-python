@@ -21,10 +21,10 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class VariableScopeTest implements RewriteTest {
+class VariableScopeTest implements RewriteTest {
     @ParameterizedTest
     @ValueSource(strings = {"nonlocal", "global"})
-    public void singleName(String kind) {
+    void singleName(String kind) {
         rewriteRun(
           python(
             """
@@ -37,7 +37,7 @@ public class VariableScopeTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"nonlocal", "global"})
-    public void multipleNames(String kind) {
+    void multipleNames(String kind) {
         rewriteRun(
           python(
             """
