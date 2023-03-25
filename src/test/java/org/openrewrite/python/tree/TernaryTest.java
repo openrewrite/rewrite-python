@@ -25,11 +25,11 @@ class TernaryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "x = 3 if True else 1",
-            "x = 3  if True else 1",
-            "x = 3 if  True else 1",
-            "x = 3 if True  else 1",
-            "x = 3 if True else  1",
+      "x = 3 if True else 1",
+      "x = 3  if True else 1",
+      "x = 3 if  True else 1",
+      "x = 3 if True  else 1",
+      "x = 3 if True else  1",
     })
     void test(String expr) {
         rewriteRun(python(expr));

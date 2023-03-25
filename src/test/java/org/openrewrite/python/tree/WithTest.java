@@ -25,19 +25,19 @@ class WithTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "A()",
-            "A() as a",
-            "A()  as a",
-            "A() as  a",
-            "A() as a ",
-            "A() as a, B() as b",
-            "A()  as a, B() as b",
-            "A() as  a, B() as b",
-            "A() as a , B() as b",
-            "A() as a,  B() as b",
-            "A() as a, B()  as b",
-            "A() as a, B() as  b",
-            "A() as a, B() as b ",
+      "A()",
+      "A() as a",
+      "A()  as a",
+      "A() as  a",
+      "A() as a ",
+      "A() as a, B() as b",
+      "A()  as a, B() as b",
+      "A() as  a, B() as b",
+      "A() as a , B() as b",
+      "A() as a,  B() as b",
+      "A() as a, B()  as b",
+      "A() as a, B() as  b",
+      "A() as a, B() as b ",
     })
     void simple(String vars) {
         rewriteRun(python(
