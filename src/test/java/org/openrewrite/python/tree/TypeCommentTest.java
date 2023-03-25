@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class TypeCommentTest implements RewriteTest {
+class TypeCommentTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
