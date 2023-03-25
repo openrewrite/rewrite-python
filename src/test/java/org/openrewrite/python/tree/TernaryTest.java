@@ -21,17 +21,17 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class TernaryTest implements RewriteTest {
+class TernaryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        "x = 3 if True else 1",
-        "x = 3  if True else 1",
-        "x = 3 if  True else 1",
-        "x = 3 if True  else 1",
-        "x = 3 if True else  1",
+            "x = 3 if True else 1",
+            "x = 3  if True else 1",
+            "x = 3 if  True else 1",
+            "x = 3 if True  else 1",
+            "x = 3 if True else  1",
     })
-    public void test(String expr) {
+    void test(String expr) {
         rewriteRun(python(expr));
     }
 

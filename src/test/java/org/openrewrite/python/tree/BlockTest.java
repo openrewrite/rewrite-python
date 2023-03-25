@@ -99,7 +99,7 @@ class BlockTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "\n", "\n\n", "\n\n\n"})
-    public void deeplyNested(String eof) {
+    void deeplyNested(String eof) {
         rewriteRun(python(
           """
             def f1():
@@ -118,7 +118,7 @@ class BlockTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", "\n", "\n\n", "\n\n\n"})
-    public void lineEndingLocations(String eof) {
+    void lineEndingLocations(String eof) {
         rewriteRun(
           python(
             """
@@ -134,13 +134,13 @@ class BlockTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-      "for x in mylist: print(x)",
-      "def f(x): x = x + 1; return x",
-      "def f(x): x = x + 1 ; return x",
-      "def f(x): x = x + 1; return x;",
-      "def f(x): x = x + 1; return x ;",
+            "for x in mylist: print(x)",
+            "def f(x): x = x + 1; return x",
+            "def f(x): x = x + 1 ; return x",
+            "def f(x): x = x + 1; return x;",
+            "def f(x): x = x + 1; return x ;",
     })
-    public void oneLineBlocks(String code) {
+    void oneLineBlocks(String code) {
         rewriteRun(
           python(code)
         );
@@ -148,35 +148,35 @@ class BlockTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-      """
+            """
         for x in xs:
             pass
         """,
-      """
+            """
         for x in xs:
             pass
         else:
             pass
         """,
-      """
+            """
         while True:
             pass
         """,
-      """
+            """
         with stuff() as x:
             pass
         """,
-      """
+            """
         if True:
             pass
         """,
-      """
+            """
         if True:
             pass
         else:
             pass
         """,
-      """
+            """
         if True:
             pass
         elif False:
@@ -184,13 +184,13 @@ class BlockTest implements RewriteTest {
         else:
             pass
         """,
-      """
+            """
         try:
             pass
         except:
             pass
         """,
-      """
+            """
         try:
             pass
         except:
@@ -198,7 +198,7 @@ class BlockTest implements RewriteTest {
         else:
             pass
         """,
-      """
+            """
         try:
             pass
         except:
@@ -209,7 +209,7 @@ class BlockTest implements RewriteTest {
             pass
         """,
     })
-    public void nested(String block) {
+    void nested(String block) {
         rewriteRun(
           python(
             """

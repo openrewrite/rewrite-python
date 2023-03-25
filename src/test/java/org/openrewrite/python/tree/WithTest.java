@@ -21,25 +21,25 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
-public class WithTest implements RewriteTest {
+class WithTest implements RewriteTest {
 
     @ParameterizedTest
-    @ValueSource(strings={
-      "A()",
-      "A() as a",
-      "A()  as a",
-      "A() as  a",
-      "A() as a ",
-      "A() as a, B() as b",
-      "A()  as a, B() as b",
-      "A() as  a, B() as b",
-      "A() as a , B() as b",
-      "A() as a,  B() as b",
-      "A() as a, B()  as b",
-      "A() as a, B() as  b",
-      "A() as a, B() as b ",
+    @ValueSource(strings = {
+            "A()",
+            "A() as a",
+            "A()  as a",
+            "A() as  a",
+            "A() as a ",
+            "A() as a, B() as b",
+            "A()  as a, B() as b",
+            "A() as  a, B() as b",
+            "A() as a , B() as b",
+            "A() as a,  B() as b",
+            "A() as a, B()  as b",
+            "A() as a, B() as  b",
+            "A() as a, B() as b ",
     })
-    public void simple(String vars) {
+    void simple(String vars) {
         rewriteRun(python(
           """
             with %s:
