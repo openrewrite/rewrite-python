@@ -43,7 +43,7 @@ class TryTest implements RewriteTest {
       "" ,       "*TypeError"
       "" ,       " *TypeError"
     """, quoteCharacter = '"')
-    void testTryExcept(String afterTry, String afterExcept) {
+    void tryExcept(String afterTry, String afterExcept) {
         rewriteRun(python(
           """
             try%s:
@@ -60,7 +60,7 @@ class TryTest implements RewriteTest {
       " TypeError "          , " OSError"
       " TypeError"          , " OSError "
     """, quoteCharacter = '"')
-    void testTryMultiExcept(String afterFirstExcept, String afterSecondExcept) {
+    void tryMultiExcept(String afterFirstExcept, String afterSecondExcept) {
         rewriteRun(python(
           """
             try:
@@ -75,7 +75,7 @@ class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    void testTryFinally(String afterFinally) {
+    void tryFinally(String afterFinally) {
         rewriteRun(python(
           """
             try:
@@ -88,7 +88,7 @@ class TryTest implements RewriteTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"", " "})
-    void testTryExceptFinally(String afterFinally) {
+    void tryExceptFinally(String afterFinally) {
         rewriteRun(python(
           """
             try:
