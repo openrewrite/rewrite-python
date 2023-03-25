@@ -49,7 +49,7 @@ class WhitespaceTest implements RewriteTest {
       " # comment",
       "# comment ",
     })
-    void testSingleStatement(String ending) {
+    void singleStatement(String ending) {
         rewriteRun(python("print(42)%s".formatted(ending)));
     }
 
@@ -64,7 +64,7 @@ class WhitespaceTest implements RewriteTest {
       " # comment\n",
       "# comment \n",
     })
-    void testMultiStatement(String ending) {
+    void multiStatement(String ending) {
         rewriteRun(python("print(42)%sprint(2)".formatted(ending)));
     }
 
@@ -84,7 +84,7 @@ class WhitespaceTest implements RewriteTest {
       "\n#comment\n",
       "\n  #comment\n",
     })
-    void testSingleLineMultiStatement(String firstLineEnding) {
+    void singleLineMultiStatement(String firstLineEnding) {
         rewriteRun(python(
           """
             print(42); print(43) ;print(44)%s
@@ -113,7 +113,7 @@ class WhitespaceTest implements RewriteTest {
       "\n   #comment\n",
       "\n    #comment\n",
     })
-    void testSingleLineMultiStatementInsideBlock(String firstLineEnding) {
+    void singleLineMultiStatementInsideBlock(String firstLineEnding) {
         rewriteRun(python(
           """
             def foo():
@@ -127,7 +127,7 @@ class WhitespaceTest implements RewriteTest {
     @ValueSource(strings = {
       "", "\n", "\n\n", "\n\n\n"
     })
-    void testEOF(String eofSpace) {
+    void eOF(String eofSpace) {
         rewriteRun(python(
           """
             print(1)
