@@ -43,7 +43,7 @@ public interface Py extends J {
     default <R extends Tree, P> R accept(TreeVisitor<R, P> v, P p) {
         final String visitorName = v.getClass().getCanonicalName();
         // FIXME HACK TO AVOID RUNTIME VISITOR-ADAPTING IN NATIVE IMAGE
-        if (visitorName.startsWith("io.moderne.serialization.")) {
+        if (visitorName != null && visitorName.startsWith("io.moderne.serialization.")) {
             return (R) this;
         }
         return (R) acceptPython(v.adapt(PythonVisitor.class), p);
