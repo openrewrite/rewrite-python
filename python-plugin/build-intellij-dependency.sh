@@ -55,8 +55,9 @@ cp "$FULL_JAR_PATH" "$DEPENDENCY_JAR_PATH"
 
 echo "  Running the Java task via Gradle.."
 $GRADLE_CMD printIntelliJDependencies 2>&1 | \
-  grep "class,load" | \
-  sed -nE "s/.*\\[class,load\\] (.*) source: file:.*$(basename "$DEPENDENCY_JAR_PATH").*/\\1/p" > "$IDENTIFIED_CLASSNAMES_FILE"
+  grep "^class" | \
+  grep "$(basename "$DEPENDENCY_JAR_PATH")" | \
+  cut -f2 > "$IDENTIFIED_CLASSNAMES_FILE"
 TASK_EXIT_CODE="${PIPESTATUS[0]}"
 
 echo "  Removing the bloated JAR.."
