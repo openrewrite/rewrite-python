@@ -6,9 +6,8 @@ group = "org.openrewrite"
 description = "Rewrite Python"
 
 task("printIntellijDependencies", JavaExec::class) {
-    mainClass.set("org.openrewrite.python.internal.CollectIntelliJDependencies")
+    mainClass.set("org.openrewrite.python.internal.CollectIntelliJDependenciesAsm")
     classpath = sourceSets["main"].runtimeClasspath
-    jvmArgs = listOf("-verbose:class", "-XX:-OmitStackTraceInFastThrow", "-Xmx2G")
 }
 
 val latest = rewriteRecipe.rewriteVersion.get()
@@ -25,6 +24,8 @@ dependencies {
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
     runtimeOnly("com.google.guava:guava:31.1-jre")
     runtimeOnly("one.util:streamex:0.8.1")
+
+    implementation("org.ow2.asm:asm:9.5")
 
     testImplementation("org.assertj:assertj-core:latest.release")
     testImplementation("org.junit.jupiter:junit-jupiter-api:latest.release")
