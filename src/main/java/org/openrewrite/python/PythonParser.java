@@ -15,20 +15,21 @@
  */
 package org.openrewrite.python;
 
-import com.jetbrains.python.psi.PyFile;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.Parser;
-import org.openrewrite.SourceFile;
 import org.openrewrite.internal.EncodingDetectingInputStream;
+import org.openrewrite.internal.MetricsHelper;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
-import org.openrewrite.python.internal.IntelliJUtils;
 import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
+import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
 import java.io.ByteArrayInputStream;
@@ -37,7 +38,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.StreamSupport;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
@@ -68,28 +69,36 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     }
 
     @Override
-    public List<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ogCtx) {
-        ParsingExecutionContextView ctx = ParsingExecutionContextView.view(ogCtx);
-        List<Py.CompilationUnit> mapped = new ArrayList<>();
+    public List<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
+        ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
+        ParsingEventListener parsingListener = pctx.getParsingListener();
 
-        for (Input input : inputs) {
-            EncodingDetectingInputStream is = input.getSource(ctx);
-            String sourceText = is.readFully();
-
-            try {
-                mapped.add(new PsiPythonMapper().mapSource(
-                        sourceText,
-                        input.getPath(),
-                        is.getCharset().toString(),
-                        is.isCharsetBomMarked()
-                ));
-            } catch (Throwable t) {
-                ctx.parseFailure(input, relativeTo, this, t);
-                ctx.getOnError().accept(t);
-            }
-        }
-
-        return mapped;
+        return acceptedInputs(inputs).stream()
+                .map(sourceFile -> {
+                    Timer.Builder timer = Timer.builder("rewrite.parse")
+                            .description("The time spent parsing an Python file")
+                            .tag("file.type", "Python");
+                    Timer.Sample sample = Timer.start();
+                    Path path = sourceFile.getRelativePath(relativeTo);
+                    try (EncodingDetectingInputStream is = sourceFile.getSource(ctx)) {
+                        Py.CompilationUnit py = new PsiPythonMapper().mapSource(
+                                is.readFully(),
+                                path,
+                                is.getCharset().toString(),
+                                is.isCharsetBomMarked()
+                        );
+                        sample.stop(MetricsHelper.successTags(timer).register(Metrics.globalRegistry));
+                        parsingListener.parsed(sourceFile, py);
+                        return py;
+                    } catch (Throwable t) {
+                        sample.stop(MetricsHelper.errorTags(timer, t).register(Metrics.globalRegistry));
+                        pctx.parseFailure(sourceFile, relativeTo, this, t);
+                        ctx.getOnError().accept(t);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(toList());
     }
 
     @Override

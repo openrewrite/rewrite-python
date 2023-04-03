@@ -20,6 +20,7 @@ dependencies {
     implementation(lib)
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
+    implementation("io.micrometer:micrometer-core:1.9.+")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
     runtimeOnly("com.google.guava:guava:31.1-jre")
