@@ -2453,23 +2453,18 @@ public class PsiPythonMapper {
 
     public Expression mapTargetExpression(PyTargetExpression element) {
         Py.TypeHint typeHint = mapTypeHintNullable(element.getAnnotation());
-        J.Identifier identifier = new J.Identifier(
-                randomId(),
-                spaceBefore(element.getNameIdentifier()),
-                EMPTY,
-                requireNonNull(element.getName()),
-                null,
-                null
-        );
+        Expression typeTree = TypeTree.build(element.getText());
+        typeTree = typeTree.withPrefix(spaceBefore(element));
+
         if (typeHint == null) {
-            return identifier.withPrefix(spaceBefore(element));
+            return typeTree;
         } else {
             return new Py.TypeHintedExpression(
                     randomId(),
                     spaceBefore(element),
                     EMPTY,
                     typeHint,
-                    identifier,
+                    typeTree,
                     null
             );
         }
