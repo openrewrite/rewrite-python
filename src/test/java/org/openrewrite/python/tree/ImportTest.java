@@ -15,8 +15,10 @@
  */
 package org.openrewrite.python.tree;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.openrewrite.Issue;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
@@ -97,6 +99,33 @@ class ImportTest implements RewriteTest {
     void localImportAlias(String arg) {
         rewriteRun(
           python(arg)
+        );
+    }
+
+    @Issue("https://github.com/openrewrite/rewrite-python/issues/35")
+    @Test
+    void multipleImports() {
+        rewriteRun(
+          python(
+            """
+             import sys
+             
+             import math
+             """)
+        );
+    }
+
+    @Issue("https://github.com/openrewrite/rewrite-python/issues/35")
+    @Test
+    void enclosedInParens() {
+        rewriteRun(
+          python(
+            """
+             from math import (
+                 sin,
+                 cos
+             )
+             """)
         );
     }
 

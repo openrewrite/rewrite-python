@@ -327,6 +327,7 @@ public class PsiPythonMapper {
                                 statement,
                                 PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, spaceBefore(closeParen)
                         );
+                        statement = statement.withMarkers(statement.getMarkers().addIfAbsent(new ImportParens(randomId())));
                         return statement;
                     }
             );

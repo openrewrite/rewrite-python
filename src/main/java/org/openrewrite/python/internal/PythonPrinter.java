@@ -1061,18 +1061,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             statementGroup = Collections.singletonList(impoort);
         }
 
-        boolean hasNewline;
-        {
-            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
-            ContainsNewlineVisitor hasNewlineVisitor = new ContainsNewlineVisitor();
-            for (Import inGroup : statementGroup) {
-                inGroup.acceptJava(hasNewlineVisitor, hasNewlineHolder);
-                if (hasNewlineHolder.get()) {
-                    break;
-                }
-            }
-            hasNewline = hasNewlineHolder.get();
-        }
+        boolean printParens = impoort.getMarkers().findFirst(ImportParens.class).isPresent();
+//        boolean hasNewline;
+//        {
+//            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
+//            ContainsNewlineVisitor hasNewlineVisitor = new ContainsNewlineVisitor();
+//            for (Import inGroup : statementGroup) {
+//                inGroup.acceptJava(hasNewlineVisitor, hasNewlineHolder);
+//                if (hasNewlineHolder.get()) {
+//                    break;
+//                }
+//            }
+//            hasNewline = hasNewlineHolder.get();
+//        }
 
         beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
         boolean isFrom = "".equals(impoort.getQualid().getSimpleName());
@@ -1085,7 +1086,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             p.append("import");
         }
 
-        if (hasNewline) {
+        if (printParens) {
             visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
             p.append("(");
         }
@@ -1107,7 +1108,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
         }
 
-        if (hasNewline) {
+        if (printParens) {
             visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
             p.append(")");
         }
