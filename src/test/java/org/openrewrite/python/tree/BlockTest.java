@@ -35,6 +35,16 @@ class BlockTest implements RewriteTest {
     }
 
     @Test
+    void blockPrefix() {
+        rewriteRun(python(
+          """
+            def f() :
+                pass
+            """
+        ));
+    }
+
+    @Test
     void singleStatementWithDocstring() {
         rewriteRun(python(
           """
