@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class SliceTest implements RewriteTest {
 

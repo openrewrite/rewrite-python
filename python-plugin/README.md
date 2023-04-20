@@ -1,3 +1,6 @@
+# `python-plugin.jar` built from IntelliJ-Community version
+Release tag `231.6890`
+
 # IntelliJ Python Plugin Integration
 
 To parse Python files, we use an implementation from the open-source IntelliJ Community project.
@@ -24,17 +27,11 @@ In this directory, you'll find the following files:
       ```
    3. Open the Intellij Community project in IntelliJ IDEA.
    4. Build the bloated JAR via "Build > Build Artifacts ... > python-plugin".
-2. Clone some example repos into `rewrite-python/example-data`. Any Python files in this directory tree will be used to exercise the IntelliJ Python Plugin parser and identify classes loaded during parsing.
-   ```bash
-   mkdir example-data
-   cd example-data
-   git clone git@github.com:wention/BeautifulSoup4.git
-   git clone git@github.com:apache/airflow.git
-   git clone git@github.com:bmc/grizzled-python.git
-   git clone git@github.com:psf/requests.git
-   ```
-3. Run `python-plugin/build-intellij-dependency.sh`; this will create (or overwrite) `lib/python-plugin.jar`.
+2. Run `python-plugin/build-intellij-dependency.sh`; this will create (or overwrite) `lib/python-plugin.jar`.
 
 ## Verifying a plugin JAR
 
 After following the above steps, run the project tests and check that none fail due to classloading errors.
+
+If there are classloading errors:
+1. Add the class to `CollectIntelliJDependenciesAsm#run()`.

@@ -20,6 +20,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
+import org.openrewrite.internal.lang.Nullable;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,6 +39,7 @@ public final class CollectIntelliJDependenciesAsm {
 
     void run() {
         processClass("org/openrewrite/python/PythonParser", Kind.ROOT);
+        processClass("com/jetbrains/python/psi/impl/PythonLanguageLevelPusher", Kind.ROOT);
     }
 
     // for debugging
@@ -49,7 +51,7 @@ public final class CollectIntelliJDependenciesAsm {
         BASE, INSTRUCTION,
     }
 
-    void processClass(String className, Kind kind) {
+    void processClass(@Nullable String className, Kind kind) {
         if (className == null) return;
 
         if (className.startsWith("[")) {
@@ -108,7 +110,7 @@ public final class CollectIntelliJDependenciesAsm {
         };
         ClassVisitor visitor = new ClassVisitor(ASM_VERSION) {
             @Override
-            public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+            public void visit(int version, int access, String name, @Nullable String signature, String superName, String[] interfaces) {
                 if (signature != null) {
                     new SignatureReader(signature).accept(signatureVisitor);
                 }
@@ -120,7 +122,7 @@ public final class CollectIntelliJDependenciesAsm {
             }
 
             @Override
-            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+            public MethodVisitor visitMethod(int access, String name, String descriptor, @Nullable String signature, String[] exceptions) {
                 if (signature != null) {
                     new SignatureReader(signature).accept(signatureVisitor);
                 }

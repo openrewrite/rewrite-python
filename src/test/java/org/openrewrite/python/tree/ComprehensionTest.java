@@ -15,12 +15,13 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class ComprehensionTest implements RewriteTest {
 
@@ -37,7 +38,7 @@ class ComprehensionTest implements RewriteTest {
       "[x for x in xs if  x]",
       "[x for x in xs if x ]",
     })
-    void listComprehension(String arg) {
+    void listComprehension(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );

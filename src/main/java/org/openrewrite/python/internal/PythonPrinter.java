@@ -865,7 +865,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, ".", p);
             visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
             visit(method.getName(), p);
-            visitContainer("(", method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", ")", p);
+            String before = "(";
+            String after = ")";
+            if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
+                before = "";
+                after = "";
+            }
+            visitContainer(before, method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p);
             afterSyntax(method, p);
         }
         return method;

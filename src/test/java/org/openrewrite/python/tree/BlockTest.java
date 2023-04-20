@@ -15,12 +15,13 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class BlockTest implements RewriteTest {
 
@@ -150,7 +151,7 @@ class BlockTest implements RewriteTest {
       "def f(x): x = x + 1; return x;",
       "def f(x): x = x + 1; return x ;",
     })
-    void oneLineBlocks(String code) {
+    void oneLineBlocks(@Language("py") String code) {
         rewriteRun(
           python(code)
         );

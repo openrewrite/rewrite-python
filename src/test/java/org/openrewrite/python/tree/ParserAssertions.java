@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.python;
+package org.openrewrite.python.tree;
 
 
 import org.intellij.lang.annotations.Language;
 import org.openrewrite.internal.lang.Nullable;
-import org.openrewrite.python.tree.Py;
+import org.openrewrite.java.JavaVisitor;
+import org.openrewrite.java.tree.Space;
+import org.openrewrite.python.PythonParser;
 import org.openrewrite.test.SourceSpec;
 import org.openrewrite.test.SourceSpecs;
 
 import java.util.function.Consumer;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.python.PythonParser.LanguageLevel.PYTHON_312;
 
-public final class Assertions {
-    private Assertions() {
+public final class ParserAssertions {
+    private ParserAssertions() {
     }
-
     public static SourceSpecs python(@Language("py") @Nullable String before) {
         return python(before, s -> {
         }, PYTHON_312);
@@ -56,7 +58,7 @@ public final class Assertions {
 
     public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
         SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, null);
-        spec.accept(python);
+        acceptSpec(spec, python);
         return python;
     }
 
@@ -68,7 +70,23 @@ public final class Assertions {
     public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
                                      Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
         SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, s -> after);
-        spec.accept(python);
+        acceptSpec(spec, python);
         return python;
+    }
+
+    private static void acceptSpec(Consumer<SourceSpec<Py.CompilationUnit>> spec, SourceSpec<Py.CompilationUnit> python) {
+        Consumer<Py.CompilationUnit> userSuppliedAfterRecipe = python.getAfterRecipe();
+        python.afterRecipe(userSuppliedAfterRecipe::accept);
+        spec.andThen(isFullyParsed()).accept(python);
+    }
+
+    public static Consumer<SourceSpec<Py.CompilationUnit>> isFullyParsed() {
+        return spec -> spec.afterRecipe(cu -> new JavaVisitor<Integer>() {
+            @Override
+            public Space visitSpace(Space space, Space.Location loc, Integer integer) {
+                assertThat(space.getWhitespace().trim()).isEmpty();
+                return super.visitSpace(space, loc, integer);
+            }
+        }.visit(cu, 0));
     }
 }

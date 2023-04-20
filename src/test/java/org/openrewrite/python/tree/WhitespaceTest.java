@@ -20,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class WhitespaceTest implements RewriteTest {
 
@@ -68,6 +68,7 @@ class WhitespaceTest implements RewriteTest {
         rewriteRun(python("print(42)%sprint(2)".formatted(ending)));
     }
 
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
     @ValueSource(strings = {
       "",
@@ -93,7 +94,7 @@ class WhitespaceTest implements RewriteTest {
         ));
     }
 
-
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
     @ValueSource(strings = {
       "",

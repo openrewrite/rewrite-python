@@ -15,11 +15,12 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class TernaryTest implements RewriteTest {
 
@@ -31,7 +32,7 @@ class TernaryTest implements RewriteTest {
       "x = 3 if True  else 1",
       "x = 3 if True else  1",
     })
-    void test(String expr) {
+    void test(@Language("py") String expr) {
         rewriteRun(python(expr));
     }
 
