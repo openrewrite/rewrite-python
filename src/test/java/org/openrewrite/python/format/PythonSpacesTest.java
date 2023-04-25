@@ -15,9 +15,7 @@
  */
 package org.openrewrite.python.format;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.ExpectedToFail;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -112,7 +110,6 @@ class PythonSpacesTest implements RewriteTest {
         );
     }
 
-    @ExpectedToFail("Parsing failure.")
     @Test
     void formatBeforeParameters() {
         rewriteRun(
@@ -131,7 +128,6 @@ class PythonSpacesTest implements RewriteTest {
         );
     }
 
-    @Disabled("Test passes with a false positive, because the whitespace is not preserved.")
     @Test
     void formatEmptyParameters() {
         rewriteRun(
@@ -139,25 +135,6 @@ class PythonSpacesTest implements RewriteTest {
             """
               class Foo:
                   def foo(    ):
-                      pass
-            """,
-            """
-              class Foo:
-                  def foo():
-                      pass
-            """
-          )
-        );
-    }
-
-    @ExpectedToFail("Parsing failure.")
-    @Test
-    void formatAfterParameters() {
-        rewriteRun(
-          python(
-            """
-              class Foo:
-                  def foo() :
                       pass
             """,
             """

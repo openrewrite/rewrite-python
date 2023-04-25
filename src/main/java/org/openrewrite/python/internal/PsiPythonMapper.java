@@ -971,7 +971,7 @@ public class PsiPythonMapper {
         Space after = rParen == null ? Space.EMPTY : spaceBefore(rParen);
         if (element.getParameterList().getParameters().length == 0) {
             params = JContainer.build(spaceAfter(element.getNameIdentifier()),
-                    singletonList(JRightPadded.<Statement>build(new J.Empty(randomId(), Space.EMPTY, EMPTY)).withAfter(after)), EMPTY);
+                    singletonList(JRightPadded.build(new J.Empty(randomId(), after, EMPTY))), EMPTY);
         } else {
             PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
             List<JRightPadded<Statement>> statements = new ArrayList<>(pyParameters.length);
