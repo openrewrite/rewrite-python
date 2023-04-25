@@ -15,11 +15,12 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class DelTest implements RewriteTest {
 
@@ -32,7 +33,7 @@ class DelTest implements RewriteTest {
             "del x , y",
             "del x,  y",
     })
-    void del(String arg) {
+    void del(@Language("py") String arg) {
         rewriteRun(python(arg));
     }
 

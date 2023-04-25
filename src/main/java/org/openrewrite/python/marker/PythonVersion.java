@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2023 the original author or authors.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.python.tree;
+package org.openrewrite.python.marker;
 
-import org.junit.jupiter.api.Test;
-import org.openrewrite.test.RewriteTest;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+import lombok.With;
+import org.openrewrite.marker.Marker;
+import org.openrewrite.python.PythonParser;
 
-import static org.openrewrite.python.tree.ParserAssertions.python;
+import java.util.UUID;
 
-class DictLiteralTest implements RewriteTest {
+@Value
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@With
+public class PythonVersion implements Marker {
+    @EqualsAndHashCode.Include
+    UUID id;
 
-    @Test
-    void dictLiteral() {
-        rewriteRun(
-          python(
-            """
-              class Test:
-                  d = { 'a': 1, 'b': 2 }
-              """
-          )
-        );
-    }
+    PythonParser.LanguageLevel languageLevel;
 }

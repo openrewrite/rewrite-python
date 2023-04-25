@@ -15,12 +15,12 @@
  */
 package org.openrewrite.python.tree;
 
-import org.junit.jupiter.api.Test;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class TypeCommentTest implements RewriteTest {
 
@@ -85,7 +85,7 @@ class TypeCommentTest implements RewriteTest {
       "a = None",
       "a: str = \"hello\""
     })
-    void variables(String stmt) {
+    void variables(@Language("py") String stmt) {
         rewriteRun(
           python(stmt)
         );

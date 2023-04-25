@@ -15,13 +15,14 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.Issue;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class ImportTest implements RewriteTest {
 
@@ -31,7 +32,7 @@ class ImportTest implements RewriteTest {
       "import math",
       "import  math",
     })
-    void simpleImport(String arg) {
+    void simpleImport(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );
@@ -45,7 +46,7 @@ class ImportTest implements RewriteTest {
       "import math  as math2",
       "import math as  math2",
     })
-    void simpleImportAlias(String arg) {
+    void simpleImportAlias(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );
@@ -66,7 +67,7 @@ class ImportTest implements RewriteTest {
       "from ...mod import  foo",
       "from ....mod import  foo",
     })
-    void localImport(String arg) {
+    void localImport(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );
@@ -80,7 +81,7 @@ class ImportTest implements RewriteTest {
       "from math  import ceil",
       "from math import  ceil",
     })
-    void qualifiedImport(String arg) {
+    void qualifiedImport(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );
@@ -96,7 +97,7 @@ class ImportTest implements RewriteTest {
       "from . import foo  as foo2",
       "from . import foo as  foo2",
     })
-    void localImportAlias(String arg) {
+    void localImportAlias(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );
@@ -129,6 +130,7 @@ class ImportTest implements RewriteTest {
         );
     }
 
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
     //language=py
     @ValueSource(strings = {
@@ -142,7 +144,7 @@ class ImportTest implements RewriteTest {
         )
         """,
     })
-    void multipleImport(String arg) {
+    void multipleImport(@Language("py") String arg) {
         rewriteRun(
           python(arg)
         );

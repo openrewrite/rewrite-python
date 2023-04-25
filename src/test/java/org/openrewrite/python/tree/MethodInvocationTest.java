@@ -18,11 +18,27 @@ package org.openrewrite.python.tree;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.openrewrite.python.PythonParser;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
 class MethodInvocationTest implements RewriteTest {
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "print", "print ",
+      "print 42", "print 42 ", "print 1, 2, 3, 4",
+      "print 1, 2, 3, 4 ", "print 1 , 2 , 3 , 4",
+      "print 1, 2, 3, 4",
+      """
+        for x in range(1,11):
+            print '{0:2d} {1:3d} {2:4d}'.format(x, x*x, x*x*x)
+        """,
+    })
+    void python2Print(@Language("py") String print) {
+        rewriteRun(python(print, PythonParser.LanguageLevel.PYTHON_27));
+    }
 
     @ParameterizedTest
     //language=py
@@ -47,7 +63,7 @@ class MethodInvocationTest implements RewriteTest {
       "int.bit_length( 42)",
       "int.bit_length(42 )",
     })
-    void qualifiedTarget(String arg) {
+    void qualifiedTarget(@Language("py") String arg) {
         rewriteRun(python(arg));
     }
 
@@ -60,7 +76,7 @@ class MethodInvocationTest implements RewriteTest {
       "list().copy ()",
       "list().copy( )",
     })
-    void methodInvocationOnExpressionTarget(String arg) {
+    void methodInvocationOnExpressionTarget(@Language("py") String arg) {
         rewriteRun(python(arg));
     }
 
@@ -81,7 +97,7 @@ class MethodInvocationTest implements RewriteTest {
       "(list().count)(1, 2)",
       "(list().count)(1,2 )",
     })
-    void methodInvocationOnCallable(String arg) {
+    void methodInvocationOnCallable(@Language("py") String arg) {
         rewriteRun(python(arg));
     }
 
@@ -93,7 +109,7 @@ class MethodInvocationTest implements RewriteTest {
       "print(**x)",
       "print(** x)",
     })
-    void specialArg(String arg) {
+    void specialArg(@Language("py") String arg) {
         rewriteRun(python(arg));
     }
 }

@@ -21,13 +21,9 @@ import com.intellij.ide.plugins.PluginUtilImpl;
 import com.intellij.ide.startup.impl.StartupManagerImpl;
 import com.intellij.lang.*;
 import com.intellij.lang.impl.PsiBuilderFactoryImpl;
-import com.intellij.mock.MockApplication;
-import com.intellij.mock.MockFileDocumentManagerImpl;
-import com.intellij.mock.MockProject;
-import com.intellij.mock.MockPsiManager;
+import com.intellij.mock.*;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.RoamingType;
 import com.intellij.openapi.components.SettingsCategory;
@@ -58,7 +54,6 @@ import com.intellij.pom.core.impl.PomModelImpl;
 import com.intellij.pom.tree.TreeAspect;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.PsiCachedValuesFactory;
-import com.intellij.psi.impl.PsiFileFactoryImpl;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry;
 import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistryImpl;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
@@ -72,17 +67,15 @@ import com.intellij.util.messages.MessageBus;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.jetbrains.python.*;
 import com.jetbrains.python.documentation.doctest.PyDocstringTokenSetContributor;
-import com.jetbrains.python.parsing.PyParser;
+import com.jetbrains.python.psi.LanguageLevel;
 import com.jetbrains.python.psi.PyFile;
 import com.jetbrains.python.psi.PyPsiFacade;
 import com.jetbrains.python.psi.impl.PyPsiFacadeImpl;
 import com.jetbrains.python.psi.impl.PythonASTFactory;
+import com.jetbrains.python.psi.impl.PythonLanguageLevelPusher;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.openrewrite.ExecutionContext;
-import org.openrewrite.Parser;
-import org.openrewrite.internal.EncodingDetectingInputStream;
 import org.picocontainer.ComponentAdapter;
 import org.picocontainer.MutablePicoContainer;
 
@@ -94,6 +87,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
+@SuppressWarnings({"SameParameterValue", "UnstableApiUsage", "unchecked", "NullableProblems", "rawtypes"})
 public class IntelliJUtils {
 
     private static <T> void registerExtensionPoint(
@@ -191,7 +185,6 @@ public class IntelliJUtils {
             }
         });
         LanguageParserDefinitions.INSTANCE.clearCache(language);
-//        disposeOnTearDown(() -> LanguageParserDefinitions.INSTANCE.clearCache(language));
     }
 
     static class MockSchemeManagerFactory extends SchemeManagerFactory {
@@ -202,83 +195,78 @@ public class IntelliJUtils {
         }
     }
 
-
-    public static PyFile parsePythonSource(@Nullable String filename, String sourceText) {
-        Disposable mockDisposable = () -> {
+    @SuppressWarnings({"NullableProblems", "UnstableApiUsage", "deprecation"})
+    @org.openrewrite.internal.lang.Nullable
+    public static PyFile parsePythonSource(String filename, String sourceText, LanguageLevel languageLevel) {
+        Disposable disposable = () -> {
         };
 
-        MockApplication app = MockApplication.setUp(mockDisposable);
-        ApplicationManager.setApplication(app, mockDisposable);
-
-        Registry.markAsLoaded();
-
-        PluginDescriptor pluginDescriptor = new DefaultPluginDescriptor("io.moderne.test");
-
-        registerExtensionPoint(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, PythonDialectsTokenSetContributor.class);
-        registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PythonTokenSetContributor());
-        registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PyDocstringTokenSetContributor());
-        addExplicitExtension(pluginDescriptor, app, LanguageASTFactory.INSTANCE, PythonLanguage.getInstance(), new PythonASTFactory());
-
-        MockProject project = new MockProject(null, mockDisposable);
-        project.registerService(PyPsiFacade.class, PyPsiFacadeImpl.class);
-        MockPsiManager psiManager = new MockPsiManager(project);
-        PsiFileFactoryImpl psiFileFactory = new PsiFileFactoryImpl(psiManager);
-
-//        ProjectCoreUtil.updateInternalTheOnlyProjectFieldTemporarily(project);
-
+        MockApplication app = MockApplication.setUp(disposable);
         MutablePicoContainer appContainer = app.getPicoContainer();
         ComponentAdapter component = appContainer.getComponentAdapter(ProgressManager.class.getName());
         if (component == null) {
             appContainer.registerComponentInstance(ProgressManager.class.getName(), new ProgressManagerImpl());
         }
+
+        MockProject project = new MockProject(appContainer, disposable);
+        MockPsiManager psiManager = new MockPsiManager(project);
+        configureProjectServices(project, psiManager);
+
         appContainer.registerComponentInstance(MessageBus.class, app.getMessageBus());
         appContainer.registerComponentInstance(SchemeManagerFactory.class, new MockSchemeManagerFactory());
         MockEditorFactory editorFactory = new MockEditorFactory();
         appContainer.registerComponentInstance(EditorFactory.class, editorFactory);
+
         app.registerService(FileDocumentManager.class, new MockFileDocumentManagerImpl(FileDocumentManagerBase.HARD_REF_TO_DOCUMENT_KEY,
                 editorFactory::createDocument));
         app.registerService(PluginUtil.class, new PluginUtilImpl());
         app.registerService(PsiBuilderFactory.class, new PsiBuilderFactoryImpl());
         app.registerService(DefaultASTFactory.class, new DefaultASTFactoryImpl());
         app.registerService(ReferenceProvidersRegistry.class, new ReferenceProvidersRegistryImpl());
-        project.registerService(PsiDocumentManager.class, new MockPsiDocumentManager());
-        project.registerService(PsiManager.class, psiManager);
-        project.registerService(TreeAspect.class, new TreeAspect());
-        project.registerService(CachedValuesManager.class, new CachedValuesManagerImpl(project, new PsiCachedValuesFactory(project)));
-        project.registerService(StartupManager.class, new StartupManagerImpl(project));
+
+        PluginDescriptor pluginDescriptor = new DefaultPluginDescriptor("io.moderne.test");
         registerExtensionPoint(pluginDescriptor, app.getExtensionArea(), FileTypeFactory.FILE_TYPE_FACTORY_EP, FileTypeFactory.class);
         registerExtensionPoint(pluginDescriptor, app.getExtensionArea(), MetaLanguage.EP_NAME, MetaLanguage.class);
+        registerExtensionPoint(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, PythonDialectsTokenSetContributor.class);
+        registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PythonTokenSetContributor());
+        registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PyDocstringTokenSetContributor());
 
-        ExtensionPointImpl<KeyedLazyInstance<ParserDefinition>> langParserDefinition = app.getExtensionArea().registerFakeBeanPoint(LanguageParserDefinitions.INSTANCE.getName(), pluginDescriptor);
-        ParserDefinition[] parserDefinitions = {
-                new PythonParserDefinition()
-        };
+        addExplicitExtension(pluginDescriptor, app, LanguageASTFactory.INSTANCE, PythonLanguage.getInstance(), new PythonASTFactory());
 
+        ExtensionPointImpl<KeyedLazyInstance<ParserDefinition>> langParserDefinition =
+                app.getExtensionArea().registerFakeBeanPoint(LanguageParserDefinitions.INSTANCE.getName(), pluginDescriptor);
+
+        PythonParserDefinition pythonParserDefinition = new PythonParserDefinition();
         {
             String fileExt = "py";
-            @NotNull Language language = parserDefinitions[0].getFileNodeType().getLanguage();
-            registerParserDefinition(langParserDefinition, parserDefinitions[0]);
+            @NotNull Language language = pythonParserDefinition.getFileNodeType().getLanguage();
+            registerParserDefinition(langParserDefinition, pythonParserDefinition);
             app.registerService(FileTypeManager.class, new MockFileTypeManager(new MockLanguageFileType(language, fileExt)));
-
-            for (int i = 1, length = parserDefinitions.length; i < length; i++) {
-                registerParserDefinition(langParserDefinition, parserDefinitions[i]);
-            }
         }
-
-        // That's for reparse routines
-        project.registerService(PomModel.class, new PomModelImpl(project));
 
         Registry.markAsLoaded();
 
-        if (filename == null) {
-            filename = "test.py";
-        }
+        LightVirtualFile lv = new LightVirtualFile(filename, PythonFileType.INSTANCE, sourceText);
+        PythonLanguageLevelPusher.specifyFileLanguageLevel(lv, languageLevel);
         final FileViewProvider fileViewProvider = new SingleRootFileViewProvider(
                 psiManager,
-                new LightVirtualFile(filename, PythonFileType.INSTANCE, sourceText)
+                lv
         );
 
         return (PyFile) fileViewProvider.getPsi(PythonLanguage.INSTANCE);
+    }
+
+    static void configureProjectServices(MockProject project, PsiManager psiManager) {
+        project.registerService(PsiManager.class, psiManager);
+
+        project.registerService(PyPsiFacade.class, PyPsiFacadeImpl.class);
+        project.registerService(PsiDocumentManager.class, new MockPsiDocumentManager());
+        project.registerService(TreeAspect.class, new TreeAspect());
+        project.registerService(CachedValuesManager.class, new CachedValuesManagerImpl(project, new PsiCachedValuesFactory(project)));
+        project.registerService(StartupManager.class, new StartupManagerImpl(project));
+
+        // That's for reparse routines
+        project.registerService(PomModel.class, new PomModelImpl(project));
     }
 
     static class MockPsiDocumentManager extends PsiDocumentManager {

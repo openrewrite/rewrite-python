@@ -15,12 +15,13 @@
  */
 package org.openrewrite.python.tree;
 
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.Assertions.python;
+import static org.openrewrite.python.tree.ParserAssertions.python;
 
 class MethodDeclarationTest implements RewriteTest {
 
@@ -35,7 +36,7 @@ class MethodDeclarationTest implements RewriteTest {
       "a, b, *args, **kwargs",
       "a, b, *, c=1"
     })
-    void functionDefinition(String args) {
+    void functionDefinition(@Language("py") String args) {
         rewriteRun(
           python(
             """

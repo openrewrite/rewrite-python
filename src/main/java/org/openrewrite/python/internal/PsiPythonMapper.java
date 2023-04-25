@@ -36,6 +36,7 @@ import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PySpace;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -50,6 +51,21 @@ import static org.openrewrite.python.tree.PySpace.appendWhitespace;
 import static org.openrewrite.python.tree.PySpace.deindent;
 
 public class PsiPythonMapper {
+
+    private final Path path;
+    private final Charset charset;
+    private final boolean isCharsetBomMarked;
+    private final LanguageLevel languageLevel;
+
+    public PsiPythonMapper(Path path,
+                           Charset charset,
+                           boolean isCharsetBomMarked,
+                           LanguageLevel languageLevel) {
+        this.path = path;
+        this.charset = charset;
+        this.isCharsetBomMarked = isCharsetBomMarked;
+        this.languageLevel = languageLevel;
+    }
 
     @Value
     public static class BlockContext {
@@ -80,15 +96,19 @@ public class PsiPythonMapper {
         }
     }
 
-    public Py.CompilationUnit mapSource(String sourceText, Path path, String charset, boolean isCharsetBomMarked) {
+    public Py.CompilationUnit mapSource(String sourceText) {
         boolean addedNewline = false;
         if (!sourceText.endsWith("\n")) {
             addedNewline = true;
             sourceText = sourceText + "\n";
         }
 
-        PyFile pyFile = IntelliJUtils.parsePythonSource(path.toString(), sourceText);
-        Py.CompilationUnit compilationUnit = mapFile(pyFile, path, charset, isCharsetBomMarked);
+        PyFile pyFile = IntelliJUtils.parsePythonSource(path.toString(), sourceText, languageLevel);
+        if (pyFile == null) {
+            throw new IllegalStateException("Unexpected null PyFile on source: " + path);
+        }
+
+        Py.CompilationUnit compilationUnit = mapFile(pyFile);
         if (addedNewline) {
             compilationUnit = compilationUnit.withMarkers(
                     compilationUnit.getMarkers().add(
@@ -96,11 +116,10 @@ public class PsiPythonMapper {
                     )
             );
         }
-
         return compilationUnit;
     }
 
-    public Py.CompilationUnit mapFile(PyFile element, Path path, String charset, boolean isCharsetBomMarked) {
+    public Py.CompilationUnit mapFile(PyFile element) {
         // Uncomment when doing development if you want a PSI tree to print out
         //  new IntelliJUtils.PsiPrinter().print(element.getNode());
         BlockContext ctx = BlockContext.root(element);
@@ -121,7 +140,7 @@ public class PsiPythonMapper {
                 markers,
                 path,
                 FileAttributes.fromPath(path),
-                charset,
+                charset.name(),
                 isCharsetBomMarked,
                 null,
                 emptyList(),
@@ -189,6 +208,8 @@ public class PsiPythonMapper {
                 return singletonList(mapVariableScopeStatement((PyNonlocalStatement) element));
             } else if (element instanceof PyPassStatement) {
                 return singletonList(mapPassStatement((PyPassStatement) element));
+            } else if (element instanceof PyPrintStatement) {
+                return singletonList(mapPrintStatement((PyPrintStatement) element));
             } else if (element instanceof PyRaiseStatement) {
                 return singletonList(mapRaiseStatement((PyRaiseStatement) element));
             } else if (element instanceof PyReturnStatement) {
@@ -229,6 +250,26 @@ public class PsiPythonMapper {
                         null,
                         null
                 )))
+        );
+    }
+
+    private J.MethodInvocation mapPrintStatement(PyPrintStatement element) {
+        PsiElement print = findChildToken(element, PyTokenTypes.PRINT_KEYWORD);
+        Markers markers = EMPTY.addIfAbsent(new OmitParentheses(randomId()));
+
+        JContainer<Expression> args = JContainer.build(Space.EMPTY, element.getChildren().length == 0 ?
+                singletonList(JRightPadded.build(new J.Empty(randomId(), Space.EMPTY, EMPTY))) :
+                mapExpressionsAsRightPadded(element.getChildren()), EMPTY);
+
+        return new J.MethodInvocation(
+                randomId(),
+                spaceBefore(print),
+                markers,
+                null,
+                null,
+                new J.Identifier(randomId(), Space.EMPTY, EMPTY, print.getText(), null, null),
+                args,
+                null
         );
     }
 
@@ -1368,7 +1409,7 @@ public class PsiPythonMapper {
         BlockContext innerCtx;
 
         if (colonToken != null) {
-            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();;
+            blockPrefix = paddingCursor.consumeUntilNewlineOrRollback();
             if (blockPrefix == null) {
                 blockPrefix = Space.EMPTY;
             }
@@ -2574,7 +2615,7 @@ public class PsiPythonMapper {
             throw new RuntimeException("expected QualifiedName, but element was null");
         }
         if (qualifiedName.getComponentCount() != 1) {
-            throw new UnsupportedOperationException("only simple names are supported; found: " + qualifiedName.toString());
+            throw new UnsupportedOperationException("only simple names are supported; found: " + qualifiedName);
         }
         //noinspection DataFlowIssue
         return qualifiedName.getLastComponent();
