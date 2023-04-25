@@ -16,8 +16,10 @@
 package org.openrewrite.python.tree;
 
 import org.intellij.lang.annotations.Language;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.openrewrite.Issue;
 import org.openrewrite.python.PythonParser;
 import org.openrewrite.test.RewriteTest;
 
@@ -111,5 +113,19 @@ class MethodInvocationTest implements RewriteTest {
     })
     void specialArg(@Language("py") String arg) {
         rewriteRun(python(arg));
+    }
+
+    @Issue("https://github.com/openrewrite/rewrite-python/issues/39")
+    @Test
+    void parameterPadding() {
+        rewriteRun(
+          python(
+            """
+              class Foo:
+                  def foo ( ) :
+                      pass
+            """
+          )
+        );
     }
 }

@@ -966,14 +966,24 @@ public class PsiPythonMapper {
     private Statement mapFunction(PyFunction element, BlockContext ctx) {
         List<J.Annotation> annotations = mapDecoratorList(element.getDecoratorList(), ctx);
 
-        PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
-        List<JRightPadded<Statement>> params = new ArrayList<>(pyParameters.length);
-        for (PyParameter pyParam : pyParameters) {
-            params.add(
-                    JRightPadded.<Statement>build(
-                            mapFunctionParameter(pyParam).withPrefix(spaceBefore(pyParam))
-                    ).withAfter(spaceAfter(pyParam))
-            );
+        JContainer<Statement> params;
+        PsiElement rParen = maybeFindChildToken(element.getParameterList(), PyTokenTypes.RPAR);
+        Space after = rParen == null ? Space.EMPTY : spaceBefore(rParen);
+        if (element.getParameterList().getParameters().length == 0) {
+            params = JContainer.build(spaceAfter(element.getNameIdentifier()),
+                    singletonList(JRightPadded.<Statement>build(new J.Empty(randomId(), Space.EMPTY, EMPTY)).withAfter(after)), EMPTY);
+        } else {
+            PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
+            List<JRightPadded<Statement>> statements = new ArrayList<>(pyParameters.length);
+            for (int i = 0; i < pyParameters.length; i++) {
+                PyParameter parameter = pyParameters[i];
+                statements.add(
+                        JRightPadded.<Statement>build(
+                                mapFunctionParameter(parameter).withPrefix(spaceBefore(parameter))
+                        ).withAfter(i < pyParameters.length - 1 ? spaceAfter(parameter) : after)
+                );
+            }
+            params = JContainer.build(spaceAfter(element.getNameIdentifier()), statements, EMPTY);
         }
 
         List<J.Modifier> modifiers = new ArrayList<>();
@@ -1013,7 +1023,7 @@ public class PsiPythonMapper {
                         mapIdentifier(element).withPrefix(spaceBefore(element.getNameIdentifier())),
                         emptyList()
                 ),
-                JContainer.build(params),
+                params,
                 null,
                 mapCompoundBlock(element, ctx),
                 null,
