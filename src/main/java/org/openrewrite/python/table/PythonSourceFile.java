@@ -35,6 +35,9 @@ public class PythonSourceFile extends DataTable<PythonSourceFile.Row> {
 
         @Column(displayName = "Source file type", description = "The source file type that was created.")
         SourceFileType sourceFileType;
+
+        @Column(displayName = "Language level", description = "The version of python.")
+        String languageLevel;
     }
 
     public enum SourceFileType {

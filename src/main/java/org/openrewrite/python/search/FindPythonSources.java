@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.openrewrite.*;
 import org.openrewrite.marker.SearchResult;
+import org.openrewrite.python.marker.PythonVersion;
 import org.openrewrite.python.table.PythonSourceFile;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.quark.Quark;
@@ -46,14 +47,17 @@ public class FindPythonSources extends Recipe {
             public Tree visitSourceFile(SourceFile sourceFile, ExecutionContext ctx) {
                 if (sourceFile.getSourcePath().toString().endsWith(".py")) {
                     PythonSourceFile.SourceFileType sourceFileType = null;
+                    String languageLevel = "";
                     if (sourceFile instanceof Py.CompilationUnit) {
+                        PythonVersion level = sourceFile.getMarkers().findFirst(PythonVersion.class).orElse(null);
+                        languageLevel = level == null ? "Not found" : level.getLanguageLevel().name();
                         sourceFileType = PythonSourceFile.SourceFileType.Python;
                     } else if (sourceFile instanceof Quark) {
                         sourceFileType = PythonSourceFile.SourceFileType.Quark;
                     } else if (sourceFile instanceof PlainText) {
                         sourceFileType = PythonSourceFile.SourceFileType.PlainText;
                     }
-                    pythonSourceFile.insertRow(ctx, new PythonSourceFile.Row(sourceFile.getSourcePath().toString(), sourceFileType));
+                    pythonSourceFile.insertRow(ctx, new PythonSourceFile.Row(sourceFile.getSourcePath().toString(), sourceFileType, languageLevel));
                     return SearchResult.found(sourceFile);
                 }
                 return sourceFile;
