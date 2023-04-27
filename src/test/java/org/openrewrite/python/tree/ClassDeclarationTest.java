@@ -63,4 +63,18 @@ class ClassDeclarationTest implements RewriteTest {
           )
         );
     }
+
+    @Test
+    void testNestedClasses() {
+        rewriteRun(
+          python(
+            """
+              class A:
+              
+                class B:
+                  pass
+              """
+          )
+        );
+    }
 }
