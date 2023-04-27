@@ -89,7 +89,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
                                 .mapSource(is.readFully());
                         sample.stop(MetricsHelper.successTags(timer).register(Metrics.globalRegistry));
                         parsingListener.parsed(sourceFile, py);
-                        return py.withMarkers(py.getMarkers().addIfAbsent(new PythonVersion(UUID.randomUUID(), languageLevel)));
+                        return py;
                     } catch (Throwable t) {
                         sample.stop(MetricsHelper.errorTags(timer, t).register(Metrics.globalRegistry));
                         pctx.parseFailure(sourceFile, relativeTo, this, t);
