@@ -1251,7 +1251,8 @@ public class PsiPythonMapper {
 
         return new J.ClassDeclaration(
                 randomId(),
-                spaceBefore(element),
+                // the prefix is currently either embedded in the decorators or in the `kind`
+                Space.EMPTY,
                 EMPTY,
                 emptyList(),
                 emptyList(),

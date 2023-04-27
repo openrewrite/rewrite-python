@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python.tree;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.test.RewriteTest;
@@ -43,6 +44,36 @@ class ClassDeclarationTest implements RewriteTest {
               class %s
                   pass
               """.formatted(decl)
+          )
+        );
+    }
+
+    @Test
+    void testSpaceBetweenClasses() {
+        rewriteRun(
+          python(
+            """
+              class Foo:
+                pass
+              
+              
+              class Bar:
+                pass
+              """
+          )
+        );
+    }
+
+    @Test
+    void testNestedClasses() {
+        rewriteRun(
+          python(
+            """
+              class A:
+              
+                class B:
+                  pass
+              """
           )
         );
     }
