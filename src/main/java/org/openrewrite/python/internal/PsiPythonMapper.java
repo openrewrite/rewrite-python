@@ -1198,6 +1198,8 @@ public class PsiPythonMapper {
     }
 
     public Statement mapClassDeclarationStatement(PyClass element, BlockContext ctx) {
+        final Space classStatementPrefix = ctx.nextStatementPrefix();
+
         List<J.Annotation> decorators = mapDecoratorList(element.getDecoratorList(), ctx);
 
         final Space kindPrefix = ctx.nextStatementPrefix(
@@ -1251,7 +1253,7 @@ public class PsiPythonMapper {
 
         return new J.ClassDeclaration(
                 randomId(),
-                spaceBefore(element),
+                classStatementPrefix,
                 EMPTY,
                 emptyList(),
                 emptyList(),
