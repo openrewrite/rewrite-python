@@ -23,6 +23,7 @@ import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.marker.OmitParentheses;
+import org.openrewrite.java.marker.TrailingComma;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.Import;
 import org.openrewrite.java.tree.Space.Location;
@@ -166,6 +167,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     protected void afterSyntax(Markers markers, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
+            if (marker instanceof TrailingComma) {
+                p.out.append(",");
+                visitSpace(((TrailingComma) marker).getSuffix(), Location.LANGUAGE_EXTENSION, p);
+            }
             p.append(p.getMarkerPrinter().afterSyntax(marker, new Cursor(getCursor(), marker), PYTHON_MARKER_WRAPPER));
         }
     }
@@ -817,13 +822,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 }
 
                 J.NewArray argList = (J.NewArray) arg;
-                int argCount = 0;
-                for (Expression argExpr : requireNonNull(argList.getInitializer())) {
-                    if (!(argExpr instanceof J.Empty)) {
-                        argCount++;
-                    }
-                }
-
                 String before;
                 String after;
                 if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
@@ -834,7 +832,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     after = "}";
                 } else {
                     before = "(";
-                    after = argCount == 1 ? ",)" : ")";
+                    after = ")";
                 }
 
                 visitContainer(

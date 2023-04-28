@@ -30,6 +30,7 @@ import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
+import org.openrewrite.java.marker.TrailingComma;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.marker.*;
@@ -1925,30 +1926,13 @@ public class PsiPythonMapper {
     }
 
     private Expression mapSequenceExpressionAsArray(PySequenceExpression element) {
-        List<JRightPadded<Expression>> exprs;
-        if (element.getElements().length == 0) {
-            Space space = Space.EMPTY;
-            if (element.getNode().getChildren(null).length > 0) {
-                PsiElement lastChild = element.getNode().getLastChildNode().getPsi();
-                if (lastChild instanceof PsiWhiteSpace) {
-                    space = trailingSpace(element);
-                } else {
-                    space = spaceBefore(lastChild);
-                }
-            }
-            exprs = singletonList(JRightPadded.<Expression>build(
-                    new J.Empty(randomId(), Space.EMPTY, EMPTY)
-            ).withAfter(space));
-        } else {
-            exprs = mapExpressionsAsRightPadded(element.getElements());
-        }
         return new J.NewArray(
                 randomId(),
                 spaceBefore(element),
                 EMPTY,
                 null,
                 emptyList(),
-                JContainer.build(exprs),
+                convertAll(element, element.getElements()),
                 null
         );
     }
@@ -2570,6 +2554,41 @@ public class PsiPythonMapper {
                         .withBefore(spaceAfter(element.getQualifier())),
                 null
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private <J2 extends J> JContainer<J2> convertAll(PsiElement parent, PsiElement[] psiElements) {
+        JContainer<J2> container;
+        Markers markers = EMPTY;
+        if (psiElements.length == 0) {
+            Space space = Space.EMPTY;
+            if (parent.getNode().getChildren(null).length > 0) {
+                PsiElement lastChild = parent.getNode().getLastChildNode().getPsi();
+                if (lastChild instanceof PsiWhiteSpace) {
+                    space = trailingSpace(parent);
+                } else {
+                    space = spaceBefore(lastChild);
+                }
+            }
+            container = JContainer.build(singletonList(JRightPadded.build((J2) new J.Empty(randomId(), Space.EMPTY, EMPTY))
+                    .withAfter(space)));
+        } else {
+            List<JRightPadded<J2>> elements = new ArrayList<>(psiElements.length);
+            for (int i = 0; i < psiElements.length; i++) {
+                PsiElement psiElement = psiElements[i];
+                Expression expression = mapExpression(psiElement);
+
+                elements.add(JRightPadded.build((J2) expression).withAfter(spaceAfter(psiElement)));
+                if (i == psiElements.length - 1) {
+                    PsiElement maybeTrailingComma = nextSiblingSkipWhitespace(psiElement);
+                    if (maybeTrailingComma != null && ",".equals(maybeTrailingComma.getText())) {
+                        markers = markers.addIfAbsent(new TrailingComma(randomId(), spaceAfter(maybeTrailingComma)));
+                    }
+                }
+            }
+            container = JContainer.build(Space.EMPTY, elements, markers);
+        }
+        return container;
     }
 
     private boolean isCompoundStatement(PsiElement element) {

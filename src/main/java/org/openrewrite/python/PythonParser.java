@@ -27,7 +27,6 @@ import org.openrewrite.internal.MetricsHelper;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.PsiPythonMapper;
-import org.openrewrite.python.marker.PythonVersion;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.tree.ParsingEventListener;
@@ -40,7 +39,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
 
