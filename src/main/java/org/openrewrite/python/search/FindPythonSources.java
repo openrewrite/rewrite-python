@@ -18,6 +18,7 @@ package org.openrewrite.python.search;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.openrewrite.*;
+import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.marker.SearchResult;
 import org.openrewrite.python.marker.PythonVersion;
 import org.openrewrite.python.table.PythonSourceFile;
@@ -41,10 +42,14 @@ public class FindPythonSources extends Recipe {
     }
 
     @Override
-    protected TreeVisitor<?, ExecutionContext> getVisitor() {
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new TreeVisitor<Tree, ExecutionContext>() {
             @Override
-            public Tree visitSourceFile(SourceFile sourceFile, ExecutionContext ctx) {
+            public @Nullable Tree visit(@Nullable Tree tree, ExecutionContext ctx) {
+                if (!(tree instanceof SourceFile)) {
+                    return tree;
+                }
+                SourceFile sourceFile = (SourceFile) tree;
                 if (sourceFile.getSourcePath().toString().endsWith(".py")) {
                     PythonSourceFile.SourceFileType sourceFileType = null;
                     String languageLevel = "";

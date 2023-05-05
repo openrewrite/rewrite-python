@@ -199,8 +199,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitJavaSourceFile(JavaSourceFile sourceFile, PrintOutputCapture<P> p) {
-        Py.CompilationUnit cu = (Py.CompilationUnit) sourceFile;
+    public J visitCompilationUnit(Py.CompilationUnit cu, PrintOutputCapture<P> p) {
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
         for (JRightPadded<Import> anImport : cu.getPadding().getImports()) {
             visitRightPadded(anImport, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
