@@ -44,7 +44,6 @@ import static org.openrewrite.python.tree.PySpace.reindent;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
-
     @lombok.experimental.Delegate
     final AdaptedMethods<Py, PySpace.Location, PyLeftPadded.Location, PyRightPadded.Location, PyContainer.Location> pyMethods = new AdaptedMethods<>(new PythonPrinterAdapter<>(
             this::visitSpace,
@@ -199,8 +198,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitJavaSourceFile(JavaSourceFile sourceFile, PrintOutputCapture<P> p) {
-        Py.CompilationUnit cu = (Py.CompilationUnit) sourceFile;
+    public J visitCompilationUnit(Py.CompilationUnit cu, PrintOutputCapture<P> p) {
         beforeSyntax(cu, Location.COMPILATION_UNIT_PREFIX, p);
         for (JRightPadded<Import> anImport : cu.getPadding().getImports()) {
             visitRightPadded(anImport, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p);
@@ -671,7 +669,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         visit(method.getLeadingAnnotations(), p);
         List<J.Modifier> modifiers = ListUtils.mapFirst(
                 method.getModifiers(),
-                mod -> reindentPrefix(mod)
+                this::reindentPrefix
         );
         for (J.Modifier m : modifiers) {
             visitModifier(m, p);

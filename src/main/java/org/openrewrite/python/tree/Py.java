@@ -237,7 +237,7 @@ public interface Py extends J {
         }
 
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitJavaSourceFile(this, p);
+            return v.visitCompilationUnit(this, p);
         }
 
         @Override
