@@ -287,20 +287,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
     }
 
     public J visitMatchCase(Py.MatchCase ogMatch, P p) {
-        Py.MatchCase caze = ogMatch;
-        caze = caze.withPrefix(visitSpace(caze.getPrefix(), PySpace.Location.MATCH_CASE_PREFIX, p));
-        caze = caze.withMarkers(visitMarkers(caze.getMarkers(), p));
-        Expression temp = (Expression) visitExpression(caze, p);
+        Py.MatchCase case_ = ogMatch;
+        case_ = case_.withPrefix(visitSpace(case_.getPrefix(), PySpace.Location.MATCH_CASE_PREFIX, p));
+        case_ = case_.withMarkers(visitMarkers(case_.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(case_, p);
         if (!(temp instanceof Py.MatchCase)) {
             return temp;
         } else {
-            caze = (Py.MatchCase) temp;
+            case_ = (Py.MatchCase) temp;
         }
-        caze = caze.getPadding().withGuard(
-                visitLeftPadded(caze.getPadding().getGuard(), PyLeftPadded.Location.MATCH_CASE_GUARD, p)
+        case_ = case_.getPadding().withGuard(
+                visitLeftPadded(case_.getPadding().getGuard(), PyLeftPadded.Location.MATCH_CASE_GUARD, p)
         );
-        caze = caze.withPattern(visitAndCast(caze.getPattern(), p));
-        return caze;
+        case_ = case_.withPattern(visitAndCast(case_.getPattern(), p));
+        return case_;
     }
 
     public J visitSpecialParameter(Py.SpecialParameter ogParam, P p) {

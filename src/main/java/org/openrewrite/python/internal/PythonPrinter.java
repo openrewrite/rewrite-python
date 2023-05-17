@@ -554,23 +554,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitCase(J.Case caze, PrintOutputCapture<P> p) {
-        beforeSyntax(caze, Space.Location.CASE_PREFIX, p);
-        Expression elem = caze.getExpressions().get(0);
+    public J visitCase(J.Case case_, PrintOutputCapture<P> p) {
+        beforeSyntax(case_, Space.Location.CASE_PREFIX, p);
+        Expression elem = case_.getExpressions().get(0);
         if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
             p.append("case");
         }
-        visitContainer("", caze.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
-        visitSpace(caze.getPadding().getStatements().getBefore(), Space.Location.CASE, p);
-        visitStatements(caze.getPadding().getStatements().getPadding()
+        visitContainer("", case_.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
+        visitSpace(case_.getPadding().getStatements().getBefore(), Space.Location.CASE, p);
+        visitStatements(case_.getPadding().getStatements().getPadding()
                 .getElements(), p);
-        if (caze.getBody() instanceof Statement) {
-            visitRightPadded(caze.getPadding().getBody(), JRightPadded.Location.LANGUAGE_EXTENSION, p);
+        if (case_.getBody() instanceof Statement) {
+            visitRightPadded(case_.getPadding().getBody(), JRightPadded.Location.LANGUAGE_EXTENSION, p);
         } else {
-            visitRightPadded(caze.getPadding().getBody(), JRightPadded.Location.CASE_BODY, ";", p);
+            visitRightPadded(case_.getPadding().getBody(), JRightPadded.Location.CASE_BODY, ";", p);
         }
-        afterSyntax(caze, p);
-        return caze;
+        afterSyntax(case_, p);
+        return case_;
     }
 
     @Override
