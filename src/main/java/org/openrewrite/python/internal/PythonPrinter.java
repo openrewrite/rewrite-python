@@ -1223,12 +1223,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitReturn(J.Return retrn, PrintOutputCapture<P> p) {
-        beforeSyntax(retrn, Space.Location.RETURN_PREFIX, p);
+    public J visitReturn(J.Return return_, PrintOutputCapture<P> p) {
+        beforeSyntax(return_, Space.Location.RETURN_PREFIX, p);
         p.append("return");
-        visit(retrn.getExpression(), p);
-        afterSyntax(retrn, p);
-        return retrn;
+        visit(return_.getExpression(), p);
+        afterSyntax(return_, p);
+        return return_;
     }
 
     @Override
