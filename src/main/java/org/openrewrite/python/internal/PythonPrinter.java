@@ -453,17 +453,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
-        beforeSyntax(reindentPrefix(elze), Space.Location.ELSE_PREFIX, p);
+    public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
+        beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
         if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
-                elze.getBody() instanceof J.If) {
+                else_.getBody() instanceof J.If) {
             p.append("el");
         } else {
             p.append("else");
         }
-        visit(elze.getBody(), p);
-        afterSyntax(elze, p);
-        return elze;
+        visit(else_.getBody(), p);
+        afterSyntax(else_, p);
+        return else_;
     }
 
     @Override
