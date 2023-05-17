@@ -350,7 +350,7 @@ public class PsiPythonMapper {
             UUID groupId = randomId();
             imports = ListUtils.map(
                     imports,
-                    impoort -> impoort.withMarkers(impoort.getMarkers().add(new GroupedStatement(randomId(), groupId)))
+                    import_ -> import_.withMarkers(import_.getMarkers().add(new GroupedStatement(randomId(), groupId)))
             );
         }
 

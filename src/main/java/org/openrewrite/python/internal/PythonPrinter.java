@@ -1051,7 +1051,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitImport(Import impoort, PrintOutputCapture<P> p) {
+    public J visitImport(Import import_, PrintOutputCapture<P> p) {
         List<Import> statementGroup = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_CURSOR_KEY);
         if (statementGroup != null) {
             Integer statementGroupIndex = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY);
@@ -1059,15 +1059,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 throw new IllegalStateException();
             }
             if (statementGroupIndex != statementGroup.size() - 1) {
-                return impoort;
+                return import_;
             }
         }
 
         if (statementGroup == null) {
-            statementGroup = Collections.singletonList(impoort);
+            statementGroup = Collections.singletonList(import_);
         }
 
-        boolean printParens = impoort.getMarkers().findFirst(ImportParens.class).isPresent();
+        boolean printParens = import_.getMarkers().findFirst(ImportParens.class).isPresent();
 //        boolean hasNewline;
 //        {
 //            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
@@ -1081,19 +1081,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 //            hasNewline = hasNewlineHolder.get();
 //        }
 
-        beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
-        boolean isFrom = "".equals(impoort.getQualid().getSimpleName());
+        beforeSyntax(import_, Space.Location.IMPORT_PREFIX, p);
+        boolean isFrom = "".equals(import_.getQualid().getSimpleName());
         if (isFrom) {
             p.append("import");
         } else {
             p.append("from");
-            visit(impoort.getQualid().getTarget(), p);
-            visitSpace(impoort.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
+            visit(import_.getQualid().getTarget(), p);
+            visitSpace(import_.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
             p.append("import");
         }
 
         if (printParens) {
-            visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
+            visitPythonExtraPadding(import_, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
             p.append("(");
         }
 
@@ -1115,13 +1115,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         if (printParens) {
-            visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
+            visitPythonExtraPadding(import_, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
             p.append(")");
         }
 
 
-        afterSyntax(impoort, p);
-        return impoort;
+        afterSyntax(import_, p);
+        return import_;
     }
 //    }
 
@@ -1644,10 +1644,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
-        public J visitImport(Import impoort, AtomicBoolean hasNewline) {
-            impoort = (Import) super.visitImport(impoort, hasNewline);
-            visitLeftPadded(impoort.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
-            return impoort;
+        public J visitImport(Import import_, AtomicBoolean hasNewline) {
+            import_ = (Import) super.visitImport(import_, hasNewline);
+            visitLeftPadded(import_.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
+            return import_;
         }
     }
 
