@@ -982,11 +982,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitCatch(J.Try.Catch catzh, PrintOutputCapture<P> p) {
-        beforeSyntax(reindentPrefix(catzh), Space.Location.CATCH_PREFIX, p);
+    public J visitCatch(J.Try.Catch catch_, PrintOutputCapture<P> p) {
+        beforeSyntax(reindentPrefix(catch_), Space.Location.CATCH_PREFIX, p);
         p.append("except");
 
-        J.VariableDeclarations multiVariable = catzh.getParameter().getTree();
+        J.VariableDeclarations multiVariable = catch_.getParameter().getTree();
         beforeSyntax(multiVariable, Space.Location.VARIABLE_DECLARATIONS_PREFIX, p);
         visit(multiVariable.getTypeExpression(), p);
         for (JRightPadded<J.VariableDeclarations.NamedVariable> paddedVariable : multiVariable.getPadding().getVariables()) {
@@ -1002,9 +1002,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
         afterSyntax(multiVariable, p);
 
-        visit(catzh.getBody(), p);
-        afterSyntax(catzh, p);
-        return catzh;
+        visit(catch_.getBody(), p);
+        afterSyntax(catch_, p);
+        return catch_;
     }
 
     @Override
