@@ -166,20 +166,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
     }
 
     public J visitAssertStatement(Py.AssertStatement ogAssert, P p) {
-        Py.AssertStatement assrt = ogAssert;
-        assrt = assrt.withPrefix(visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p));
-        assrt = assrt.withMarkers(visitMarkers(assrt.getMarkers(), p));
-        Statement temp = (Statement) visitStatement(assrt, p);
+        Py.AssertStatement assert_ = ogAssert;
+        assert_ = assert_.withPrefix(visitSpace(assert_.getPrefix(), PySpace.Location.ASSERT_PREFIX, p));
+        assert_ = assert_.withMarkers(visitMarkers(assert_.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(assert_, p);
         if (!(temp instanceof Py.AssertStatement)) {
             return temp;
         } else {
-            assrt = (Py.AssertStatement) temp;
+            assert_ = (Py.AssertStatement) temp;
         }
-        assrt = assrt.getPadding().withExpressions(ListUtils.map(
-                assrt.getPadding().getExpressions(),
+        assert_ = assert_.getPadding().withExpressions(ListUtils.map(
+                assert_.getPadding().getExpressions(),
                 t -> visitRightPadded(t, PyRightPadded.Location.ASSERT_ELEMENT, p)
         ));
-        return assrt;
+        return assert_;
     }
 
     public J visitYieldExpression(Py.YieldExpression ogYield, P p) {

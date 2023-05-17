@@ -1317,16 +1317,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitAssertStatement(Py.AssertStatement assrt, PrintOutputCapture<P> p) {
-        visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
+    public J visitAssertStatement(Py.AssertStatement assert_, PrintOutputCapture<P> p) {
+        visitSpace(assert_.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
         p.append("assert");
         visitRightPadded(
-                assrt.getPadding().getExpressions(),
+                assert_.getPadding().getExpressions(),
                 PyRightPadded.Location.ASSERT_ELEMENT,
                 ",",
                 p
         );
-        return assrt;
+        return assert_;
     }
 
     @Override
