@@ -544,13 +544,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         return lambda;
     }
 
-    public J visitSwitch(J.Switch switzh, PrintOutputCapture<P> p) {
-        beforeSyntax(switzh, Space.Location.SWITCH_PREFIX, p);
+    public J visitSwitch(J.Switch switch_, PrintOutputCapture<P> p) {
+        beforeSyntax(switch_, Space.Location.SWITCH_PREFIX, p);
         p.append("match");
-        visit(switzh.getSelector(), p);
-        visit(switzh.getCases(), p);
-        afterSyntax(switzh, p);
-        return switzh;
+        visit(switch_.getSelector(), p);
+        visit(switch_.getCases(), p);
+        afterSyntax(switch_, p);
+        return switch_;
     }
 
     @Override
