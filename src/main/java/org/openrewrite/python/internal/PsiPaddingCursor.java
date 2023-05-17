@@ -144,7 +144,7 @@ public class PsiPaddingCursor {
         }
 
         /**
-         * Marker interface; declares that discarding thie state will not discard unused whitespace.
+         * Marker interface; declares that discarding this state will not discard unused whitespace.
          */
         interface Discardable extends State {
         }
