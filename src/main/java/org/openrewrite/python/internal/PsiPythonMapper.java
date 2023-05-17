@@ -639,10 +639,10 @@ public class PsiPythonMapper {
             );
         }
 
-        JLeftPadded<J.Block> finallie = null;
+        JLeftPadded<J.Block> finally_ = null;
         if (element.getFinallyPart() != null) {
             Space finallyPrefix = ctx.nextStatementPrefix(element.getFinallyPart());
-            finallie = JLeftPadded.build(
+            finally_ = JLeftPadded.build(
                     mapCompoundBlock(element.getFinallyPart(), ctx)
             ).withBefore(finallyPrefix);
         }
@@ -654,7 +654,7 @@ public class PsiPythonMapper {
                 null,
                 tryBlock,
                 catches,
-                finallie
+                finally_
         );
     }
 
