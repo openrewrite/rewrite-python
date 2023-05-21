@@ -453,17 +453,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitElse(J.If.Else elze, PrintOutputCapture<P> p) {
-        beforeSyntax(reindentPrefix(elze), Space.Location.ELSE_PREFIX, p);
+    public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
+        beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
         if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
-                elze.getBody() instanceof J.If) {
+                else_.getBody() instanceof J.If) {
             p.append("el");
         } else {
             p.append("else");
         }
-        visit(elze.getBody(), p);
-        afterSyntax(elze, p);
-        return elze;
+        visit(else_.getBody(), p);
+        afterSyntax(else_, p);
+        return else_;
     }
 
     @Override
@@ -544,33 +544,33 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         return lambda;
     }
 
-    public J visitSwitch(J.Switch switzh, PrintOutputCapture<P> p) {
-        beforeSyntax(switzh, Space.Location.SWITCH_PREFIX, p);
+    public J visitSwitch(J.Switch switch_, PrintOutputCapture<P> p) {
+        beforeSyntax(switch_, Space.Location.SWITCH_PREFIX, p);
         p.append("match");
-        visit(switzh.getSelector(), p);
-        visit(switzh.getCases(), p);
-        afterSyntax(switzh, p);
-        return switzh;
+        visit(switch_.getSelector(), p);
+        visit(switch_.getCases(), p);
+        afterSyntax(switch_, p);
+        return switch_;
     }
 
     @Override
-    public J visitCase(J.Case caze, PrintOutputCapture<P> p) {
-        beforeSyntax(caze, Space.Location.CASE_PREFIX, p);
-        Expression elem = caze.getExpressions().get(0);
+    public J visitCase(J.Case case_, PrintOutputCapture<P> p) {
+        beforeSyntax(case_, Space.Location.CASE_PREFIX, p);
+        Expression elem = case_.getExpressions().get(0);
         if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
             p.append("case");
         }
-        visitContainer("", caze.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
-        visitSpace(caze.getPadding().getStatements().getBefore(), Space.Location.CASE, p);
-        visitStatements(caze.getPadding().getStatements().getPadding()
+        visitContainer("", case_.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
+        visitSpace(case_.getPadding().getStatements().getBefore(), Space.Location.CASE, p);
+        visitStatements(case_.getPadding().getStatements().getPadding()
                 .getElements(), p);
-        if (caze.getBody() instanceof Statement) {
-            visitRightPadded(caze.getPadding().getBody(), JRightPadded.Location.LANGUAGE_EXTENSION, p);
+        if (case_.getBody() instanceof Statement) {
+            visitRightPadded(case_.getPadding().getBody(), JRightPadded.Location.LANGUAGE_EXTENSION, p);
         } else {
-            visitRightPadded(caze.getPadding().getBody(), JRightPadded.Location.CASE_BODY, ";", p);
+            visitRightPadded(case_.getPadding().getBody(), JRightPadded.Location.CASE_BODY, ";", p);
         }
-        afterSyntax(caze, p);
-        return caze;
+        afterSyntax(case_, p);
+        return case_;
     }
 
     @Override
@@ -982,11 +982,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitCatch(J.Try.Catch catzh, PrintOutputCapture<P> p) {
-        beforeSyntax(reindentPrefix(catzh), Space.Location.CATCH_PREFIX, p);
+    public J visitCatch(J.Try.Catch catch_, PrintOutputCapture<P> p) {
+        beforeSyntax(reindentPrefix(catch_), Space.Location.CATCH_PREFIX, p);
         p.append("except");
 
-        J.VariableDeclarations multiVariable = catzh.getParameter().getTree();
+        J.VariableDeclarations multiVariable = catch_.getParameter().getTree();
         beforeSyntax(multiVariable, Space.Location.VARIABLE_DECLARATIONS_PREFIX, p);
         visit(multiVariable.getTypeExpression(), p);
         for (JRightPadded<J.VariableDeclarations.NamedVariable> paddedVariable : multiVariable.getPadding().getVariables()) {
@@ -1002,9 +1002,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
         afterSyntax(multiVariable, p);
 
-        visit(catzh.getBody(), p);
-        afterSyntax(catzh, p);
-        return catzh;
+        visit(catch_.getBody(), p);
+        afterSyntax(catch_, p);
+        return catch_;
     }
 
     @Override
@@ -1051,7 +1051,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitImport(Import impoort, PrintOutputCapture<P> p) {
+    public J visitImport(Import import_, PrintOutputCapture<P> p) {
         List<Import> statementGroup = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_CURSOR_KEY);
         if (statementGroup != null) {
             Integer statementGroupIndex = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY);
@@ -1059,15 +1059,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 throw new IllegalStateException();
             }
             if (statementGroupIndex != statementGroup.size() - 1) {
-                return impoort;
+                return import_;
             }
         }
 
         if (statementGroup == null) {
-            statementGroup = Collections.singletonList(impoort);
+            statementGroup = Collections.singletonList(import_);
         }
 
-        boolean printParens = impoort.getMarkers().findFirst(ImportParens.class).isPresent();
+        boolean printParens = import_.getMarkers().findFirst(ImportParens.class).isPresent();
 //        boolean hasNewline;
 //        {
 //            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
@@ -1081,19 +1081,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 //            hasNewline = hasNewlineHolder.get();
 //        }
 
-        beforeSyntax(impoort, Space.Location.IMPORT_PREFIX, p);
-        boolean isFrom = "".equals(impoort.getQualid().getSimpleName());
+        beforeSyntax(import_, Space.Location.IMPORT_PREFIX, p);
+        boolean isFrom = "".equals(import_.getQualid().getSimpleName());
         if (isFrom) {
             p.append("import");
         } else {
             p.append("from");
-            visit(impoort.getQualid().getTarget(), p);
-            visitSpace(impoort.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
+            visit(import_.getQualid().getTarget(), p);
+            visitSpace(import_.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
             p.append("import");
         }
 
         if (printParens) {
-            visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
+            visitPythonExtraPadding(import_, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
             p.append("(");
         }
 
@@ -1115,13 +1115,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         if (printParens) {
-            visitPythonExtraPadding(impoort, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
+            visitPythonExtraPadding(import_, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
             p.append(")");
         }
 
 
-        afterSyntax(impoort, p);
-        return impoort;
+        afterSyntax(import_, p);
+        return import_;
     }
 //    }
 
@@ -1223,12 +1223,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitReturn(J.Return retrn, PrintOutputCapture<P> p) {
-        beforeSyntax(retrn, Space.Location.RETURN_PREFIX, p);
+    public J visitReturn(J.Return return_, PrintOutputCapture<P> p) {
+        beforeSyntax(return_, Space.Location.RETURN_PREFIX, p);
         p.append("return");
-        visit(retrn.getExpression(), p);
-        afterSyntax(retrn, p);
-        return retrn;
+        visit(return_.getExpression(), p);
+        afterSyntax(return_, p);
+        return return_;
     }
 
     @Override
@@ -1317,16 +1317,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitAssertStatement(Py.AssertStatement assrt, PrintOutputCapture<P> p) {
-        visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
+    public J visitAssertStatement(Py.AssertStatement assert_, PrintOutputCapture<P> p) {
+        visitSpace(assert_.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
         p.append("assert");
         visitRightPadded(
-                assrt.getPadding().getExpressions(),
+                assert_.getPadding().getExpressions(),
                 PyRightPadded.Location.ASSERT_ELEMENT,
                 ",",
                 p
         );
-        return assrt;
+        return assert_;
     }
 
     @Override
@@ -1644,10 +1644,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
-        public J visitImport(Import impoort, AtomicBoolean hasNewline) {
-            impoort = (Import) super.visitImport(impoort, hasNewline);
-            visitLeftPadded(impoort.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
-            return impoort;
+        public J visitImport(Import import_, AtomicBoolean hasNewline) {
+            import_ = (Import) super.visitImport(import_, hasNewline);
+            visitLeftPadded(import_.getPadding().getAlias(), JLeftPadded.Location.LANGUAGE_EXTENSION, hasNewline);
+            return import_;
         }
     }
 

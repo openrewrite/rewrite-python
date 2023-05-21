@@ -350,7 +350,7 @@ public class PsiPythonMapper {
             UUID groupId = randomId();
             imports = ListUtils.map(
                     imports,
-                    impoort -> impoort.withMarkers(impoort.getMarkers().add(new GroupedStatement(randomId(), groupId)))
+                    import_ -> import_.withMarkers(import_.getMarkers().add(new GroupedStatement(randomId(), groupId)))
             );
         }
 
@@ -639,10 +639,10 @@ public class PsiPythonMapper {
             );
         }
 
-        JLeftPadded<J.Block> finallie = null;
+        JLeftPadded<J.Block> finally_ = null;
         if (element.getFinallyPart() != null) {
             Space finallyPrefix = ctx.nextStatementPrefix(element.getFinallyPart());
-            finallie = JLeftPadded.build(
+            finally_ = JLeftPadded.build(
                     mapCompoundBlock(element.getFinallyPart(), ctx)
             ).withBefore(finallyPrefix);
         }
@@ -654,7 +654,7 @@ public class PsiPythonMapper {
                 null,
                 tryBlock,
                 catches,
-                finallie
+                finally_
         );
     }
 
