@@ -27,7 +27,6 @@ import org.openrewrite.internal.MetricsHelper;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.PsiPythonMapper;
-import org.openrewrite.python.marker.PythonVersion;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.tree.ParsingEventListener;
@@ -40,9 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
-
-import static java.util.stream.Collectors.toList;
+import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -53,7 +50,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     private final JavaTypeCache typeCache;
 
     @Override
-    public List<Py.CompilationUnit> parse(String... sources) {
+    public Stream<Py.CompilationUnit> parse(String... sources) {
         List<Input> inputs = new ArrayList<>(sources.length);
         for (int i = 0; i < sources.length; i++) {
             Path path = Paths.get("p" + i + ".py");
@@ -73,7 +70,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     }
 
     @Override
-    public List<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
+    public Stream<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
@@ -97,8 +94,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
                         return null;
                     }
                 })
-                .filter(Objects::nonNull)
-                .collect(toList());
+                .filter(Objects::nonNull);
     }
 
     public enum LanguageLevel {

@@ -38,11 +38,6 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return "python";
     }
 
-    @Override
-    public J visitJavaSourceFile(JavaSourceFile cu, P p) {
-        return cu instanceof Py.CompilationUnit ? visitCompilationUnit((Py.CompilationUnit) cu, p) : cu;
-    }
-
     public J visitCompilationUnit(Py.CompilationUnit cu, P p) {
         Py.CompilationUnit c = cu;
         c = c.withPrefix(visitSpace(c.getPrefix(), Space.Location.COMPILATION_UNIT_PREFIX, p));

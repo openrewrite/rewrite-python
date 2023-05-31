@@ -134,8 +134,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public JavaSourceFile visitJavaSourceFile(JavaSourceFile cu, P p) {
-        return (JavaSourceFile) super.visitJavaSourceFile(cu, p);
+    public Py.CompilationUnit visitCompilationUnit(Py.CompilationUnit cu, P p) {
+        return (Py.CompilationUnit) super.visitCompilationUnit(cu, p);
     }
 
     @Override
