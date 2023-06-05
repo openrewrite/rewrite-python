@@ -610,7 +610,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (literal.getMarkers().findFirst(ImplicitNone.class).isPresent()) {
                 literal = literal.withValueSource("");
             } else {
-                literal = literal.withValueSource("None");
+                if ("null".equals(literal.getValueSource())) {
+                    literal = literal.withValueSource("None");
+                }
             }
         }
 

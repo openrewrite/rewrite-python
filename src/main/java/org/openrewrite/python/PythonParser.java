@@ -181,7 +181,8 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
 
     @Override
     public boolean accept(Path path) {
-        return path.toString().endsWith(".py");
+        String pathString = path.toString();
+        return pathString.endsWith(".py") || pathString.endsWith(".pyi");
     }
 
     @Override

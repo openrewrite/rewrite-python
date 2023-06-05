@@ -2320,7 +2320,7 @@ public class PsiPythonMapper {
                 spaceBefore(element),
                 EMPTY,
                 null,
-                "null",
+                element.isEllipsis() ? "..." : "null",
                 null,
                 JavaType.Primitive.Null
         );
