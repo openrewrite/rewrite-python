@@ -1,6 +1,7 @@
 plugins {
-    id("org.openrewrite.build.recipe-library") version "latest.release"
-    id("org.openrewrite.build.shadow") version "latest.release"
+    id("org.openrewrite.build.recipe-library") version "latest.integration"
+    id("org.openrewrite.build.shadow") version "latest.integration"
+    id("nebula.release") version "17.1.0"
 }
 group = "org.openrewrite"
 description = "Rewrite Python"
@@ -10,12 +11,28 @@ task("printIntellijDependencies", JavaExec::class) {
     classpath = sourceSets["main"].runtimeClasspath
 }
 
-val latest = rewriteRecipe.rewriteVersion.get()
+configurations {
+    all {
+        resolutionStrategy {
+            cacheChangingModulesFor(1, TimeUnit.HOURS)
+            cacheDynamicVersionsFor(1, TimeUnit.HOURS)
+            exclude("ch.qos.logback")
+        }
+    }
+}
+
+val latest = if (project.hasProperty("releasing")) {
+    "latest.release"
+} else {
+    "latest.integration"
+}
+
 val lib = fileTree("lib")
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
 
     implementation(platform("org.openrewrite:rewrite-bom:$latest"))
+    implementation("org.openrewrite:rewrite-core")
     implementation("org.openrewrite:rewrite-java")
     implementation(lib)
 
@@ -35,6 +52,14 @@ dependencies {
     testImplementation("org.openrewrite:rewrite-test")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+    mavenCentral()
 }
 
 val shadowJar = tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {

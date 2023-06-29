@@ -24,6 +24,7 @@ import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
+import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
@@ -42,7 +43,6 @@ public class PythonParser implements Parser {
     private final List<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
-
     @Override
     public Stream<SourceFile> parse(String... sources) {
         List<Input> inputs = new ArrayList<>(sources.length);
