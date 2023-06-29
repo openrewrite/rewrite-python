@@ -14,8 +14,8 @@ task("printIntellijDependencies", JavaExec::class) {
 configurations {
     all {
         resolutionStrategy {
-            cacheChangingModulesFor(1, TimeUnit.MINUTES)
-            cacheDynamicVersionsFor(1, TimeUnit.MINUTES)
+            cacheChangingModulesFor(1, TimeUnit.HOURS)
+            cacheDynamicVersionsFor(1, TimeUnit.HOURS)
             exclude("ch.qos.logback")
         }
     }
