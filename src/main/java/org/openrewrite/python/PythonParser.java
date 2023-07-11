@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -40,7 +41,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PythonParser implements Parser {
     private final LanguageLevel languageLevel;
-    private final List<NamedStyles> styles;
+    private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
     @Override
@@ -71,7 +72,7 @@ public class PythonParser implements Parser {
         return acceptedInputs(inputs).map(sourceFile -> {
             Path path = sourceFile.getRelativePath(relativeTo);
             try (EncodingDetectingInputStream is = sourceFile.getSource(ctx)) {
-                Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), mapLanguageLevel(languageLevel))
+                Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), styles, mapLanguageLevel(languageLevel))
                         .mapSource(is.readFully());
                 parsingListener.parsed(sourceFile, py);
                 return py;
@@ -189,7 +190,7 @@ public class PythonParser implements Parser {
         private LanguageLevel languageLevel = LanguageLevel.PYTHON_312;
         private JavaTypeCache typeCache = new JavaTypeCache();
         private boolean logCompilationWarningsAndErrors;
-        private final List<NamedStyles> styles = new ArrayList<>();
+        private final Collection<NamedStyles> styles = new ArrayList<>();
 
         public Builder() {
             super(Py.CompilationUnit.class);

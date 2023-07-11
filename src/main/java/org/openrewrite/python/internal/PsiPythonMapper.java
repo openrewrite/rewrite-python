@@ -35,6 +35,7 @@ import org.openrewrite.marker.Markers;
 import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.python.tree.PySpace;
+import org.openrewrite.style.NamedStyles;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -55,15 +56,18 @@ public class PsiPythonMapper {
     private final Path path;
     private final Charset charset;
     private final boolean isCharsetBomMarked;
+    private final Collection<NamedStyles> styles;
     private final LanguageLevel languageLevel;
 
     public PsiPythonMapper(Path path,
                            Charset charset,
                            boolean isCharsetBomMarked,
+                           Collection<NamedStyles> styles,
                            LanguageLevel languageLevel) {
         this.path = path;
         this.charset = charset;
         this.isCharsetBomMarked = isCharsetBomMarked;
+        this.styles = styles;
         this.languageLevel = languageLevel;
     }
 
@@ -127,9 +131,9 @@ public class PsiPythonMapper {
                 mapBlock(element, null, element.getStatements(), ctx)
         );
 
-        Markers markers = EMPTY;
+        Markers markers = Markers.build(styles);
         if (!element.getText().endsWith("\n")) {
-            markers = Markers.build(singletonList(new SuppressNewline(randomId())));
+            markers = markers.addIfAbsent(new SuppressNewline(randomId()));
         }
 
         Space eof = ctx.paddingCursor.consumeRemainingAndExpectEOF();
