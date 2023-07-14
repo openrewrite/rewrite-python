@@ -45,7 +45,7 @@ public class ChangeMethodName extends Recipe {
 
     @Override
     public String getDisplayName() {
-        return "Example recipe to change a method name";
+        return "Change method name";
     }
 
     @Override

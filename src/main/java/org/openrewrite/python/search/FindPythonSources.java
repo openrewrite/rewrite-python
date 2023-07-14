@@ -33,12 +33,12 @@ public class FindPythonSources extends Recipe {
 
     @Override
     public String getDisplayName() {
-        return "Find Python sources and collect data metrics";
+        return "Find Python sources and collect metrics on them";
     }
 
     @Override
     public String getDescription() {
-        return "Use data table to collect source files types and counts of files with extensions `.py`.";
+        return "Creates a data table which contains detailed information about all `.py` files such as where those files are and what version of Python is being used.";
     }
 
     @Override
