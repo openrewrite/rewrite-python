@@ -40,7 +40,7 @@ dependencies {
     implementation("io.micrometer:micrometer-core:1.9.+")
     runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
-    runtimeOnly("com.google.guava:guava:31.1-jre")
+    runtimeOnly("com.google.guava:guava:32.1.2-jre")
     runtimeOnly("one.util:streamex:0.8.1")
 
     implementation("org.ow2.asm:asm:9.5")
