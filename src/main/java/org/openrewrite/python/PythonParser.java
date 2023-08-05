@@ -69,16 +69,16 @@ public class PythonParser implements Parser {
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
-        return acceptedInputs(inputs).map(sourceFile -> {
-            Path path = sourceFile.getRelativePath(relativeTo);
-            try (EncodingDetectingInputStream is = sourceFile.getSource(ctx)) {
+        return acceptedInputs(inputs).map(input -> {
+            Path path = input.getRelativePath(relativeTo);
+            try (EncodingDetectingInputStream is = input.getSource(ctx)) {
                 Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), styles, mapLanguageLevel(languageLevel))
                         .mapSource(is.readFully());
-                parsingListener.parsed(sourceFile, py);
-                return py;
+                parsingListener.parsed(input, py);
+                return requirePrintEqualsInput(py, input, relativeTo, ctx);
             } catch (Throwable t) {
                 ctx.getOnError().accept(t);
-                return ParseError.build(this, sourceFile, relativeTo, ctx, t);
+                return ParseError.build(this, input, relativeTo, ctx, t);
             }
         });
     }
