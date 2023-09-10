@@ -44,6 +44,7 @@ public class PythonParser implements Parser {
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
+
     @Override
     public Stream<SourceFile> parse(String... sources) {
         List<Input> inputs = new ArrayList<>(sources.length);
@@ -71,6 +72,7 @@ public class PythonParser implements Parser {
 
         return acceptedInputs(inputs).map(input -> {
             Path path = input.getRelativePath(relativeTo);
+            parsingListener.startedParsing(input);
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
                 Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), styles, mapLanguageLevel(languageLevel))
                         .mapSource(is.readFully());
