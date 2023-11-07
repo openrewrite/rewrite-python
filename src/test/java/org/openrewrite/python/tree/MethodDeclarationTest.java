@@ -100,4 +100,16 @@ class MethodDeclarationTest implements RewriteTest {
           )
         );
     }
+
+    @Test
+    void typedParams() {
+        rewriteRun(
+          python(
+            """
+              def foo(a: int = 0, b: str = ''):
+                  pass
+              """
+          )
+        );
+    }
 }

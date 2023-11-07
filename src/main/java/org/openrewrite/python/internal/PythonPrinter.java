@@ -692,15 +692,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visitModifier(m, p);
         }
 
-        TypeTree type = multiVariable.getTypeExpression();
-        if (type instanceof Py.SpecialParameter) {
-            Py.SpecialParameter special = (Py.SpecialParameter) type;
-            visit(special, p);
-            type = special.getTypeHint();
-        }
-
         visitRightPadded(multiVariable.getPadding().getVariables(), JRightPadded.Location.NAMED_VARIABLE, ",", p);
-        visit(type, p);
 
         afterSyntax(multiVariable, p);
         return multiVariable;
@@ -709,10 +701,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitVariable(J.VariableDeclarations.NamedVariable variable, PrintOutputCapture<P> p) {
         beforeSyntax(variable, Space.Location.VARIABLE_PREFIX, p);
+        J.VariableDeclarations vd = getCursor().getParentTreeCursor().getValue();
+        TypeTree type = vd.getTypeExpression();
+        if (type instanceof Py.SpecialParameter) {
+            Py.SpecialParameter special = (Py.SpecialParameter) type;
+            visit(special, p);
+            type = special.getTypeHint();
+        }
         if (variable.getName().getSimpleName().isEmpty()) {
             visit(variable.getInitializer(), p);
         } else {
             visit(variable.getName(), p);
+            visit(type, p);
             visitLeftPadded("=", variable.getPadding().getInitializer(), JLeftPadded.Location.VARIABLE_INITIALIZER, p);
         }
         afterSyntax(variable, p);
