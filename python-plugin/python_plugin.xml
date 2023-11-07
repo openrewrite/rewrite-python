@@ -10,6 +10,7 @@
       <element id="library" level="project" name="automaton" />
       <element id="library" level="project" name="Guava" />
       <element id="library" level="project" name="kotlinx-collections-immutable-jvm" />
+      <element id="module-output" name="intellij.python.parser" />
       <element id="module-output" name="intellij.platform.core" />
       <element id="module-output" name="intellij.platform.util" />
       <element id="library" level="project" name="Log4J" />

@@ -21,7 +21,10 @@ import com.intellij.ide.plugins.PluginUtilImpl;
 import com.intellij.ide.startup.impl.StartupManagerImpl;
 import com.intellij.lang.*;
 import com.intellij.lang.impl.PsiBuilderFactoryImpl;
-import com.intellij.mock.*;
+import com.intellij.mock.MockApplication;
+import com.intellij.mock.MockFileDocumentManagerImpl;
+import com.intellij.mock.MockProject;
+import com.intellij.mock.MockPsiManager;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ModalityState;
@@ -59,7 +62,6 @@ import com.intellij.psi.impl.source.resolve.reference.ReferenceProvidersRegistry
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.psi.util.CachedValuesManager;
 import com.intellij.testFramework.LightVirtualFile;
-import com.intellij.util.ArrayUtil;
 import com.intellij.util.CachedValuesManagerImpl;
 import com.intellij.util.IncorrectOperationException;
 import com.intellij.util.KeyedLazyInstance;
@@ -67,7 +69,6 @@ import com.intellij.util.messages.MessageBus;
 import com.intellij.util.text.CharArrayCharSequence;
 import com.jetbrains.python.*;
 import com.jetbrains.python.documentation.doctest.PyDocstringTokenSetContributor;
-import com.jetbrains.python.psi.LanguageLevel;
 import com.jetbrains.python.psi.PyFile;
 import com.jetbrains.python.psi.PyPsiFacade;
 import com.jetbrains.python.psi.impl.PyPsiFacadeImpl;
@@ -86,6 +87,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+
+import static kotlinx.coroutines.CoroutineScopeKt.MainScope;
 
 @SuppressWarnings({"SameParameterValue", "UnstableApiUsage", "unchecked", "NullableProblems", "rawtypes"})
 public class IntelliJUtils {
@@ -197,7 +200,7 @@ public class IntelliJUtils {
 
     @SuppressWarnings({"NullableProblems", "UnstableApiUsage", "deprecation"})
     @org.openrewrite.internal.lang.Nullable
-    public static PyFile parsePythonSource(String filename, String sourceText, LanguageLevel languageLevel) {
+    public static PyFile parsePythonSource(String filename, String sourceText, com.jetbrains.python.psi.LanguageLevel languageLevel) {
         Disposable disposable = () -> {
         };
 
@@ -223,11 +226,13 @@ public class IntelliJUtils {
         app.registerService(PsiBuilderFactory.class, new PsiBuilderFactoryImpl());
         app.registerService(DefaultASTFactory.class, new DefaultASTFactoryImpl());
         app.registerService(ReferenceProvidersRegistry.class, new ReferenceProvidersRegistryImpl());
+        app.registerService(PyElementTypesFacade.class, new PyElementTypesFacadeImpl());
+        app.registerService(PyLanguageFacade.class, new PyLanguageFacadeImpl());
 
         PluginDescriptor pluginDescriptor = new DefaultPluginDescriptor("io.moderne.test");
         registerExtensionPoint(pluginDescriptor, app.getExtensionArea(), FileTypeFactory.FILE_TYPE_FACTORY_EP, FileTypeFactory.class);
         registerExtensionPoint(pluginDescriptor, app.getExtensionArea(), MetaLanguage.EP_NAME, MetaLanguage.class);
-        registerExtensionPoint(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, PythonDialectsTokenSetContributor.class);
+        registerExtensionPoint(pluginDescriptor, app, PythonDialectsTokenSetContributorBase.EP_NAME, PythonDialectsTokenSetContributor.class);
         registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PythonTokenSetContributor());
         registerExtension(pluginDescriptor, app, PythonDialectsTokenSetContributor.EP_NAME, new PyDocstringTokenSetContributor());
 
@@ -263,7 +268,7 @@ public class IntelliJUtils {
         project.registerService(PsiDocumentManager.class, new MockPsiDocumentManager());
         project.registerService(TreeAspect.class, new TreeAspect());
         project.registerService(CachedValuesManager.class, new CachedValuesManagerImpl(project, new PsiCachedValuesFactory(project)));
-        project.registerService(StartupManager.class, new StartupManagerImpl(project));
+        project.registerService(StartupManager.class, new StartupManagerImpl(project, MainScope()));
 
         // That's for reparse routines
         project.registerService(PomModel.class, new PomModelImpl(project));
@@ -510,12 +515,6 @@ public class IntelliJUtils {
         @Override
         public boolean isFileIgnored(@NotNull VirtualFile file) {
             return false;
-        }
-
-        @Override
-        @SuppressWarnings("removal")
-        public String @NotNull [] getAssociatedExtensions(@NotNull FileType type) {
-            return ArrayUtil.EMPTY_STRING_ARRAY;
         }
 
         @Override
