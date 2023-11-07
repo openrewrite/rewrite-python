@@ -23,7 +23,7 @@ In this directory, you'll find the following files:
    1. Clone `git@github.com:JetBrains/intellij-community.git` in the same parent directory as the Rewrite clone.
    2. Add a new artifact export to the IntelliJ Community project: 
       ```bash
-      cp python_plugin.xml ../intellij-community/.idea/artifacts/python_plugin.xml
+      cp python-plugin/python_plugin.xml ../intellij-community/.idea/artifacts/python_plugin.xml
       ```
    3. Open the Intellij Community project in IntelliJ IDEA.
    4. Build the bloated JAR via "Build > Build Artifacts ... > python-plugin".

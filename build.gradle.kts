@@ -38,7 +38,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
     implementation("io.micrometer:micrometer-core:1.9.+")
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3")
+    runtimeOnly("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.6")
     runtimeOnly("it.unimi.dsi:fastutil:8.5.2")
     runtimeOnly("com.google.guava:guava:31.1-jre")
     runtimeOnly("one.util:streamex:0.8.1")
