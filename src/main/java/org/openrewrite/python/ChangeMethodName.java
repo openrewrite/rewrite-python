@@ -45,7 +45,7 @@ public class ChangeMethodName extends Recipe {
 
     @Override
     public String getDisplayName() {
-        return "Example recipe to change a method name";
+        return "Change method name";
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ChangeMethodName extends Recipe {
     }
 
     @Override
-    protected TreeVisitor<?, ExecutionContext> getVisitor() {
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new PythonIsoVisitor<ExecutionContext>() {
             @Override
             public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext executionContext) {

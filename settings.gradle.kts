@@ -1,3 +1,8 @@
-rootProject.name = "rewrite-python"
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
 
-enableFeaturePreview("VERSION_ORDERING_V2")
+rootProject.name = "rewrite-python"

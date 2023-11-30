@@ -15,20 +15,16 @@
  */
 package org.openrewrite.python;
 
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Timer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.openrewrite.ExecutionContext;
-import org.openrewrite.InMemoryExecutionContext;
-import org.openrewrite.Parser;
+import org.openrewrite.*;
 import org.openrewrite.internal.EncodingDetectingInputStream;
-import org.openrewrite.internal.MetricsHelper;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
+import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
@@ -37,21 +33,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class PythonParser implements Parser<Py.CompilationUnit> {
+public class PythonParser implements Parser {
     private final LanguageLevel languageLevel;
-    private final List<NamedStyles> styles;
+    private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
 
     @Override
-    public List<Py.CompilationUnit> parse(String... sources) {
+    public Stream<SourceFile> parse(String... sources) {
         List<Input> inputs = new ArrayList<>(sources.length);
         for (int i = 0; i < sources.length; i++) {
             Path path = Paths.get("p" + i + ".py");
@@ -71,32 +69,23 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
     }
 
     @Override
-    public List<Py.CompilationUnit> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
+    public Stream<SourceFile> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
-        return acceptedInputs(inputs).stream()
-                .map(sourceFile -> {
-                    Timer.Builder timer = Timer.builder("rewrite.parse")
-                            .description("The time spent parsing an Python file")
-                            .tag("file.type", "Python");
-                    Timer.Sample sample = Timer.start();
-                    Path path = sourceFile.getRelativePath(relativeTo);
-                    try (EncodingDetectingInputStream is = sourceFile.getSource(ctx)) {
-                        Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), mapLanguageLevel(languageLevel))
-                                .mapSource(is.readFully());
-                        sample.stop(MetricsHelper.successTags(timer).register(Metrics.globalRegistry));
-                        parsingListener.parsed(sourceFile, py);
-                        return py;
-                    } catch (Throwable t) {
-                        sample.stop(MetricsHelper.errorTags(timer, t).register(Metrics.globalRegistry));
-                        pctx.parseFailure(sourceFile, relativeTo, this, t);
-                        ctx.getOnError().accept(t);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(toList());
+        return acceptedInputs(inputs).map(input -> {
+            Path path = input.getRelativePath(relativeTo);
+            parsingListener.startedParsing(input);
+            try (EncodingDetectingInputStream is = input.getSource(ctx)) {
+                Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), styles, mapLanguageLevel(languageLevel))
+                        .mapSource(is.readFully());
+                parsingListener.parsed(input, py);
+                return requirePrintEqualsInput(py, input, relativeTo, ctx);
+            } catch (Throwable t) {
+                ctx.getOnError().accept(t);
+                return ParseError.build(this, input, relativeTo, ctx, t);
+            }
+        });
     }
 
     public enum LanguageLevel {
@@ -206,7 +195,7 @@ public class PythonParser implements Parser<Py.CompilationUnit> {
         private LanguageLevel languageLevel = LanguageLevel.PYTHON_312;
         private JavaTypeCache typeCache = new JavaTypeCache();
         private boolean logCompilationWarningsAndErrors;
-        private final List<NamedStyles> styles = new ArrayList<>();
+        private final Collection<NamedStyles> styles = new ArrayList<>();
 
         public Builder() {
             super(Py.CompilationUnit.class);

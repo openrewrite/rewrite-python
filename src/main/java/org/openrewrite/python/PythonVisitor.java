@@ -38,11 +38,6 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return "python";
     }
 
-    @Override
-    public J visitJavaSourceFile(JavaSourceFile cu, P p) {
-        return cu instanceof Py.CompilationUnit ? visitCompilationUnit((Py.CompilationUnit) cu, p) : cu;
-    }
-
     public J visitCompilationUnit(Py.CompilationUnit cu, P p) {
         Py.CompilationUnit c = cu;
         c = c.withPrefix(visitSpace(c.getPrefix(), Space.Location.COMPILATION_UNIT_PREFIX, p));
@@ -166,20 +161,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
     }
 
     public J visitAssertStatement(Py.AssertStatement ogAssert, P p) {
-        Py.AssertStatement assrt = ogAssert;
-        assrt = assrt.withPrefix(visitSpace(assrt.getPrefix(), PySpace.Location.ASSERT_PREFIX, p));
-        assrt = assrt.withMarkers(visitMarkers(assrt.getMarkers(), p));
-        Statement temp = (Statement) visitStatement(assrt, p);
+        Py.AssertStatement assert_ = ogAssert;
+        assert_ = assert_.withPrefix(visitSpace(assert_.getPrefix(), PySpace.Location.ASSERT_PREFIX, p));
+        assert_ = assert_.withMarkers(visitMarkers(assert_.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(assert_, p);
         if (!(temp instanceof Py.AssertStatement)) {
             return temp;
         } else {
-            assrt = (Py.AssertStatement) temp;
+            assert_ = (Py.AssertStatement) temp;
         }
-        assrt = assrt.getPadding().withExpressions(ListUtils.map(
-                assrt.getPadding().getExpressions(),
+        assert_ = assert_.getPadding().withExpressions(ListUtils.map(
+                assert_.getPadding().getExpressions(),
                 t -> visitRightPadded(t, PyRightPadded.Location.ASSERT_ELEMENT, p)
         ));
-        return assrt;
+        return assert_;
     }
 
     public J visitYieldExpression(Py.YieldExpression ogYield, P p) {
@@ -287,20 +282,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
     }
 
     public J visitMatchCase(Py.MatchCase ogMatch, P p) {
-        Py.MatchCase caze = ogMatch;
-        caze = caze.withPrefix(visitSpace(caze.getPrefix(), PySpace.Location.MATCH_CASE_PREFIX, p));
-        caze = caze.withMarkers(visitMarkers(caze.getMarkers(), p));
-        Expression temp = (Expression) visitExpression(caze, p);
+        Py.MatchCase case_ = ogMatch;
+        case_ = case_.withPrefix(visitSpace(case_.getPrefix(), PySpace.Location.MATCH_CASE_PREFIX, p));
+        case_ = case_.withMarkers(visitMarkers(case_.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(case_, p);
         if (!(temp instanceof Py.MatchCase)) {
             return temp;
         } else {
-            caze = (Py.MatchCase) temp;
+            case_ = (Py.MatchCase) temp;
         }
-        caze = caze.getPadding().withGuard(
-                visitLeftPadded(caze.getPadding().getGuard(), PyLeftPadded.Location.MATCH_CASE_GUARD, p)
+        case_ = case_.getPadding().withGuard(
+                visitLeftPadded(case_.getPadding().getGuard(), PyLeftPadded.Location.MATCH_CASE_GUARD, p)
         );
-        caze = caze.withPattern(visitAndCast(caze.getPattern(), p));
-        return caze;
+        case_ = case_.withPattern(visitAndCast(case_.getPattern(), p));
+        return case_;
     }
 
     public J visitSpecialParameter(Py.SpecialParameter ogParam, P p) {
