@@ -57,8 +57,8 @@ public class ChangeMethodName extends Recipe {
     public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new PythonIsoVisitor<ExecutionContext>() {
             @Override
-            public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext executionContext) {
-                J.MethodDeclaration m = super.visitMethodDeclaration(method, executionContext);
+            public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+                J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
                 if (!Boolean.TRUE.equals(ignoreDefinition) && oldMethodName.equals(m.getName().getSimpleName())) {
                     m = m.withName(m.getName().withSimpleName(newMethodName));
                 }
@@ -66,8 +66,8 @@ public class ChangeMethodName extends Recipe {
             }
 
             @Override
-            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext executionContext) {
-                J.MethodInvocation m = super.visitMethodInvocation(method, executionContext);
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+                J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
                 if (oldMethodName.equals(m.getName().getSimpleName())) {
                     m = m.withName(m.getName().withSimpleName(newMethodName));
                 }
@@ -75,8 +75,8 @@ public class ChangeMethodName extends Recipe {
             }
 
             @Override
-            public J.MemberReference visitMemberReference(J.MemberReference memberRef, ExecutionContext executionContext) {
-                J.MemberReference m = super.visitMemberReference(memberRef, executionContext);
+            public J.MemberReference visitMemberReference(J.MemberReference memberRef, ExecutionContext ctx) {
+                J.MemberReference m = super.visitMemberReference(memberRef, ctx);
                 if (oldMethodName.equals(m.getReference().getSimpleName())) {
                     m = m.withReference(m.getReference().withSimpleName(newMethodName));
                 }
