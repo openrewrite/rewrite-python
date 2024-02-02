@@ -23,7 +23,7 @@ import org.openrewrite.java.tree.J;
 
 @Incubating(since = "0.3.1")
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class ChangeMethodName extends Recipe {
 
     @Option(displayName = "Old method name",

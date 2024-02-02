@@ -27,7 +27,7 @@ import org.openrewrite.quark.Quark;
 import org.openrewrite.text.PlainText;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class FindPythonSources extends Recipe {
     transient PythonSourceFile pythonSourceFile = new PythonSourceFile(this);
 

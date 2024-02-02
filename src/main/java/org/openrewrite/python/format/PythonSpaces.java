@@ -24,7 +24,7 @@ import org.openrewrite.TreeVisitor;
 
 @Incubating(since = "0.3.1")
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class PythonSpaces extends Recipe {
     @Override
     public String getDisplayName() {
