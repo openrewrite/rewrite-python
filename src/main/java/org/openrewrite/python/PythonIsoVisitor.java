@@ -17,7 +17,6 @@ package org.openrewrite.python;
 
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.JavaSourceFile;
 import org.openrewrite.java.tree.Statement;
 import org.openrewrite.python.tree.Py;
 

@@ -15,7 +15,8 @@
  */
 package org.openrewrite.python.marker;
 
-import lombok.*;
+import lombok.Value;
+import lombok.With;
 import org.openrewrite.marker.Marker;
 
 import java.util.UUID;
