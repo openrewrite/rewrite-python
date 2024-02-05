@@ -49,7 +49,7 @@ class ClassDeclarationTest implements RewriteTest {
     }
 
     @Test
-    void testSpaceBetweenClasses() {
+    void spaceBetweenClasses() {
         rewriteRun(
           python(
             """
@@ -65,7 +65,7 @@ class ClassDeclarationTest implements RewriteTest {
     }
 
     @Test
-    void testNestedClasses() {
+    void nestedClasses() {
         rewriteRun(
           python(
             """
