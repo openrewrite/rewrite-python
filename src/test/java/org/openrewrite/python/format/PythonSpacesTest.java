@@ -16,6 +16,7 @@
 package org.openrewrite.python.format;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -84,6 +85,7 @@ class PythonSpacesTest implements RewriteTest {
         );
     }
 
+    @DocumentExample
     @Test
     void formatAfterWithNewLines() {
         rewriteRun(

@@ -16,6 +16,7 @@
 package org.openrewrite.python.tree;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.tree.J;
@@ -66,6 +67,7 @@ class ReindentationTest implements RewriteTest {
         }));
     }
 
+    @DocumentExample
     @Test
     void example1() {
         rewriteRun(python(

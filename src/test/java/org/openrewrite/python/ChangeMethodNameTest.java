@@ -16,6 +16,7 @@
 package org.openrewrite.python;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.DocumentExample;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -28,6 +29,7 @@ class ChangeMethodNameTest implements RewriteTest {
         spec.recipe(new ChangeMethodName("print", "println", true));
     }
 
+    @DocumentExample
     @Test
     void renameMethod() {
         rewriteRun(
