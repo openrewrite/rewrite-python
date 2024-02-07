@@ -43,7 +43,7 @@ public class StartsWithEndsWith extends Recipe {
 
     @Override
     public String getDescription() {
-        return "`startswith` and `endswith` methods of the `str` object accept a tuple of strings to match against." +
+        return "`startswith` and `endswith` methods of the `str` object accept a tuple of strings to match against. " +
                "When multiple calls to `startswith` or `endswith` are made on the same string, they can be combined into a single call with a tuple of strings.";
     }
 
