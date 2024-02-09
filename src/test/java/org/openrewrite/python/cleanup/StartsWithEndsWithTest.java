@@ -23,7 +23,7 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.python.Assertions.python;
 
 @SuppressWarnings({"PyInterpreter", "PyUnresolvedReferences"})
-public class StartsWithEndsWithTest implements RewriteTest {
+class StartsWithEndsWithTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new StartsWithEndsWith());
