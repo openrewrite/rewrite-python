@@ -8,7 +8,7 @@ pluginManagement {
 rootProject.name = "rewrite-python"
 
 plugins {
-    id("com.gradle.enterprise") version "3.16"
+    id("com.gradle.enterprise") version "latest.release"
     id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
 }
 
@@ -17,11 +17,10 @@ gradleEnterprise {
     server = "https://ge.openrewrite.org/"
 
     buildCache {
-        remote(HttpBuildCache::class) {
-            url = uri("https://ge.openrewrite.org/cache/")
-            // Check access key presence to avoid build cache errors on PR builds when access key is not present
+        remote(gradleEnterprise.buildCache) {
+            isEnabled = true
             val accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
-            isPush = isCiServer && !accessKey.isNullOrEmpty()
+            isPush = isCiServer && !accessKey.isNullOrBlank()
         }
     }
 
