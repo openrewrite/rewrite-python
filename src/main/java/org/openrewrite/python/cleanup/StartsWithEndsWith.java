@@ -61,8 +61,8 @@ public class StartsWithEndsWith extends Recipe {
                 if (left instanceof J.MethodInvocation && right instanceof J.MethodInvocation) {
                     J.MethodInvocation leftMethod = (J.MethodInvocation) left;
                     J.MethodInvocation rightMethod = (J.MethodInvocation) right;
-                    boolean bothStartsWith = leftMethod.getSimpleName().equals("startswith") && rightMethod.getSimpleName().equals("startswith");
-                    boolean bothEndsWith = leftMethod.getSimpleName().equals("endswith") && rightMethod.getSimpleName().equals("endswith");
+                    boolean bothStartsWith = "startswith".equals(leftMethod.getSimpleName()) && "startswith".equals(rightMethod.getSimpleName());
+                    boolean bothEndsWith = "endswith".equals(leftMethod.getSimpleName()) && "endswith".equals(rightMethod.getSimpleName());
                     if ((bothStartsWith || bothEndsWith) &&
                         leftMethod.getSelect() != null &&
                         rightMethod.getSelect() != null &&
