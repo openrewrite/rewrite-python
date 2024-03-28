@@ -134,7 +134,9 @@ public class PythonExtraPadding implements Marker {
     }
 
     public static <T extends Tree> T set(T tree, Location loc, Space space) {
-        if (space.equals(loc.defaultSpace)) return tree;
+        if (space.equals(loc.defaultSpace)) {
+            return tree;
+        }
 
         PythonExtraPadding marker = new PythonExtraPadding(UUID.randomUUID(), loc, space);
         return tree.withMarkers(

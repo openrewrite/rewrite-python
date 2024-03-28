@@ -150,7 +150,7 @@ public class PsiPaddingCursor {
         }
 
         @Value
-        class Uninitialized implements State.Discardable {
+        final class Uninitialized implements State.Discardable {
             static final Uninitialized INSTANCE = new Uninitialized();
 
             private Uninitialized() {
@@ -408,7 +408,7 @@ public class PsiPaddingCursor {
         final int expectedOffset = actualNodeOffset(expectedNext);
         if (currentOffset == null || currentOffset != expectedOffset) {
             throw new IllegalStateException(String.format(
-                    "did not stop (%d) where expected (%d);\n%s\n%s",
+                    "did not stop (%d) where expected (%d);%n%s%n%s",
                     currentOffset == null ? -1 : currentOffset,
                     expectedOffset,
                     printDebuggingMessage("STOPPED HERE"),
@@ -420,7 +420,7 @@ public class PsiPaddingCursor {
     public void expectEOF() {
         if (!(state instanceof State.StoppedAtEOF)) {
             throw new IllegalStateException(String.format(
-                    "did not stop where expected (at eof);\n%s",
+                    "did not stop where expected (at eof);%n%s",
                     printDebuggingMessage("STOPPED HERE")
             ));
         }
@@ -432,7 +432,7 @@ public class PsiPaddingCursor {
 
     private String printDebuggingMessage(String label, @Nullable Integer offset) {
         StringBuilder sb = new StringBuilder();
-        sb.append("In file " + file.getName() + ":\n");
+        sb.append("In file ").append(file.getName()).append(":\n");
         sb.append("--\n");
         if (offset == null) {
             sb.append("<null position>\n");

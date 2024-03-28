@@ -171,17 +171,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     private <T extends J> @Nullable T reindentPrefix(@Nullable T element) {
-        if (element == null) return null;
+        if (element == null) {
+            return null;
+        }
         return element.withPrefix(reindentPrefix(element.getPrefix()));
     }
 
     private <T extends J> @Nullable JLeftPadded<T> reindentBefore(@Nullable JLeftPadded<T> padded) {
-        if (padded == null) return null;
+        if (padded == null) {
+            return null;
+        }
         return padded.withBefore(reindentPrefix(padded.getBefore()));
     }
 
     private <T extends J> @Nullable JRightPadded<T> reindentPrefix(@Nullable JRightPadded<T> padded) {
-        if (padded == null) return null;
+        if (padded == null) {
+            return null;
+        }
         return padded.withElement(reindentPrefix(padded.getElement()));
     }
 
@@ -556,7 +562,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitCase(J.Case case_, PrintOutputCapture<P> p) {
         beforeSyntax(case_, Space.Location.CASE_PREFIX, p);
         Expression elem = case_.getExpressions().get(0);
-        if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
+        if (!(elem instanceof J.Identifier) || !"default".equals(((J.Identifier) elem).getSimpleName())) {
             p.append("case");
         }
         visitContainer("", case_.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
@@ -647,13 +653,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     protected void visitModifier(J.Modifier mod, PrintOutputCapture<P> p) {
         String keyword = null;
-        switch (mod.getType()) {
-            case Default:
-                keyword = "def";
-                break;
-            case Async:
-                keyword = "async";
-                break;
+        if (mod.getType() == J.Modifier.Type.Default) {
+            keyword = "def";
+        } else if (mod.getType() == J.Modifier.Type.Async) {
+            keyword = "async";
         }
         if (keyword != null) {
             visit(mod.getAnnotations(), p);
@@ -1350,13 +1353,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitVariableScopeStatement(Py.VariableScopeStatement scope, PrintOutputCapture<P> p) {
         visitSpace(scope.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p);
-        switch (scope.getKind()) {
-            case GLOBAL:
-                p.append("global");
-                break;
-            case NONLOCAL:
-                p.append("nonlocal");
-                break;
+        if (scope.getKind() == GLOBAL) {
+            p.append("global");
+        } else if (scope.getKind() == NONLOCAL) {
+            p.append("nonlocal");
         }
 
         visitRightPadded(
@@ -1581,13 +1581,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitSpecialParameter(Py.SpecialParameter param, PrintOutputCapture<P> p) {
         beforeSyntax(param, PySpace.Location.SPECIAL_PARAM_PREFIX, p);
-        switch (param.getKind()) {
-            case ARGS:
-                p.append("*");
-                break;
-            case KWARGS:
-                p.append("**");
-                break;
+        if (param.getKind() == ARGS) {
+            p.append("*");
+        } else if (param.getKind() == KWARGS) {
+            p.append("**");
         }
         afterSyntax(param, p);
         return param;
@@ -1604,13 +1601,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitSpecialArgument(Py.SpecialArgument arg, PrintOutputCapture<P> p) {
         beforeSyntax(arg, PySpace.Location.SPECIAL_ARG_PREFIX, p);
-        switch (arg.getKind()) {
-            case ARGS:
-                p.append("*");
-                break;
-            case KWARGS:
-                p.append("**");
-                break;
+        if (arg.getKind() == ARGS) {
+            p.append("*");
+        } else if (arg.getKind() == KWARGS) {
+            p.append("**");
         }
         visit(arg.getExpression(), p);
         afterSyntax(arg, p);
@@ -1653,13 +1647,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitTypeHint(Py.TypeHint type, PrintOutputCapture<P> p) {
         beforeSyntax(type, PySpace.Location.TYPE_HINT_PREFIX, p);
-        switch (type.getKind()) {
-            case VARIABLE_TYPE:
-                p.append(":");
-                break;
-            case RETURN_TYPE:
-                p.append("->");
-                break;
+        if (type.getKind() == VARIABLE_TYPE) {
+            p.append(":");
+        } else if (type.getKind() == RETURN_TYPE) {
+            p.append("->");
         }
         visit(type.getExpression(), p);
         afterSyntax(type, p);

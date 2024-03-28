@@ -99,7 +99,9 @@ public abstract class PsiUtils {
     }
 
     public static @Nullable PsiElement nextSiblingSkipWhitespace(@Nullable PsiElement element) {
-        if (element == null) return null;
+        if (element == null) {
+            return null;
+        }
 
         do {
             element = element.getNextSibling();

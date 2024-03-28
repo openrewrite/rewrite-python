@@ -146,23 +146,20 @@ public final class PySpace {
             return original;
         }
 
-        switch (endMode) {
-            case REST_OF_LINE:
+        if (endMode == PySpace.IndentEndMode.REST_OF_LINE) {
+            if (!original.getLastWhitespace().endsWith("\n")) {
+                throw new IllegalStateException("expected statement suffix to end with a newline: " + original);
+            }
+        } else if (endMode == PySpace.IndentEndMode.STATEMENT_START) {
+            if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
                 if (!original.getLastWhitespace().endsWith("\n")) {
-                    throw new IllegalStateException("expected statement suffix to end with a newline: " + original);
+                    throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
                 }
-                break;
-            case STATEMENT_START:
-                if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
-                    if (!original.getLastWhitespace().endsWith("\n")) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
-                    }
-                } else {
-                    if (!original.getLastWhitespace().isEmpty()) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
-                    }
+            } else {
+                if (!original.getLastWhitespace().isEmpty()) {
+                    throw new IllegalStateException("expected statement prefix to end with an indent placeholder: " + original);
                 }
-                break;
+            }
         }
 
         Space space = Space.build(original.getWhitespace(), Collections.emptyList());
@@ -211,23 +208,20 @@ public final class PySpace {
 
         final String indentWithNewline = "\n" + indentWithoutNewline;
 
-        switch (endMode) {
-            case REST_OF_LINE:
-                if (!original.getLastWhitespace().endsWith("\n")) {
-                    throw new IllegalStateException("expected statement suffix to end with a newline");
+        if (endMode == PySpace.IndentEndMode.REST_OF_LINE) {
+            if (!original.getLastWhitespace().endsWith("\n")) {
+                throw new IllegalStateException("expected statement suffix to end with a newline");
+            }
+        } else if (endMode == PySpace.IndentEndMode.STATEMENT_START) {
+            if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
+                if (!original.getLastWhitespace().endsWith(indentWithNewline)) {
+                    throw new IllegalStateException("expected statement prefix to end with an indent");
                 }
-                break;
-            case STATEMENT_START:
-                if (!original.getComments().isEmpty() || original.getLastWhitespace().contains("\n")) {
-                    if (!original.getLastWhitespace().endsWith(indentWithNewline)) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent");
-                    }
-                } else {
-                    if (!original.getLastWhitespace().equals(indentWithoutNewline)) {
-                        throw new IllegalStateException("expected statement prefix to end with an indent");
-                    }
+            } else {
+                if (!original.getLastWhitespace().equals(indentWithoutNewline)) {
+                    throw new IllegalStateException("expected statement prefix to end with an indent");
                 }
-                break;
+            }
         }
 
         Space space;

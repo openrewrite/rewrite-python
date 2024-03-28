@@ -52,7 +52,9 @@ public final class CollectIntelliJDependenciesAsm {
     }
 
     void processClass(@Nullable String className, Kind kind) {
-        if (className == null) return;
+        if (className == null) {
+            return;
+        }
 
         if (className.startsWith("[")) {
             while (className.startsWith("[")) {
@@ -68,7 +70,9 @@ public final class CollectIntelliJDependenciesAsm {
             return;
         }
 
-        if (!visited.add(className)) return;
+        if (!visited.add(className)) {
+            return;
+        }
 
         ClassReader reader;
         try {
@@ -80,7 +84,7 @@ public final class CollectIntelliJDependenciesAsm {
         }
 
         URL classfileUrl = getClass().getClassLoader().getResource(className + ".class");
-        if (classfileUrl != null && classfileUrl.getProtocol().equals("jar")) {
+        if (classfileUrl != null && "jar".equals(classfileUrl.getProtocol())) {
             String jarfile = classfileUrl.getPath().substring(0, classfileUrl.getPath().indexOf("!"));
             System.out.println("class\t" + className + "\t" + jarfile);
         }
@@ -91,9 +95,9 @@ public final class CollectIntelliJDependenciesAsm {
 //            System.err.println("\t*** NOT FOUND: " + e);
 //        }
 
-        final int ASM_VERSION = ASM9;
+        final int asmVersion = ASM9;
 
-        SignatureVisitor signatureVisitor = new SignatureVisitor(ASM_VERSION) {
+        SignatureVisitor signatureVisitor = new SignatureVisitor(asmVersion) {
             @Override
             public void visitClassType(String name) {
                 processClass(name, Kind.SIGNATURE);
@@ -101,14 +105,14 @@ public final class CollectIntelliJDependenciesAsm {
             }
         };
 
-        MethodVisitor methodVisitor = new MethodVisitor(ASM_VERSION) {
+        MethodVisitor methodVisitor = new MethodVisitor(asmVersion) {
             @Override
             public void visitTypeInsn(int opcode, String type) {
                 processClass(type, Kind.INSTRUCTION);
                 super.visitTypeInsn(opcode, type);
             }
         };
-        ClassVisitor visitor = new ClassVisitor(ASM_VERSION) {
+        ClassVisitor visitor = new ClassVisitor(asmVersion) {
             @Override
             public void visit(int version, int access, String name, @Nullable String signature, String superName, String[] interfaces) {
                 if (signature != null) {

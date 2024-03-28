@@ -1559,7 +1559,7 @@ public interface Py extends J {
         @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
         @RequiredArgsConstructor
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
-        public final static class Pattern implements Py, Expression {
+        public static final class Pattern implements Py, Expression {
             public enum Kind {
                 AS,
                 CAPTURE,

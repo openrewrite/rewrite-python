@@ -175,7 +175,7 @@ public class PsiPythonMapper {
         } catch (Exception e) {
             throw new RuntimeException(
                     String.format(
-                            "error processing compound statement of type %s in:\n--\n%s\n--",
+                            "error processing compound statement of type %s in:%n--%n%s%n--",
                             element.getClass().getSimpleName(),
                             element.getText()
                     ),
@@ -226,7 +226,7 @@ public class PsiPythonMapper {
         } catch (Exception e) {
             throw new RuntimeException(
                     String.format(
-                            "error processing compound statement of type %s in:\n--\n%s\n--",
+                            "error processing compound statement of type %s in:%n--%n%s%n--",
                             element.getClass().getSimpleName(),
                             element.getText()
                     ),
@@ -1068,7 +1068,7 @@ public class PsiPythonMapper {
             typeHint = null;
         } else {
             throw new IllegalArgumentException(String.format(
-                    "expected function parameter to be a NamedParameter or StarArgument; found: %s\n%s",
+                    "expected function parameter to be a NamedParameter or StarArgument; found: %s%n%s",
                     element.getClass().getSimpleName(),
                     element.getText()
             ));
@@ -1640,7 +1640,7 @@ public class PsiPythonMapper {
         } catch (Exception e) {
             throw new RuntimeException(
                     String.format(
-                            "error processing expression of type %s in:\n--\n%s\n--",
+                            "error processing expression of type %s in:%n--%n%s%n--",
                             element.getClass().getSimpleName(),
                             element.getText()
                     ),
@@ -1803,7 +1803,9 @@ public class PsiPythonMapper {
     }
 
     private @Nullable Py.TypeHint mapTypeHintNullable(@Nullable PyAnnotation element) {
-        if (element == null) return null;
+        if (element == null) {
+            return null;
+        }
         return mapTypeHint(element);
     }
 
