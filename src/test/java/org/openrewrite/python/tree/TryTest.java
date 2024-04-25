@@ -119,4 +119,3 @@ class TryTest implements RewriteTest {
     }
 
 }
-
