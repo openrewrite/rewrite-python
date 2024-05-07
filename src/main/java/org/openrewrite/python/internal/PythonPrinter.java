@@ -425,9 +425,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
         visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
         visit(classDecl.getLeadingAnnotations(), p);
-        visit(classDecl.getAnnotations().getKind().getAnnotations(), p);
+        visit(classDecl.getPadding().getKind().getAnnotations(), p);
         visitSpace(
-                reindentPrefix(classDecl.getAnnotations().getKind().getPrefix()),
+                reindentPrefix(classDecl.getPadding().getKind().getPrefix()),
                 Space.Location.CLASS_KIND,
                 p
         );
