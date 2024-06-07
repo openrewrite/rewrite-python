@@ -25,7 +25,6 @@ import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import lombok.Value;
-import org.jetbrains.annotations.NotNull;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.internal.lang.Nullable;
@@ -977,7 +976,7 @@ public class PsiPythonMapper {
             params = JContainer.build(spaceAfter(element.getNameIdentifier()),
                     singletonList(JRightPadded.build(new J.Empty(randomId(), after, EMPTY))), EMPTY);
         } else {
-            PyParameter @NotNull [] pyParameters = element.getParameterList().getParameters();
+            PyParameter [] pyParameters = element.getParameterList().getParameters();
             List<JRightPadded<Statement>> statements = new ArrayList<>(pyParameters.length);
             for (int i = 0; i < pyParameters.length; i++) {
                 PyParameter parameter = pyParameters[i];
