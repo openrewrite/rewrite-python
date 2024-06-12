@@ -36,7 +36,9 @@ import static java.util.Collections.emptyList;
 public class PythonExtraPadding implements Marker {
     @EqualsAndHashCode.Exclude
     UUID id;
+
     Location loc;
+
     @EqualsAndHashCode.Exclude
     Space space;
 
