@@ -101,8 +101,7 @@ public class StartsWithEndsWith extends Recipe {
             return super.visitBinary(binary, p);
         }
 
-        @Nullable
-        private static List<Expression> getSimplestRightExpressions(J.MethodInvocation rightMethod) {
+        private static @Nullable List<Expression> getSimplestRightExpressions(J.MethodInvocation rightMethod) {
             // The `rightMethod` is already a call to `startsWith` or `endsWith`
             // If the right side is already a tuple, then unpack the elements
             if (rightMethod.getArguments().get(0) instanceof J.MethodInvocation &&

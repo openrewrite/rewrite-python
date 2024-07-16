@@ -54,8 +54,7 @@ public interface Py extends J {
         return v.isAdaptableTo(PythonVisitor.class);
     }
 
-    @Nullable
-    default <P> J acceptPython(PythonVisitor<P> v, P p) {
+    default <P> @Nullable J acceptPython(PythonVisitor<P> v, P p) {
         return v.defaultValue(this, p);
     }
 
@@ -460,8 +459,7 @@ public interface Py extends J {
         public static class Padding {
             private final KeyValue t;
 
-            @Nullable
-            public JRightPadded<Expression> getKey() {
+            public @Nullable JRightPadded<Expression> getKey() {
                 return t.key;
             }
 
