@@ -1,8 +1,8 @@
 from rewrite.core import random_id
 from rewrite.core.marker import Markers
-from rewrite.properties.tree import File
+import rewrite.properties.tree as py
 
-f = File(
+f = py.File(
     id=random_id(),
     prefix='test',
     markers=Markers.EMPTY,
