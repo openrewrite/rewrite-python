@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Protocol, Final
+from typing import List, Protocol, ClassVar
 from uuid import UUID
 
 from rewrite.core import random_id
@@ -14,7 +14,7 @@ class Markers:
     id: UUID
     markers: List[Marker]
 
-    EMPTY: Final = None
+    EMPTY: ClassVar = None
 
 
 # noinspection PyFinal
