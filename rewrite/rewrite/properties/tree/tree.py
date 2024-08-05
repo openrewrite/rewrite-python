@@ -2,16 +2,15 @@ from dataclasses import dataclass, replace
 from typing import Protocol
 from uuid import UUID
 
-from ...core import Tree
+from ...core import Tree, SourceFile
 from ...core.marker.markers import Markers, Marker
-from ...core.tree import SourceFile
 
 
 class Properties(Tree, Protocol):
     pass
 
 
-@dataclass
+@dataclass(eq=False, frozen=True)
 class File(Properties, SourceFile):
     id: UUID
     prefix: str

@@ -10,5 +10,8 @@ f = py.File(
 )
 
 print(f)
+print(f.with_prefix(' ') is f)
 print(f.with_prefix(' ') == f)
-print(f.with_prefix('') == f)
+print(f.with_prefix('') is f)
+print(f.with_prefix(' ').with_prefix('') == f) # value equality
+print(f.with_prefix(' ').with_prefix('') is f) # referential equality
