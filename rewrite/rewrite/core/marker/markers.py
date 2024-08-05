@@ -9,12 +9,20 @@ class Marker(Protocol):
     id: UUID
 
 
-@dataclass
+@dataclass(frozen=True, eq=False)
 class Markers:
     id: UUID
     markers: List[Marker]
 
     EMPTY: ClassVar = None
+
+    def __eq__(self, other):
+        if self.__class__ == other.__class__:
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
 
 
 # noinspection PyFinal
