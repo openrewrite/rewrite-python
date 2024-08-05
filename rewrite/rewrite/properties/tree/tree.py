@@ -36,12 +36,6 @@ class File(Properties, SourceFile):
         return self if self.source_path == value else replace(self, source_path=value)
 
 
-class Delimiter(Enum):
-    COLON = ':'
-    EQUALS = '='
-    NONE = '\0'
-
-
 @dataclass(eq=False, frozen=True)
 class Entry(Content):
     id: UUID
@@ -52,6 +46,11 @@ class Entry(Content):
     delimiter: Optional[Delimiter]
     value: Value
 
+    class Delimiter(Enum):
+        COLON = ':'
+        EQUALS = '='
+        NONE = '\0'
+
 
 @dataclass(eq=False, frozen=True)
 class Value:
@@ -59,3 +58,16 @@ class Value:
     prefix: str
     markers: Markers
     text: str
+
+
+@dataclass(eq=False, frozen=True)
+class Comment:
+    id: UUID
+    prefix: str
+    markers: Markers
+    delimiter: Delimiter
+    message: str
+
+    class Delimiter(Enum):
+        HASH_TAG = '#'
+        EXCLAMATION_MARK = '!'
