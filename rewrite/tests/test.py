@@ -4,9 +4,11 @@ import rewrite.properties.tree as py
 
 f = py.File(
     id=random_id(),
-    prefix='test',
+    prefix='',
     markers=Markers.EMPTY,
-    sourcePath='tree.py'
+    source_path='tree.py'
 )
 
 print(f)
+print(f.with_prefix(' ') == f)
+print(f.with_prefix('') == f)

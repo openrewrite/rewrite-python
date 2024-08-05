@@ -11,4 +11,4 @@ class Tree(Protocol):
 
 
 class SourceFile(Tree, Protocol):
-    sourcePath: str
+    source_path: str
