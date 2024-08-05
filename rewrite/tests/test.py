@@ -9,9 +9,7 @@ f = py.File(
     source_path='tree.py'
 )
 
-print(f)
-print(f.with_prefix(' ') is f)
-print(f.with_prefix(' ') == f)
-print(f.with_prefix('') is f)
-print(f.with_prefix(' ').with_prefix('') == f) # value equality
-print(f.with_prefix(' ').with_prefix('') is f) # referential equality
+assert f is not f.with_prefix(' ')
+assert f is f.with_prefix('')
+assert f == f.with_prefix(' ')
+assert f == f.with_prefix('')
