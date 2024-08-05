@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Protocol, ClassVar
 from uuid import UUID
@@ -22,7 +23,7 @@ class Markers:
     id: UUID
     markers: List[Marker]
 
-    EMPTY: ClassVar = None
+    EMPTY: ClassVar[Markers] = None
 
     def __eq__(self, other):
         if self.__class__ == other.__class__:
@@ -33,5 +34,4 @@ class Markers:
         return hash(self.id)
 
 
-# noinspection PyFinal
 Markers.EMPTY = Markers(random_id(), [])
