@@ -5,7 +5,7 @@ from uuid import UUID
 from enum import Enum
 
 from ...core import Tree, SourceFile
-from ...core.marker.markers import Markers, Marker
+from ...core.marker.markers import Markers
 
 
 class Properties(Tree, Protocol):
@@ -23,16 +23,16 @@ class File(Properties, SourceFile):
     markers: Markers
     source_path: str
 
-    def with_id(self, value: UUID):
+    def with_id(self, value: UUID) -> File:
         return self if self.id == value else replace(self, id=value)
 
-    def with_prefix(self, value: str):
+    def with_prefix(self, value: str) -> File:
         return self if self.prefix == value else replace(self, prefix=value)
 
-    def with_markers(self, value: Markers):
+    def with_markers(self, value: Markers) -> File:
         return self if self.markers == value else replace(self, markers=value)
 
-    def with_source_path(self, value: str):
+    def with_source_path(self, value: str) -> File:
         return self if self.source_path == value else replace(self, source_path=value)
 
 
