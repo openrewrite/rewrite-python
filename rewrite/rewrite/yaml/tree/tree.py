@@ -5,6 +5,7 @@ from typing import List, Optional, Protocol
 from uuid import UUID
 from enum import Enum
 
+from .additional_types import *
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
@@ -76,13 +77,13 @@ class Documents(Yaml, SourceFile["Documents"]):
     def with_checksum(self, checksum: Optional[Checksum]) -> Documents:
         return self if checksum is self._checksum else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    _documents: List[Yaml.Document]
+    _documents: List[Document]
 
     @property
-    def documents(self) -> List[Yaml.Document]:
+    def documents(self) -> List[Document]:
         return self._documents
 
-    def with_documents(self, documents: List[Yaml.Document]) -> Documents:
+    def with_documents(self, documents: List[Document]) -> Documents:
         return self if documents is self._documents else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
 @dataclass(frozen=True, eq=False)
@@ -123,13 +124,13 @@ class Document(Yaml):
     def with_explicit(self, explicit: bool) -> Document:
         return self if explicit is self._explicit else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
-    _block: Yaml.Block
+    _block: Block
 
     @property
-    def block(self) -> Yaml.Block:
+    def block(self) -> Block:
         return self._block
 
-    def with_block(self, block: Yaml.Block) -> Document:
+    def with_block(self, block: Block) -> Document:
         return self if block is self._block else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
     _end: End
@@ -180,7 +181,11 @@ class Document(Yaml):
             return self if explicit is self._explicit else Document.End(self._id, self._prefix, self._markers, self._explicit)
 
 @dataclass(frozen=True, eq=False)
-class Scalar(Yaml.Block, YamlKey):
+class Block(Yaml):
+    pass
+
+@dataclass(frozen=True, eq=False)
+class Scalar(Block, YamlKey):
     _id: UUID
 
     @property
@@ -217,13 +222,13 @@ class Scalar(Yaml.Block, YamlKey):
     def with_style(self, style: Style) -> Scalar:
         return self if style is self._style else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
-    _anchor: Optional[Yaml.Anchor]
+    _anchor: Optional[Anchor]
 
     @property
-    def anchor(self) -> Optional[Yaml.Anchor]:
+    def anchor(self) -> Optional[Anchor]:
         return self._anchor
 
-    def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Scalar:
+    def with_anchor(self, anchor: Optional[Anchor]) -> Scalar:
         return self if anchor is self._anchor else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
     _value: str
@@ -243,7 +248,7 @@ class Scalar(Yaml.Block, YamlKey):
         PLAIN = 4
 
 @dataclass(frozen=True, eq=False)
-class Mapping(Yaml.Block):
+class Mapping(Block):
     _id: UUID
 
     @property
@@ -289,13 +294,13 @@ class Mapping(Yaml.Block):
     def with_closing_brace_prefix(self, closing_brace_prefix: Optional[str]) -> Mapping:
         return self if closing_brace_prefix is self._closing_brace_prefix else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
-    _anchor: Optional[Yaml.Anchor]
+    _anchor: Optional[Anchor]
 
     @property
-    def anchor(self) -> Optional[Yaml.Anchor]:
+    def anchor(self) -> Optional[Anchor]:
         return self._anchor
 
-    def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Mapping:
+    def with_anchor(self, anchor: Optional[Anchor]) -> Mapping:
         return self if anchor is self._anchor else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
     @dataclass(frozen=True, eq=False)
@@ -345,17 +350,17 @@ class Mapping(Yaml.Block):
         def with_before_mapping_value_indicator(self, before_mapping_value_indicator: str) -> Mapping.Entry:
             return self if before_mapping_value_indicator is self._before_mapping_value_indicator else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
-        _value: Yaml.Block
+        _value: Block
 
         @property
-        def value(self) -> Yaml.Block:
+        def value(self) -> Block:
             return self._value
 
-        def with_value(self, value: Yaml.Block) -> Mapping.Entry:
+        def with_value(self, value: Block) -> Mapping.Entry:
             return self if value is self._value else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
 @dataclass(frozen=True, eq=False)
-class Sequence(Yaml.Block):
+class Sequence(Block):
     _id: UUID
 
     @property
@@ -401,13 +406,13 @@ class Sequence(Yaml.Block):
     def with_closing_bracket_prefix(self, closing_bracket_prefix: Optional[str]) -> Sequence:
         return self if closing_bracket_prefix is self._closing_bracket_prefix else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
-    _anchor: Optional[Yaml.Anchor]
+    _anchor: Optional[Anchor]
 
     @property
-    def anchor(self) -> Optional[Yaml.Anchor]:
+    def anchor(self) -> Optional[Anchor]:
         return self._anchor
 
-    def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Sequence:
+    def with_anchor(self, anchor: Optional[Anchor]) -> Sequence:
         return self if anchor is self._anchor else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
     @dataclass(frozen=True, eq=False)
@@ -439,13 +444,13 @@ class Sequence(Yaml.Block):
         def with_markers(self, markers: Markers) -> Sequence.Entry:
             return self if markers is self._markers else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
-        _block: Yaml.Block
+        _block: Block
 
         @property
-        def block(self) -> Yaml.Block:
+        def block(self) -> Block:
             return self._block
 
-        def with_block(self, block: Yaml.Block) -> Sequence.Entry:
+        def with_block(self, block: Block) -> Sequence.Entry:
             return self if block is self._block else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
         _dash: bool
@@ -467,7 +472,7 @@ class Sequence(Yaml.Block):
             return self if trailing_comma_prefix is self._trailing_comma_prefix else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
 @dataclass(frozen=True, eq=False)
-class Alias(Yaml.Block, YamlKey):
+class Alias(Block, YamlKey):
     _id: UUID
 
     @property
@@ -495,13 +500,13 @@ class Alias(Yaml.Block, YamlKey):
     def with_markers(self, markers: Markers) -> Alias:
         return self if markers is self._markers else Alias(self._id, self._prefix, self._markers, self._anchor)
 
-    _anchor: Yaml.Anchor
+    _anchor: Anchor
 
     @property
-    def anchor(self) -> Yaml.Anchor:
+    def anchor(self) -> Anchor:
         return self._anchor
 
-    def with_anchor(self, anchor: Yaml.Anchor) -> Alias:
+    def with_anchor(self, anchor: Anchor) -> Alias:
         return self if anchor is self._anchor else Alias(self._id, self._prefix, self._markers, self._anchor)
 
 @dataclass(frozen=True, eq=False)
@@ -550,7 +555,3 @@ class Anchor(Yaml):
 
     def with_key(self, key: str) -> Anchor:
         return self if key is self._key else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
-
-@dataclass(frozen=True, eq=False)
-class Block(Yaml):
-    pass
