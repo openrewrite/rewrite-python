@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import weakref
+from dataclasses import replace
 from typing import List, Optional, Protocol, TypeVar, Generic
 
 from attr import dataclass
 
 from rewrite.core import Tree, SourceFile
 from rewrite.core.marker import Markers
-from rewrite.json.tree.tree import Json
 
 
 @dataclass(frozen=True)
@@ -105,7 +106,8 @@ class JavaType(Protocol):
     pass
 
 
-T = TypeVar('T', bound=Json)
+T = TypeVar('T')
+
 
 @dataclass
 class JRightPadded(Generic[T]):
@@ -151,6 +153,57 @@ class JLeftPadded(Generic[T]):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class JContainer(Generic[T]):
-    pass
+    _before: Space
+
+    @property
+    def before(self) -> Space:
+        return self._before
+
+    def with_before(self, before: Space) -> JContainer[T]:
+        return self if before is self._before else replace(self, _before=before)
+
+    _elements: List[JRightPadded[T]]
+
+    @property
+    def elements(self) -> List[T]:
+        return JRightPadded.get_elements(self._elements)
+
+    def with_elements(self, elements: List[T]) -> JContainer[T]:
+        return self.padding.with_elements(JRightPadded.with_elements(self._elements, elements))
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> JContainer[T]:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    @dataclass
+    class PaddingHelper:
+        _t: JContainer[T]
+
+        @property
+        def elements(self) -> List[JRightPadded[T]]:
+            return self._t._elements
+
+        def with_elements(self, elements: List[JRightPadded[T]]) -> JContainer[T]:
+            return self._t if self._t._elements is elements else replace(self._t, _elements=elements)
+
+    _padding: weakref.ReferenceType[JContainer.PaddingHelper] = None
+
+    @property
+    def padding(self) -> JContainer.PaddingHelper:
+        p: JContainer.PaddingHelper
+        if self._padding is None:
+            p = JContainer.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            if p is None or p._t != self:
+                p = JContainer.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
