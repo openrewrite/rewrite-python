@@ -12,144 +12,228 @@ class Yaml(Tree, Protocol):
     pass
 
 @dataclass(frozen=True, eq=False)
-class Documents(Yaml, MutableSourceFile<Documents>):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitDocuments(this, p)
+class Documents(Yaml, SourceFile["Documents"]):
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Documents:
-        return self if id is self.id else Documents(id, self.markers, self.source_path, self.file_attributes, self.charset_name, self.charset_bom_marked, self.checksum, self.documents)
+    def with_id(self, id: UUID) -> Documents:
+        return self if id is self._id else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    markers: Markers
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Documents:
-        return self if markers is self.markers else Documents(self.id, markers, self.source_path, self.file_attributes, self.charset_name, self.charset_bom_marked, self.checksum, self.documents)
+        return self if markers is self._markers else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    source_path: string
+    _source_path: Path
 
-    def with_source_path(self, source_path: string) -> Documents:
-        return self if source_path is self.source_path else Documents(self.id, self.markers, source_path, self.file_attributes, self.charset_name, self.charset_bom_marked, self.checksum, self.documents)
+    @property
+    def source_path(self) -> Path:
+        return self._source_path
 
-    file_attributes: Optional[FileAttributes]
+    def with_source_path(self, source_path: Path) -> Documents:
+        return self if source_path is self._source_path else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
+
+    _file_attributes: Optional[FileAttributes]
+
+    @property
+    def file_attributes(self) -> Optional[FileAttributes]:
+        return self._file_attributes
 
     def with_file_attributes(self, file_attributes: Optional[FileAttributes]) -> Documents:
-        return self if file_attributes is self.file_attributes else Documents(self.id, self.markers, self.source_path, file_attributes, self.charset_name, self.charset_bom_marked, self.checksum, self.documents)
+        return self if file_attributes is self._file_attributes else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    charset_name: Optional[string]
+    _charset_name: Optional[str]
 
-    def with_charset_name(self, charset_name: Optional[string]) -> Documents:
-        return self if charset_name is self.charset_name else Documents(self.id, self.markers, self.source_path, self.file_attributes, charset_name, self.charset_bom_marked, self.checksum, self.documents)
+    @property
+    def charset_name(self) -> Optional[str]:
+        return self._charset_name
 
-    charset_bom_marked: bool
+    def with_charset_name(self, charset_name: Optional[str]) -> Documents:
+        return self if charset_name is self._charset_name else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
+
+    _charset_bom_marked: bool
+
+    @property
+    def charset_bom_marked(self) -> bool:
+        return self._charset_bom_marked
 
     def with_charset_bom_marked(self, charset_bom_marked: bool) -> Documents:
-        return self if charset_bom_marked is self.charset_bom_marked else Documents(self.id, self.markers, self.source_path, self.file_attributes, self.charset_name, charset_bom_marked, self.checksum, self.documents)
+        return self if charset_bom_marked is self._charset_bom_marked else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    checksum: Optional[Checksum]
+    _checksum: Optional[Checksum]
+
+    @property
+    def checksum(self) -> Optional[Checksum]:
+        return self._checksum
 
     def with_checksum(self, checksum: Optional[Checksum]) -> Documents:
-        return self if checksum is self.checksum else Documents(self.id, self.markers, self.source_path, self.file_attributes, self.charset_name, self.charset_bom_marked, checksum, self.documents)
+        return self if checksum is self._checksum else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
-    documents: IList<Yaml.Document>
+    _documents: List[Yaml.Document]
 
-    def with_documents(self, documents: IList<Yaml.Document>) -> Documents:
-        return self if documents is self.documents else Documents(self.id, self.markers, self.source_path, self.file_attributes, self.charset_name, self.charset_bom_marked, self.checksum, documents)
+    @property
+    def documents(self) -> List[Yaml.Document]:
+        return self._documents
+
+    def with_documents(self, documents: List[Yaml.Document]) -> Documents:
+        return self if documents is self._documents else Documents(self._id, self._markers, self._source_path, self._file_attributes, self._charset_name, self._charset_bom_marked, self._checksum, self._documents)
 
 @dataclass(frozen=True, eq=False)
 class Document(Yaml):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitDocument(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Document:
-        return self if id is self.id else Document(id, self.prefix, self.markers, self.explicit, self.block, self.end)
+    def with_id(self, id: UUID) -> Document:
+        return self if id is self._id else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
-    prefix: string
+    _prefix: str
 
-    def with_prefix(self, prefix: string) -> Document:
-        return self if prefix is self.prefix else Document(self.id, prefix, self.markers, self.explicit, self.block, self.end)
+    @property
+    def prefix(self) -> str:
+        return self._prefix
 
-    markers: Markers
+    def with_prefix(self, prefix: str) -> Document:
+        return self if prefix is self._prefix else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Document:
-        return self if markers is self.markers else Document(self.id, self.prefix, markers, self.explicit, self.block, self.end)
+        return self if markers is self._markers else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
-    explicit: bool
+    _explicit: bool
+
+    @property
+    def explicit(self) -> bool:
+        return self._explicit
 
     def with_explicit(self, explicit: bool) -> Document:
-        return self if explicit is self.explicit else Document(self.id, self.prefix, self.markers, explicit, self.block, self.end)
+        return self if explicit is self._explicit else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
-    block: Yaml.Block
+    _block: Yaml.Block
+
+    @property
+    def block(self) -> Yaml.Block:
+        return self._block
 
     def with_block(self, block: Yaml.Block) -> Document:
-        return self if block is self.block else Document(self.id, self.prefix, self.markers, self.explicit, block, self.end)
+        return self if block is self._block else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
-    end: End
+    _end: End
+
+    @property
+    def end(self) -> End:
+        return self._end
 
     def with_end(self, end: End) -> Document:
-        return self if end is self.end else Document(self.id, self.prefix, self.markers, self.explicit, self.block, end)
+        return self if end is self._end else Document(self._id, self._prefix, self._markers, self._explicit, self._block, self._end)
 
     @dataclass(frozen=True, eq=False)
     class End(Yaml):
-        def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-            return v.VisitDocumentEnd(this, p)
+        _id: UUID
 
-        id: Guid
+        @property
+        def id(self) -> UUID:
+            return self._id
 
-        def with_id(self, id: Guid) -> End:
-            return self if id is self.id else End(id, self.prefix, self.markers, self.explicit)
+        def with_id(self, id: UUID) -> Document.End:
+            return self if id is self._id else Document.End(self._id, self._prefix, self._markers, self._explicit)
 
-        prefix: string
+        _prefix: str
 
-        def with_prefix(self, prefix: string) -> End:
-            return self if prefix is self.prefix else End(self.id, prefix, self.markers, self.explicit)
+        @property
+        def prefix(self) -> str:
+            return self._prefix
 
-        markers: Markers
+        def with_prefix(self, prefix: str) -> Document.End:
+            return self if prefix is self._prefix else Document.End(self._id, self._prefix, self._markers, self._explicit)
 
-        def with_markers(self, markers: Markers) -> End:
-            return self if markers is self.markers else End(self.id, self.prefix, markers, self.explicit)
+        _markers: Markers
 
-        explicit: bool
+        @property
+        def markers(self) -> Markers:
+            return self._markers
 
-        def with_explicit(self, explicit: bool) -> End:
-            return self if explicit is self.explicit else End(self.id, self.prefix, self.markers, explicit)
+        def with_markers(self, markers: Markers) -> Document.End:
+            return self if markers is self._markers else Document.End(self._id, self._prefix, self._markers, self._explicit)
+
+        _explicit: bool
+
+        @property
+        def explicit(self) -> bool:
+            return self._explicit
+
+        def with_explicit(self, explicit: bool) -> Document.End:
+            return self if explicit is self._explicit else Document.End(self._id, self._prefix, self._markers, self._explicit)
 
 @dataclass(frozen=True, eq=False)
 class Scalar(Yaml.Block, YamlKey):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitScalar(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Scalar:
-        return self if id is self.id else Scalar(id, self.prefix, self.markers, self.style, self.anchor, self.value)
+    def with_id(self, id: UUID) -> Scalar:
+        return self if id is self._id else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
-    prefix: string
+    _prefix: str
 
-    def with_prefix(self, prefix: string) -> Scalar:
-        return self if prefix is self.prefix else Scalar(self.id, prefix, self.markers, self.style, self.anchor, self.value)
+    @property
+    def prefix(self) -> str:
+        return self._prefix
 
-    markers: Markers
+    def with_prefix(self, prefix: str) -> Scalar:
+        return self if prefix is self._prefix else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Scalar:
-        return self if markers is self.markers else Scalar(self.id, self.prefix, markers, self.style, self.anchor, self.value)
+        return self if markers is self._markers else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
-    style: Style
+    _style: Style
+
+    @property
+    def style(self) -> Style:
+        return self._style
 
     def with_style(self, style: Style) -> Scalar:
-        return self if style is self.style else Scalar(self.id, self.prefix, self.markers, style, self.anchor, self.value)
+        return self if style is self._style else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
-    anchor: Optional[Yaml.Anchor]
+    _anchor: Optional[Yaml.Anchor]
+
+    @property
+    def anchor(self) -> Optional[Yaml.Anchor]:
+        return self._anchor
 
     def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Scalar:
-        return self if anchor is self.anchor else Scalar(self.id, self.prefix, self.markers, self.style, anchor, self.value)
+        return self if anchor is self._anchor else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
-    value: string
+    _value: str
 
-    def with_value(self, value: string) -> Scalar:
-        return self if value is self.value else Scalar(self.id, self.prefix, self.markers, self.style, self.anchor, value)
+    @property
+    def value(self) -> str:
+        return self._value
+
+    def with_value(self, value: str) -> Scalar:
+        return self if value is self._value else Scalar(self._id, self._prefix, self._markers, self._style, self._anchor, self._value)
 
     class Style(Enum):
         DOUBLE_QUOTED = 0
@@ -160,199 +244,313 @@ class Scalar(Yaml.Block, YamlKey):
 
 @dataclass(frozen=True, eq=False)
 class Mapping(Yaml.Block):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitMapping(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Mapping:
-        return self if id is self.id else Mapping(id, self.markers, self.opening_brace_prefix, self.entries, self.closing_brace_prefix, self.anchor)
+    def with_id(self, id: UUID) -> Mapping:
+        return self if id is self._id else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
-    markers: Markers
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Mapping:
-        return self if markers is self.markers else Mapping(self.id, markers, self.opening_brace_prefix, self.entries, self.closing_brace_prefix, self.anchor)
+        return self if markers is self._markers else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
-    opening_brace_prefix: Optional[string]
+    _opening_brace_prefix: Optional[str]
 
-    def with_opening_brace_prefix(self, opening_brace_prefix: Optional[string]) -> Mapping:
-        return self if opening_brace_prefix is self.opening_brace_prefix else Mapping(self.id, self.markers, opening_brace_prefix, self.entries, self.closing_brace_prefix, self.anchor)
+    @property
+    def opening_brace_prefix(self) -> Optional[str]:
+        return self._opening_brace_prefix
 
-    entries: IList<Entry>
+    def with_opening_brace_prefix(self, opening_brace_prefix: Optional[str]) -> Mapping:
+        return self if opening_brace_prefix is self._opening_brace_prefix else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
-    def with_entries(self, entries: IList<Entry>) -> Mapping:
-        return self if entries is self.entries else Mapping(self.id, self.markers, self.opening_brace_prefix, entries, self.closing_brace_prefix, self.anchor)
+    _entries: List[Entry]
 
-    closing_brace_prefix: Optional[string]
+    @property
+    def entries(self) -> List[Entry]:
+        return self._entries
 
-    def with_closing_brace_prefix(self, closing_brace_prefix: Optional[string]) -> Mapping:
-        return self if closing_brace_prefix is self.closing_brace_prefix else Mapping(self.id, self.markers, self.opening_brace_prefix, self.entries, closing_brace_prefix, self.anchor)
+    def with_entries(self, entries: List[Entry]) -> Mapping:
+        return self if entries is self._entries else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
-    anchor: Optional[Yaml.Anchor]
+    _closing_brace_prefix: Optional[str]
+
+    @property
+    def closing_brace_prefix(self) -> Optional[str]:
+        return self._closing_brace_prefix
+
+    def with_closing_brace_prefix(self, closing_brace_prefix: Optional[str]) -> Mapping:
+        return self if closing_brace_prefix is self._closing_brace_prefix else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
+
+    _anchor: Optional[Yaml.Anchor]
+
+    @property
+    def anchor(self) -> Optional[Yaml.Anchor]:
+        return self._anchor
 
     def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Mapping:
-        return self if anchor is self.anchor else Mapping(self.id, self.markers, self.opening_brace_prefix, self.entries, self.closing_brace_prefix, anchor)
+        return self if anchor is self._anchor else Mapping(self._id, self._markers, self._opening_brace_prefix, self._entries, self._closing_brace_prefix, self._anchor)
 
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
-        def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-            return v.VisitMappingEntry(this, p)
+        _id: UUID
 
-        id: Guid
+        @property
+        def id(self) -> UUID:
+            return self._id
 
-        def with_id(self, id: Guid) -> Entry:
-            return self if id is self.id else Entry(id, self.prefix, self.markers, self.key, self.before_mapping_value_indicator, self.value)
+        def with_id(self, id: UUID) -> Mapping.Entry:
+            return self if id is self._id else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
-        prefix: string
+        _prefix: str
 
-        def with_prefix(self, prefix: string) -> Entry:
-            return self if prefix is self.prefix else Entry(self.id, prefix, self.markers, self.key, self.before_mapping_value_indicator, self.value)
+        @property
+        def prefix(self) -> str:
+            return self._prefix
 
-        markers: Markers
+        def with_prefix(self, prefix: str) -> Mapping.Entry:
+            return self if prefix is self._prefix else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
-        def with_markers(self, markers: Markers) -> Entry:
-            return self if markers is self.markers else Entry(self.id, self.prefix, markers, self.key, self.before_mapping_value_indicator, self.value)
+        _markers: Markers
 
-        key: YamlKey
+        @property
+        def markers(self) -> Markers:
+            return self._markers
 
-        def with_key(self, key: YamlKey) -> Entry:
-            return self if key is self.key else Entry(self.id, self.prefix, self.markers, key, self.before_mapping_value_indicator, self.value)
+        def with_markers(self, markers: Markers) -> Mapping.Entry:
+            return self if markers is self._markers else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
-        before_mapping_value_indicator: string
+        _key: YamlKey
 
-        def with_before_mapping_value_indicator(self, before_mapping_value_indicator: string) -> Entry:
-            return self if before_mapping_value_indicator is self.before_mapping_value_indicator else Entry(self.id, self.prefix, self.markers, self.key, before_mapping_value_indicator, self.value)
+        @property
+        def key(self) -> YamlKey:
+            return self._key
 
-        value: Yaml.Block
+        def with_key(self, key: YamlKey) -> Mapping.Entry:
+            return self if key is self._key else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
-        def with_value(self, value: Yaml.Block) -> Entry:
-            return self if value is self.value else Entry(self.id, self.prefix, self.markers, self.key, self.before_mapping_value_indicator, value)
+        _before_mapping_value_indicator: str
+
+        @property
+        def before_mapping_value_indicator(self) -> str:
+            return self._before_mapping_value_indicator
+
+        def with_before_mapping_value_indicator(self, before_mapping_value_indicator: str) -> Mapping.Entry:
+            return self if before_mapping_value_indicator is self._before_mapping_value_indicator else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
+
+        _value: Yaml.Block
+
+        @property
+        def value(self) -> Yaml.Block:
+            return self._value
+
+        def with_value(self, value: Yaml.Block) -> Mapping.Entry:
+            return self if value is self._value else Mapping.Entry(self._id, self._prefix, self._markers, self._key, self._before_mapping_value_indicator, self._value)
 
 @dataclass(frozen=True, eq=False)
 class Sequence(Yaml.Block):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitSequence(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Sequence:
-        return self if id is self.id else Sequence(id, self.markers, self.opening_bracket_prefix, self.entries, self.closing_bracket_prefix, self.anchor)
+    def with_id(self, id: UUID) -> Sequence:
+        return self if id is self._id else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
-    markers: Markers
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Sequence:
-        return self if markers is self.markers else Sequence(self.id, markers, self.opening_bracket_prefix, self.entries, self.closing_bracket_prefix, self.anchor)
+        return self if markers is self._markers else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
-    opening_bracket_prefix: Optional[string]
+    _opening_bracket_prefix: Optional[str]
 
-    def with_opening_bracket_prefix(self, opening_bracket_prefix: Optional[string]) -> Sequence:
-        return self if opening_bracket_prefix is self.opening_bracket_prefix else Sequence(self.id, self.markers, opening_bracket_prefix, self.entries, self.closing_bracket_prefix, self.anchor)
+    @property
+    def opening_bracket_prefix(self) -> Optional[str]:
+        return self._opening_bracket_prefix
 
-    entries: IList<Entry>
+    def with_opening_bracket_prefix(self, opening_bracket_prefix: Optional[str]) -> Sequence:
+        return self if opening_bracket_prefix is self._opening_bracket_prefix else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
-    def with_entries(self, entries: IList<Entry>) -> Sequence:
-        return self if entries is self.entries else Sequence(self.id, self.markers, self.opening_bracket_prefix, entries, self.closing_bracket_prefix, self.anchor)
+    _entries: List[Entry]
 
-    closing_bracket_prefix: Optional[string]
+    @property
+    def entries(self) -> List[Entry]:
+        return self._entries
 
-    def with_closing_bracket_prefix(self, closing_bracket_prefix: Optional[string]) -> Sequence:
-        return self if closing_bracket_prefix is self.closing_bracket_prefix else Sequence(self.id, self.markers, self.opening_bracket_prefix, self.entries, closing_bracket_prefix, self.anchor)
+    def with_entries(self, entries: List[Entry]) -> Sequence:
+        return self if entries is self._entries else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
-    anchor: Optional[Yaml.Anchor]
+    _closing_bracket_prefix: Optional[str]
+
+    @property
+    def closing_bracket_prefix(self) -> Optional[str]:
+        return self._closing_bracket_prefix
+
+    def with_closing_bracket_prefix(self, closing_bracket_prefix: Optional[str]) -> Sequence:
+        return self if closing_bracket_prefix is self._closing_bracket_prefix else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
+
+    _anchor: Optional[Yaml.Anchor]
+
+    @property
+    def anchor(self) -> Optional[Yaml.Anchor]:
+        return self._anchor
 
     def with_anchor(self, anchor: Optional[Yaml.Anchor]) -> Sequence:
-        return self if anchor is self.anchor else Sequence(self.id, self.markers, self.opening_bracket_prefix, self.entries, self.closing_bracket_prefix, anchor)
+        return self if anchor is self._anchor else Sequence(self._id, self._markers, self._opening_bracket_prefix, self._entries, self._closing_bracket_prefix, self._anchor)
 
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
-        def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-            return v.VisitSequenceEntry(this, p)
+        _id: UUID
 
-        id: Guid
+        @property
+        def id(self) -> UUID:
+            return self._id
 
-        def with_id(self, id: Guid) -> Entry:
-            return self if id is self.id else Entry(id, self.prefix, self.markers, self.block, self.dash, self.trailing_comma_prefix)
+        def with_id(self, id: UUID) -> Sequence.Entry:
+            return self if id is self._id else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
-        prefix: string
+        _prefix: str
 
-        def with_prefix(self, prefix: string) -> Entry:
-            return self if prefix is self.prefix else Entry(self.id, prefix, self.markers, self.block, self.dash, self.trailing_comma_prefix)
+        @property
+        def prefix(self) -> str:
+            return self._prefix
 
-        markers: Markers
+        def with_prefix(self, prefix: str) -> Sequence.Entry:
+            return self if prefix is self._prefix else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
-        def with_markers(self, markers: Markers) -> Entry:
-            return self if markers is self.markers else Entry(self.id, self.prefix, markers, self.block, self.dash, self.trailing_comma_prefix)
+        _markers: Markers
 
-        block: Yaml.Block
+        @property
+        def markers(self) -> Markers:
+            return self._markers
 
-        def with_block(self, block: Yaml.Block) -> Entry:
-            return self if block is self.block else Entry(self.id, self.prefix, self.markers, block, self.dash, self.trailing_comma_prefix)
+        def with_markers(self, markers: Markers) -> Sequence.Entry:
+            return self if markers is self._markers else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
-        dash: bool
+        _block: Yaml.Block
 
-        def with_dash(self, dash: bool) -> Entry:
-            return self if dash is self.dash else Entry(self.id, self.prefix, self.markers, self.block, dash, self.trailing_comma_prefix)
+        @property
+        def block(self) -> Yaml.Block:
+            return self._block
 
-        trailing_comma_prefix: Optional[string]
+        def with_block(self, block: Yaml.Block) -> Sequence.Entry:
+            return self if block is self._block else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
-        def with_trailing_comma_prefix(self, trailing_comma_prefix: Optional[string]) -> Entry:
-            return self if trailing_comma_prefix is self.trailing_comma_prefix else Entry(self.id, self.prefix, self.markers, self.block, self.dash, trailing_comma_prefix)
+        _dash: bool
+
+        @property
+        def dash(self) -> bool:
+            return self._dash
+
+        def with_dash(self, dash: bool) -> Sequence.Entry:
+            return self if dash is self._dash else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
+
+        _trailing_comma_prefix: Optional[str]
+
+        @property
+        def trailing_comma_prefix(self) -> Optional[str]:
+            return self._trailing_comma_prefix
+
+        def with_trailing_comma_prefix(self, trailing_comma_prefix: Optional[str]) -> Sequence.Entry:
+            return self if trailing_comma_prefix is self._trailing_comma_prefix else Sequence.Entry(self._id, self._prefix, self._markers, self._block, self._dash, self._trailing_comma_prefix)
 
 @dataclass(frozen=True, eq=False)
 class Alias(Yaml.Block, YamlKey):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitAlias(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Alias:
-        return self if id is self.id else Alias(id, self.prefix, self.markers, self.anchor)
+    def with_id(self, id: UUID) -> Alias:
+        return self if id is self._id else Alias(self._id, self._prefix, self._markers, self._anchor)
 
-    prefix: string
+    _prefix: str
 
-    def with_prefix(self, prefix: string) -> Alias:
-        return self if prefix is self.prefix else Alias(self.id, prefix, self.markers, self.anchor)
+    @property
+    def prefix(self) -> str:
+        return self._prefix
 
-    markers: Markers
+    def with_prefix(self, prefix: str) -> Alias:
+        return self if prefix is self._prefix else Alias(self._id, self._prefix, self._markers, self._anchor)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Alias:
-        return self if markers is self.markers else Alias(self.id, self.prefix, markers, self.anchor)
+        return self if markers is self._markers else Alias(self._id, self._prefix, self._markers, self._anchor)
 
-    anchor: Yaml.Anchor
+    _anchor: Yaml.Anchor
+
+    @property
+    def anchor(self) -> Yaml.Anchor:
+        return self._anchor
 
     def with_anchor(self, anchor: Yaml.Anchor) -> Alias:
-        return self if anchor is self.anchor else Alias(self.id, self.prefix, self.markers, anchor)
+        return self if anchor is self._anchor else Alias(self._id, self._prefix, self._markers, self._anchor)
 
 @dataclass(frozen=True, eq=False)
 class Anchor(Yaml):
-    def accept_yaml(v: YamlVisitor[P], p: P) -> Yaml:
-        return v.VisitAnchor(this, p)
+    _id: UUID
 
-    id: Guid
+    @property
+    def id(self) -> UUID:
+        return self._id
 
-    def with_id(self, id: Guid) -> Anchor:
-        return self if id is self.id else Anchor(id, self.prefix, self.postfix, self.markers, self.key)
+    def with_id(self, id: UUID) -> Anchor:
+        return self if id is self._id else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
 
-    prefix: string
+    _prefix: str
 
-    def with_prefix(self, prefix: string) -> Anchor:
-        return self if prefix is self.prefix else Anchor(self.id, prefix, self.postfix, self.markers, self.key)
+    @property
+    def prefix(self) -> str:
+        return self._prefix
 
-    postfix: string
+    def with_prefix(self, prefix: str) -> Anchor:
+        return self if prefix is self._prefix else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
 
-    def with_postfix(self, postfix: string) -> Anchor:
-        return self if postfix is self.postfix else Anchor(self.id, self.prefix, postfix, self.markers, self.key)
+    _postfix: str
 
-    markers: Markers
+    @property
+    def postfix(self) -> str:
+        return self._postfix
+
+    def with_postfix(self, postfix: str) -> Anchor:
+        return self if postfix is self._postfix else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
 
     def with_markers(self, markers: Markers) -> Anchor:
-        return self if markers is self.markers else Anchor(self.id, self.prefix, self.postfix, markers, self.key)
+        return self if markers is self._markers else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
 
-    key: string
+    _key: str
 
-    def with_key(self, key: string) -> Anchor:
-        return self if key is self.key else Anchor(self.id, self.prefix, self.postfix, self.markers, key)
+    @property
+    def key(self) -> str:
+        return self._key
+
+    def with_key(self, key: str) -> Anchor:
+        return self if key is self._key else Anchor(self._id, self._prefix, self._postfix, self._markers, self._key)
 
 @dataclass(frozen=True, eq=False)
 class Block(Yaml):
-        pass
+    pass

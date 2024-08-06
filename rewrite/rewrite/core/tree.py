@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import datetime
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, Optional, Union, List
+from typing import Protocol, Optional
 from uuid import UUID, uuid4
 
-import datetime
+from rewrite.core.marker import Markers
 
 
 def random_id() -> UUID:
@@ -14,7 +15,19 @@ def random_id() -> UUID:
 
 
 class Tree(Protocol):
-    id: UUID
+    @property
+    def id(self) -> UUID:
+        ...
+
+    def with_id(self, id: UUID) -> Tree:
+        ...
+
+    @property
+    def markers(self) -> Markers:
+        ...
+
+    def with_markers(self, markers: Markers) -> Tree:
+        ...
 
     def __eq__(self, other):
         if self.__class__ == other.__class__:
@@ -26,7 +39,19 @@ class Tree(Protocol):
 
 
 class SourceFile(Tree, Protocol):
-    source_path: Path
+    @property
+    def source_path(self) -> Path:
+        ...
+
+    def with_source_path(self, source_path: Path) -> SourceFile:
+        ...
+
+    @property
+    def file_attributes(self) -> Optional[FileAttributes]:
+        ...
+
+    def with_file_attributes(self, file_attributes: Optional[FileAttributes]) -> SourceFile:
+        ...
 
 
 @dataclass(frozen=True)
