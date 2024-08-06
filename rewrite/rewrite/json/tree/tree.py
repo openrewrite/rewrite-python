@@ -23,7 +23,7 @@ class Array(JsonValue):
         return self._id
 
     def with_id(self, id: UUID) -> Array:
-        return self if id is self._id else Array(self._id, self._prefix, self._markers, self._values)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -32,7 +32,7 @@ class Array(JsonValue):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Array:
-        return self if prefix is self._prefix else Array(self._id, self._prefix, self._markers, self._values)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -41,7 +41,7 @@ class Array(JsonValue):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Array:
-        return self if markers is self._markers else Array(self._id, self._prefix, self._markers, self._values)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _values: List[JsonRightPadded[JsonValue]]
 
@@ -61,7 +61,7 @@ class Array(JsonValue):
             return self._t._values
 
         def with_values(self, values: List[JsonRightPadded[JsonValue]]) -> Array:
-            return self._t if self._t._values is values else Array(self._t.id, self._t.prefix, self._t.markers, values)
+            return self._t if self._t._values is values else replace(self._t, _values=values)
 
     _padding: weakref.ReferenceType[Array.PaddingHelper] = None
 
@@ -87,7 +87,7 @@ class Document(Json, SourceFile["Document"]):
         return self._id
 
     def with_id(self, id: UUID) -> Document:
-        return self if id is self._id else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if id is self._id else replace(self, _id=id)
 
     _source_path: Path
 
@@ -96,7 +96,7 @@ class Document(Json, SourceFile["Document"]):
         return self._source_path
 
     def with_source_path(self, source_path: Path) -> Document:
-        return self if source_path is self._source_path else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if source_path is self._source_path else replace(self, _source_path=source_path)
 
     _prefix: Space
 
@@ -105,7 +105,7 @@ class Document(Json, SourceFile["Document"]):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Document:
-        return self if prefix is self._prefix else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -114,7 +114,7 @@ class Document(Json, SourceFile["Document"]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Document:
-        return self if markers is self._markers else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _charset_name: Optional[str]
 
@@ -123,7 +123,7 @@ class Document(Json, SourceFile["Document"]):
         return self._charset_name
 
     def with_charset_name(self, charset_name: Optional[str]) -> Document:
-        return self if charset_name is self._charset_name else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if charset_name is self._charset_name else replace(self, _charset_name=charset_name)
 
     _charset_bom_marked: bool
 
@@ -132,7 +132,7 @@ class Document(Json, SourceFile["Document"]):
         return self._charset_bom_marked
 
     def with_charset_bom_marked(self, charset_bom_marked: bool) -> Document:
-        return self if charset_bom_marked is self._charset_bom_marked else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if charset_bom_marked is self._charset_bom_marked else replace(self, _charset_bom_marked=charset_bom_marked)
 
     _checksum: Optional[Checksum]
 
@@ -141,7 +141,7 @@ class Document(Json, SourceFile["Document"]):
         return self._checksum
 
     def with_checksum(self, checksum: Optional[Checksum]) -> Document:
-        return self if checksum is self._checksum else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if checksum is self._checksum else replace(self, _checksum=checksum)
 
     _file_attributes: Optional[FileAttributes]
 
@@ -150,7 +150,7 @@ class Document(Json, SourceFile["Document"]):
         return self._file_attributes
 
     def with_file_attributes(self, file_attributes: Optional[FileAttributes]) -> Document:
-        return self if file_attributes is self._file_attributes else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if file_attributes is self._file_attributes else replace(self, _file_attributes=file_attributes)
 
     _value: JsonValue
 
@@ -159,7 +159,7 @@ class Document(Json, SourceFile["Document"]):
         return self._value
 
     def with_value(self, value: JsonValue) -> Document:
-        return self if value is self._value else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if value is self._value else replace(self, _value=value)
 
     _eof: Space
 
@@ -168,7 +168,7 @@ class Document(Json, SourceFile["Document"]):
         return self._eof
 
     def with_eof(self, eof: Space) -> Document:
-        return self if eof is self._eof else Document(self._id, self._source_path, self._prefix, self._markers, self._charset_name, self._charset_bom_marked, self._checksum, self._file_attributes, self._value, self._eof)
+        return self if eof is self._eof else replace(self, _eof=eof)
 
 @dataclass(frozen=True, eq=False)
 class Empty(JsonValue):
@@ -179,7 +179,7 @@ class Empty(JsonValue):
         return self._id
 
     def with_id(self, id: UUID) -> Empty:
-        return self if id is self._id else Empty(self._id, self._prefix, self._markers)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -188,7 +188,7 @@ class Empty(JsonValue):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Empty:
-        return self if prefix is self._prefix else Empty(self._id, self._prefix, self._markers)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -197,7 +197,7 @@ class Empty(JsonValue):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Empty:
-        return self if markers is self._markers else Empty(self._id, self._prefix, self._markers)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
 @dataclass(frozen=True, eq=False)
 class Identifier(JsonKey):
@@ -208,7 +208,7 @@ class Identifier(JsonKey):
         return self._id
 
     def with_id(self, id: UUID) -> Identifier:
-        return self if id is self._id else Identifier(self._id, self._prefix, self._markers, self._name)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -217,7 +217,7 @@ class Identifier(JsonKey):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Identifier:
-        return self if prefix is self._prefix else Identifier(self._id, self._prefix, self._markers, self._name)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -226,7 +226,7 @@ class Identifier(JsonKey):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Identifier:
-        return self if markers is self._markers else Identifier(self._id, self._prefix, self._markers, self._name)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _name: str
 
@@ -235,7 +235,7 @@ class Identifier(JsonKey):
         return self._name
 
     def with_name(self, name: str) -> Identifier:
-        return self if name is self._name else Identifier(self._id, self._prefix, self._markers, self._name)
+        return self if name is self._name else replace(self, _name=name)
 
 @dataclass(frozen=True, eq=False)
 class Literal(JsonValue, JsonKey):
@@ -246,7 +246,7 @@ class Literal(JsonValue, JsonKey):
         return self._id
 
     def with_id(self, id: UUID) -> Literal:
-        return self if id is self._id else Literal(self._id, self._prefix, self._markers, self._source, self._value)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -255,7 +255,7 @@ class Literal(JsonValue, JsonKey):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Literal:
-        return self if prefix is self._prefix else Literal(self._id, self._prefix, self._markers, self._source, self._value)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -264,7 +264,7 @@ class Literal(JsonValue, JsonKey):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Literal:
-        return self if markers is self._markers else Literal(self._id, self._prefix, self._markers, self._source, self._value)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _source: str
 
@@ -273,7 +273,7 @@ class Literal(JsonValue, JsonKey):
         return self._source
 
     def with_source(self, source: str) -> Literal:
-        return self if source is self._source else Literal(self._id, self._prefix, self._markers, self._source, self._value)
+        return self if source is self._source else replace(self, _source=source)
 
     _value: object
 
@@ -282,7 +282,7 @@ class Literal(JsonValue, JsonKey):
         return self._value
 
     def with_value(self, value: object) -> Literal:
-        return self if value is self._value else Literal(self._id, self._prefix, self._markers, self._source, self._value)
+        return self if value is self._value else replace(self, _value=value)
 
 @dataclass(frozen=True, eq=False)
 class Member(Json):
@@ -293,7 +293,7 @@ class Member(Json):
         return self._id
 
     def with_id(self, id: UUID) -> Member:
-        return self if id is self._id else Member(self._id, self._prefix, self._markers, self._key, self._value)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -302,7 +302,7 @@ class Member(Json):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Member:
-        return self if prefix is self._prefix else Member(self._id, self._prefix, self._markers, self._key, self._value)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -311,7 +311,7 @@ class Member(Json):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Member:
-        return self if markers is self._markers else Member(self._id, self._prefix, self._markers, self._key, self._value)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _key: JsonRightPadded[JsonKey]
 
@@ -329,7 +329,7 @@ class Member(Json):
         return self._value
 
     def with_value(self, value: JsonValue) -> Member:
-        return self if value is self._value else Member(self._id, self._prefix, self._markers, self._key, self._value)
+        return self if value is self._value else replace(self, _value=value)
 
     @dataclass
     class PaddingHelper:
@@ -340,7 +340,7 @@ class Member(Json):
             return self._t._key
 
         def with_key(self, key: JsonRightPadded[JsonKey]) -> Member:
-            return self._t if self._t._key is key else Member(self._t.id, self._t.prefix, self._t.markers, key, self._t.value)
+            return self._t if self._t._key is key else replace(self._t, _key=key)
 
     _padding: weakref.ReferenceType[Member.PaddingHelper] = None
 
@@ -366,7 +366,7 @@ class JsonObject(JsonValue):
         return self._id
 
     def with_id(self, id: UUID) -> JsonObject:
-        return self if id is self._id else JsonObject(self._id, self._prefix, self._markers, self._members)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -375,7 +375,7 @@ class JsonObject(JsonValue):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> JsonObject:
-        return self if prefix is self._prefix else JsonObject(self._id, self._prefix, self._markers, self._members)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -384,7 +384,7 @@ class JsonObject(JsonValue):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JsonObject:
-        return self if markers is self._markers else JsonObject(self._id, self._prefix, self._markers, self._members)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _members: List[JsonRightPadded[Json]]
 
@@ -404,7 +404,7 @@ class JsonObject(JsonValue):
             return self._t._members
 
         def with_members(self, members: List[JsonRightPadded[Json]]) -> JsonObject:
-            return self._t if self._t._members is members else JsonObject(self._t.id, self._t.prefix, self._t.markers, members)
+            return self._t if self._t._members is members else replace(self._t, _members=members)
 
     _padding: weakref.ReferenceType[JsonObject.PaddingHelper] = None
 
