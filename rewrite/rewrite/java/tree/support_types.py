@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import weakref
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar
+from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict
+from uuid import UUID
 
 from attr import dataclass
 
@@ -148,9 +149,35 @@ class JRightPadded(Generic[T]):
         return [x.element for x in padded_list]
 
     @classmethod
-    def with_elements(cls, padded_list: List[JRightPadded[T]], elements: List[T]) -> List[JRightPadded[T]]:
-        # TODO implement
-        pass
+    def with_elements(cls, before: List[JRightPadded[J2]], elements: List[J2]) -> List[JRightPadded[J2]]:
+        # a cheaper check for the most common case when there are no changes
+        if len(elements) == len(before):
+            has_changes = False
+            for i in range(len(before)):
+                if before[i].element != elements[i]:
+                    has_changes = True
+                    break
+            if not has_changes:
+                return before
+        elif not elements:
+            return []
+
+        after: List[JRightPadded[J2]] = []
+        before_by_id: Dict[UUID, JRightPadded[J2]] = {}
+
+        for j in before:
+            if j.element.id in before_by_id:
+                raise Exception("Duplicate key")
+            before_by_id[j.element.id] = j
+
+        for t in elements:
+            found = before_by_id.get(t.id)
+            if found is not None:
+                after.append(found.with_element(t))
+            else:
+                after.append(JRightPadded(t, Space.EMPTY, Markers.EMPTY))
+
+        return after
 
 
 @dataclass(frozen=True)
@@ -181,15 +208,6 @@ class JLeftPadded(Generic[T]):
 
     def with_markers(self, markers: Markers) -> JLeftPadded[T]:
         return self if markers is self._markers else JLeftPadded(self._before, self._element, markers)
-
-    @classmethod
-    def get_elements(cls, padded_list: List[JLeftPadded[T]]) -> List[T]:
-        return [x.element for x in padded_list]
-
-    @classmethod
-    def with_elements(cls, padded_list: List[JLeftPadded[T]], elements: List[T]) -> List[JLeftPadded[T]]:
-        # TODO implement
-        pass
 
 
 @dataclass(frozen=True)
