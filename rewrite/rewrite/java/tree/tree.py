@@ -15,6 +15,8 @@ from ...core.marker.markers import Markers
 class J(Tree, Protocol):
     pass
 
+J2 = TypeVar('J2', bound=J)
+
 # noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AnnotatedType(J, Expression, TypeTree):
@@ -106,7 +108,7 @@ class Annotation(J, Expression):
 
     @property
     def arguments(self) -> Optional[List[Expression]]:
-        return self._arguments.element
+        return self._arguments.elements
 
     def with_arguments(self, arguments: Optional[List[Expression]]) -> Annotation:
         return self.padding.with_arguments(JContainer.with_elements_nullable(self._arguments, arguments))
@@ -435,10 +437,10 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
     _operator: JLeftPadded[Type]
 
     @property
-    def operator(self) -> AssignmentOperation.Type:
+    def operator(self) -> Type:
         return self._operator.element
 
-    def with_operator(self, operator: AssignmentOperation.Type) -> AssignmentOperation:
+    def with_operator(self, operator: Type) -> AssignmentOperation:
         return self.padding.with_operator(JLeftPadded.with_element(self._operator, operator))
 
     _assignment: Expression
@@ -544,10 +546,10 @@ class Binary(J, Expression, TypedTree):
     _operator: JLeftPadded[Type]
 
     @property
-    def operator(self) -> Binary.Type:
+    def operator(self) -> Type:
         return self._operator.element
 
-    def with_operator(self, operator: Binary.Type) -> Binary:
+    def with_operator(self, operator: Type) -> Binary:
         return self.padding.with_operator(JLeftPadded.with_element(self._operator, operator))
 
     _right: Expression
@@ -785,7 +787,7 @@ class Case(J, Statement):
 
     @property
     def expressions(self) -> List[Expression]:
-        return self._expressions.element
+        return self._expressions.elements
 
     def with_expressions(self, expressions: List[Expression]) -> Case:
         return self.padding.with_expressions(JContainer.with_elements(self._expressions, expressions))
@@ -794,7 +796,7 @@ class Case(J, Statement):
 
     @property
     def statements(self) -> List[Statement]:
-        return self._statements.element
+        return self._statements.elements
 
     def with_statements(self, statements: List[Statement]) -> Case:
         return self.padding.with_statements(JContainer.with_elements(self._statements, statements))
@@ -919,7 +921,7 @@ class ClassDeclaration(J, Statement, TypedTree):
 
     @property
     def type_parameters(self) -> Optional[List[TypeParameter]]:
-        return self._type_parameters.element
+        return self._type_parameters.elements
 
     def with_type_parameters(self, type_parameters: Optional[List[TypeParameter]]) -> ClassDeclaration:
         return self.padding.with_type_parameters(JContainer.with_elements_nullable(self._type_parameters, type_parameters))
@@ -928,7 +930,7 @@ class ClassDeclaration(J, Statement, TypedTree):
 
     @property
     def primary_constructor(self) -> Optional[List[Statement]]:
-        return self._primary_constructor.element
+        return self._primary_constructor.elements
 
     def with_primary_constructor(self, primary_constructor: Optional[List[Statement]]) -> ClassDeclaration:
         return self.padding.with_primary_constructor(JContainer.with_elements_nullable(self._primary_constructor, primary_constructor))
@@ -946,7 +948,7 @@ class ClassDeclaration(J, Statement, TypedTree):
 
     @property
     def implements(self) -> Optional[List[TypeTree]]:
-        return self._implements.element
+        return self._implements.elements
 
     def with_implements(self, implements: Optional[List[TypeTree]]) -> ClassDeclaration:
         return self.padding.with_implements(JContainer.with_elements_nullable(self._implements, implements))
@@ -955,7 +957,7 @@ class ClassDeclaration(J, Statement, TypedTree):
 
     @property
     def permits(self) -> Optional[List[TypeTree]]:
-        return self._permits.element
+        return self._permits.elements
 
     def with_permits(self, permits: Optional[List[TypeTree]]) -> ClassDeclaration:
         return self.padding.with_permits(JContainer.with_elements_nullable(self._permits, permits))
@@ -1315,13 +1317,13 @@ class DoWhileLoop(J, Loop):
     def with_body(self, body: Statement) -> DoWhileLoop:
         return self.padding.with_body(JRightPadded.with_element(self._body, body))
 
-    _while_condition: JLeftPadded[J.ControlParentheses[Expression]]
+    _while_condition: JLeftPadded[ControlParentheses[Expression]]
 
     @property
-    def while_condition(self) -> J.ControlParentheses[Expression]:
+    def while_condition(self) -> ControlParentheses[Expression]:
         return self._while_condition.element
 
-    def with_while_condition(self, while_condition: J.ControlParentheses[Expression]) -> DoWhileLoop:
+    def with_while_condition(self, while_condition: ControlParentheses[Expression]) -> DoWhileLoop:
         return self.padding.with_while_condition(JLeftPadded.with_element(self._while_condition, while_condition))
 
     @dataclass
@@ -1336,10 +1338,10 @@ class DoWhileLoop(J, Loop):
             return self._t if self._t._body is body else replace(self._t, _body=body)
 
         @property
-        def while_condition(self) -> JLeftPadded[J.ControlParentheses[Expression]]:
+        def while_condition(self) -> JLeftPadded[ControlParentheses[Expression]]:
             return self._t._while_condition
 
-        def with_while_condition(self, while_condition: JLeftPadded[J.ControlParentheses[Expression]]) -> DoWhileLoop:
+        def with_while_condition(self, while_condition: JLeftPadded[ControlParentheses[Expression]]) -> DoWhileLoop:
             return self._t if self._t._while_condition is while_condition else replace(self._t, _while_condition=while_condition)
 
     _padding: weakref.ReferenceType[DoWhileLoop.PaddingHelper] = None
@@ -1973,13 +1975,13 @@ class ParenthesizedTypeTree(J, TypeTree, Expression):
     def with_annotations(self, annotations: List[Annotation]) -> ParenthesizedTypeTree:
         return self if annotations is self._annotations else replace(self, _annotations=annotations)
 
-    _parenthesized_type: J.Parentheses[TypeTree]
+    _parenthesized_type: Parentheses[TypeTree]
 
     @property
-    def parenthesized_type(self) -> J.Parentheses[TypeTree]:
+    def parenthesized_type(self) -> Parentheses[TypeTree]:
         return self._parenthesized_type
 
-    def with_parenthesized_type(self, parenthesized_type: J.Parentheses[TypeTree]) -> ParenthesizedTypeTree:
+    def with_parenthesized_type(self, parenthesized_type: Parentheses[TypeTree]) -> ParenthesizedTypeTree:
         return self if parenthesized_type is self._parenthesized_type else replace(self, _parenthesized_type=parenthesized_type)
 
 # noinspection PyShadowingBuiltins,DuplicatedCode
@@ -2078,13 +2080,13 @@ class If(J, Statement):
     def with_markers(self, markers: Markers) -> If:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _if_condition: J.ControlParentheses[Expression]
+    _if_condition: ControlParentheses[Expression]
 
     @property
-    def if_condition(self) -> J.ControlParentheses[Expression]:
+    def if_condition(self) -> ControlParentheses[Expression]:
         return self._if_condition
 
-    def with_if_condition(self, if_condition: J.ControlParentheses[Expression]) -> If:
+    def with_if_condition(self, if_condition: ControlParentheses[Expression]) -> If:
         return self if if_condition is self._if_condition else replace(self, _if_condition=if_condition)
 
     _then_part: JRightPadded[Statement]
@@ -2416,7 +2418,7 @@ class IntersectionType(J, TypeTree, Expression):
 
     @property
     def bounds(self) -> List[TypeTree]:
-        return self._bounds.element
+        return self._bounds.elements
 
     def with_bounds(self, bounds: List[TypeTree]) -> IntersectionType:
         return self.padding.with_bounds(JContainer.with_elements(self._bounds, bounds))
@@ -2792,7 +2794,7 @@ class MemberReference(J, Expression, TypedTree, MethodCall):
 
     @property
     def type_parameters(self) -> Optional[List[Expression]]:
-        return self._type_parameters.element
+        return self._type_parameters.elements
 
     def with_type_parameters(self, type_parameters: Optional[List[Expression]]) -> MemberReference:
         return self.padding.with_type_parameters(JContainer.with_elements_nullable(self._type_parameters, type_parameters))
@@ -2939,7 +2941,7 @@ class MethodDeclaration(J, Statement, TypedTree):
 
     @property
     def parameters(self) -> List[Statement]:
-        return self._parameters.element
+        return self._parameters.elements
 
     def with_parameters(self, parameters: List[Statement]) -> MethodDeclaration:
         return self.padding.with_parameters(JContainer.with_elements(self._parameters, parameters))
@@ -2948,7 +2950,7 @@ class MethodDeclaration(J, Statement, TypedTree):
 
     @property
     def throws(self) -> Optional[List[NameTree]]:
-        return self._throws.element
+        return self._throws.elements
 
     def with_throws(self, throws: Optional[List[NameTree]]) -> MethodDeclaration:
         return self.padding.with_throws(JContainer.with_elements_nullable(self._throws, throws))
@@ -3152,7 +3154,7 @@ class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
 
     @property
     def type_parameters(self) -> Optional[List[Expression]]:
-        return self._type_parameters.element
+        return self._type_parameters.elements
 
     def with_type_parameters(self, type_parameters: Optional[List[Expression]]) -> MethodInvocation:
         return self.padding.with_type_parameters(JContainer.with_elements_nullable(self._type_parameters, type_parameters))
@@ -3170,7 +3172,7 @@ class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
 
     @property
     def arguments(self) -> List[Expression]:
-        return self._arguments.element
+        return self._arguments.elements
 
     def with_arguments(self, arguments: List[Expression]) -> MethodInvocation:
         return self.padding.with_arguments(JContainer.with_elements(self._arguments, arguments))
@@ -3420,7 +3422,7 @@ class NewArray(J, Expression, TypedTree):
 
     @property
     def initializer(self) -> Optional[List[Expression]]:
-        return self._initializer.element
+        return self._initializer.elements
 
     def with_initializer(self, initializer: Optional[List[Expression]]) -> NewArray:
         return self.padding.with_initializer(JContainer.with_elements_nullable(self._initializer, initializer))
@@ -3588,7 +3590,7 @@ class NewClass(J, Statement, Expression, TypedTree, MethodCall):
 
     @property
     def arguments(self) -> List[Expression]:
-        return self._arguments.element
+        return self._arguments.elements
 
     def with_arguments(self, arguments: List[Expression]) -> NewClass:
         return self.padding.with_arguments(JContainer.with_elements(self._arguments, arguments))
@@ -3811,7 +3813,7 @@ class ParameterizedType(J, TypeTree, Expression):
 
     @property
     def type_parameters(self) -> Optional[List[Expression]]:
-        return self._type_parameters.element
+        return self._type_parameters.elements
 
     def with_type_parameters(self, type_parameters: Optional[List[Expression]]) -> ParameterizedType:
         return self.padding.with_type_parameters(JContainer.with_elements_nullable(self._type_parameters, type_parameters))
@@ -3851,8 +3853,6 @@ class ParameterizedType(J, TypeTree, Expression):
                 p = ParameterizedType.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
-
-J2 = TypeVar('J2', bound=J)
 
 # noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3922,14 +3922,14 @@ class Parentheses(Generic[J2], J, Expression):
 
 # noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ControlParentheses(J, Expression):
+class ControlParentheses(Generic[J2], J, Expression):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> J.ControlParentheses[J2]:
+    def with_id(self, id: UUID) -> ControlParentheses[J2]:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -3938,7 +3938,7 @@ class ControlParentheses(J, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> J.ControlParentheses[J2]:
+    def with_prefix(self, prefix: Space) -> ControlParentheses[J2]:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -3947,7 +3947,7 @@ class ControlParentheses(J, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> J.ControlParentheses[J2]:
+    def with_markers(self, markers: Markers) -> ControlParentheses[J2]:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _tree: JRightPadded[J2]
@@ -3956,18 +3956,18 @@ class ControlParentheses(J, Expression):
     def tree(self) -> J2:
         return self._tree.element
 
-    def with_tree(self, tree: J2) -> J.ControlParentheses[J2]:
+    def with_tree(self, tree: J2) -> ControlParentheses[J2]:
         return self.padding.with_tree(JRightPadded.with_element(self._tree, tree))
 
     @dataclass
     class PaddingHelper:
-        _t: J.ControlParentheses[J2]
+        _t: ControlParentheses[J2]
 
         @property
         def tree(self) -> JRightPadded[J2]:
             return self._t._tree
 
-        def with_tree(self, tree: JRightPadded[J2]) -> J.ControlParentheses[J2]:
+        def with_tree(self, tree: JRightPadded[J2]) -> ControlParentheses[J2]:
             return self._t if self._t._tree is tree else replace(self._t, _tree=tree)
 
     _padding: weakref.ReferenceType[ControlParentheses.PaddingHelper] = None
@@ -4090,13 +4090,13 @@ class Switch(J, Statement):
     def with_markers(self, markers: Markers) -> Switch:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _selector: J.ControlParentheses[Expression]
+    _selector: ControlParentheses[Expression]
 
     @property
-    def selector(self) -> J.ControlParentheses[Expression]:
+    def selector(self) -> ControlParentheses[Expression]:
         return self._selector
 
-    def with_selector(self, selector: J.ControlParentheses[Expression]) -> Switch:
+    def with_selector(self, selector: ControlParentheses[Expression]) -> Switch:
         return self if selector is self._selector else replace(self, _selector=selector)
 
     _cases: Block
@@ -4138,13 +4138,13 @@ class SwitchExpression(J, Expression, TypedTree):
     def with_markers(self, markers: Markers) -> SwitchExpression:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _selector: J.ControlParentheses[Expression]
+    _selector: ControlParentheses[Expression]
 
     @property
-    def selector(self) -> J.ControlParentheses[Expression]:
+    def selector(self) -> ControlParentheses[Expression]:
         return self._selector
 
-    def with_selector(self, selector: J.ControlParentheses[Expression]) -> SwitchExpression:
+    def with_selector(self, selector: ControlParentheses[Expression]) -> SwitchExpression:
         return self if selector is self._selector else replace(self, _selector=selector)
 
     _cases: Block
@@ -4186,13 +4186,13 @@ class Synchronized(J, Statement):
     def with_markers(self, markers: Markers) -> Synchronized:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _lock: J.ControlParentheses[Expression]
+    _lock: ControlParentheses[Expression]
 
     @property
-    def lock(self) -> J.ControlParentheses[Expression]:
+    def lock(self) -> ControlParentheses[Expression]:
         return self._lock
 
-    def with_lock(self, lock: J.ControlParentheses[Expression]) -> Synchronized:
+    def with_lock(self, lock: ControlParentheses[Expression]) -> Synchronized:
         return self if lock is self._lock else replace(self, _lock=lock)
 
     _body: Block
@@ -4377,7 +4377,7 @@ class Try(J, Statement):
 
     @property
     def resources(self) -> Optional[List[Try.Resource]]:
-        return self._resources.element
+        return self._resources.elements
 
     def with_resources(self, resources: Optional[List[Try.Resource]]) -> Try:
         return self.padding.with_resources(JContainer.with_elements_nullable(self._resources, resources))
@@ -4487,13 +4487,13 @@ class Try(J, Statement):
         def with_markers(self, markers: Markers) -> Try.Catch:
             return self if markers is self._markers else replace(self, _markers=markers)
 
-        _parameter: J.ControlParentheses[VariableDeclarations]
+        _parameter: ControlParentheses[VariableDeclarations]
 
         @property
-        def parameter(self) -> J.ControlParentheses[VariableDeclarations]:
+        def parameter(self) -> ControlParentheses[VariableDeclarations]:
             return self._parameter
 
-        def with_parameter(self, parameter: J.ControlParentheses[VariableDeclarations]) -> Try.Catch:
+        def with_parameter(self, parameter: ControlParentheses[VariableDeclarations]) -> Try.Catch:
             return self if parameter is self._parameter else replace(self, _parameter=parameter)
 
         _body: Block
@@ -4569,13 +4569,13 @@ class TypeCast(J, Expression, TypedTree):
     def with_markers(self, markers: Markers) -> TypeCast:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _clazz: J.ControlParentheses[TypeTree]
+    _clazz: ControlParentheses[TypeTree]
 
     @property
-    def clazz(self) -> J.ControlParentheses[TypeTree]:
+    def clazz(self) -> ControlParentheses[TypeTree]:
         return self._clazz
 
-    def with_clazz(self, clazz: J.ControlParentheses[TypeTree]) -> TypeCast:
+    def with_clazz(self, clazz: ControlParentheses[TypeTree]) -> TypeCast:
         return self if clazz is self._clazz else replace(self, _clazz=clazz)
 
     _expression: Expression
@@ -4648,7 +4648,7 @@ class TypeParameter(J):
 
     @property
     def bounds(self) -> Optional[List[TypeTree]]:
-        return self._bounds.element
+        return self._bounds.elements
 
     def with_bounds(self, bounds: Optional[List[TypeTree]]) -> TypeParameter:
         return self.padding.with_bounds(JContainer.with_elements_nullable(self._bounds, bounds))
@@ -5083,13 +5083,13 @@ class WhileLoop(J, Loop):
     def with_markers(self, markers: Markers) -> WhileLoop:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _condition: J.ControlParentheses[Expression]
+    _condition: ControlParentheses[Expression]
 
     @property
-    def condition(self) -> J.ControlParentheses[Expression]:
+    def condition(self) -> ControlParentheses[Expression]:
         return self._condition
 
-    def with_condition(self, condition: J.ControlParentheses[Expression]) -> WhileLoop:
+    def with_condition(self, condition: ControlParentheses[Expression]) -> WhileLoop:
         return self if condition is self._condition else replace(self, _condition=condition)
 
     _body: JRightPadded[Statement]

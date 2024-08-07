@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import weakref
 from dataclasses import replace
-from typing import List, Optional, Protocol, TypeVar, Generic
+from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar
 
 from attr import dataclass
 
 from rewrite.core import Tree, SourceFile
 from rewrite.core.marker import Markers
+from rewrite.java.tree.tree import J
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,10 @@ class Space:
     def with_whitespace(self, whitespace: Optional[str]) -> Space:
         return self if whitespace is self._whitespace else Space(self._comments, whitespace)
 
+    EMPTY: ClassVar[Space] = None
+
+
+Space.EMPTY = Space([], '')
 
 class JavaSourceFile(SourceFile, Protocol):
     pass
@@ -107,6 +112,7 @@ class JavaType(Protocol):
 
 
 T = TypeVar('T')
+J2 = TypeVar('J2', bound=J)
 
 
 @dataclass
@@ -139,18 +145,52 @@ class JRightPadded(Generic[T]):
         return self if markers is self._markers else JRightPadded(self._element, self._after, markers)
 
     @classmethod
-    def get_elements(cls, list: List[JRightPadded[T]]) -> List[T]:
-        return [x.element for x in list]
+    def get_elements(cls, padded_list: List[JRightPadded[T]]) -> List[T]:
+        return [x.element for x in padded_list]
 
     @classmethod
-    def with_elements(cls, list: List[JRightPadded[T]], elements: List[T]) -> List[JRightPadded[T]]:
+    def with_elements(cls, padded_list: List[JRightPadded[T]], elements: List[T]) -> List[JRightPadded[T]]:
         # TODO implement
         pass
 
 
 @dataclass
 class JLeftPadded(Generic[T]):
-    pass
+    _before: Space
+
+    @property
+    def before(self) -> Space:
+        return self._before
+
+    def with_before(self, before: Space) -> JLeftPadded[T]:
+        return self if before is self._before else replace(self, _before=before)
+
+    _element: T
+
+    @property
+    def element(self) -> T:
+        return self._element
+
+    def with_element(self, element: T) -> JLeftPadded[T]:
+        return self if element is self._element else replace(self, _element=element)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> JLeftPadded[T]:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    @classmethod
+    def get_elements(cls, padded_list: List[JLeftPadded[T]]) -> List[T]:
+        return [x.element for x in padded_list]
+
+    @classmethod
+    def with_elements(cls, padded_list: List[JLeftPadded[T]], elements: List[T]) -> List[JLeftPadded[T]]:
+        # TODO implement
+        pass
 
 
 @dataclass(frozen=True)
@@ -203,7 +243,16 @@ class JContainer(Generic[T]):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = JContainer.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    @classmethod
+    def with_elements_nullable(cls, before: Optional[JContainer[J2]], elements: Optional[List[J2]]) -> Optional[JContainer[J2]]:
+        if elements is None or elements == []:
+            return None
+        if before is None:
+            return JContainer(Space.EMPTY, elements, Markers.EMPTY)
+        return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
