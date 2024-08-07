@@ -18,7 +18,7 @@ class J(Tree, Protocol):
 J2 = TypeVar('J2', bound=J)
 
 
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AnnotatedType(J, Expression, TypeTree):
     _id: UUID
@@ -66,7 +66,7 @@ class AnnotatedType(J, Expression, TypeTree):
     def with_type_expression(self, type_expression: TypeTree) -> AnnotatedType:
         return self if type_expression is self._type_expression else replace(self, _type_expression=type_expression)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Annotation(J, Expression):
     _id: UUID
@@ -125,10 +125,10 @@ class Annotation(J, Expression):
         def with_arguments(self, arguments: Optional[JContainer[Expression]]) -> Annotation:
             return self._t if self._t._arguments is arguments else replace(self._t, _arguments=arguments)
 
-    _padding: weakref.ReferenceType[Annotation.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Annotation.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Annotation.PaddingHelper
         if self._padding is None:
             p = Annotation.PaddingHelper(self)
@@ -141,7 +141,7 @@ class Annotation(J, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayAccess(J, Expression, TypedTree):
     _id: UUID
@@ -198,8 +198,7 @@ class ArrayAccess(J, Expression, TypedTree):
     def with_type(self, type: Optional[JavaType]) -> ArrayAccess:
         return self if type is self._type else replace(self, _type=type)
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayType(J, TypeTree, Expression):
     _id: UUID
@@ -265,7 +264,7 @@ class ArrayType(J, TypeTree, Expression):
     def with_type(self, type: JavaType) -> ArrayType:
         return self if type is self._type else replace(self, _type=type)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assert(J, Statement):
     _id: UUID
@@ -313,7 +312,7 @@ class Assert(J, Statement):
     def with_detail(self, detail: Optional[JLeftPadded[Expression]]) -> Assert:
         return self if detail is self._detail else replace(self, _detail=detail)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assignment(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -381,10 +380,10 @@ class Assignment(J, Statement, Expression, TypedTree):
         def with_assignment(self, assignment: JLeftPadded[Expression]) -> Assignment:
             return self._t if self._t._assignment is assignment else replace(self._t, _assignment=assignment)
 
-    _padding: weakref.ReferenceType[Assignment.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Assignment.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Assignment.PaddingHelper
         if self._padding is None:
             p = Assignment.PaddingHelper(self)
@@ -397,7 +396,7 @@ class Assignment(J, Statement, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AssignmentOperation(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -490,10 +489,10 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         def with_operator(self, operator: JLeftPadded[AssignmentOperation.Type]) -> AssignmentOperation:
             return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
 
-    _padding: weakref.ReferenceType[AssignmentOperation.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> AssignmentOperation.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: AssignmentOperation.PaddingHelper
         if self._padding is None:
             p = AssignmentOperation.PaddingHelper(self)
@@ -506,7 +505,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Binary(J, Expression, TypedTree):
     _id: UUID
@@ -604,10 +603,10 @@ class Binary(J, Expression, TypedTree):
         def with_operator(self, operator: JLeftPadded[Binary.Type]) -> Binary:
             return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
 
-    _padding: weakref.ReferenceType[Binary.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Binary.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Binary.PaddingHelper
         if self._padding is None:
             p = Binary.PaddingHelper(self)
@@ -620,7 +619,7 @@ class Binary(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(J, Statement):
     _id: UUID
@@ -695,10 +694,10 @@ class Block(J, Statement):
         def with_statements(self, statements: List[JRightPadded[Statement]]) -> Block:
             return self._t if self._t._statements is statements else replace(self._t, _statements=statements)
 
-    _padding: weakref.ReferenceType[Block.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Block.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Block.PaddingHelper
         if self._padding is None:
             p = Block.PaddingHelper(self)
@@ -711,7 +710,7 @@ class Block(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Break(J, Statement):
     _id: UUID
@@ -750,7 +749,7 @@ class Break(J, Statement):
     def with_label(self, label: Optional[Identifier]) -> Break:
         return self if label is self._label else replace(self, _label=label)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Case(J, Statement):
     _id: UUID
@@ -841,10 +840,10 @@ class Case(J, Statement):
         def with_body(self, body: Optional[JRightPadded[J]]) -> Case:
             return self._t if self._t._body is body else replace(self._t, _body=body)
 
-    _padding: weakref.ReferenceType[Case.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Case.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Case.PaddingHelper
         if self._padding is None:
             p = Case.PaddingHelper(self)
@@ -857,7 +856,7 @@ class Case(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ClassDeclaration(J, Statement, TypedTree):
     _id: UUID
@@ -982,7 +981,7 @@ class ClassDeclaration(J, Statement, TypedTree):
     def with_type(self, type: Optional[JavaType.FullyQualified]) -> ClassDeclaration:
         return self if type is self._type else replace(self, _type=type)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Kind(J):
         _id: UUID
@@ -1084,10 +1083,10 @@ class ClassDeclaration(J, Statement, TypedTree):
         def with_permits(self, permits: Optional[JContainer[TypeTree]]) -> ClassDeclaration:
             return self._t if self._t._permits is permits else replace(self._t, _permits=permits)
 
-    _padding: weakref.ReferenceType[ClassDeclaration.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ClassDeclaration.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ClassDeclaration.PaddingHelper
         if self._padding is None:
             p = ClassDeclaration.PaddingHelper(self)
@@ -1100,7 +1099,7 @@ class ClassDeclaration(J, Statement, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class CompilationUnit(J, JavaSourceFile["CompilationUnit"], SourceFile["CompilationUnit"]):
     _id: UUID
@@ -1225,10 +1224,10 @@ class CompilationUnit(J, JavaSourceFile["CompilationUnit"], SourceFile["Compilat
         def with_imports(self, imports: List[JRightPadded[Import]]) -> CompilationUnit:
             return self._t if self._t._imports is imports else replace(self._t, _imports=imports)
 
-    _padding: weakref.ReferenceType[CompilationUnit.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> CompilationUnit.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: CompilationUnit.PaddingHelper
         if self._padding is None:
             p = CompilationUnit.PaddingHelper(self)
@@ -1241,7 +1240,7 @@ class CompilationUnit(J, JavaSourceFile["CompilationUnit"], SourceFile["Compilat
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Continue(J, Statement):
     _id: UUID
@@ -1280,7 +1279,7 @@ class Continue(J, Statement):
     def with_label(self, label: Optional[Identifier]) -> Continue:
         return self if label is self._label else replace(self, _label=label)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DoWhileLoop(J, Loop):
     _id: UUID
@@ -1346,10 +1345,10 @@ class DoWhileLoop(J, Loop):
         def with_while_condition(self, while_condition: JLeftPadded[ControlParentheses[Expression]]) -> DoWhileLoop:
             return self._t if self._t._while_condition is while_condition else replace(self._t, _while_condition=while_condition)
 
-    _padding: weakref.ReferenceType[DoWhileLoop.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> DoWhileLoop.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: DoWhileLoop.PaddingHelper
         if self._padding is None:
             p = DoWhileLoop.PaddingHelper(self)
@@ -1362,7 +1361,7 @@ class DoWhileLoop(J, Loop):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(J, Statement, Expression, TypeTree):
     _id: UUID
@@ -1392,8 +1391,7 @@ class Empty(J, Statement, Expression, TypeTree):
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class EnumValue(J):
     _id: UUID
@@ -1450,7 +1448,7 @@ class EnumValue(J):
     def with_initializer(self, initializer: Optional[NewClass]) -> EnumValue:
         return self if initializer is self._initializer else replace(self, _initializer=initializer)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class EnumValueSet(J, Statement):
     _id: UUID
@@ -1509,10 +1507,10 @@ class EnumValueSet(J, Statement):
         def with_enums(self, enums: List[JRightPadded[EnumValue]]) -> EnumValueSet:
             return self._t if self._t._enums is enums else replace(self._t, _enums=enums)
 
-    _padding: weakref.ReferenceType[EnumValueSet.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> EnumValueSet.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: EnumValueSet.PaddingHelper
         if self._padding is None:
             p = EnumValueSet.PaddingHelper(self)
@@ -1525,7 +1523,7 @@ class EnumValueSet(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class FieldAccess(J, TypeTree, Expression, Statement):
     _id: UUID
@@ -1593,10 +1591,10 @@ class FieldAccess(J, TypeTree, Expression, Statement):
         def with_name(self, name: JLeftPadded[Identifier]) -> FieldAccess:
             return self._t if self._t._name is name else replace(self._t, _name=name)
 
-    _padding: weakref.ReferenceType[FieldAccess.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> FieldAccess.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: FieldAccess.PaddingHelper
         if self._padding is None:
             p = FieldAccess.PaddingHelper(self)
@@ -1609,7 +1607,7 @@ class FieldAccess(J, TypeTree, Expression, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ForEachLoop(J, Loop):
     _id: UUID
@@ -1657,7 +1655,7 @@ class ForEachLoop(J, Loop):
     def with_body(self, body: Statement) -> ForEachLoop:
         return self.padding.with_body(JRightPadded.with_element(self._body, body))
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Control(J):
         _id: UUID
@@ -1750,10 +1748,10 @@ class ForEachLoop(J, Loop):
         def with_body(self, body: JRightPadded[Statement]) -> ForEachLoop:
             return self._t if self._t._body is body else replace(self._t, _body=body)
 
-    _padding: weakref.ReferenceType[ForEachLoop.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ForEachLoop.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ForEachLoop.PaddingHelper
         if self._padding is None:
             p = ForEachLoop.PaddingHelper(self)
@@ -1766,7 +1764,7 @@ class ForEachLoop(J, Loop):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ForLoop(J, Loop):
     _id: UUID
@@ -1814,7 +1812,7 @@ class ForLoop(J, Loop):
     def with_body(self, body: Statement) -> ForLoop:
         return self.padding.with_body(JRightPadded.with_element(self._body, body))
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Control(J):
         _id: UUID
@@ -1923,10 +1921,10 @@ class ForLoop(J, Loop):
         def with_body(self, body: JRightPadded[Statement]) -> ForLoop:
             return self._t if self._t._body is body else replace(self._t, _body=body)
 
-    _padding: weakref.ReferenceType[ForLoop.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ForLoop.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ForLoop.PaddingHelper
         if self._padding is None:
             p = ForLoop.PaddingHelper(self)
@@ -1939,8 +1937,7 @@ class ForLoop(J, Loop):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParenthesizedTypeTree(J, TypeTree, Expression):
     _id: UUID
@@ -1988,8 +1985,7 @@ class ParenthesizedTypeTree(J, TypeTree, Expression):
     def with_parenthesized_type(self, parenthesized_type: Parentheses[TypeTree]) -> ParenthesizedTypeTree:
         return self if parenthesized_type is self._parenthesized_type else replace(self, _parenthesized_type=parenthesized_type)
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Identifier(J, TypeTree, Expression):
     _id: UUID
@@ -2055,7 +2051,7 @@ class Identifier(J, TypeTree, Expression):
     def with_field_type(self, field_type: Optional[JavaType.Variable]) -> Identifier:
         return self if field_type is self._field_type else replace(self, _field_type=field_type)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class If(J, Statement):
     _id: UUID
@@ -2112,7 +2108,7 @@ class If(J, Statement):
     def with_else_part(self, else_part: Optional[Else]) -> If:
         return self if else_part is self._else_part else replace(self, _else_part=else_part)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Else(J):
         _id: UUID
@@ -2189,10 +2185,10 @@ class If(J, Statement):
         def with_then_part(self, then_part: JRightPadded[Statement]) -> If:
             return self._t if self._t._then_part is then_part else replace(self._t, _then_part=then_part)
 
-    _padding: weakref.ReferenceType[If.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> If.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: If.PaddingHelper
         if self._padding is None:
             p = If.PaddingHelper(self)
@@ -2205,7 +2201,7 @@ class If(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Import(Statement):
     _id: UUID
@@ -2280,10 +2276,10 @@ class Import(Statement):
         def with_alias(self, alias: Optional[JLeftPadded[Identifier]]) -> Import:
             return self._t if self._t._alias is alias else replace(self._t, _alias=alias)
 
-    _padding: weakref.ReferenceType[Import.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Import.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Import.PaddingHelper
         if self._padding is None:
             p = Import.PaddingHelper(self)
@@ -2296,7 +2292,7 @@ class Import(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class InstanceOf(J, Expression, TypedTree):
     _id: UUID
@@ -2373,10 +2369,10 @@ class InstanceOf(J, Expression, TypedTree):
         def with_expression(self, expression: JRightPadded[Expression]) -> InstanceOf:
             return self._t if self._t._expression is expression else replace(self._t, _expression=expression)
 
-    _padding: weakref.ReferenceType[InstanceOf.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> InstanceOf.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: InstanceOf.PaddingHelper
         if self._padding is None:
             p = InstanceOf.PaddingHelper(self)
@@ -2389,7 +2385,7 @@ class InstanceOf(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class IntersectionType(J, TypeTree, Expression):
     _id: UUID
@@ -2439,10 +2435,10 @@ class IntersectionType(J, TypeTree, Expression):
         def with_bounds(self, bounds: JContainer[TypeTree]) -> IntersectionType:
             return self._t if self._t._bounds is bounds else replace(self._t, _bounds=bounds)
 
-    _padding: weakref.ReferenceType[IntersectionType.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> IntersectionType.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: IntersectionType.PaddingHelper
         if self._padding is None:
             p = IntersectionType.PaddingHelper(self)
@@ -2455,7 +2451,7 @@ class IntersectionType(J, TypeTree, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Label(J, Statement):
     _id: UUID
@@ -2514,10 +2510,10 @@ class Label(J, Statement):
         def with_label(self, label: JRightPadded[Identifier]) -> Label:
             return self._t if self._t._label is label else replace(self._t, _label=label)
 
-    _padding: weakref.ReferenceType[Label.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Label.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Label.PaddingHelper
         if self._padding is None:
             p = Label.PaddingHelper(self)
@@ -2530,7 +2526,7 @@ class Label(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Lambda(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -2596,7 +2592,7 @@ class Lambda(J, Statement, Expression, TypedTree):
     def with_type(self, type: Optional[JavaType]) -> Lambda:
         return self if type is self._type else replace(self, _type=type)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Parameters(J):
         _id: UUID
@@ -2671,7 +2667,7 @@ class Lambda(J, Statement, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(J, Expression, TypedTree):
     _id: UUID
@@ -2757,7 +2753,7 @@ class Literal(J, Expression, TypedTree):
         def with_code_point(self, code_point: str) -> Literal.UnicodeEscape:
             return self if code_point is self._code_point else replace(self, _code_point=code_point)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MemberReference(J, Expression, TypedTree, MethodCall):
     _id: UUID
@@ -2866,10 +2862,10 @@ class MemberReference(J, Expression, TypedTree, MethodCall):
         def with_reference(self, reference: JLeftPadded[Identifier]) -> MemberReference:
             return self._t if self._t._reference is reference else replace(self._t, _reference=reference)
 
-    _padding: weakref.ReferenceType[MemberReference.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> MemberReference.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: MemberReference.PaddingHelper
         if self._padding is None:
             p = MemberReference.PaddingHelper(self)
@@ -2882,7 +2878,7 @@ class MemberReference(J, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MethodDeclaration(J, Statement, TypedTree):
     _id: UUID
@@ -2988,7 +2984,6 @@ class MethodDeclaration(J, Statement, TypedTree):
     def with_method_type(self, method_type: Optional[JavaType.Method]) -> MethodDeclaration:
         return self if method_type is self._method_type else replace(self, _method_type=method_type)
 
-    # noinspection PyShadowingNames
     @dataclass
     class IdentifierWithAnnotations:
         _identifier: Identifier
@@ -3048,6 +3043,22 @@ class MethodDeclaration(J, Statement, TypedTree):
         def with_default_value(self, default_value: Optional[JLeftPadded[Expression]]) -> MethodDeclaration:
             return self._t if self._t._default_value is default_value else replace(self._t, _default_value=default_value)
 
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: MethodDeclaration.PaddingHelper
+        if self._padding is None:
+            p = MethodDeclaration.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = MethodDeclaration.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
     @dataclass
     class AnnotationsHelper:
         _t: MethodDeclaration
@@ -3087,26 +3098,10 @@ class MethodDeclaration(J, Statement, TypedTree):
         def with_default_value(self, default_value: Optional[JLeftPadded[Expression]]) -> MethodDeclaration:
             return self._t if self._t._default_value is default_value else replace(self._t, _default_value=default_value)
 
-    _padding: weakref.ReferenceType[MethodDeclaration.PaddingHelper] = None
+    _annotations: weakref.ReferenceType[AnnotationsHelper] = None
 
     @property
-    def padding(self) -> MethodDeclaration.PaddingHelper:
-        p: MethodDeclaration.PaddingHelper
-        if self._padding is None:
-            p = MethodDeclaration.PaddingHelper(self)
-            object.__setattr__(self, '_padding', weakref.ref(p))
-        else:
-            p = self._padding()
-            # noinspection PyProtectedMember
-            if p is None or p._t != self:
-                p = MethodDeclaration.PaddingHelper(self)
-                object.__setattr__(self, '_padding', weakref.ref(p))
-        return p
-
-    _annotations: weakref.ReferenceType[MethodDeclaration.AnnotationsHelper] = None
-
-    @property
-    def annotations(self) -> MethodDeclaration.AnnotationsHelper:
+    def annotations(self) -> AnnotationsHelper:
         p: MethodDeclaration.AnnotationsHelper
         if self._annotations is None:
             p = MethodDeclaration.AnnotationsHelper(self)
@@ -3119,7 +3114,7 @@ class MethodDeclaration(J, Statement, TypedTree):
                 object.__setattr__(self, '_annotations', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
     _id: UUID
@@ -3219,10 +3214,10 @@ class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
         def with_arguments(self, arguments: JContainer[Expression]) -> MethodInvocation:
             return self._t if self._t._arguments is arguments else replace(self._t, _arguments=arguments)
 
-    _padding: weakref.ReferenceType[MethodInvocation.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> MethodInvocation.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: MethodInvocation.PaddingHelper
         if self._padding is None:
             p = MethodInvocation.PaddingHelper(self)
@@ -3235,8 +3230,7 @@ class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Modifier(J):
     _id: UUID
@@ -3313,7 +3307,7 @@ class Modifier(J):
         Inline = 16
         LanguageExtension = 17
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MultiCatch(J, TypeTree):
     _id: UUID
@@ -3363,10 +3357,10 @@ class MultiCatch(J, TypeTree):
         def with_alternatives(self, alternatives: List[JRightPadded[NameTree]]) -> MultiCatch:
             return self._t if self._t._alternatives is alternatives else replace(self._t, _alternatives=alternatives)
 
-    _padding: weakref.ReferenceType[MultiCatch.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> MultiCatch.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: MultiCatch.PaddingHelper
         if self._padding is None:
             p = MultiCatch.PaddingHelper(self)
@@ -3379,7 +3373,7 @@ class MultiCatch(J, TypeTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NewArray(J, Expression, TypedTree):
     _id: UUID
@@ -3456,10 +3450,10 @@ class NewArray(J, Expression, TypedTree):
         def with_initializer(self, initializer: Optional[JContainer[Expression]]) -> NewArray:
             return self._t if self._t._initializer is initializer else replace(self._t, _initializer=initializer)
 
-    _padding: weakref.ReferenceType[NewArray.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> NewArray.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: NewArray.PaddingHelper
         if self._padding is None:
             p = NewArray.PaddingHelper(self)
@@ -3472,7 +3466,7 @@ class NewArray(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayDimension(J):
     _id: UUID
@@ -3522,10 +3516,10 @@ class ArrayDimension(J):
         def with_index(self, index: JRightPadded[Expression]) -> ArrayDimension:
             return self._t if self._t._index is index else replace(self._t, _index=index)
 
-    _padding: weakref.ReferenceType[ArrayDimension.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ArrayDimension.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ArrayDimension.PaddingHelper
         if self._padding is None:
             p = ArrayDimension.PaddingHelper(self)
@@ -3538,7 +3532,7 @@ class ArrayDimension(J):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NewClass(J, Statement, Expression, TypedTree, MethodCall):
     _id: UUID
@@ -3640,10 +3634,10 @@ class NewClass(J, Statement, Expression, TypedTree, MethodCall):
         def with_arguments(self, arguments: JContainer[Expression]) -> NewClass:
             return self._t if self._t._arguments is arguments else replace(self._t, _arguments=arguments)
 
-    _padding: weakref.ReferenceType[NewClass.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> NewClass.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: NewClass.PaddingHelper
         if self._padding is None:
             p = NewClass.PaddingHelper(self)
@@ -3656,8 +3650,7 @@ class NewClass(J, Statement, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NullableType(J, TypeTree, Expression):
     _id: UUID
@@ -3716,10 +3709,10 @@ class NullableType(J, TypeTree, Expression):
         def with_type_tree(self, type_tree: JRightPadded[TypeTree]) -> NullableType:
             return self._t if self._t._type_tree is type_tree else replace(self._t, _type_tree=type_tree)
 
-    _padding: weakref.ReferenceType[NullableType.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> NullableType.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: NullableType.PaddingHelper
         if self._padding is None:
             p = NullableType.PaddingHelper(self)
@@ -3732,8 +3725,7 @@ class NullableType(J, TypeTree, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Package(Statement, J):
     _id: UUID
@@ -3781,7 +3773,7 @@ class Package(Statement, J):
     def with_annotations(self, annotations: List[Annotation]) -> Package:
         return self if annotations is self._annotations else replace(self, _annotations=annotations)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParameterizedType(J, TypeTree, Expression):
     _id: UUID
@@ -3849,10 +3841,10 @@ class ParameterizedType(J, TypeTree, Expression):
         def with_type_parameters(self, type_parameters: Optional[JContainer[Expression]]) -> ParameterizedType:
             return self._t if self._t._type_parameters is type_parameters else replace(self._t, _type_parameters=type_parameters)
 
-    _padding: weakref.ReferenceType[ParameterizedType.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ParameterizedType.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ParameterizedType.PaddingHelper
         if self._padding is None:
             p = ParameterizedType.PaddingHelper(self)
@@ -3865,7 +3857,7 @@ class ParameterizedType(J, TypeTree, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Parentheses(Generic[J2], J, Expression):
     _id: UUID
@@ -3915,10 +3907,10 @@ class Parentheses(Generic[J2], J, Expression):
         def with_tree(self, tree: JRightPadded[J2]) -> Parentheses[J2]:
             return self._t if self._t._tree is tree else replace(self._t, _tree=tree)
 
-    _padding: weakref.ReferenceType[Parentheses.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Parentheses.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Parentheses.PaddingHelper
         if self._padding is None:
             p = Parentheses.PaddingHelper(self)
@@ -3931,7 +3923,7 @@ class Parentheses(Generic[J2], J, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ControlParentheses(Generic[J2], J, Expression):
     _id: UUID
@@ -3981,10 +3973,10 @@ class ControlParentheses(Generic[J2], J, Expression):
         def with_tree(self, tree: JRightPadded[J2]) -> ControlParentheses[J2]:
             return self._t if self._t._tree is tree else replace(self._t, _tree=tree)
 
-    _padding: weakref.ReferenceType[ControlParentheses.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> ControlParentheses.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: ControlParentheses.PaddingHelper
         if self._padding is None:
             p = ControlParentheses.PaddingHelper(self)
@@ -3997,7 +3989,7 @@ class ControlParentheses(Generic[J2], J, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Primitive(J, TypeTree, Expression):
     _id: UUID
@@ -4032,7 +4024,7 @@ class Primitive(J, TypeTree, Expression):
     def with_type(self, type: JavaType.Primitive) -> Primitive:
         return self if type is self._type else replace(self, _type=type)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Return(J, Statement):
     _id: UUID
@@ -4071,7 +4063,7 @@ class Return(J, Statement):
     def with_expression(self, expression: Optional[Expression]) -> Return:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Switch(J, Statement):
     _id: UUID
@@ -4119,7 +4111,7 @@ class Switch(J, Statement):
     def with_cases(self, cases: Block) -> Switch:
         return self if cases is self._cases else replace(self, _cases=cases)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SwitchExpression(J, Expression, TypedTree):
     _id: UUID
@@ -4167,7 +4159,7 @@ class SwitchExpression(J, Expression, TypedTree):
     def with_cases(self, cases: Block) -> SwitchExpression:
         return self if cases is self._cases else replace(self, _cases=cases)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Synchronized(J, Statement):
     _id: UUID
@@ -4215,7 +4207,7 @@ class Synchronized(J, Statement):
     def with_body(self, body: Block) -> Synchronized:
         return self if body is self._body else replace(self, _body=body)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Ternary(J, Expression, Statement, TypedTree):
     _id: UUID
@@ -4299,10 +4291,10 @@ class Ternary(J, Expression, Statement, TypedTree):
         def with_false_part(self, false_part: JLeftPadded[Expression]) -> Ternary:
             return self._t if self._t._false_part is false_part else replace(self._t, _false_part=false_part)
 
-    _padding: weakref.ReferenceType[Ternary.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Ternary.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Ternary.PaddingHelper
         if self._padding is None:
             p = Ternary.PaddingHelper(self)
@@ -4315,7 +4307,7 @@ class Ternary(J, Expression, Statement, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Throw(J, Statement):
     _id: UUID
@@ -4354,7 +4346,7 @@ class Throw(J, Statement):
     def with_exception(self, exception: Expression) -> Throw:
         return self if exception is self._exception else replace(self, _exception=exception)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Try(J, Statement):
     _id: UUID
@@ -4420,7 +4412,7 @@ class Try(J, Statement):
     def with_finally(self, finally_: Optional[Block]) -> Try:
         return self.padding.with_finally(JLeftPadded.with_element(self._finally, finally_))
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Resource(J):
         _id: UUID
@@ -4468,7 +4460,7 @@ class Try(J, Statement):
         def with_terminated_with_semicolon(self, terminated_with_semicolon: bool) -> Try.Resource:
             return self if terminated_with_semicolon is self._terminated_with_semicolon else replace(self, _terminated_with_semicolon=terminated_with_semicolon)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Catch(J):
         _id: UUID
@@ -4534,10 +4526,10 @@ class Try(J, Statement):
         def with_finally(self, finally_: Optional[JLeftPadded[Block]]) -> Try:
             return self._t if self._t._finally is finally_ else replace(self._t, _finally=finally_)
 
-    _padding: weakref.ReferenceType[Try.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Try.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Try.PaddingHelper
         if self._padding is None:
             p = Try.PaddingHelper(self)
@@ -4550,7 +4542,7 @@ class Try(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeCast(J, Expression, TypedTree):
     _id: UUID
@@ -4598,8 +4590,7 @@ class TypeCast(J, Expression, TypedTree):
     def with_expression(self, expression: Expression) -> TypeCast:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeParameter(J):
     _id: UUID
@@ -4676,10 +4667,10 @@ class TypeParameter(J):
         def with_bounds(self, bounds: Optional[JContainer[TypeTree]]) -> TypeParameter:
             return self._t if self._t._bounds is bounds else replace(self._t, _bounds=bounds)
 
-    _padding: weakref.ReferenceType[TypeParameter.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> TypeParameter.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: TypeParameter.PaddingHelper
         if self._padding is None:
             p = TypeParameter.PaddingHelper(self)
@@ -4692,8 +4683,7 @@ class TypeParameter(J):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-
-# noinspection PyShadowingBuiltins,DuplicatedCode,PyShadowingNames
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeParameters(J):
     _id: UUID
@@ -4752,10 +4742,10 @@ class TypeParameters(J):
         def with_type_parameters(self, type_parameters: List[JRightPadded[TypeParameter]]) -> TypeParameters:
             return self._t if self._t._type_parameters is type_parameters else replace(self._t, _type_parameters=type_parameters)
 
-    _padding: weakref.ReferenceType[TypeParameters.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> TypeParameters.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: TypeParameters.PaddingHelper
         if self._padding is None:
             p = TypeParameters.PaddingHelper(self)
@@ -4768,7 +4758,7 @@ class TypeParameters(J):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Unary(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -4846,10 +4836,10 @@ class Unary(J, Statement, Expression, TypedTree):
         def with_operator(self, operator: JLeftPadded[Unary.Type]) -> Unary:
             return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
 
-    _padding: weakref.ReferenceType[Unary.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Unary.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Unary.PaddingHelper
         if self._padding is None:
             p = Unary.PaddingHelper(self)
@@ -4862,7 +4852,7 @@ class Unary(J, Statement, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class VariableDeclarations(J, Statement, TypedTree):
     _id: UUID
@@ -4946,7 +4936,7 @@ class VariableDeclarations(J, Statement, TypedTree):
     def with_variables(self, variables: List[NamedVariable]) -> VariableDeclarations:
         return self.padding.with_variables(JRightPadded.with_elements(self._variables, variables))
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class NamedVariable(J, NameTree):
         _id: UUID
@@ -5050,10 +5040,10 @@ class VariableDeclarations(J, Statement, TypedTree):
         def with_variables(self, variables: List[JRightPadded[VariableDeclarations.NamedVariable]]) -> VariableDeclarations:
             return self._t if self._t._variables is variables else replace(self._t, _variables=variables)
 
-    _padding: weakref.ReferenceType[VariableDeclarations.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> VariableDeclarations.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: VariableDeclarations.PaddingHelper
         if self._padding is None:
             p = VariableDeclarations.PaddingHelper(self)
@@ -5066,7 +5056,7 @@ class VariableDeclarations(J, Statement, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class WhileLoop(J, Loop):
     _id: UUID
@@ -5125,10 +5115,10 @@ class WhileLoop(J, Loop):
         def with_body(self, body: JRightPadded[Statement]) -> WhileLoop:
             return self._t if self._t._body is body else replace(self._t, _body=body)
 
-    _padding: weakref.ReferenceType[WhileLoop.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> WhileLoop.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: WhileLoop.PaddingHelper
         if self._padding is None:
             p = WhileLoop.PaddingHelper(self)
@@ -5141,7 +5131,7 @@ class WhileLoop(J, Loop):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Wildcard(J, Expression, TypeTree):
     _id: UUID
@@ -5204,10 +5194,10 @@ class Wildcard(J, Expression, TypeTree):
         def with_bound(self, bound: Optional[JLeftPadded[Wildcard.Bound]]) -> Wildcard:
             return self._t if self._t._bound is bound else replace(self._t, _bound=bound)
 
-    _padding: weakref.ReferenceType[Wildcard.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Wildcard.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Wildcard.PaddingHelper
         if self._padding is None:
             p = Wildcard.PaddingHelper(self)
@@ -5220,7 +5210,7 @@ class Wildcard(J, Expression, TypeTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Yield(J, Statement):
     _id: UUID
@@ -5268,7 +5258,7 @@ class Yield(J, Statement):
     def with_value(self, value: Expression) -> Yield:
         return self if value is self._value else replace(self, _value=value)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Unknown(J, Statement, Expression, TypeTree, TypedTree, NameTree):
     _id: UUID
@@ -5307,7 +5297,7 @@ class Unknown(J, Statement, Expression, TypeTree, TypedTree, NameTree):
     def with_source(self, source: Source) -> Unknown:
         return self if source is self._source else replace(self, _source=source)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Source(J):
         _id: UUID

@@ -65,10 +65,10 @@ class Array(JsonValue):
         def with_values(self, values: List[JsonRightPadded[JsonValue]]) -> Array:
             return self._t if self._t._values is values else replace(self._t, _values=values)
 
-    _padding: weakref.ReferenceType[Array.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Array.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Array.PaddingHelper
         if self._padding is None:
             p = Array.PaddingHelper(self)
@@ -350,10 +350,10 @@ class Member(Json):
         def with_key(self, key: JsonRightPadded[JsonKey]) -> Member:
             return self._t if self._t._key is key else replace(self._t, _key=key)
 
-    _padding: weakref.ReferenceType[Member.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> Member.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: Member.PaddingHelper
         if self._padding is None:
             p = Member.PaddingHelper(self)
@@ -416,10 +416,10 @@ class JsonObject(JsonValue):
         def with_members(self, members: List[JsonRightPadded[Json]]) -> JsonObject:
             return self._t if self._t._members is members else replace(self._t, _members=members)
 
-    _padding: weakref.ReferenceType[JsonObject.PaddingHelper] = None
+    _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
-    def padding(self) -> JsonObject.PaddingHelper:
+    def padding(self) -> PaddingHelper:
         p: JsonObject.PaddingHelper
         if self._padding is None:
             p = JsonObject.PaddingHelper(self)
