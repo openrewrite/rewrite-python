@@ -9,6 +9,7 @@ from uuid import UUID
 from enum import Enum
 
 from .support_types import *
+from ..visitor import YamlVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
@@ -90,6 +91,9 @@ class Documents(Yaml, SourceFile["Documents"]):
 
     def with_documents(self, documents: List[Document]) -> Documents:
         return self if documents is self._documents else replace(self, _documents=documents)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_documents(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -187,6 +191,12 @@ class Document(Yaml):
         def with_explicit(self, explicit: bool) -> Document.End:
             return self if explicit is self._explicit else replace(self, _explicit=explicit)
 
+        def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+            return v.visit_document_end(self, p)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_document(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(Yaml):
@@ -255,6 +265,9 @@ class Scalar(Block, YamlKey):
         LITERAL = 2
         FOLDED = 3
         PLAIN = 4
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_scalar(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -370,6 +383,12 @@ class Mapping(Block):
         def with_value(self, value: Block) -> Mapping.Entry:
             return self if value is self._value else replace(self, _value=value)
 
+        def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+            return v.visit_mapping_entry(self, p)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_mapping(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Sequence(Block):
@@ -484,6 +503,12 @@ class Sequence(Block):
         def with_trailing_comma_prefix(self, trailing_comma_prefix: Optional[str]) -> Sequence.Entry:
             return self if trailing_comma_prefix is self._trailing_comma_prefix else replace(self, _trailing_comma_prefix=trailing_comma_prefix)
 
+        def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+            return v.visit_sequence_entry(self, p)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_sequence(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Alias(Block, YamlKey):
@@ -522,6 +547,9 @@ class Alias(Block, YamlKey):
 
     def with_anchor(self, anchor: Anchor) -> Alias:
         return self if anchor is self._anchor else replace(self, _anchor=anchor)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_alias(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -570,3 +598,6 @@ class Anchor(Yaml):
 
     def with_key(self, key: str) -> Anchor:
         return self if key is self._key else replace(self, _key=key)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_anchor(self, p)

@@ -9,6 +9,7 @@ from uuid import UUID
 from enum import Enum
 
 from .support_types import *
+from ..visitor import JsonVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
@@ -81,6 +82,9 @@ class Array(JsonValue):
                 p = Array.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_array(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -175,6 +179,9 @@ class Document(Json, SourceFile["Document"]):
     def with_eof(self, eof: Space) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_document(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(JsonValue):
@@ -204,6 +211,9 @@ class Empty(JsonValue):
 
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
+
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_empty(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -243,6 +253,9 @@ class Identifier(JsonKey):
 
     def with_name(self, name: str) -> Identifier:
         return self if name is self._name else replace(self, _name=name)
+
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_identifier(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -291,6 +304,9 @@ class Literal(JsonValue, JsonKey):
 
     def with_value(self, value: object) -> Literal:
         return self if value is self._value else replace(self, _value=value)
+
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -367,6 +383,9 @@ class Member(Json):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_member(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JsonObject(JsonValue):
@@ -432,3 +451,6 @@ class JsonObject(JsonValue):
                 p = JsonObject.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+        return v.visit_object(self, p)
