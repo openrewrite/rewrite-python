@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import weakref
-from dataclasses import replace
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar
 
 from attr import dataclass
@@ -115,7 +114,7 @@ T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
 
 
-@dataclass
+@dataclass(frozen=True)
 class JRightPadded(Generic[T]):
     _element: T
 
@@ -154,7 +153,7 @@ class JRightPadded(Generic[T]):
         pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class JLeftPadded(Generic[T]):
     _before: Space
 
@@ -163,7 +162,7 @@ class JLeftPadded(Generic[T]):
         return self._before
 
     def with_before(self, before: Space) -> JLeftPadded[T]:
-        return self if before is self._before else replace(self, _before=before)
+        return self if before is self._before else JLeftPadded(before, self._element, self._markers)
 
     _element: T
 
@@ -172,7 +171,7 @@ class JLeftPadded(Generic[T]):
         return self._element
 
     def with_element(self, element: T) -> JLeftPadded[T]:
-        return self if element is self._element else replace(self, _element=element)
+        return self if element is self._element else JLeftPadded(self._before, element, self._markers)
 
     _markers: Markers
 
@@ -181,7 +180,7 @@ class JLeftPadded(Generic[T]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JLeftPadded[T]:
-        return self if markers is self._markers else replace(self, _markers=markers)
+        return self if markers is self._markers else JLeftPadded(self._before, self._element, markers)
 
     @classmethod
     def get_elements(cls, padded_list: List[JLeftPadded[T]]) -> List[T]:
@@ -202,7 +201,7 @@ class JContainer(Generic[T]):
         return self._before
 
     def with_before(self, before: Space) -> JContainer[T]:
-        return self if before is self._before else replace(self, _before=before)
+        return self if before is self._before else JContainer(before, self._elements, self._markers)
 
     _elements: List[JRightPadded[T]]
 
@@ -220,7 +219,7 @@ class JContainer(Generic[T]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JContainer[T]:
-        return self if markers is self._markers else replace(self, _markers=markers)
+        return self if markers is self._markers else JContainer(self._before, self._elements, markers)
 
     @dataclass
     class PaddingHelper:
@@ -231,7 +230,7 @@ class JContainer(Generic[T]):
             return self._t._elements
 
         def with_elements(self, elements: List[JRightPadded[T]]) -> JContainer[T]:
-            return self._t if self._t._elements is elements else replace(self._t, _elements=elements)
+            return self._t if self._t._elements is elements else JContainer(self._t._before, elements, self._t._markers)
 
     _padding: weakref.ReferenceType[JContainer.PaddingHelper] = None
 
