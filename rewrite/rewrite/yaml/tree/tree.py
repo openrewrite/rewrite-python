@@ -15,7 +15,7 @@ from ...core.marker.markers import Markers
 class Yaml(Tree, Protocol):
     pass
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Documents(Yaml, SourceFile["Documents"]):
     _id: UUID
@@ -90,7 +90,7 @@ class Documents(Yaml, SourceFile["Documents"]):
     def with_documents(self, documents: List[Document]) -> Documents:
         return self if documents is self._documents else replace(self, _documents=documents)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(Yaml):
     _id: UUID
@@ -147,7 +147,7 @@ class Document(Yaml):
     def with_end(self, end: End) -> Document:
         return self if end is self._end else replace(self, _end=end)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class End(Yaml):
         _id: UUID
@@ -186,12 +186,12 @@ class Document(Yaml):
         def with_explicit(self, explicit: bool) -> Document.End:
             return self if explicit is self._explicit else replace(self, _explicit=explicit)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(Yaml):
     pass
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Scalar(Block, YamlKey):
     _id: UUID
@@ -255,7 +255,7 @@ class Scalar(Block, YamlKey):
         FOLDED = 3
         PLAIN = 4
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Mapping(Block):
     _id: UUID
@@ -312,7 +312,7 @@ class Mapping(Block):
     def with_anchor(self, anchor: Optional[Anchor]) -> Mapping:
         return self if anchor is self._anchor else replace(self, _anchor=anchor)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
         _id: UUID
@@ -369,7 +369,7 @@ class Mapping(Block):
         def with_value(self, value: Block) -> Mapping.Entry:
             return self if value is self._value else replace(self, _value=value)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Sequence(Block):
     _id: UUID
@@ -426,7 +426,7 @@ class Sequence(Block):
     def with_anchor(self, anchor: Optional[Anchor]) -> Sequence:
         return self if anchor is self._anchor else replace(self, _anchor=anchor)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
         _id: UUID
@@ -483,7 +483,7 @@ class Sequence(Block):
         def with_trailing_comma_prefix(self, trailing_comma_prefix: Optional[str]) -> Sequence.Entry:
             return self if trailing_comma_prefix is self._trailing_comma_prefix else replace(self, _trailing_comma_prefix=trailing_comma_prefix)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Alias(Block, YamlKey):
     _id: UUID
@@ -522,7 +522,7 @@ class Alias(Block, YamlKey):
     def with_anchor(self, anchor: Anchor) -> Alias:
         return self if anchor is self._anchor else replace(self, _anchor=anchor)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Anchor(Yaml):
     _id: UUID

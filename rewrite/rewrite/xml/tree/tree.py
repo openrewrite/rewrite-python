@@ -15,7 +15,7 @@ from ...core.marker.markers import Markers
 class Xml(Tree, Protocol):
     pass
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(Xml, SourceFile["Document"]):
     _id: UUID
@@ -117,7 +117,7 @@ class Document(Xml, SourceFile["Document"]):
     def with_eof(self, eof: str) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Prolog(Xml):
     _id: UUID
@@ -174,7 +174,7 @@ class Prolog(Xml):
     def with_jsp_directives(self, jsp_directives: List[JspDirective]) -> Prolog:
         return self if jsp_directives is self._jsp_directives else replace(self, _jsp_directives=jsp_directives)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class XmlDecl(Xml, Misc):
     _id: UUID
@@ -231,7 +231,7 @@ class XmlDecl(Xml, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> XmlDecl:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ProcessingInstruction(Xml, Content, Misc):
     _id: UUID
@@ -288,7 +288,7 @@ class ProcessingInstruction(Xml, Content, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> ProcessingInstruction:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Tag(Xml, Content):
     _id: UUID
@@ -363,7 +363,7 @@ class Tag(Xml, Content):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Tag:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Closing(Xml):
         _id: UUID
@@ -411,7 +411,7 @@ class Tag(Xml, Content):
         def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Tag.Closing:
             return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Attribute(Xml):
     _id: UUID
@@ -468,7 +468,7 @@ class Attribute(Xml):
     def with_value(self, value: Value) -> Attribute:
         return self if value is self._value else replace(self, _value=value)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Value(Xml):
         class Quote(Enum):
@@ -520,7 +520,7 @@ class Attribute(Xml):
         def with_value(self, value: str) -> Attribute.Value:
             return self if value is self._value else replace(self, _value=value)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class CharData(Xml, Content):
     _id: UUID
@@ -577,7 +577,7 @@ class CharData(Xml, Content):
     def with_after_text(self, after_text: str) -> CharData:
         return self if after_text is self._after_text else replace(self, _after_text=after_text)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Comment(Xml, Content, Misc):
     _id: UUID
@@ -616,7 +616,7 @@ class Comment(Xml, Content, Misc):
     def with_text(self, text: str) -> Comment:
         return self if text is self._text else replace(self, _text=text)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DocTypeDecl(Xml, Misc):
     _id: UUID
@@ -691,7 +691,7 @@ class DocTypeDecl(Xml, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> DocTypeDecl:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-    # noinspection PyShadowingBuiltins,DuplicatedCode
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class ExternalSubsets(Xml):
         _id: UUID
@@ -730,7 +730,7 @@ class DocTypeDecl(Xml, Misc):
         def with_elements(self, elements: List[Element]) -> DocTypeDecl.ExternalSubsets:
             return self if elements is self._elements else replace(self, _elements=elements)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Element(Xml):
     _id: UUID
@@ -778,7 +778,7 @@ class Element(Xml):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Element:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Ident(Xml):
     _id: UUID
@@ -817,7 +817,7 @@ class Ident(Xml):
     def with_name(self, name: str) -> Ident:
         return self if name is self._name else replace(self, _name=name)
 
-# noinspection PyShadowingBuiltins,DuplicatedCode
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JspDirective(Xml, Content):
     _id: UUID
