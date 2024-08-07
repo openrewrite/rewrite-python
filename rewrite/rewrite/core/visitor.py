@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Optional, Dict, List, Any
+from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type
 
 from rewrite.core import SourceFile, Tree, RecipeRunException
 from rewrite.core.marker import Markers, Marker
 
 O = TypeVar('O')
 T = TypeVar('T', bound=Tree)
+T2 = TypeVar('T2', bound=Tree)
 P = TypeVar('P')
 M = TypeVar('M', bound=Marker)
 
@@ -90,6 +91,9 @@ class TreeVisitor(Protocol[T, P]):
             raise RecipeRunException(e, self.cursor)
 
         return t if is_acceptable else tree
+
+    def visit_and_cast(self, tree: Optional[Tree], p: P, t_type: Type[T2]) -> T2:
+        return cast(t_type, self.visit(tree, p))
 
     def default_value(self, tree: Optional[Tree], p: P) -> Optional[Tree]:
         return tree

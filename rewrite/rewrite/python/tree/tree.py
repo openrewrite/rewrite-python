@@ -4,7 +4,7 @@ import extensions
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import List, Optional, Protocol
+from typing import List, Optional, Protocol, runtime_checkable
 from uuid import UUID
 from enum import Enum
 
@@ -14,7 +14,7 @@ from ...java.tree.support_types import TypeTree, Space, JavaType, Expression, Ja
     TypedTree, JContainer, JLeftPadded
 from ...java.tree.tree import Import, Block, Identifier
 
-
+@runtime_checkable
 class Py(Tree, Protocol):
     pass
 

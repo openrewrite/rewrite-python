@@ -4,7 +4,7 @@ import extensions
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import List, Optional, Protocol
+from typing import List, Optional, Protocol, runtime_checkable
 from uuid import UUID
 from enum import Enum
 
@@ -12,6 +12,7 @@ from .support_types import *
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
+@runtime_checkable
 class Yaml(Tree, Protocol):
     pass
 
