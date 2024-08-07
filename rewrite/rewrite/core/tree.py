@@ -4,14 +4,18 @@ import datetime
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, Optional
+from typing import Protocol, Optional, Any, TypeVar, runtime_checkable
 from uuid import UUID, uuid4
 
+from rewrite.core import TreeVisitor
 from rewrite.core.marker import Markers
 
 
 def random_id() -> UUID:
     return uuid4()
+
+
+P = TypeVar('P')
 
 
 class Tree(Protocol):
@@ -29,6 +33,9 @@ class Tree(Protocol):
     def with_markers(self, markers: Markers) -> Tree:
         ...
 
+    def is_acceptable(self, v: TreeVisitor[Any, P], p) -> bool:
+        ...
+
     def __eq__(self, other):
         if self.__class__ == other.__class__:
             return self.id == other.id
@@ -38,6 +45,7 @@ class Tree(Protocol):
         return hash(self.id)
 
 
+@runtime_checkable
 class SourceFile(Tree, Protocol):
     @property
     def source_path(self) -> Path:
