@@ -2732,6 +2732,7 @@ class Literal(J, Expression, TypedTree):
     def with_type(self, type: JavaType.Primitive) -> Literal:
         return self if type is self._type else replace(self, _type=type)
 
+    @dataclass
     class UnicodeEscape:
         _value_source_index: int
 
@@ -2982,6 +2983,7 @@ class MethodDeclaration(J, Statement, TypedTree):
     def with_method_type(self, method_type: Optional[JavaType.Method]) -> MethodDeclaration:
         return self if method_type is self._method_type else replace(self, _method_type=method_type)
 
+    @dataclass
     class IdentifierWithAnnotations:
         _identifier: Identifier
 
