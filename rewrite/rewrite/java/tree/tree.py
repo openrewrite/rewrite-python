@@ -3911,15 +3911,15 @@ class Parentheses(Generic[J2], J, Expression):
 
     @property
     def padding(self) -> PaddingHelper:
-        p: Parentheses.PaddingHelper
+        p: Parentheses[J2].PaddingHelper
         if self._padding is None:
-            p = Parentheses.PaddingHelper(self)
+            p = Parentheses[J2].PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = Parentheses.PaddingHelper(self)
+                p = Parentheses[J2].PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
@@ -3977,15 +3977,15 @@ class ControlParentheses(Generic[J2], J, Expression):
 
     @property
     def padding(self) -> PaddingHelper:
-        p: ControlParentheses.PaddingHelper
+        p: ControlParentheses[J2].PaddingHelper
         if self._padding is None:
-            p = ControlParentheses.PaddingHelper(self)
+            p = ControlParentheses[J2].PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = ControlParentheses.PaddingHelper(self)
+                p = ControlParentheses[J2].PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
