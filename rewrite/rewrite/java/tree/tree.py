@@ -8,13 +8,14 @@ from typing import List, Optional, Protocol
 from uuid import UUID
 from enum import Enum
 
-from .additional_types import *
+from .support_types import *
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
 class J(Tree, Protocol):
     pass
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AnnotatedType(J, Expression, TypeTree):
     _id: UUID
@@ -24,7 +25,7 @@ class AnnotatedType(J, Expression, TypeTree):
         return self._id
 
     def with_id(self, id: UUID) -> AnnotatedType:
-        return self if id is self._id else AnnotatedType(self._id, self._prefix, self._markers, self._annotations, self._type_expression)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -33,7 +34,7 @@ class AnnotatedType(J, Expression, TypeTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> AnnotatedType:
-        return self if prefix is self._prefix else AnnotatedType(self._id, self._prefix, self._markers, self._annotations, self._type_expression)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -42,7 +43,7 @@ class AnnotatedType(J, Expression, TypeTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> AnnotatedType:
-        return self if markers is self._markers else AnnotatedType(self._id, self._prefix, self._markers, self._annotations, self._type_expression)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _annotations: List[Annotation]
 
@@ -51,7 +52,7 @@ class AnnotatedType(J, Expression, TypeTree):
         return self._annotations
 
     def with_annotations(self, annotations: List[Annotation]) -> AnnotatedType:
-        return self if annotations is self._annotations else AnnotatedType(self._id, self._prefix, self._markers, self._annotations, self._type_expression)
+        return self if annotations is self._annotations else replace(self, _annotations=annotations)
 
     _type_expression: TypeTree
 
@@ -60,8 +61,9 @@ class AnnotatedType(J, Expression, TypeTree):
         return self._type_expression
 
     def with_type_expression(self, type_expression: TypeTree) -> AnnotatedType:
-        return self if type_expression is self._type_expression else AnnotatedType(self._id, self._prefix, self._markers, self._annotations, self._type_expression)
+        return self if type_expression is self._type_expression else replace(self, _type_expression=type_expression)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Annotation(J, Expression):
     _id: UUID
@@ -71,7 +73,7 @@ class Annotation(J, Expression):
         return self._id
 
     def with_id(self, id: UUID) -> Annotation:
-        return self if id is self._id else Annotation(self._id, self._prefix, self._markers, self._annotation_type, self._arguments)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -80,7 +82,7 @@ class Annotation(J, Expression):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Annotation:
-        return self if prefix is self._prefix else Annotation(self._id, self._prefix, self._markers, self._annotation_type, self._arguments)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -89,7 +91,7 @@ class Annotation(J, Expression):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Annotation:
-        return self if markers is self._markers else Annotation(self._id, self._prefix, self._markers, self._annotation_type, self._arguments)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _annotation_type: NameTree
 
@@ -98,16 +100,16 @@ class Annotation(J, Expression):
         return self._annotation_type
 
     def with_annotation_type(self, annotation_type: NameTree) -> Annotation:
-        return self if annotation_type is self._annotation_type else Annotation(self._id, self._prefix, self._markers, self._annotation_type, self._arguments)
+        return self if annotation_type is self._annotation_type else replace(self, _annotation_type=annotation_type)
 
     _arguments: Optional[JContainer[Expression]]
 
     @property
-    def arguments(self) -> Optional[Expression]:
+    def arguments(self) -> Optional[List[Expression]]:
         return self._arguments.element
 
-    def with_arguments(self, arguments: Optional[Expression]) -> Annotation:
-        return self.padding.with_arguments(JContainer[Expression].with_element(self._arguments, arguments))
+    def with_arguments(self, arguments: Optional[List[Expression]]) -> Annotation:
+        return self.padding.with_arguments(JContainer.with_elements_nullable(self._arguments, arguments))
 
     @dataclass
     class PaddingHelper:
@@ -118,7 +120,7 @@ class Annotation(J, Expression):
             return self._t._arguments
 
         def with_arguments(self, arguments: Optional[JContainer[Expression]]) -> Annotation:
-            return self._t if self._t._arguments is arguments else Annotation(self._t.id, self._t.prefix, self._t.markers, self._t.annotation_type, arguments)
+            return self._t if self._t._arguments is arguments else replace(self._t, _arguments=arguments)
 
     _padding: weakref.ReferenceType[Annotation.PaddingHelper] = None
 
@@ -130,11 +132,13 @@ class Annotation(J, Expression):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Annotation.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayAccess(J, Expression, TypedTree):
     _id: UUID
@@ -144,7 +148,7 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._id
 
     def with_id(self, id: UUID) -> ArrayAccess:
-        return self if id is self._id else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -153,7 +157,7 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> ArrayAccess:
-        return self if prefix is self._prefix else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -162,7 +166,7 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> ArrayAccess:
-        return self if markers is self._markers else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _indexed: Expression
 
@@ -171,7 +175,7 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._indexed
 
     def with_indexed(self, indexed: Expression) -> ArrayAccess:
-        return self if indexed is self._indexed else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if indexed is self._indexed else replace(self, _indexed=indexed)
 
     _dimension: ArrayDimension
 
@@ -180,7 +184,7 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._dimension
 
     def with_dimension(self, dimension: ArrayDimension) -> ArrayAccess:
-        return self if dimension is self._dimension else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if dimension is self._dimension else replace(self, _dimension=dimension)
 
     _type: Optional[JavaType]
 
@@ -189,8 +193,9 @@ class ArrayAccess(J, Expression, TypedTree):
         return self._type
 
     def with_type(self, type: Optional[JavaType]) -> ArrayAccess:
-        return self if type is self._type else ArrayAccess(self._id, self._prefix, self._markers, self._indexed, self._dimension, self._type)
+        return self if type is self._type else replace(self, _type=type)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayType(J, TypeTree, Expression):
     _id: UUID
@@ -200,7 +205,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._id
 
     def with_id(self, id: UUID) -> ArrayType:
-        return self if id is self._id else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -209,7 +214,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> ArrayType:
-        return self if prefix is self._prefix else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -218,7 +223,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._markers
 
     def with_markers(self, markers: Markers) -> ArrayType:
-        return self if markers is self._markers else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _element_type: TypeTree
 
@@ -227,7 +232,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._element_type
 
     def with_element_type(self, element_type: TypeTree) -> ArrayType:
-        return self if element_type is self._element_type else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if element_type is self._element_type else replace(self, _element_type=element_type)
 
     _annotations: Optional[List[Annotation]]
 
@@ -236,7 +241,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._annotations
 
     def with_annotations(self, annotations: Optional[List[Annotation]]) -> ArrayType:
-        return self if annotations is self._annotations else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if annotations is self._annotations else replace(self, _annotations=annotations)
 
     _dimension: Optional[JLeftPadded[Space]]
 
@@ -245,7 +250,7 @@ class ArrayType(J, TypeTree, Expression):
         return self._dimension
 
     def with_dimension(self, dimension: Optional[JLeftPadded[Space]]) -> ArrayType:
-        return self if dimension is self._dimension else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if dimension is self._dimension else replace(self, _dimension=dimension)
 
     _type: JavaType
 
@@ -254,8 +259,9 @@ class ArrayType(J, TypeTree, Expression):
         return self._type
 
     def with_type(self, type: JavaType) -> ArrayType:
-        return self if type is self._type else ArrayType(self._id, self._prefix, self._markers, self._element_type, self._annotations, self._dimension, self._type)
+        return self if type is self._type else replace(self, _type=type)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assert(J, Statement):
     _id: UUID
@@ -265,7 +271,7 @@ class Assert(J, Statement):
         return self._id
 
     def with_id(self, id: UUID) -> Assert:
-        return self if id is self._id else Assert(self._id, self._prefix, self._markers, self._condition, self._detail)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -274,7 +280,7 @@ class Assert(J, Statement):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Assert:
-        return self if prefix is self._prefix else Assert(self._id, self._prefix, self._markers, self._condition, self._detail)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -283,7 +289,7 @@ class Assert(J, Statement):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Assert:
-        return self if markers is self._markers else Assert(self._id, self._prefix, self._markers, self._condition, self._detail)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _condition: Expression
 
@@ -292,7 +298,7 @@ class Assert(J, Statement):
         return self._condition
 
     def with_condition(self, condition: Expression) -> Assert:
-        return self if condition is self._condition else Assert(self._id, self._prefix, self._markers, self._condition, self._detail)
+        return self if condition is self._condition else replace(self, _condition=condition)
 
     _detail: Optional[JLeftPadded[Expression]]
 
@@ -301,8 +307,9 @@ class Assert(J, Statement):
         return self._detail
 
     def with_detail(self, detail: Optional[JLeftPadded[Expression]]) -> Assert:
-        return self if detail is self._detail else Assert(self._id, self._prefix, self._markers, self._condition, self._detail)
+        return self if detail is self._detail else replace(self, _detail=detail)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assignment(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -312,7 +319,7 @@ class Assignment(J, Statement, Expression, TypedTree):
         return self._id
 
     def with_id(self, id: UUID) -> Assignment:
-        return self if id is self._id else Assignment(self._id, self._prefix, self._markers, self._variable, self._assignment, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -321,7 +328,7 @@ class Assignment(J, Statement, Expression, TypedTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Assignment:
-        return self if prefix is self._prefix else Assignment(self._id, self._prefix, self._markers, self._variable, self._assignment, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -330,7 +337,7 @@ class Assignment(J, Statement, Expression, TypedTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Assignment:
-        return self if markers is self._markers else Assignment(self._id, self._prefix, self._markers, self._variable, self._assignment, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _variable: Expression
 
@@ -339,7 +346,7 @@ class Assignment(J, Statement, Expression, TypedTree):
         return self._variable
 
     def with_variable(self, variable: Expression) -> Assignment:
-        return self if variable is self._variable else Assignment(self._id, self._prefix, self._markers, self._variable, self._assignment, self._type)
+        return self if variable is self._variable else replace(self, _variable=variable)
 
     _assignment: JLeftPadded[Expression]
 
@@ -357,7 +364,7 @@ class Assignment(J, Statement, Expression, TypedTree):
         return self._type
 
     def with_type(self, type: Optional[JavaType]) -> Assignment:
-        return self if type is self._type else Assignment(self._id, self._prefix, self._markers, self._variable, self._assignment, self._type)
+        return self if type is self._type else replace(self, _type=type)
 
     @dataclass
     class PaddingHelper:
@@ -368,7 +375,7 @@ class Assignment(J, Statement, Expression, TypedTree):
             return self._t._assignment
 
         def with_assignment(self, assignment: JLeftPadded[Expression]) -> Assignment:
-            return self._t if self._t._assignment is assignment else Assignment(self._t.id, self._t.prefix, self._t.markers, self._t.variable, assignment, self._t.type)
+            return self._t if self._t._assignment is assignment else replace(self._t, _assignment=assignment)
 
     _padding: weakref.ReferenceType[Assignment.PaddingHelper] = None
 
@@ -380,11 +387,13 @@ class Assignment(J, Statement, Expression, TypedTree):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Assignment.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AssignmentOperation(J, Statement, Expression, TypedTree):
     _id: UUID
@@ -394,7 +403,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._id
 
     def with_id(self, id: UUID) -> AssignmentOperation:
-        return self if id is self._id else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -403,7 +412,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> AssignmentOperation:
-        return self if prefix is self._prefix else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -412,7 +421,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> AssignmentOperation:
-        return self if markers is self._markers else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _variable: Expression
 
@@ -421,7 +430,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._variable
 
     def with_variable(self, variable: Expression) -> AssignmentOperation:
-        return self if variable is self._variable else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if variable is self._variable else replace(self, _variable=variable)
 
     _operator: JLeftPadded[Type]
 
@@ -439,7 +448,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._assignment
 
     def with_assignment(self, assignment: Expression) -> AssignmentOperation:
-        return self if assignment is self._assignment else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if assignment is self._assignment else replace(self, _assignment=assignment)
 
     _type: Optional[JavaType]
 
@@ -448,7 +457,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
         return self._type
 
     def with_type(self, type: Optional[JavaType]) -> AssignmentOperation:
-        return self if type is self._type else AssignmentOperation(self._id, self._prefix, self._markers, self._variable, self._operator, self._assignment, self._type)
+        return self if type is self._type else replace(self, _type=type)
 
     class Type(Enum):
         Addition = 0
@@ -475,7 +484,7 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
             return self._t._operator
 
         def with_operator(self, operator: JLeftPadded[AssignmentOperation.Type]) -> AssignmentOperation:
-            return self._t if self._t._operator is operator else AssignmentOperation(self._t.id, self._t.prefix, self._t.markers, self._t.variable, operator, self._t.assignment, self._t.type)
+            return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
 
     _padding: weakref.ReferenceType[AssignmentOperation.PaddingHelper] = None
 
@@ -487,11 +496,13 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = AssignmentOperation.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Binary(J, Expression, TypedTree):
     _id: UUID
@@ -501,7 +512,7 @@ class Binary(J, Expression, TypedTree):
         return self._id
 
     def with_id(self, id: UUID) -> Binary:
-        return self if id is self._id else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -510,7 +521,7 @@ class Binary(J, Expression, TypedTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Binary:
-        return self if prefix is self._prefix else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -519,7 +530,7 @@ class Binary(J, Expression, TypedTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Binary:
-        return self if markers is self._markers else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _left: Expression
 
@@ -528,7 +539,7 @@ class Binary(J, Expression, TypedTree):
         return self._left
 
     def with_left(self, left: Expression) -> Binary:
-        return self if left is self._left else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if left is self._left else replace(self, _left=left)
 
     _operator: JLeftPadded[Type]
 
@@ -546,7 +557,7 @@ class Binary(J, Expression, TypedTree):
         return self._right
 
     def with_right(self, right: Expression) -> Binary:
-        return self if right is self._right else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if right is self._right else replace(self, _right=right)
 
     _type: Optional[JavaType]
 
@@ -555,7 +566,7 @@ class Binary(J, Expression, TypedTree):
         return self._type
 
     def with_type(self, type: Optional[JavaType]) -> Binary:
-        return self if type is self._type else Binary(self._id, self._prefix, self._markers, self._left, self._operator, self._right, self._type)
+        return self if type is self._type else replace(self, _type=type)
 
     class Type(Enum):
         Addition = 0
@@ -587,7 +598,7 @@ class Binary(J, Expression, TypedTree):
             return self._t._operator
 
         def with_operator(self, operator: JLeftPadded[Binary.Type]) -> Binary:
-            return self._t if self._t._operator is operator else Binary(self._t.id, self._t.prefix, self._t.markers, self._t.left, operator, self._t.right, self._t.type)
+            return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
 
     _padding: weakref.ReferenceType[Binary.PaddingHelper] = None
 
@@ -599,11 +610,13 @@ class Binary(J, Expression, TypedTree):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Binary.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(J, Statement):
     _id: UUID
@@ -613,7 +626,7 @@ class Block(J, Statement):
         return self._id
 
     def with_id(self, id: UUID) -> Block:
-        return self if id is self._id else Block(self._id, self._prefix, self._markers, self._static, self._statements, self._end)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -622,7 +635,7 @@ class Block(J, Statement):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Block:
-        return self if prefix is self._prefix else Block(self._id, self._prefix, self._markers, self._static, self._statements, self._end)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -631,7 +644,7 @@ class Block(J, Statement):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Block:
-        return self if markers is self._markers else Block(self._id, self._prefix, self._markers, self._static, self._statements, self._end)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _static: JRightPadded[bool]
 
@@ -658,7 +671,7 @@ class Block(J, Statement):
         return self._end
 
     def with_end(self, end: Space) -> Block:
-        return self if end is self._end else Block(self._id, self._prefix, self._markers, self._static, self._statements, self._end)
+        return self if end is self._end else replace(self, _end=end)
 
     @dataclass
     class PaddingHelper:
@@ -669,14 +682,14 @@ class Block(J, Statement):
             return self._t._static
 
         def with_static(self, static: JRightPadded[bool]) -> Block:
-            return self._t if self._t._static is static else Block(self._t.id, self._t.prefix, self._t.markers, static, self._t._statements, self._t.end)
+            return self._t if self._t._static is static else replace(self._t, _static=static)
 
         @property
         def statements(self) -> List[JRightPadded[Statement]]:
             return self._t._statements
 
         def with_statements(self, statements: List[JRightPadded[Statement]]) -> Block:
-            return self._t if self._t._statements is statements else Block(self._t.id, self._t.prefix, self._t.markers, self._t._static, statements, self._t.end)
+            return self._t if self._t._statements is statements else replace(self._t, _statements=statements)
 
     _padding: weakref.ReferenceType[Block.PaddingHelper] = None
 
@@ -688,11 +701,13 @@ class Block(J, Statement):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Block.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Break(J, Statement):
     _id: UUID
@@ -702,7 +717,7 @@ class Break(J, Statement):
         return self._id
 
     def with_id(self, id: UUID) -> Break:
-        return self if id is self._id else Break(self._id, self._prefix, self._markers, self._label)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -711,7 +726,7 @@ class Break(J, Statement):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Break:
-        return self if prefix is self._prefix else Break(self._id, self._prefix, self._markers, self._label)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -720,7 +735,7 @@ class Break(J, Statement):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Break:
-        return self if markers is self._markers else Break(self._id, self._prefix, self._markers, self._label)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _label: Optional[Identifier]
 
@@ -729,8 +744,9 @@ class Break(J, Statement):
         return self._label
 
     def with_label(self, label: Optional[Identifier]) -> Break:
-        return self if label is self._label else Break(self._id, self._prefix, self._markers, self._label)
+        return self if label is self._label else replace(self, _label=label)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Case(J, Statement):
     _id: UUID
@@ -740,7 +756,7 @@ class Case(J, Statement):
         return self._id
 
     def with_id(self, id: UUID) -> Case:
-        return self if id is self._id else Case(self._id, self._prefix, self._markers, self._type, self._expressions, self._statements, self._body)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -749,7 +765,7 @@ class Case(J, Statement):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> Case:
-        return self if prefix is self._prefix else Case(self._id, self._prefix, self._markers, self._type, self._expressions, self._statements, self._body)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -758,30 +774,30 @@ class Case(J, Statement):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Case:
-        return self if markers is self._markers else Case(self._id, self._prefix, self._markers, self._type, self._expressions, self._statements, self._body)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _type: Type
 
     def with_type(self, type: Type) -> Case:
-        return self if type is self._type else Case(self._id, self._prefix, self._markers, self._type, self._expressions, self._statements, self._body)
+        return self if type is self._type else replace(self, _type=type)
 
     _expressions: JContainer[Expression]
 
     @property
-    def expressions(self) -> Expression:
+    def expressions(self) -> List[Expression]:
         return self._expressions.element
 
-    def with_expressions(self, expressions: Expression) -> Case:
-        return self.padding.with_expressions(JContainer.with_element(self._expressions, expressions))
+    def with_expressions(self, expressions: List[Expression]) -> Case:
+        return self.padding.with_expressions(JContainer.with_elements(self._expressions, expressions))
 
     _statements: JContainer[Statement]
 
     @property
-    def statements(self) -> Statement:
+    def statements(self) -> List[Statement]:
         return self._statements.element
 
-    def with_statements(self, statements: Statement) -> Case:
-        return self.padding.with_statements(JContainer.with_element(self._statements, statements))
+    def with_statements(self, statements: List[Statement]) -> Case:
+        return self.padding.with_statements(JContainer.with_elements(self._statements, statements))
 
     _body: Optional[JRightPadded[J]]
 
@@ -790,7 +806,7 @@ class Case(J, Statement):
         return self._body.element
 
     def with_body(self, body: Optional[J]) -> Case:
-        return self.padding.with_body(JRightPadded[J].with_element(self._body, body))
+        return self.padding.with_body(JRightPadded.with_element(self._body, body))
 
     class Type(Enum):
         Statement = 0
@@ -805,21 +821,21 @@ class Case(J, Statement):
             return self._t._expressions
 
         def with_expressions(self, expressions: JContainer[Expression]) -> Case:
-            return self._t if self._t._expressions is expressions else Case(self._t.id, self._t.prefix, self._t.markers, self._t.type, expressions, self._t._statements, self._t._body)
+            return self._t if self._t._expressions is expressions else replace(self._t, _expressions=expressions)
 
         @property
         def statements(self) -> JContainer[Statement]:
             return self._t._statements
 
         def with_statements(self, statements: JContainer[Statement]) -> Case:
-            return self._t if self._t._statements is statements else Case(self._t.id, self._t.prefix, self._t.markers, self._t.type, self._t._expressions, statements, self._t._body)
+            return self._t if self._t._statements is statements else replace(self._t, _statements=statements)
 
         @property
         def body(self) -> Optional[JRightPadded[J]]:
             return self._t._body
 
         def with_body(self, body: Optional[JRightPadded[J]]) -> Case:
-            return self._t if self._t._body is body else Case(self._t.id, self._t.prefix, self._t.markers, self._t.type, self._t._expressions, self._t._statements, body)
+            return self._t if self._t._body is body else replace(self._t, _body=body)
 
     _padding: weakref.ReferenceType[Case.PaddingHelper] = None
 
@@ -831,11 +847,13 @@ class Case(J, Statement):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Case.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ClassDeclaration(J, Statement, TypedTree):
     _id: UUID
@@ -845,7 +863,7 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._id
 
     def with_id(self, id: UUID) -> ClassDeclaration:
-        return self if id is self._id else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
 
@@ -854,7 +872,7 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._prefix
 
     def with_prefix(self, prefix: Space) -> ClassDeclaration:
-        return self if prefix is self._prefix else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
 
@@ -863,7 +881,7 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._markers
 
     def with_markers(self, markers: Markers) -> ClassDeclaration:
-        return self if markers is self._markers else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     _leading_annotations: List[Annotation]
 
@@ -872,7 +890,7 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._leading_annotations
 
     def with_leading_annotations(self, leading_annotations: List[Annotation]) -> ClassDeclaration:
-        return self if leading_annotations is self._leading_annotations else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if leading_annotations is self._leading_annotations else replace(self, _leading_annotations=leading_annotations)
 
     _modifiers: List[Modifier]
 
@@ -881,12 +899,12 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._modifiers
 
     def with_modifiers(self, modifiers: List[Modifier]) -> ClassDeclaration:
-        return self if modifiers is self._modifiers else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if modifiers is self._modifiers else replace(self, _modifiers=modifiers)
 
     _kind: Kind
 
     def with_kind(self, kind: Kind) -> ClassDeclaration:
-        return self if kind is self._kind else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if kind is self._kind else replace(self, _kind=kind)
 
     _name: Identifier
 
@@ -895,7 +913,7 @@ class ClassDeclaration(J, Statement, TypedTree):
         return self._name
 
     def with_name(self, name: Identifier) -> ClassDeclaration:
-        return self if name is self._name else ClassDeclaration(self._id, self._prefix, self._markers, self._leading_annotations, self._modifiers, self._kind, self._name, self._type_parameters, self._primary_constructor, self._extends, self._implements, self._permits, self._body, self._type)
+        return self if name is self._name else replace(self, _name=name)
 
     _type_parameters: Optional[JContainer[TypeParameter]]
 

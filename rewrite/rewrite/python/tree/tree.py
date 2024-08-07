@@ -10,7 +10,7 @@ from enum import Enum
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 import rewrite.java.tree as j
-from ...java.tree.additional_types import *
+from ...java.tree.support_types import *
 from ...java.tree.tree import Import, Block, Identifier
 
 

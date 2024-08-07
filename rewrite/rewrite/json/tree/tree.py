@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import extensions
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -7,13 +8,14 @@ from typing import List, Optional, Protocol
 from uuid import UUID
 from enum import Enum
 
-from .additional_types import *
+from .support_types import *
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
 class Json(Tree, Protocol):
     pass
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Array(JsonValue):
     _id: UUID
@@ -73,11 +75,13 @@ class Array(JsonValue):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Array.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(Json, SourceFile["Document"]):
     _id: UUID
@@ -170,6 +174,7 @@ class Document(Json, SourceFile["Document"]):
     def with_eof(self, eof: Space) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(JsonValue):
     _id: UUID
@@ -199,6 +204,7 @@ class Empty(JsonValue):
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Identifier(JsonKey):
     _id: UUID
@@ -237,6 +243,7 @@ class Identifier(JsonKey):
     def with_name(self, name: str) -> Identifier:
         return self if name is self._name else replace(self, _name=name)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(JsonValue, JsonKey):
     _id: UUID
@@ -284,6 +291,7 @@ class Literal(JsonValue, JsonKey):
     def with_value(self, value: object) -> Literal:
         return self if value is self._value else replace(self, _value=value)
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Member(Json):
     _id: UUID
@@ -352,11 +360,13 @@ class Member(Json):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = Member.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+# noinspection PyShadowingBuiltins,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JsonObject(JsonValue):
     _id: UUID
@@ -416,6 +426,7 @@ class JsonObject(JsonValue):
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
+            # noinspection PyProtectedMember
             if p is None or p._t != self:
                 p = JsonObject.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
