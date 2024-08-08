@@ -92,7 +92,7 @@ class TreeVisitor(Protocol[T, P]):
 
         return t if is_acceptable else tree
 
-    def visit_and_cast(self, tree: Optional[Tree], p: P, t_type: Type[T2]) -> T2:
+    def visit_and_cast(self, tree: Optional[Tree], t_type: Type[T2], p: P) -> T2:
         return cast(t_type, self.visit(tree, p))
 
     def default_value(self, tree: Optional[Tree], p: P) -> Optional[Tree]:

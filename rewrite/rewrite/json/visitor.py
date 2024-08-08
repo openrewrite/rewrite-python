@@ -18,7 +18,7 @@ class JsonVisitor(TreeVisitor[Json, P]):
     def visit_document(self, document: Document, p: P) -> Json:
         document = document.with_prefix(self.visit_space(document.prefix, p))
         document = document.with_markers(self.visit_markers(document.markers, p))
-        document = document.with_value(self.visit_and_cast(document.value, p, JsonValue))
+        document = document.with_value(self.visit_and_cast(document.value, JsonValue, p))
         document = document.with_eof(self.visit_space(document.eof, p))
         return document
 
@@ -41,7 +41,7 @@ class JsonVisitor(TreeVisitor[Json, P]):
         member = member.with_prefix(self.visit_space(member.prefix, p))
         member = member.with_markers(self.visit_markers(member.markers, p))
         member = member.padding.with_key(self.visit_right_padded(member.padding.key, p))
-        member = member.with_value(self.visit_and_cast(member.value, p, JsonValue))
+        member = member.with_value(self.visit_and_cast(member.value, JsonValue, p))
         return member
 
     def visit_object(self, json_object: JsonObject, p: P) -> Json:
@@ -51,7 +51,7 @@ class JsonVisitor(TreeVisitor[Json, P]):
         return json_object
 
     def visit_right_padded(self, right_padded: JsonRightPadded[T], p: P) -> JsonRightPadded[T]:
-        right_padded = right_padded.with_element(self.visit_and_cast(right_padded.element, p, T))
+        right_padded = right_padded.with_element(self.visit_and_cast(right_padded.element, T, p))
         right_padded = right_padded.with_after(self.visit_space(right_padded.after, p))
         right_padded = right_padded.with_markers(self.visit_markers(right_padded.markers, p))
         return right_padded
