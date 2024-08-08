@@ -13,10 +13,6 @@ from ..visitor import JavaVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
-@runtime_checkable
-class J(Tree, Protocol):
-    pass
-
 J2 = TypeVar('J2', bound=J)
 
 

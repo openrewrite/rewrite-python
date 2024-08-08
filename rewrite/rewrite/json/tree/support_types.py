@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import List, Optional, Protocol, TypeVar, Generic
+from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable
 
 from attr import dataclass
 
 from rewrite.core import Tree
 from rewrite.core.marker import Markers
 from rewrite.json.tree.tree import Json
+
+
+@runtime_checkable
+class Json(Tree, Protocol):
+    pass
 
 
 @dataclass(frozen=True)

@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import weakref
 from enum import Enum, auto
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict
-from uuid import UUID
+from typing import Protocol, TypeVar, runtime_checkable
 
-from attr import dataclass
-
-from rewrite.core import Tree, SourceFile
-from rewrite.core.marker import Markers
+from rewrite.core import Tree
 from rewrite.java.tree.tree import J
+
+
+@runtime_checkable
+class Py(Tree, Protocol):
+    pass
 
 
 class PySpace:

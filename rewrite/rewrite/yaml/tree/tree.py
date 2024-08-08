@@ -13,10 +13,6 @@ from ..visitor import YamlVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
-@runtime_checkable
-class Yaml(Tree, Protocol):
-    pass
-
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Documents(Yaml, SourceFile["Documents"]):

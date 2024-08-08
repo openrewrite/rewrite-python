@@ -16,10 +16,6 @@ from ...java.tree.support_types import TypeTree, Space, JavaType, Expression, Ja
 from ...java.tree.tree import Import, Block, Identifier, J
 
 
-@runtime_checkable
-class Py(Tree, Protocol):
-    pass
-
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ExceptionType(Py, TypeTree):

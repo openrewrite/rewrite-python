@@ -1,6 +1,11 @@
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from rewrite.core import Tree
+
+
+@runtime_checkable
+class Xml(Tree, Protocol):
+    pass
 
 
 class Content(Tree, Protocol):

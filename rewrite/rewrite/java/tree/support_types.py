@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import weakref
 from enum import Enum, auto
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict
+from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable
 from uuid import UUID
 
 from attr import dataclass
 
 from rewrite.core import Tree, SourceFile
 from rewrite.core.marker import Markers
-from rewrite.java.tree.tree import J
+
+
+@runtime_checkable
+class J(Tree, Protocol):
+    pass
 
 
 @dataclass(frozen=True)

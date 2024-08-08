@@ -13,10 +13,6 @@ from ..visitor import XmlVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
-@runtime_checkable
-class Xml(Tree, Protocol):
-    pass
-
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(Xml, SourceFile["Document"]):

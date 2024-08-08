@@ -8,10 +8,6 @@ from ...core import Tree, SourceFile
 from ...core.marker.markers import Markers
 
 
-class Properties(Tree, Protocol):
-    pass
-
-
 class Content(Properties, Protocol):
     pass
 
