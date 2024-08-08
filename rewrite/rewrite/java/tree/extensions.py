@@ -5,7 +5,20 @@ from rewrite.java.tree.support_types import JRightPadded, JLeftPadded, JContaine
 from rewrite.java.tree.tree import J
 from rewrite.java.visitor import JavaVisitor
 
-T = TypeVar('T', bound=J)
+T = TypeVar('T')
+J2 = TypeVar('J2', bound=J)
+
+
+def visit_container(v: JavaVisitor, container: Optional[JContainer[J2]], loc: JContainer.Location, p) -> Optional[JContainer[J2]]:
+    if container is None:
+        return None
+
+    v.cursor = Cursor(v.cursor, container)
+    before = v.visit_space(container.before, loc.before_location, p)
+    js = [v.visit_right_padded(el.element, loc.element_location, p) for el in container.padding.elements]
+    v.cursor = v.cursor.parent
+
+    return container if js == container.padding.elements and before is container.before else JContainer(before, js, container.markers)
 
 
 def visit_right_padded(v: JavaVisitor, right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p) -> Optional[JRightPadded[T]]:
@@ -25,6 +38,7 @@ def visit_right_padded(v: JavaVisitor, right: Optional[JRightPadded[T]], loc: JR
     right = right.with_markers(v.visit_markers(right.markers, p))
     return right
 
+
 def visit_left_padded(v: JavaVisitor, left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p) -> Optional[JLeftPadded[T]]:
     if left is None:
         return None
@@ -42,17 +56,6 @@ def visit_left_padded(v: JavaVisitor, left: Optional[JLeftPadded[T]], loc: JLeft
         return None
 
     return JLeftPadded(before, t, left.markers)
-
-def visit_container(v: JavaVisitor, container: Optional[JContainer[T]], loc: JContainer.Location, p) -> Optional[JContainer[T]]:
-    if container is None:
-        return None
-
-    v.cursor = Cursor(v.cursor, container)
-    before = v.visit_space(container.before, loc.before_location, p)
-    js = [v.visit_right_padded(el.element, loc.element_location, p) for el in container.padding.elements]
-    v.cursor = v.cursor.parent
-
-    return container if js == container.padding.elements and before is container.before else JContainer(before, js, container.markers)
 
 
 def visit_space(v: JavaVisitor, space: Optional[Space], loc: Space.Location, p):

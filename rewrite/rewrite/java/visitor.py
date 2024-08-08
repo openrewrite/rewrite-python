@@ -770,11 +770,11 @@ class JavaVisitor(TreeVisitor[J, P]):
         source = source.with_markers(self.visit_markers(source.markers, p))
         return source
 
-    def visit_container(self, container: Optional[JContainer[T]], loc: JContainer.Location, p: P) -> JContainer[T]:
+    def visit_container(self, container: Optional[JContainer[J2]], loc: JContainer.Location, p: P) -> JContainer[J2]:
         return extensions.visit_container(self, container, loc, p)
 
-    def visit_left_padded(self, right: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p: P) -> Optional[JLeftPadded[T]]:
-        return extensions.visit_right_padded(self, right, loc, p)
+    def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p: P) -> Optional[JLeftPadded[T]]:
+        return extensions.visit_left_padded(self, left, loc, p)
 
     def visit_right_padded(self, right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p: P) -> Optional[JRightPadded[T]]:
         return extensions.visit_right_padded(self, right, loc, p)
