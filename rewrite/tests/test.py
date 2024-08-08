@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import rewrite.properties.tree as py
+import rewrite.properties.tree as properties
 from rewrite.core import random_id
 from rewrite.core.marker import Markers
 
-f = py.File(
+f = properties.File(
     id=random_id(),
     prefix='',
     markers=Markers.EMPTY,
