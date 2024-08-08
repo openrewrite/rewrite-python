@@ -5,6 +5,7 @@ from rewrite.yaml.tree.tree import *
 
 P = TypeVar('P')
 
+# noinspection DuplicatedCode
 class YamlVisitor(TreeVisitor[Yaml, P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Yaml)

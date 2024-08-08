@@ -5,6 +5,7 @@ from rewrite.json.tree.tree import *
 
 P = TypeVar('P')
 
+# noinspection DuplicatedCode
 class JsonVisitor(TreeVisitor[Json, P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Json)
@@ -12,7 +13,7 @@ class JsonVisitor(TreeVisitor[Json, P]):
     def visit_array(self, array: Array, p: P) -> Json:
         array = array.with_prefix(self.visit_space(array.prefix, p))
         array = array.with_markers(self.visit_markers(array.markers, p))
-        array = array.padding.with_values([self.visit_right_padded(v, p, ) for v in array.padding.values])
+        array = array.padding.with_values([self.visit_right_padded(v, p) for v in array.padding.values])
         return array
 
     def visit_document(self, document: Document, p: P) -> Json:
@@ -47,7 +48,7 @@ class JsonVisitor(TreeVisitor[Json, P]):
     def visit_object(self, json_object: JsonObject, p: P) -> Json:
         json_object = json_object.with_prefix(self.visit_space(json_object.prefix, p))
         json_object = json_object.with_markers(self.visit_markers(json_object.markers, p))
-        json_object = json_object.padding.with_members([self.visit_right_padded(v, p, ) for v in json_object.padding.members])
+        json_object = json_object.padding.with_members([self.visit_right_padded(v, p) for v in json_object.padding.members])
         return json_object
 
     def visit_right_padded(self, right: Optional[JsonRightPadded[T]], p: P) -> JsonRightPadded[T]:

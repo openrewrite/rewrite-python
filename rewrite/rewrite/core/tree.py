@@ -18,6 +18,7 @@ def random_id() -> UUID:
 P = TypeVar('P')
 
 
+@runtime_checkable
 class Tree(Protocol):
     @property
     def id(self) -> UUID:

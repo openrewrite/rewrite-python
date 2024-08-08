@@ -5,6 +5,7 @@ from rewrite.xml.tree.tree import *
 
 P = TypeVar('P')
 
+# noinspection DuplicatedCode
 class XmlVisitor(TreeVisitor[Xml, P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Xml)

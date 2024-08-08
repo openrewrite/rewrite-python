@@ -9,6 +9,7 @@ from uuid import UUID
 from enum import Enum
 
 from .support_types import *
+from ..visitor import JavaVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
@@ -66,6 +67,9 @@ class AnnotatedType(J, Expression, TypeTree):
 
     def with_type_expression(self, type_expression: TypeTree) -> AnnotatedType:
         return self if type_expression is self._type_expression else replace(self, _type_expression=type_expression)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_annotated_type(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -142,6 +146,9 @@ class Annotation(J, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_annotation(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayAccess(J, Expression, TypedTree):
@@ -198,6 +205,9 @@ class ArrayAccess(J, Expression, TypedTree):
 
     def with_type(self, type: Optional[JavaType]) -> ArrayAccess:
         return self if type is self._type else replace(self, _type=type)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_array_access(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -265,6 +275,9 @@ class ArrayType(J, TypeTree, Expression):
     def with_type(self, type: JavaType) -> ArrayType:
         return self if type is self._type else replace(self, _type=type)
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_array_type(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assert(J, Statement):
@@ -312,6 +325,9 @@ class Assert(J, Statement):
 
     def with_detail(self, detail: Optional[JLeftPadded[Expression]]) -> Assert:
         return self if detail is self._detail else replace(self, _detail=detail)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_assert(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -396,6 +412,9 @@ class Assignment(J, Statement, Expression, TypedTree):
                 p = Assignment.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_assignment(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -505,6 +524,9 @@ class AssignmentOperation(J, Statement, Expression, TypedTree):
                 p = AssignmentOperation.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_assignment_operation(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -620,6 +642,9 @@ class Binary(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_binary(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(J, Statement):
@@ -711,6 +736,9 @@ class Block(J, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_block(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Break(J, Statement):
@@ -749,6 +777,9 @@ class Break(J, Statement):
 
     def with_label(self, label: Optional[Identifier]) -> Break:
         return self if label is self._label else replace(self, _label=label)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_break(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -856,6 +887,9 @@ class Case(J, Statement):
                 p = Case.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_case(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1038,6 +1072,9 @@ class ClassDeclaration(J, Statement, TypedTree):
             Record = 4
             Value = 5
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_class_declaration_kind(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: ClassDeclaration
@@ -1099,6 +1136,9 @@ class ClassDeclaration(J, Statement, TypedTree):
                 p = ClassDeclaration.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_class_declaration(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1241,6 +1281,9 @@ class CompilationUnit(J, JavaSourceFile["CompilationUnit"], SourceFile["Compilat
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_compilation_unit(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Continue(J, Statement):
@@ -1279,6 +1322,9 @@ class Continue(J, Statement):
 
     def with_label(self, label: Optional[Identifier]) -> Continue:
         return self if label is self._label else replace(self, _label=label)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_continue(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1362,6 +1408,9 @@ class DoWhileLoop(J, Loop):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_do_while_loop(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(J, Statement, Expression, TypeTree):
@@ -1391,6 +1440,9 @@ class Empty(J, Statement, Expression, TypeTree):
 
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_empty(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1448,6 +1500,9 @@ class EnumValue(J):
 
     def with_initializer(self, initializer: Optional[NewClass]) -> EnumValue:
         return self if initializer is self._initializer else replace(self, _initializer=initializer)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_enum_value(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1523,6 +1578,9 @@ class EnumValueSet(J, Statement):
                 p = EnumValueSet.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_enum_value_set(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1607,6 +1665,9 @@ class FieldAccess(J, TypeTree, Expression, Statement):
                 p = FieldAccess.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_field_access(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1738,6 +1799,9 @@ class ForEachLoop(J, Loop):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_for_each_control(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: ForEachLoop
@@ -1764,6 +1828,9 @@ class ForEachLoop(J, Loop):
                 p = ForEachLoop.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_for_each_loop(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1911,6 +1978,9 @@ class ForLoop(J, Loop):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_for_control(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: ForLoop
@@ -1937,6 +2007,9 @@ class ForLoop(J, Loop):
                 p = ForLoop.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_for_loop(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1985,6 +2058,9 @@ class ParenthesizedTypeTree(J, TypeTree, Expression):
 
     def with_parenthesized_type(self, parenthesized_type: Parentheses[TypeTree]) -> ParenthesizedTypeTree:
         return self if parenthesized_type is self._parenthesized_type else replace(self, _parenthesized_type=parenthesized_type)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_parenthesized_type_tree(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2051,6 +2127,9 @@ class Identifier(J, TypeTree, Expression):
 
     def with_field_type(self, field_type: Optional[JavaType.Variable]) -> Identifier:
         return self if field_type is self._field_type else replace(self, _field_type=field_type)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_identifier(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2175,6 +2254,9 @@ class If(J, Statement):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_else(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: If
@@ -2201,6 +2283,9 @@ class If(J, Statement):
                 p = If.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_if(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2292,6 +2377,9 @@ class Import(Statement):
                 p = Import.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_import(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2386,6 +2474,9 @@ class InstanceOf(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_instance_of(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class IntersectionType(J, TypeTree, Expression):
@@ -2451,6 +2542,9 @@ class IntersectionType(J, TypeTree, Expression):
                 p = IntersectionType.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_intersection_type(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2526,6 +2620,9 @@ class Label(J, Statement):
                 p = Label.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_label(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2668,6 +2765,12 @@ class Lambda(J, Statement, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_lambda_parameters(self, p)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_lambda(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(J, Expression, TypedTree):
@@ -2753,6 +2856,9 @@ class Literal(J, Expression, TypedTree):
 
         def with_code_point(self, code_point: str) -> Literal.UnicodeEscape:
             return self if code_point is self._code_point else replace(self, _code_point=code_point)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2878,6 +2984,9 @@ class MemberReference(J, Expression, TypedTree, MethodCall):
                 p = MemberReference.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_member_reference(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3115,6 +3224,9 @@ class MethodDeclaration(J, Statement, TypedTree):
                 object.__setattr__(self, '_annotations', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_method_declaration(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
@@ -3231,6 +3343,9 @@ class MethodInvocation(J, Statement, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_method_invocation(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Modifier(J):
@@ -3308,6 +3423,9 @@ class Modifier(J):
         Inline = 16
         LanguageExtension = 17
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_modifier(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MultiCatch(J, TypeTree):
@@ -3373,6 +3491,9 @@ class MultiCatch(J, TypeTree):
                 p = MultiCatch.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_multi_catch(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3467,6 +3588,9 @@ class NewArray(J, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_new_array(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayDimension(J):
@@ -3532,6 +3656,9 @@ class ArrayDimension(J):
                 p = ArrayDimension.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_array_dimension(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3651,6 +3778,9 @@ class NewClass(J, Statement, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_new_class(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NullableType(J, TypeTree, Expression):
@@ -3726,6 +3856,9 @@ class NullableType(J, TypeTree, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_nullable_type(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Package(Statement, J):
@@ -3773,6 +3906,9 @@ class Package(Statement, J):
 
     def with_annotations(self, annotations: List[Annotation]) -> Package:
         return self if annotations is self._annotations else replace(self, _annotations=annotations)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_package(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3858,6 +3994,9 @@ class ParameterizedType(J, TypeTree, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_parameterized_type(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Parentheses(Generic[J2], J, Expression):
@@ -3923,6 +4062,9 @@ class Parentheses(Generic[J2], J, Expression):
                 p = Parentheses[J2].PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_parentheses(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -3990,6 +4132,9 @@ class ControlParentheses(Generic[J2], J, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_control_parentheses(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Primitive(J, TypeTree, Expression):
@@ -4024,6 +4169,9 @@ class Primitive(J, TypeTree, Expression):
 
     def with_type(self, type: JavaType.Primitive) -> Primitive:
         return self if type is self._type else replace(self, _type=type)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_primitive(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4063,6 +4211,9 @@ class Return(J, Statement):
 
     def with_expression(self, expression: Optional[Expression]) -> Return:
         return self if expression is self._expression else replace(self, _expression=expression)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_return(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4112,6 +4263,9 @@ class Switch(J, Statement):
     def with_cases(self, cases: Block) -> Switch:
         return self if cases is self._cases else replace(self, _cases=cases)
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_switch(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SwitchExpression(J, Expression, TypedTree):
@@ -4160,6 +4314,9 @@ class SwitchExpression(J, Expression, TypedTree):
     def with_cases(self, cases: Block) -> SwitchExpression:
         return self if cases is self._cases else replace(self, _cases=cases)
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_switch_expression(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Synchronized(J, Statement):
@@ -4207,6 +4364,9 @@ class Synchronized(J, Statement):
 
     def with_body(self, body: Block) -> Synchronized:
         return self if body is self._body else replace(self, _body=body)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_synchronized(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4308,6 +4468,9 @@ class Ternary(J, Expression, Statement, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_ternary(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Throw(J, Statement):
@@ -4346,6 +4509,9 @@ class Throw(J, Statement):
 
     def with_exception(self, exception: Expression) -> Throw:
         return self if exception is self._exception else replace(self, _exception=exception)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_throw(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4461,6 +4627,9 @@ class Try(J, Statement):
         def with_terminated_with_semicolon(self, terminated_with_semicolon: bool) -> Try.Resource:
             return self if terminated_with_semicolon is self._terminated_with_semicolon else replace(self, _terminated_with_semicolon=terminated_with_semicolon)
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_try_resource(self, p)
+
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Catch(J):
@@ -4509,6 +4678,9 @@ class Try(J, Statement):
         def with_body(self, body: Block) -> Try.Catch:
             return self if body is self._body else replace(self, _body=body)
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_catch(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: Try
@@ -4542,6 +4714,9 @@ class Try(J, Statement):
                 p = Try.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_try(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4590,6 +4765,9 @@ class TypeCast(J, Expression, TypedTree):
 
     def with_expression(self, expression: Expression) -> TypeCast:
         return self if expression is self._expression else replace(self, _expression=expression)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_type_cast(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4684,6 +4862,9 @@ class TypeParameter(J):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_type_parameter(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeParameters(J):
@@ -4758,6 +4939,9 @@ class TypeParameters(J):
                 p = TypeParameters.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_type_parameters(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -4852,6 +5036,9 @@ class Unary(J, Statement, Expression, TypedTree):
                 p = Unary.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_unary(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -5030,6 +5217,9 @@ class VariableDeclarations(J, Statement, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_variable(self, p)
+
     @dataclass
     class PaddingHelper:
         _t: VariableDeclarations
@@ -5056,6 +5246,9 @@ class VariableDeclarations(J, Statement, TypedTree):
                 p = VariableDeclarations.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_variable_declarations(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -5131,6 +5324,9 @@ class WhileLoop(J, Loop):
                 p = WhileLoop.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_while_loop(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -5211,6 +5407,9 @@ class Wildcard(J, Expression, TypeTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_wildcard(self, p)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Yield(J, Statement):
@@ -5258,6 +5457,9 @@ class Yield(J, Statement):
 
     def with_value(self, value: Expression) -> Yield:
         return self if value is self._value else replace(self, _value=value)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_yield(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -5336,3 +5538,9 @@ class Unknown(J, Statement, Expression, TypeTree, TypedTree, NameTree):
 
         def with_text(self, text: str) -> Unknown.Source:
             return self if text is self._text else replace(self, _text=text)
+
+        def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+            return v.visit_unknown_source(self, p)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_unknown(self, p)
