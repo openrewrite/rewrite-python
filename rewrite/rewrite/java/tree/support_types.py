@@ -334,7 +334,7 @@ class JRightPadded(Generic[T]):
 
         return after
 
-    class Location(Emum):
+    class Location(Enum):
         ANNOTATION_ARGUMENT = Space.Location.ANNOTATION_ARGUMENT_SUFFIX
         ARRAY_INDEX = Space.Location.ARRAY_INDEX_SUFFIX
         BLOCK_STATEMENT = Space.Location.BLOCK_STATEMENT_SUFFIX
@@ -378,6 +378,10 @@ class JRightPadded(Generic[T]):
         TYPE_PARAMETER = Space.Location.TYPE_PARAMETER_SUFFIX
         WHILE_BODY = Space.Location.WHILE_BODY_SUFFIX
 
+        def __init__(self, after_location: Space.Location):
+            self.after_location = after_location
+
+        after_location: Space.Location = None
 
 @dataclass(frozen=True)
 class JLeftPadded(Generic[T]):

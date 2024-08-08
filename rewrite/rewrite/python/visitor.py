@@ -28,7 +28,7 @@ class PythonVisitor(JavaVisitor[P]):
     def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:
         compilation_unit = compilation_unit.with_prefix(self.visit_space(compilation_unit.prefix, Space.Location.COMPILATION_UNIT_PREFIX, p))
         compilation_unit = compilation_unit.with_markers(self.visit_markers(compilation_unit.markers, p))
-        compilation_unit = compilation_unit.padding.with_imports([self.visit_right_padded(v, PyRightPadded.Location.COMPILATION_UNIT_IMPORTS, p) for v in compilation_unit.padding.imports])
+        compilation_unit = compilation_unit.padding.with_imports([self.visit_right_padded(v, JRightPadded.Location.IMPORT, p) for v in compilation_unit.padding.imports])
         compilation_unit = compilation_unit.padding.with_statements([self.visit_right_padded(v, PyRightPadded.Location.COMPILATION_UNIT_STATEMENTS, p) for v in compilation_unit.padding.statements])
         compilation_unit = compilation_unit.with_eof(self.visit_space(compilation_unit.eof, Space.Location.COMPILATION_UNIT_EOF, p))
         return compilation_unit
