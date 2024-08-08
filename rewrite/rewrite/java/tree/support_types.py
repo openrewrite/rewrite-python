@@ -72,6 +72,8 @@ class Space:
 
     EMPTY: ClassVar[Space] = None
 
+    class Location:
+        pass
 
 Space.EMPTY = Space([], '')
 
@@ -179,6 +181,9 @@ class JRightPadded(Generic[T]):
 
         return after
 
+    class Location:
+        pass
+
 
 @dataclass(frozen=True)
 class JLeftPadded(Generic[T]):
@@ -208,6 +213,9 @@ class JLeftPadded(Generic[T]):
 
     def with_markers(self, markers: Markers) -> JLeftPadded[T]:
         return self if markers is self._markers else JLeftPadded(self._before, self._element, markers)
+
+    class Location:
+        pass
 
 
 @dataclass(frozen=True)
@@ -273,3 +281,6 @@ class JContainer(Generic[T]):
         if before is None:
             return JContainer(Space.EMPTY, elements, Markers.EMPTY)
         return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
+
+    class Location:
+        pass

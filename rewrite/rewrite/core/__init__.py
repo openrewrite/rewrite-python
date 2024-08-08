@@ -4,6 +4,7 @@ from .tree import SourceFile
 from .tree import Tree
 from .tree import random_id
 
+from .visitor import Cursor
 from .visitor import TreeVisitor
 
 from .execution import ExecutionContext
@@ -15,6 +16,7 @@ __all__ = [
     'SourceFile',
     'Tree',
     'random_id',
+    'Cursor',
     'TreeVisitor',
     'ExecutionContext',
     'RecipeRunException',
