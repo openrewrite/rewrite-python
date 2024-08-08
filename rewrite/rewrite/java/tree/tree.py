@@ -13,9 +13,6 @@ from ..visitor import JavaVisitor, P
 from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
 
-J2 = TypeVar('J2', bound=J)
-
-
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AnnotatedType(J, Expression, TypeTree):

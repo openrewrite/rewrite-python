@@ -8,13 +8,11 @@ from typing import List, Optional, Protocol, runtime_checkable
 from uuid import UUID
 from enum import Enum
 
+from .support_types import *
 from ..visitor import PythonVisitor, P
-from ...core import Checksum, FileAttributes, SourceFile, Tree, Cursor, TreeVisitor
+from ...core import Checksum, FileAttributes, SourceFile, Tree
 from ...core.marker.markers import Markers
-from ...java.tree.support_types import TypeTree, Space, JavaType, Expression, JavaSourceFile, JRightPadded, Statement, \
-    TypedTree, JContainer, JLeftPadded
-from ...java.tree.tree import Import, Block, Identifier, J
-
+from rewrite.java.tree import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
