@@ -20,10 +20,47 @@ concurrency:
 
 jobs:
   build:
-    uses: openrewrite/gh-automation/.github/workflows/ci-gradle.yml@main
-    secrets:
-      gradle_enterprise_access_key: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      ossrh_username: ${{ secrets.OSSRH_USERNAME }}
-      ossrh_token: ${{ secrets.OSSRH_TOKEN }}
-      ossrh_signing_key: ${{ secrets.OSSRH_SIGNING_KEY }}
-      ossrh_signing_password: ${{ secrets.OSSRH_SIGNING_PASSWORD }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          show-progress: false
+      - uses: gradle/actions/wrapper-validation@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - uses: Gr1N/setup-poetry@v8
+      - run: poetry --version
+      - uses: gradle/actions/setup-gradle@v3
+      - name: set-up-jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: check-java
+        run: java --version
+
+      - name: build-java
+        run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
+      - name: build-python
+        run: |
+          for directory in rewrite/rewrite-*/; do
+            if [ -f "$directory/pyproject.toml" ]; then
+              echo "Building project in $directory"
+              cd "$directory"
+              poetry install --no-interaction --no-ansi
+              poetry build
+              cd - > /dev/null
+            fi
+          done
+
+      - name: publish-snapshots
+        if: github.event_name != 'pull_request'
+        run: ./gradlew ${{ env.GRADLE_SWITCHES }} snapshot publish -PforceSigning -x test
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.OSSRH_TOKEN }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.OSSRH_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.OSSRH_SIGNING_PASSWORD }}
