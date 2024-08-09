@@ -1,5 +1,69 @@
-# Ignore egg-info directories
-*.egg-info/
-
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+__pypackages__/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Others
+tests/__pycache__/
+
+# System-specific files (macOS)
+.DS_Store
+
+# Virtual environments
+.env/
+.venv/
+.env.bak/
+.venv.bak/
+env/
+venv/
+
+# Poetry related
+poetry.lock
+
+# Distribution / Packages
+dist/

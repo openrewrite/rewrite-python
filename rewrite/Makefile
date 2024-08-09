@@ -1,27 +1,26 @@
-.PHONY: install_core install_java test
+.PHONY: all install-deps build
 
-install:
-	pip install -e rewrite-core/
-	pip install -e rewrite-java/
-	pip install -e rewrite-json/
-	pip install -e rewrite-python/
-	pip install -e rewrite-xml/
-	pip install -e rewrite-yaml/
+# List of project directories
+PROJECTS= rewrite-core rewrite-java rewrite-json rewrite-python rewrite-xml rewrite-yaml
 
-install_core:
-	pip install -e rewrite-core/
+# Default target
+all: install-deps build
 
-install_json:
-	pip install -e rewrite-json/
+# Define a target to install dependencies for all projects
+install-deps:
+	@for project in $(PROJECTS); do\
+	  echo "Installing dependencies for $$project";\
+	  cd $$project && poetry install;\
+	  cd -;\
+	done
 
-install_python:
-	pip install -e rewrite-python/
-
-install_xml:
-	pip install -e rewrite-xml/
-
-install_yaml:
-	pip install -e rewrite-yaml/
+# Define a target to build all projects
+build:
+	@for project in $(PROJECTS); do\
+	  echo "Building project $$project";\
+	  cd $$project && poetry build;\
+	  cd -;\
+	done
 
 test:
 	pytest

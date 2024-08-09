@@ -1,3 +1,17 @@
+[tool.poetry]
+name = "rewrite-xml"
+version = "0.1.0"
+description = "XML functionality for the OpenRewrite library"
+authors = ["Moderne Inc. <support@moderne.io>"]
+license = "Apache-2.0"
+packages = [
+    { include = "rewrite/xml", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+rewrite-core = { path = "../rewrite-core", develop = true }
+
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
