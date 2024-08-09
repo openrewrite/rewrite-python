@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import extensions
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -9,8 +8,7 @@ from uuid import UUID
 from enum import Enum
 
 from .support_types import *
-from ..visitor import JsonVisitor, P
-from rewrite import Checksum, FileAttributes, SourceFile, Tree
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -79,12 +77,13 @@ class Array(JsonValue):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_array(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Document(Json, SourceFile["Document"]):
+class Document(SourceFile):
     _id: UUID
 
     @property
@@ -175,7 +174,8 @@ class Document(Json, SourceFile["Document"]):
     def with_eof(self, eof: Space) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_document(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -208,7 +208,8 @@ class Empty(JsonValue):
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_empty(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -250,7 +251,8 @@ class Identifier(JsonKey):
     def with_name(self, name: str) -> Identifier:
         return self if name is self._name else replace(self, _name=name)
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_identifier(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -301,12 +303,13 @@ class Literal(JsonValue, JsonKey):
     def with_value(self, value: object) -> Literal:
         return self if value is self._value else replace(self, _value=value)
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Member(Json):
+class Member:
     _id: UUID
 
     @property
@@ -379,7 +382,8 @@ class Member(Json):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_member(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -448,5 +452,6 @@ class JsonObject(JsonValue):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
+    def accept_json(self, v: TreeVisitor[Json, P], p: P) -> Json:
+        # noinspection PyUnresolvedReferences
         return v.visit_object(self, p)

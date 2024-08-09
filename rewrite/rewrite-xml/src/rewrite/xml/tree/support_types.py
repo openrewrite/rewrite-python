@@ -1,6 +1,9 @@
-from typing import Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable, TypeVar
 
-from rewrite.core import Tree
+from rewrite import Tree
+
+
+P = TypeVar('P')
 
 
 @runtime_checkable

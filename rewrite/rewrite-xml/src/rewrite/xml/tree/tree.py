@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import extensions
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -9,13 +8,12 @@ from uuid import UUID
 from enum import Enum
 
 from .support_types import *
-from ..visitor import XmlVisitor, P
-from rewrite import Checksum, FileAttributes, SourceFile, Tree
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Document(Xml, SourceFile["Document"]):
+class Document(SourceFile):
     _id: UUID
 
     @property
@@ -115,12 +113,13 @@ class Document(Xml, SourceFile["Document"]):
     def with_eof(self, eof: str) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_document(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Prolog(Xml):
+class Prolog:
     _id: UUID
 
     @property
@@ -175,12 +174,13 @@ class Prolog(Xml):
     def with_jsp_directives(self, jsp_directives: List[JspDirective]) -> Prolog:
         return self if jsp_directives is self._jsp_directives else replace(self, _jsp_directives=jsp_directives)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_prolog(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class XmlDecl(Xml, Misc):
+class XmlDecl(Misc):
     _id: UUID
 
     @property
@@ -235,12 +235,13 @@ class XmlDecl(Xml, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> XmlDecl:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_xml_decl(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ProcessingInstruction(Xml, Content, Misc):
+class ProcessingInstruction(Content, Misc):
     _id: UUID
 
     @property
@@ -295,12 +296,13 @@ class ProcessingInstruction(Xml, Content, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> ProcessingInstruction:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_processing_instruction(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Tag(Xml, Content):
+class Tag(Content):
     _id: UUID
 
     @property
@@ -375,7 +377,7 @@ class Tag(Xml, Content):
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
-    class Closing(Xml):
+    class Closing:
         _id: UUID
 
         @property
@@ -421,15 +423,17 @@ class Tag(Xml, Content):
         def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Tag.Closing:
             return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-        def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+        def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+            # noinspection PyUnresolvedReferences
             return v.visit_tag_closing(self, p)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_tag(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Attribute(Xml):
+class Attribute:
     _id: UUID
 
     @property
@@ -486,7 +490,7 @@ class Attribute(Xml):
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
-    class Value(Xml):
+    class Value:
         class Quote(Enum):
             Double = 0
             Single = 1
@@ -536,15 +540,17 @@ class Attribute(Xml):
         def with_value(self, value: str) -> Attribute.Value:
             return self if value is self._value else replace(self, _value=value)
 
-        def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+        def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+            # noinspection PyUnresolvedReferences
             return v.visit_attribute_value(self, p)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_attribute(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class CharData(Xml, Content):
+class CharData(Content):
     _id: UUID
 
     @property
@@ -599,12 +605,13 @@ class CharData(Xml, Content):
     def with_after_text(self, after_text: str) -> CharData:
         return self if after_text is self._after_text else replace(self, _after_text=after_text)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_char_data(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Comment(Xml, Content, Misc):
+class Comment(Content, Misc):
     _id: UUID
 
     @property
@@ -641,12 +648,13 @@ class Comment(Xml, Content, Misc):
     def with_text(self, text: str) -> Comment:
         return self if text is self._text else replace(self, _text=text)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_comment(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class DocTypeDecl(Xml, Misc):
+class DocTypeDecl(Misc):
     _id: UUID
 
     @property
@@ -721,7 +729,7 @@ class DocTypeDecl(Xml, Misc):
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
-    class ExternalSubsets(Xml):
+    class ExternalSubsets:
         _id: UUID
 
         @property
@@ -758,15 +766,17 @@ class DocTypeDecl(Xml, Misc):
         def with_elements(self, elements: List[Element]) -> DocTypeDecl.ExternalSubsets:
             return self if elements is self._elements else replace(self, _elements=elements)
 
-        def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+        def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+            # noinspection PyUnresolvedReferences
             return v.visit_doc_type_decl_external_subsets(self, p)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_doc_type_decl(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Element(Xml):
+class Element:
     _id: UUID
 
     @property
@@ -812,12 +822,13 @@ class Element(Xml):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Element:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_element(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Ident(Xml):
+class Ident:
     _id: UUID
 
     @property
@@ -854,12 +865,13 @@ class Ident(Xml):
     def with_name(self, name: str) -> Ident:
         return self if name is self._name else replace(self, _name=name)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_ident(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class JspDirective(Xml, Content):
+class JspDirective(Content):
     _id: UUID
 
     @property
@@ -923,5 +935,6 @@ class JspDirective(Xml, Content):
     def with_before_directive_end_prefix(self, before_directive_end_prefix: str) -> JspDirective:
         return self if before_directive_end_prefix is self._before_directive_end_prefix else replace(self, _before_directive_end_prefix=before_directive_end_prefix)
 
-    def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
+    def accept_xml(self, v: TreeVisitor[Xml, P], p: P) -> Xml:
+        # noinspection PyUnresolvedReferences
         return v.visit_jsp_directive(self, p)

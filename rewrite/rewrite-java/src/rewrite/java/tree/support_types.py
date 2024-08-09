@@ -10,6 +10,9 @@ from rewrite import Tree, SourceFile
 from rewrite.marker import Markers
 
 
+P = TypeVar('P')
+
+
 @runtime_checkable
 class J(Tree, Protocol):
     pass

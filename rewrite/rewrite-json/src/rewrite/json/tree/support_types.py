@@ -7,6 +7,9 @@ from rewrite import Tree
 from rewrite.marker import Markers
 
 
+P = TypeVar('P')
+
+
 @runtime_checkable
 class Json(Tree, Protocol):
     pass
