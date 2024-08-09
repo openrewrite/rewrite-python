@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rewrite-core"
-version = "0.1.0"
+version = "0.0.0"  # This will be replaced by the GitHub Actions workflow
 description = "Core functionality for the OpenRewrite library"
 authors = ["Moderne Inc. <support@moderne.io>"]
 license = "Apache-2.0"
