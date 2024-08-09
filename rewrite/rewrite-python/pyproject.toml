@@ -12,7 +12,6 @@ packages = [
 python = "^3.8"
 rewrite-core = { path = "../rewrite-core", develop = true }
 rewrite-java = { path = "../rewrite-java", develop = true }
-mypy = "^1.11.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"

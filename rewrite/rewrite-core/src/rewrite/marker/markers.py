@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List, Protocol, ClassVar
 from uuid import UUID
 
-from rewrite import random_id
+from ..utils import random_id
 
 
 class Marker(Protocol):

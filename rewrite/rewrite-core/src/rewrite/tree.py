@@ -5,15 +5,9 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, Optional, Any, TypeVar, runtime_checkable
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from rewrite import TreeVisitor
-from rewrite.marker import Markers
-
-
-def random_id() -> UUID:
-    return uuid4()
-
+from .marker import Markers
 
 P = TypeVar('P')
 

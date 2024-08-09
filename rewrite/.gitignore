@@ -62,8 +62,5 @@ tests/__pycache__/
 env/
 venv/
 
-# Poetry related
-poetry.lock
-
 # Distribution / Packages
 dist/

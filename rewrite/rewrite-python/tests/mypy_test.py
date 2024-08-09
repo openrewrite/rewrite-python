@@ -1,23 +1,21 @@
+import ast
 import textwrap
 
-import mypy.api
+from rewrite.python.parser.ast_visitor import SimpleASTVisitor
 
 
-def test_run_mypy_on_valid_code():
-    code = textwrap.dedent("""
-    def add(a: int, b: int) -> int:
-        return a + b
+def run_visitor():
+    source = textwrap.dedent("""
+    def foo():
+        print('hello')
 
-    result = add(1, 2)
-    print(result)
+    def bar(x):
+        return x * 2
     """)
-    stdout, stderr, exit_code = run_mypy_on_code(code)
 
-    assert "Success: no issues found" in stdout
-    assert stderr == ""
-    assert exit_code == 0
+    # Parse the source code into an AST
+    tree = ast.parse(source)
 
-def run_mypy_on_code(code: str):
-    result = mypy.api.run(["-c", code])
-    stdout, stderr, exit_code = result
-    return stdout, stderr, exit_code
+    # Create the visitor and visit the AST
+    visitor = SimpleASTVisitor()
+    visitor.visit(tree)
