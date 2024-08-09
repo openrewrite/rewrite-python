@@ -385,8 +385,6 @@ class JRightPadded(Generic[T]):
         def __init__(self, after_location: Space.Location):
             self.after_location = after_location
 
-        after_location: Space.Location = None
-
 @dataclass(frozen=True)
 class JLeftPadded(Generic[T]):
     _before: Space
@@ -441,8 +439,6 @@ class JLeftPadded(Generic[T]):
 
         def __init__(self, before_location: Space.Location):
             self.before_location = before_location
-
-        before_location: Space.Location = None
 
 
 @dataclass(frozen=True)
@@ -530,6 +526,3 @@ class JContainer(Generic[T]):
         def __init__(self, before_location: Space.Location, element_location: JRightPadded.Location):
             self.before_location = before_location
             self.element_location = element_location
-
-        before_location: Space.Location = None
-        element_location: JRightPadded.Location = None

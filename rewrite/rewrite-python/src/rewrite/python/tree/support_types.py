@@ -79,8 +79,6 @@ class PyRightPadded:
         def __init__(self, after_location: PySpace.Location):
             self.after_location = after_location
 
-        after_location: PySpace.Location = None
-
 
 class PyLeftPadded:
     class Location(Enum):
@@ -94,8 +92,6 @@ class PyLeftPadded:
         def __init__(self, before_location: PySpace.Location):
             self.before_location = before_location
 
-        before_location: PySpace.Location = None
-
 
 class PyContainer:
     class Location(Enum):
@@ -105,6 +101,3 @@ class PyContainer:
         def __init__(self, before_location: PySpace.Location, element_location: PyRightPadded.Location):
             self.before_location = before_location
             self.element_location = element_location
-
-        before_location: PySpace.Location = None
-        element_location: PyRightPadded.Location = None
