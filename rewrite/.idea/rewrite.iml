@@ -12,6 +12,7 @@
     </content>
     <content url="file://$MODULE_DIR$/rewrite-python">
       <sourceFolder url="file://$MODULE_DIR$/rewrite-python/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rewrite-python/tests" isTestSource="true" />
     </content>
     <content url="file://$MODULE_DIR$/rewrite-xml">
       <sourceFolder url="file://$MODULE_DIR$/rewrite-xml/src" isTestSource="false" />
@@ -19,7 +20,7 @@
     <content url="file://$MODULE_DIR$/rewrite-yaml">
       <sourceFolder url="file://$MODULE_DIR$/rewrite-yaml/src" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8 (rewrite)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Poetry (rewrite-core)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
