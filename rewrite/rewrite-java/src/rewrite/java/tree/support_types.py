@@ -7,8 +7,8 @@ from uuid import UUID
 
 from attr import dataclass
 
-from rewrite.core import Tree, SourceFile
-from rewrite.core.marker import Markers
+from rewrite import Tree, SourceFile
+from rewrite.marker import Markers
 
 
 @runtime_checkable

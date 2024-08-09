@@ -10,8 +10,8 @@ from enum import Enum
 
 from .support_types import *
 from ..visitor import PythonVisitor, P
-from rewrite.core import Checksum, FileAttributes, SourceFile, Tree
-from rewrite.core.marker.markers import Markers
+from rewrite import Checksum, FileAttributes, SourceFile, Tree
+from rewrite.marker import Markers
 from rewrite.java.tree import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode

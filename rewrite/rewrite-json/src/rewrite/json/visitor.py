@@ -1,7 +1,7 @@
 from typing import cast, TypeVar
 
-from rewrite.core import TreeVisitor, SourceFile
-from rewrite.json.tree.tree import *
+from rewrite import TreeVisitor
+from .tree import *
 
 P = TypeVar('P')
 

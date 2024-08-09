@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Protocol, Optional, Any, TypeVar, runtime_checkable
 from uuid import UUID, uuid4
 
-from rewrite.core import TreeVisitor
-from rewrite.core.marker import Markers
+from rewrite import TreeVisitor
+from rewrite.marker import Markers
 
 
 def random_id() -> UUID:

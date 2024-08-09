@@ -10,8 +10,8 @@ from enum import Enum
 
 from .support_types import *
 from ..visitor import JavaVisitor, P
-from ...core import Checksum, FileAttributes, SourceFile, Tree
-from ...core.marker.markers import Markers
+from rewrite import Checksum, FileAttributes, SourceFile, Tree
+from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

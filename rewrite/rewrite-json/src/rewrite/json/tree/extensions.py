@@ -1,9 +1,9 @@
 from typing import Optional, TypeVar
 
-from rewrite.core import Cursor
-from rewrite.json.tree.support_types import JsonRightPadded
-from rewrite.json.tree.tree import Json
-from rewrite.json.visitor import JsonVisitor
+from rewrite import Cursor
+from .support_types import JsonRightPadded
+from .tree import Json
+from ..visitor import JsonVisitor
 
 T = TypeVar('T', bound=Json)
 

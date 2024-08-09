@@ -4,8 +4,8 @@ from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable
 
 from attr import dataclass
 
-from rewrite.core import Tree
-from rewrite.core.marker import Markers
+from rewrite import Tree
+from rewrite.marker import Markers
 
 
 @runtime_checkable

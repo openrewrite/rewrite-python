@@ -1,9 +1,8 @@
 from typing import Optional, TypeVar
 
-from rewrite.core import Cursor, Tree
-from rewrite.java.tree.support_types import JRightPadded, JLeftPadded, JContainer, Space
-from rewrite.java.tree.tree import J
-from rewrite.java.visitor import JavaVisitor
+from rewrite import Cursor, Tree
+from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+from ..visitor import JavaVisitor
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)

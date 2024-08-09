@@ -1,9 +1,8 @@
 from typing import Optional, TypeVar
 
-from rewrite.java.tree.support_types import JContainer, JRightPadded, JLeftPadded, Space
-from rewrite.java.tree.tree import J
-from rewrite.python.tree.support_types import PyContainer, PyRightPadded, PyLeftPadded, PySpace
-from rewrite.python.visitor import PythonVisitor
+from rewrite.java.tree import J, JContainer, JRightPadded, JLeftPadded, Space
+from .support_types import PyContainer, PyRightPadded, PyLeftPadded, PySpace
+from ..visitor import PythonVisitor
 
 
 T = TypeVar('T')

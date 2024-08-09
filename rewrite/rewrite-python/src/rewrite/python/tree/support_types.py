@@ -3,8 +3,8 @@ from __future__ import annotations
 from enum import Enum, auto
 from typing import Protocol, TypeVar, runtime_checkable
 
-from rewrite.core import Tree
-from rewrite.java.tree.tree import J
+from rewrite import Tree
+from rewrite.java.tree import J
 
 
 @runtime_checkable

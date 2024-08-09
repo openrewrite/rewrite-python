@@ -1,9 +1,7 @@
-from typing import cast, TypeVar, Union
+from typing import cast, TypeVar
 
-from rewrite.core import TreeVisitor
-from rewrite.json.tree.support_types import JsonRightPadded
-from rewrite.python.tree.support_types import PySpace, PyRightPadded, PyContainer, PyLeftPadded, J2, T
-from rewrite.python.tree.tree import *
+from rewrite import TreeVisitor
+from .tree import *
 from rewrite.java.visitor import JavaVisitor
 
 P = TypeVar('P')

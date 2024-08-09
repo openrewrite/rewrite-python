@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type
 
-from rewrite.core import SourceFile, Tree, RecipeRunException
-from rewrite.core.marker import Markers, Marker
+from rewrite import SourceFile, Tree, RecipeRunException
+from rewrite.marker import Markers, Marker
 
 O = TypeVar('O')
 T = TypeVar('T', bound=Tree)
