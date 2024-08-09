@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import weakref
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable
 from uuid import UUID
-
-from attr import dataclass
 
 from rewrite import Tree, SourceFile
 from rewrite.marker import Markers
@@ -238,23 +237,23 @@ class JavaSourceFile(SourceFile, Protocol):
     pass
 
 
-class Expression(Tree, Protocol):
+class Expression(J, Protocol):
     pass
 
 
-class Statement(Tree, Protocol):
+class Statement(J, Protocol):
     pass
 
 
-class NameTree(Tree, Protocol):
+class TypedTree(J, Protocol):
     pass
 
 
-class TypeTree(Tree, Protocol):
+class NameTree(TypedTree, Protocol):
     pass
 
 
-class TypedTree(Tree, Protocol):
+class TypeTree(NameTree, Protocol):
     pass
 
 

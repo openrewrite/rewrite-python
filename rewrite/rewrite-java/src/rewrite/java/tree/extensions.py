@@ -2,13 +2,12 @@ from typing import Optional, TypeVar
 
 from rewrite import Cursor, Tree
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
-from ..visitor import JavaVisitor
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
 
 
-def visit_container(v: JavaVisitor, container: Optional[JContainer[J2]], loc: JContainer.Location, p) -> Optional[JContainer[J2]]:
+def visit_container(v: 'JavaVisitor', container: Optional[JContainer[J2]], loc: JContainer.Location, p) -> Optional[JContainer[J2]]:
     if container is None:
         return None
 
@@ -20,7 +19,7 @@ def visit_container(v: JavaVisitor, container: Optional[JContainer[J2]], loc: JC
     return container if js == container.padding.elements and before is container.before else JContainer(before, js, container.markers)
 
 
-def visit_right_padded(v: JavaVisitor, right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p) -> Optional[JRightPadded[T]]:
+def visit_right_padded(v: 'JavaVisitor', right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p) -> Optional[JRightPadded[T]]:
     if right is None:
         return None
 
@@ -38,7 +37,7 @@ def visit_right_padded(v: JavaVisitor, right: Optional[JRightPadded[T]], loc: JR
     return right
 
 
-def visit_left_padded(v: JavaVisitor, left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p) -> Optional[JLeftPadded[T]]:
+def visit_left_padded(v: 'JavaVisitor', left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p) -> Optional[JLeftPadded[T]]:
     if left is None:
         return None
 
@@ -57,6 +56,6 @@ def visit_left_padded(v: JavaVisitor, left: Optional[JLeftPadded[T]], loc: JLeft
     return JLeftPadded(before, t, left.markers)
 
 
-def visit_space(v: JavaVisitor, space: Optional[Space], loc: Space.Location, p):
+def visit_space(v: 'JavaVisitor', space: Optional[Space], loc: Space.Location, p):
     # FIXME support Javadoc
     return space

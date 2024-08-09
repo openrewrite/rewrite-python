@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable
-
-from attr import dataclass
 
 from rewrite import Tree
 from rewrite.marker import Markers
