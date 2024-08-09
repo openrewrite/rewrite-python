@@ -11,12 +11,75 @@ concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"'
+  GRADLE_SWITCHES: --console=plain --info --stacktrace --warning-mode=all --no-daemon
+  GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.gradle_enterprise_access_key }}
+  ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ossrh_username }}
+  ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ossrh_token }}
+  ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ossrh_signing_key }}
+  ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ossrh_signing_password }}
+#  POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+
 jobs:
   release:
-    uses: openrewrite/gh-automation/.github/workflows/publish-gradle.yml@main
-    secrets:
-      gradle_enterprise_access_key: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      ossrh_username: ${{ secrets.OSSRH_USERNAME }}
-      ossrh_token: ${{ secrets.OSSRH_TOKEN }}
-      ossrh_signing_key: ${{ secrets.OSSRH_SIGNING_KEY }}
-      ossrh_signing_password: ${{ secrets.OSSRH_SIGNING_PASSWORD }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          show-progress: false
+      - name: set-up-jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: set-up-gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Extract version from ref
+        id: extract_version
+        run: |
+          ref=${GITHUB_REF##*/}
+          echo "Extracted ref: $ref"
+          version=${ref#v}
+          echo "Extracted version: $version"
+          echo "::set-output name=VERSION::$version"
+
+      - name: publish-candidate
+        if: contains(github.ref, '-rc.')
+        run: |
+          ./gradlew \
+          ${{ env.GRADLE_SWITCHES }} \
+          -Preleasing \
+          -Prelease.disableGitChecks=true \
+          -Prelease.useLastTag=true \
+          candidate \
+          publish \
+          closeAndReleaseSonatypeStagingRepository
+
+      - name: publish-release
+        if: (!contains(github.ref, '-rc.'))
+        run: |
+          ./gradlew \
+          ${{ env.GRADLE_SWITCHES }} \
+          -Preleasing \
+          -Prelease.disableGitChecks=true \
+          -Prelease.useLastTag=true \
+          final \
+          publish \
+          closeAndReleaseSonatypeStagingRepository
+
+#      - name: publish-python
+#        if: (!contains(github.ref, '-rc.'))
+#        run: |
+#          for directory in rewrite/rewrite-*/; do
+#            if [ -f "$directory/pyproject.toml" ]; then
+#              echo "Building project in $directory"
+#              cd "$directory"
+#              poetry install --no-interaction --no-ansi
+#              poetry build
+#              poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+#              cd - > /dev/null
+#            fi
+#          done
