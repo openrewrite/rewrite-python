@@ -12,6 +12,9 @@ packages = [
 python = "^3.8"
 rewrite-core = { path = "../rewrite-core", develop = true }
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

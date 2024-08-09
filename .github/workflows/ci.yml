@@ -52,6 +52,7 @@ jobs:
               cd "$directory"
               poetry install --no-interaction --no-ansi
               poetry build
+              poetry run pytest
               cd - > /dev/null
             fi
           done
