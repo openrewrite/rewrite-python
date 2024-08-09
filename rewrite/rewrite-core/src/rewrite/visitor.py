@@ -10,22 +10,21 @@ O = TypeVar('O')
 T = TypeVar('T', bound=Tree)
 T2 = TypeVar('T2', bound=Tree)
 P = TypeVar('P')
-M = TypeVar('M', bound=Marker)
 
 
 @dataclass(frozen=True)
 class Cursor:
     parent: Optional[Cursor]
     value: object
-    messages: Dict[str, object] = None
+    messages: Optional[Dict[str, object]] = None
 
     def get_message(self, key: str, default_value: O) -> O:
-        return default_value if self.messages is None else self.messages.get(key)
+        return default_value if self.messages is None else cast(O, self.messages.get(key))
 
 
 class TreeVisitor(Protocol[T, P]):
     _visit_count: int = 0
-    _cursor: Cursor
+    _cursor: Cursor = Cursor(None, "root")
     _after_visit: Optional[List[TreeVisitor[Any, P]]]
 
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
@@ -36,21 +35,21 @@ class TreeVisitor(Protocol[T, P]):
         return self._cursor
 
     @cursor.setter
-    def cursor(self, cursor: Cursor):
+    def cursor(self, cursor: Cursor) -> None:
         self._cursor = cursor
 
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
-        return self.default_value(tree, p)
+        return cast(Optional[T], self.default_value(tree, p))
 
     def post_visit(self, tree: T, p: P) -> Optional[T]:
-        return self.default_value(tree, p)
+        return cast(Optional[T], self.default_value(tree, p))
 
-    def visit(self, tree: Optional[Tree], p: P, parent: Cursor = None) -> Optional[T]:
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
         if parent is not None:
             self._cursor = parent
 
         if tree is None:
-            return self.default_value(None, p)
+            return cast(Optional[T], self.default_value(None, p))
 
         top_level = False
         if self._visit_count == 0:
@@ -65,14 +64,14 @@ class TreeVisitor(Protocol[T, P]):
 
         try:
             if is_acceptable:
-                t = self.pre_visit(tree, p)
+                t = self.pre_visit(cast(T, tree), p)
                 if not self._cursor.get_message("STOP_AFTER_PRE_VISIT", False):
                     if t is not None:
                         t = t.accept(self, p)
                     if t is not None:
                         t = self.post_visit(t, p)
 
-            self.cursor = self._cursor.parent
+            self.cursor = self._cursor.parent # type: ignore
 
             if top_level:
                 if t is not None and self._after_visit is not None:
@@ -90,10 +89,10 @@ class TreeVisitor(Protocol[T, P]):
 
             raise RecipeRunException(e, self.cursor)
 
-        return t if is_acceptable else tree
+        return t if is_acceptable else cast(Optional[T], tree)
 
     def visit_and_cast(self, tree: Optional[Tree], t_type: Type[T2], p: P) -> T2:
-        return cast(t_type, self.visit(tree, p))
+        return cast(T2, self.visit(tree, p))
 
     def default_value(self, tree: Optional[Tree], p: P) -> Optional[Tree]:
         return tree
@@ -105,5 +104,5 @@ class TreeVisitor(Protocol[T, P]):
             return markers
         return markers.with_markers([self.visit_marker(m, p) for m in markers.markers])
 
-    def visit_marker(self, marker: Marker, p: P) -> M:
+    def visit_marker(self, marker: Marker, p: P) -> Marker:
         return marker

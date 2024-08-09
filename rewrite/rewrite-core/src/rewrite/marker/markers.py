@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Protocol, ClassVar
+from typing import List, Protocol, ClassVar, cast
 from uuid import UUID
 
 from ..utils import random_id
@@ -15,12 +15,12 @@ class Marker(Protocol):
     def with_id(self, id: UUID) -> Marker:
         ...
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
-            return self.id == other.id
+            return self.id == cast(Marker, other).id
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
 
@@ -44,14 +44,14 @@ class Markers:
     def with_markers(self, markers: List[Marker]) -> Markers:
         return self if markers is self._markers else Markers(self._id, markers)
 
-    EMPTY: ClassVar[Markers] = None
+    EMPTY: ClassVar[Markers]
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
-            return self.id == other.id
+            return self.id == cast(Markers, other).id
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
 

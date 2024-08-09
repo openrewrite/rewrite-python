@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import datetime
+from datetime import datetime
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, Optional, Any, TypeVar, runtime_checkable
+from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast
 from uuid import UUID
 
+from . import TreeVisitor
 from .marker import Markers
 
 P = TypeVar('P')
@@ -28,15 +29,18 @@ class Tree(Protocol):
     def with_markers(self, markers: Markers) -> Tree:
         ...
 
-    def is_acceptable(self, v: TreeVisitor[Any, P], p) -> bool:
+    def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
         ...
 
-    def __eq__(self, other):
+    def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
+        return v.default_value(self, p)
+
+    def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
-            return self.id == other.id
+            return self.id == cast(Tree, other).id
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
 
