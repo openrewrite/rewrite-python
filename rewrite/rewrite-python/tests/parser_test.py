@@ -1,21 +1,19 @@
 import ast
 import textwrap
 
-from rewrite.python.parser.ast_visitor import SimpleASTVisitor
+from rewrite.python.parser.parser_visitor import ParserVisitor
 
 
-def run_visitor():
+def test_visitor():
     source = textwrap.dedent("""
-    def foo():
-        print('hello')
-
     def bar(x):
-        return x * 2
+        x = x + 1
+        return x
     """)
 
     # Parse the source code into an AST
     tree = ast.parse(source)
 
     # Create the visitor and visit the AST
-    visitor = SimpleASTVisitor()
+    visitor = ParserVisitor()
     visitor.visit(tree)
