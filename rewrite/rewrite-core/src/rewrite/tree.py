@@ -4,8 +4,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast
-from typing import TYPE_CHECKING
+from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING
 from uuid import UUID
 
 from .marker import Markers
