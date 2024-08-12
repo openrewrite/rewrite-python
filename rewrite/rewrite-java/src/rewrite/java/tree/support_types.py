@@ -3,12 +3,11 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable
+from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast
 from uuid import UUID
 
 from rewrite import Tree, SourceFile
 from rewrite.marker import Markers
-
 
 P = TypeVar('P')
 
@@ -507,6 +506,13 @@ class JContainer(Generic[T]):
         if before is None:
             return JContainer(Space.EMPTY, elements, Markers.EMPTY)
         return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
+
+    EMPTY: ClassVar[JContainer[Any]] = None
+
+    @classmethod
+    def empty(cls) -> JContainer[T]:
+        return cast(JContainer[T], JContainer.EMPTY)
+
 
     class Location(Enum):
         ANNOTATION_ARGUMENTS = (Space.Location.ANNOTATION_ARGUMENTS, JRightPadded.Location.ANNOTATION_ARGUMENT)
