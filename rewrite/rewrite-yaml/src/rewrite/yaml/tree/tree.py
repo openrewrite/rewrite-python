@@ -16,6 +16,17 @@ from rewrite.marker import Markers
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Documents(SourceFile):
+    def __init__(self, id: UUID, markers: Markers, sourcePath: Path, fileAttributes: Optional[FileAttributes], charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], documents: List[Document]) -> Documents:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_sourcePath', sourcePath)
+        object.__setattr__(self, '_fileAttributes', fileAttributes)
+        object.__setattr__(self, '_charsetName', charsetName)
+        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_documents', documents)
+
     _id: UUID
 
     @property
@@ -94,6 +105,15 @@ class Documents(SourceFile):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(Yaml):
+    def __init__(self, id: UUID, prefix: str, markers: Markers, explicit: bool, block: Block, end: Document.End) -> Document:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_explicit', explicit)
+        object.__setattr__(self, '_block', block)
+        object.__setattr__(self, '_end', end)
+
     _id: UUID
 
     @property
@@ -151,6 +171,13 @@ class Document(Yaml):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class End(Yaml):
+        def __init__(self, id: UUID, prefix: str, markers: Markers, explicit: bool) -> End:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_explicit', explicit)
+
         _id: UUID
 
         @property
@@ -200,6 +227,15 @@ class Block(Yaml, Protocol):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Scalar(Block, YamlKey):
+    def __init__(self, id: UUID, prefix: str, markers: Markers, style: Scalar.Style, anchor: Optional[Anchor], value: str) -> Scalar:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_style', style)
+        object.__setattr__(self, '_anchor', anchor)
+        object.__setattr__(self, '_value', value)
+
     _id: UUID
 
     @property
@@ -267,6 +303,15 @@ class Scalar(Block, YamlKey):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Mapping(Block):
+    def __init__(self, id: UUID, markers: Markers, openingBracePrefix: Optional[str], entries: List[Mapping.Entry], closingBracePrefix: Optional[str], anchor: Optional[Anchor]) -> Mapping:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_openingBracePrefix', openingBracePrefix)
+        object.__setattr__(self, '_entries', entries)
+        object.__setattr__(self, '_closingBracePrefix', closingBracePrefix)
+        object.__setattr__(self, '_anchor', anchor)
+
     _id: UUID
 
     @property
@@ -324,6 +369,15 @@ class Mapping(Block):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
+        def __init__(self, id: UUID, prefix: str, markers: Markers, key: YamlKey, beforeMappingValueIndicator: str, value: Block) -> Entry:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_key', key)
+            object.__setattr__(self, '_beforeMappingValueIndicator', beforeMappingValueIndicator)
+            object.__setattr__(self, '_value', value)
+
         _id: UUID
 
         @property
@@ -387,6 +441,15 @@ class Mapping(Block):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Sequence(Block):
+    def __init__(self, id: UUID, markers: Markers, openingBracketPrefix: Optional[str], entries: List[Sequence.Entry], closingBracketPrefix: Optional[str], anchor: Optional[Anchor]) -> Sequence:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_openingBracketPrefix', openingBracketPrefix)
+        object.__setattr__(self, '_entries', entries)
+        object.__setattr__(self, '_closingBracketPrefix', closingBracketPrefix)
+        object.__setattr__(self, '_anchor', anchor)
+
     _id: UUID
 
     @property
@@ -444,6 +507,15 @@ class Sequence(Block):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Entry(Yaml):
+        def __init__(self, id: UUID, prefix: str, markers: Markers, block: Block, dash: bool, trailingCommaPrefix: Optional[str]) -> Entry:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_block', block)
+            object.__setattr__(self, '_dash', dash)
+            object.__setattr__(self, '_trailingCommaPrefix', trailingCommaPrefix)
+
         _id: UUID
 
         @property
@@ -507,6 +579,13 @@ class Sequence(Block):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Alias(Block, YamlKey):
+    def __init__(self, id: UUID, prefix: str, markers: Markers, anchor: Anchor) -> Alias:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_anchor', anchor)
+
     _id: UUID
 
     @property
@@ -549,6 +628,14 @@ class Alias(Block, YamlKey):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Anchor(Yaml):
+    def __init__(self, id: UUID, prefix: str, postfix: str, markers: Markers, key: str) -> Anchor:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_postfix', postfix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_key', key)
+
     _id: UUID
 
     @property

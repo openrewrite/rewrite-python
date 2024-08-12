@@ -16,6 +16,13 @@ from rewrite.marker import Markers
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Array(JsonValue):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, values: List[JsonRightPadded[JsonValue]]) -> Array:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_values', values)
+
     _id: UUID
 
     @property
@@ -85,6 +92,19 @@ class Array(JsonValue):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(SourceFile):
+    def __init__(self, id: UUID, sourcePath: Path, prefix: Space, markers: Markers, charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], fileAttributes: Optional[FileAttributes], value: JsonValue, eof: Space) -> Document:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_sourcePath', sourcePath)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_charsetName', charsetName)
+        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_fileAttributes', fileAttributes)
+        object.__setattr__(self, '_value', value)
+        object.__setattr__(self, '_eof', eof)
+
     _id: UUID
 
     @property
@@ -181,6 +201,12 @@ class Document(SourceFile):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(JsonValue):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> Empty:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+
     _id: UUID
 
     @property
@@ -214,6 +240,13 @@ class Empty(JsonValue):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Identifier(JsonKey):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: str) -> Identifier:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+
     _id: UUID
 
     @property
@@ -256,6 +289,14 @@ class Identifier(JsonKey):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(JsonValue, JsonKey):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, source: str, value: object) -> Literal:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_source', source)
+        object.__setattr__(self, '_value', value)
+
     _id: UUID
 
     @property
@@ -307,6 +348,14 @@ class Literal(JsonValue, JsonKey):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Member(Json):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JsonRightPadded[JsonKey], value: JsonValue) -> Member:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_key', key)
+        object.__setattr__(self, '_value', value)
+
     _id: UUID
 
     @property
@@ -385,6 +434,13 @@ class Member(Json):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JsonObject(JsonValue):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, members: List[JsonRightPadded[Json]]) -> JsonObject:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_members', members)
+
     _id: UUID
 
     @property

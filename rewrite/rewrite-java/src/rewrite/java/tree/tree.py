@@ -16,6 +16,14 @@ from rewrite.marker import Markers
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AnnotatedType(Expression, TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], typeExpression: TypeTree) -> AnnotatedType:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_typeExpression', typeExpression)
+
     _id: UUID
 
     @property
@@ -67,6 +75,14 @@ class AnnotatedType(Expression, TypeTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Annotation(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotationType: NameTree, arguments: Optional[JContainer[Expression]]) -> Annotation:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotationType', annotationType)
+        object.__setattr__(self, '_arguments', arguments)
+
     _id: UUID
 
     @property
@@ -145,6 +161,15 @@ class Annotation(Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayAccess(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, indexed: Expression, dimension: ArrayDimension, type: Optional[JavaType]) -> ArrayAccess:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_indexed', indexed)
+        object.__setattr__(self, '_dimension', dimension)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -205,6 +230,16 @@ class ArrayAccess(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayType(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, elementType: TypeTree, annotations: Optional[List[Annotation]], dimension: Optional[JLeftPadded[Space]], type: JavaType) -> ArrayType:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_elementType', elementType)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_dimension', dimension)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -274,6 +309,14 @@ class ArrayType(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assert(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, condition: Expression, detail: Optional[JLeftPadded[Expression]]) -> Assert:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_condition', condition)
+        object.__setattr__(self, '_detail', detail)
+
     _id: UUID
 
     @property
@@ -325,6 +368,15 @@ class Assert(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Assignment(Statement, Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, variable: Expression, assignment: JLeftPadded[Expression], type: Optional[JavaType]) -> Assignment:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_variable', variable)
+        object.__setattr__(self, '_assignment', assignment)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -412,6 +464,16 @@ class Assignment(Statement, Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AssignmentOperation(Statement, Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, variable: Expression, operator: JLeftPadded[AssignmentOperation.Type], assignment: Expression, type: Optional[JavaType]) -> AssignmentOperation:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_variable', variable)
+        object.__setattr__(self, '_operator', operator)
+        object.__setattr__(self, '_assignment', assignment)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -524,6 +586,16 @@ class AssignmentOperation(Statement, Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Binary(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, left: Expression, operator: JLeftPadded[Binary.Type], right: Expression, type: Optional[JavaType]) -> Binary:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_left', left)
+        object.__setattr__(self, '_operator', operator)
+        object.__setattr__(self, '_right', right)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -641,6 +713,15 @@ class Binary(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Block(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, statik: JRightPadded[bool], statements: List[JRightPadded[Statement]], end: Space) -> Block:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_statik', statik)
+        object.__setattr__(self, '_statements', statements)
+        object.__setattr__(self, '_end', end)
+
     _id: UUID
 
     @property
@@ -735,6 +816,13 @@ class Block(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Break(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, label: Optional[Identifier]) -> Break:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_label', label)
+
     _id: UUID
 
     @property
@@ -777,6 +865,16 @@ class Break(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Case(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: Case.Type, expressions: JContainer[Expression], statements: JContainer[Statement], body: Optional[JRightPadded[J]]) -> Case:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_expressions', expressions)
+        object.__setattr__(self, '_statements', statements)
+        object.__setattr__(self, '_body', body)
+
     _id: UUID
 
     @property
@@ -887,6 +985,23 @@ class Case(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ClassDeclaration(Statement, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, leadingAnnotations: List[Annotation], modifiers: List[Modifier], kind: ClassDeclaration.Kind, name: Identifier, typeParameters: Optional[JContainer[TypeParameter]], primaryConstructor: Optional[JContainer[Statement]], extendings: Optional[JLeftPadded[TypeTree]], implementings: Optional[JContainer[TypeTree]], permitting: Optional[JContainer[TypeTree]], body: Block, type: Optional[JavaType.FullyQualified]) -> ClassDeclaration:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_leadingAnnotations', leadingAnnotations)
+        object.__setattr__(self, '_modifiers', modifiers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+        object.__setattr__(self, '_primaryConstructor', primaryConstructor)
+        object.__setattr__(self, '_extendings', extendings)
+        object.__setattr__(self, '_implementings', implementings)
+        object.__setattr__(self, '_permitting', permitting)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1012,6 +1127,14 @@ class ClassDeclaration(Statement, TypedTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Kind(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], type: ClassDeclaration.Kind.Type) -> Kind:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_annotations', annotations)
+            object.__setattr__(self, '_type', type)
+
         _id: UUID
 
         @property
@@ -1136,6 +1259,21 @@ class ClassDeclaration(Statement, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class CompilationUnit(JavaSourceFile, SourceFile):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, sourcePath: Path, fileAttributes: Optional[FileAttributes], charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], packageDeclaration: Optional[JRightPadded[Package]], imports: List[JRightPadded[Import]], classes: List[ClassDeclaration], eof: Space) -> CompilationUnit:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_sourcePath', sourcePath)
+        object.__setattr__(self, '_fileAttributes', fileAttributes)
+        object.__setattr__(self, '_charsetName', charsetName)
+        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_packageDeclaration', packageDeclaration)
+        object.__setattr__(self, '_imports', imports)
+        object.__setattr__(self, '_classes', classes)
+        object.__setattr__(self, '_eof', eof)
+
     _id: UUID
 
     @property
@@ -1280,6 +1418,13 @@ class CompilationUnit(JavaSourceFile, SourceFile):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Continue(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, label: Optional[Identifier]) -> Continue:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_label', label)
+
     _id: UUID
 
     @property
@@ -1322,6 +1467,14 @@ class Continue(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DoWhileLoop(Loop):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, body: JRightPadded[Statement], whileCondition: JLeftPadded[ControlParentheses[Expression]]) -> DoWhileLoop:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_whileCondition', whileCondition)
+
     _id: UUID
 
     @property
@@ -1407,6 +1560,12 @@ class DoWhileLoop(Loop):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(Statement, Expression, TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> Empty:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+
     _id: UUID
 
     @property
@@ -1440,6 +1599,15 @@ class Empty(Statement, Expression, TypeTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class EnumValue(J):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], name: Identifier, initializer: Optional[NewClass]) -> EnumValue:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_initializer', initializer)
+
     _id: UUID
 
     @property
@@ -1500,6 +1668,14 @@ class EnumValue(J):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class EnumValueSet(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, enums: List[JRightPadded[EnumValue]], terminatedWithSemicolon: bool) -> EnumValueSet:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_enums', enums)
+        object.__setattr__(self, '_terminatedWithSemicolon', terminatedWithSemicolon)
+
     _id: UUID
 
     @property
@@ -1578,6 +1754,15 @@ class EnumValueSet(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class FieldAccess(TypeTree, Expression, Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, target: Expression, name: JLeftPadded[Identifier], type: Optional[JavaType]) -> FieldAccess:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_target', target)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1665,6 +1850,14 @@ class FieldAccess(TypeTree, Expression, Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ForEachLoop(Loop):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, control: ForEachLoop.Control, body: JRightPadded[Statement]) -> ForEachLoop:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_control', control)
+        object.__setattr__(self, '_body', body)
+
     _id: UUID
 
     @property
@@ -1713,6 +1906,14 @@ class ForEachLoop(Loop):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Control(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, variable: JRightPadded[VariableDeclarations], iterable: JRightPadded[Expression]) -> Control:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_variable', variable)
+            object.__setattr__(self, '_iterable', iterable)
+
         _id: UUID
 
         @property
@@ -1828,6 +2029,14 @@ class ForEachLoop(Loop):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ForLoop(Loop):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, control: ForLoop.Control, body: JRightPadded[Statement]) -> ForLoop:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_control', control)
+        object.__setattr__(self, '_body', body)
+
     _id: UUID
 
     @property
@@ -1876,6 +2085,15 @@ class ForLoop(Loop):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Control(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, init: List[JRightPadded[Statement]], condition: JRightPadded[Expression], update: List[JRightPadded[Statement]]) -> Control:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_init', init)
+            object.__setattr__(self, '_condition', condition)
+            object.__setattr__(self, '_update', update)
+
         _id: UUID
 
         @property
@@ -2007,6 +2225,14 @@ class ForLoop(Loop):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParenthesizedTypeTree(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], parenthesizedType: Parentheses[TypeTree]) -> ParenthesizedTypeTree:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_parenthesizedType', parenthesizedType)
+
     _id: UUID
 
     @property
@@ -2058,6 +2284,16 @@ class ParenthesizedTypeTree(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Identifier(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], simpleName: str, type: Optional[JavaType], fieldType: Optional[JavaType.Variable]) -> Identifier:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_simpleName', simpleName)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_fieldType', fieldType)
+
     _id: UUID
 
     @property
@@ -2127,6 +2363,15 @@ class Identifier(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class If(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, ifCondition: ControlParentheses[Expression], thenPart: JRightPadded[Statement], elsePart: Optional[If.Else]) -> If:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_ifCondition', ifCondition)
+        object.__setattr__(self, '_thenPart', thenPart)
+        object.__setattr__(self, '_elsePart', elsePart)
+
     _id: UUID
 
     @property
@@ -2184,6 +2429,13 @@ class If(Statement):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Else(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, body: JRightPadded[Statement]) -> Else:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_body', body)
+
         _id: UUID
 
         @property
@@ -2283,6 +2535,15 @@ class If(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Import(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, statik: JLeftPadded[bool], qualid: FieldAccess, alias: Optional[JLeftPadded[Identifier]]) -> Import:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_statik', statik)
+        object.__setattr__(self, '_qualid', qualid)
+        object.__setattr__(self, '_alias', alias)
+
     _id: UUID
 
     @property
@@ -2377,6 +2638,16 @@ class Import(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class InstanceOf(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], clazz: J, pattern: Optional[J], type: Optional[JavaType]) -> InstanceOf:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_clazz', clazz)
+        object.__setattr__(self, '_pattern', pattern)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -2473,6 +2744,13 @@ class InstanceOf(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class IntersectionType(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, bounds: JContainer[TypeTree]) -> IntersectionType:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_bounds', bounds)
+
     _id: UUID
 
     @property
@@ -2542,6 +2820,14 @@ class IntersectionType(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Label(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, label: JRightPadded[Identifier], statement: Statement) -> Label:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_label', label)
+        object.__setattr__(self, '_statement', statement)
+
     _id: UUID
 
     @property
@@ -2620,6 +2906,16 @@ class Label(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Lambda(Statement, Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, parameters: Lambda.Parameters, arrow: Space, body: J, type: Optional[JavaType]) -> Lambda:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_parameters', parameters)
+        object.__setattr__(self, '_arrow', arrow)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -2686,6 +2982,14 @@ class Lambda(Statement, Expression, TypedTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Parameters(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, parenthesized: bool, parameters: List[JRightPadded[J]]) -> Parameters:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_parenthesized', parenthesized)
+            object.__setattr__(self, '_parameters', parameters)
+
         _id: UUID
 
         @property
@@ -2767,6 +3071,16 @@ class Lambda(Statement, Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, value: Optional[object], valueSource: Optional[str], unicodeEscapes: Optional[List[Literal.UnicodeEscape]], type: JavaType.Primitive) -> Literal:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_value', value)
+        object.__setattr__(self, '_valueSource', valueSource)
+        object.__setattr__(self, '_unicodeEscapes', unicodeEscapes)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -2856,6 +3170,18 @@ class Literal(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MemberReference(Expression, TypedTree, MethodCall):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, containing: JRightPadded[Expression], typeParameters: Optional[JContainer[Expression]], reference: JLeftPadded[Identifier], type: Optional[JavaType], methodType: Optional[JavaType.Method], variableType: Optional[JavaType.Variable]) -> MemberReference:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_containing', containing)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+        object.__setattr__(self, '_reference', reference)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_methodType', methodType)
+        object.__setattr__(self, '_variableType', variableType)
+
     _id: UUID
 
     @property
@@ -2984,6 +3310,22 @@ class MemberReference(Expression, TypedTree, MethodCall):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MethodDeclaration(Statement, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, leadingAnnotations: List[Annotation], modifiers: List[Modifier], typeParameters: Optional[TypeParameters], returnTypeExpression: Optional[TypeTree], name: MethodDeclaration.IdentifierWithAnnotations, parameters: JContainer[Statement], throwz: Optional[JContainer[NameTree]], body: Optional[Block], defaultValue: Optional[JLeftPadded[Expression]], methodType: Optional[JavaType.Method]) -> MethodDeclaration:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_leadingAnnotations', leadingAnnotations)
+        object.__setattr__(self, '_modifiers', modifiers)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+        object.__setattr__(self, '_returnTypeExpression', returnTypeExpression)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_parameters', parameters)
+        object.__setattr__(self, '_throwz', throwz)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_defaultValue', defaultValue)
+        object.__setattr__(self, '_methodType', methodType)
+
     _id: UUID
 
     @property
@@ -3223,6 +3565,17 @@ class MethodDeclaration(Statement, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MethodInvocation(Statement, Expression, TypedTree, MethodCall):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, select: Optional[JRightPadded[Expression]], typeParameters: Optional[JContainer[Expression]], name: Identifier, arguments: JContainer[Expression], methodType: Optional[JavaType.Method]) -> MethodInvocation:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_select', select)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_arguments', arguments)
+        object.__setattr__(self, '_methodType', methodType)
+
     _id: UUID
 
     @property
@@ -3342,6 +3695,15 @@ class MethodInvocation(Statement, Expression, TypedTree, MethodCall):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Modifier(J):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, keyword: Optional[str], type: Modifier.Type, annotations: List[Annotation]) -> Modifier:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_keyword', keyword)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_annotations', annotations)
+
     _id: UUID
 
     @property
@@ -3422,6 +3784,13 @@ class Modifier(J):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MultiCatch(TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, alternatives: List[JRightPadded[NameTree]]) -> MultiCatch:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_alternatives', alternatives)
+
     _id: UUID
 
     @property
@@ -3491,6 +3860,16 @@ class MultiCatch(TypeTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NewArray(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, typeExpression: Optional[TypeTree], dimensions: List[ArrayDimension], initializer: Optional[JContainer[Expression]], type: Optional[JavaType]) -> NewArray:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_typeExpression', typeExpression)
+        object.__setattr__(self, '_dimensions', dimensions)
+        object.__setattr__(self, '_initializer', initializer)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -3587,6 +3966,13 @@ class NewArray(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ArrayDimension(J):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, index: JRightPadded[Expression]) -> ArrayDimension:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_index', index)
+
     _id: UUID
 
     @property
@@ -3656,6 +4042,18 @@ class ArrayDimension(J):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NewClass(Statement, Expression, TypedTree, MethodCall):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, enclosing: Optional[JRightPadded[Expression]], nooh: Space, clazz: Optional[TypeTree], arguments: JContainer[Expression], body: Optional[Block], constructorType: Optional[JavaType.Method]) -> NewClass:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_enclosing', enclosing)
+        object.__setattr__(self, '_nooh', nooh)
+        object.__setattr__(self, '_clazz', clazz)
+        object.__setattr__(self, '_arguments', arguments)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_constructorType', constructorType)
+
     _id: UUID
 
     @property
@@ -3777,6 +4175,14 @@ class NewClass(Statement, Expression, TypedTree, MethodCall):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NullableType(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], typeTree: JRightPadded[TypeTree]) -> NullableType:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_typeTree', typeTree)
+
     _id: UUID
 
     @property
@@ -3855,6 +4261,14 @@ class NullableType(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Package(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, annotations: List[Annotation]) -> Package:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_annotations', annotations)
+
     _id: UUID
 
     @property
@@ -3906,6 +4320,15 @@ class Package(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParameterizedType(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, clazz: NameTree, typeParameters: Optional[JContainer[Expression]], type: Optional[JavaType]) -> ParameterizedType:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_clazz', clazz)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -3993,6 +4416,13 @@ class ParameterizedType(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Parentheses(Expression, Generic[J2]):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, tree: JRightPadded[J2]) -> Parentheses[J2]:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_tree', tree)
+
     _id: UUID
 
     @property
@@ -4062,6 +4492,13 @@ class Parentheses(Expression, Generic[J2]):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ControlParentheses(Expression, Generic[J2]):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, tree: JRightPadded[J2]) -> ControlParentheses[J2]:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_tree', tree)
+
     _id: UUID
 
     @property
@@ -4131,6 +4568,13 @@ class ControlParentheses(Expression, Generic[J2]):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Primitive(TypeTree, Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType.Primitive) -> Primitive:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -4169,6 +4613,13 @@ class Primitive(TypeTree, Expression):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Return(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Optional[Expression]) -> Return:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_expression', expression)
+
     _id: UUID
 
     @property
@@ -4211,6 +4662,14 @@ class Return(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Switch(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, selector: ControlParentheses[Expression], cases: Block) -> Switch:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_selector', selector)
+        object.__setattr__(self, '_cases', cases)
+
     _id: UUID
 
     @property
@@ -4262,6 +4721,14 @@ class Switch(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SwitchExpression(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, selector: ControlParentheses[Expression], cases: Block) -> SwitchExpression:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_selector', selector)
+        object.__setattr__(self, '_cases', cases)
+
     _id: UUID
 
     @property
@@ -4313,6 +4780,14 @@ class SwitchExpression(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Synchronized(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, lock: ControlParentheses[Expression], body: Block) -> Synchronized:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_lock', lock)
+        object.__setattr__(self, '_body', body)
+
     _id: UUID
 
     @property
@@ -4364,6 +4839,16 @@ class Synchronized(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Ternary(Expression, Statement, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, condition: Expression, truePart: JLeftPadded[Expression], falsePart: JLeftPadded[Expression], type: Optional[JavaType]) -> Ternary:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_condition', condition)
+        object.__setattr__(self, '_truePart', truePart)
+        object.__setattr__(self, '_falsePart', falsePart)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -4467,6 +4952,13 @@ class Ternary(Expression, Statement, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Throw(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, exception: Expression) -> Throw:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_exception', exception)
+
     _id: UUID
 
     @property
@@ -4509,6 +5001,16 @@ class Throw(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Try(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, resources: Optional[JContainer[Try.Resource]], body: Block, catches: List[Try.Catch], finallie: Optional[JLeftPadded[Block]]) -> Try:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_resources', resources)
+        object.__setattr__(self, '_body', body)
+        object.__setattr__(self, '_catches', catches)
+        object.__setattr__(self, '_finallie', finallie)
+
     _id: UUID
 
     @property
@@ -4575,6 +5077,14 @@ class Try(Statement):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Resource(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, variableDeclarations: TypedTree, terminatedWithSemicolon: bool) -> Resource:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_variableDeclarations', variableDeclarations)
+            object.__setattr__(self, '_terminatedWithSemicolon', terminatedWithSemicolon)
+
         _id: UUID
 
         @property
@@ -4626,6 +5136,14 @@ class Try(Statement):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Catch(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, parameter: ControlParentheses[VariableDeclarations], body: Block) -> Catch:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_parameter', parameter)
+            object.__setattr__(self, '_body', body)
+
         _id: UUID
 
         @property
@@ -4714,6 +5232,14 @@ class Try(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeCast(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, clazz: ControlParentheses[TypeTree], expression: Expression) -> TypeCast:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_clazz', clazz)
+        object.__setattr__(self, '_expression', expression)
+
     _id: UUID
 
     @property
@@ -4765,6 +5291,16 @@ class TypeCast(Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeParameter(J):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], modifiers: List[Modifier], name: Expression, bounds: Optional[JContainer[TypeTree]]) -> TypeParameter:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_modifiers', modifiers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_bounds', bounds)
+
     _id: UUID
 
     @property
@@ -4861,6 +5397,14 @@ class TypeParameter(J):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeParameters(J):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, annotations: List[Annotation], typeParameters: List[JRightPadded[TypeParameter]]) -> TypeParameters:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_annotations', annotations)
+        object.__setattr__(self, '_typeParameters', typeParameters)
+
     _id: UUID
 
     @property
@@ -4939,6 +5483,15 @@ class TypeParameters(J):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Unary(Statement, Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, operator: JLeftPadded[Unary.Type], expression: Expression, type: Optional[JavaType]) -> Unary:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_operator', operator)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -5036,6 +5589,18 @@ class Unary(Statement, Expression, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class VariableDeclarations(Statement, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, leadingAnnotations: List[Annotation], modifiers: List[Modifier], typeExpression: Optional[TypeTree], varargs: Optional[Space], dimensionsBeforeName: List[JLeftPadded[Space]], variables: List[JRightPadded[VariableDeclarations.NamedVariable]]) -> VariableDeclarations:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_leadingAnnotations', leadingAnnotations)
+        object.__setattr__(self, '_modifiers', modifiers)
+        object.__setattr__(self, '_typeExpression', typeExpression)
+        object.__setattr__(self, '_varargs', varargs)
+        object.__setattr__(self, '_dimensionsBeforeName', dimensionsBeforeName)
+        object.__setattr__(self, '_variables', variables)
+
     _id: UUID
 
     @property
@@ -5120,6 +5685,16 @@ class VariableDeclarations(Statement, TypedTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class NamedVariable(NameTree):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, name: Identifier, dimensionsAfterName: List[JLeftPadded[Space]], initializer: Optional[JLeftPadded[Expression]], variableType: Optional[JavaType.Variable]) -> NamedVariable:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_name', name)
+            object.__setattr__(self, '_dimensionsAfterName', dimensionsAfterName)
+            object.__setattr__(self, '_initializer', initializer)
+            object.__setattr__(self, '_variableType', variableType)
+
         _id: UUID
 
         @property
@@ -5246,6 +5821,14 @@ class VariableDeclarations(Statement, TypedTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class WhileLoop(Loop):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, condition: ControlParentheses[Expression], body: JRightPadded[Statement]) -> WhileLoop:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_condition', condition)
+        object.__setattr__(self, '_body', body)
+
     _id: UUID
 
     @property
@@ -5324,6 +5907,14 @@ class WhileLoop(Loop):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Wildcard(Expression, TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, bound: Optional[JLeftPadded[Wildcard.Bound]], boundedType: Optional[NameTree]) -> Wildcard:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_bound', bound)
+        object.__setattr__(self, '_boundedType', boundedType)
+
     _id: UUID
 
     @property
@@ -5406,6 +5997,14 @@ class Wildcard(Expression, TypeTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Yield(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, implicit: bool, value: Expression) -> Yield:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_implicit', implicit)
+        object.__setattr__(self, '_value', value)
+
     _id: UUID
 
     @property
@@ -5457,6 +6056,13 @@ class Yield(Statement):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Unknown(Statement, Expression, TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, source: Unknown.Source) -> Unknown:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_source', source)
+
     _id: UUID
 
     @property
@@ -5496,6 +6102,13 @@ class Unknown(Statement, Expression, TypeTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Source(J):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, text: str) -> Source:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_text', text)
+
         _id: UUID
 
         @property
