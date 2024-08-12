@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable
+from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable, Dict, ClassVar
+from uuid import UUID
 
 from rewrite import Tree
 from rewrite.marker import Markers
 
-
 P = TypeVar('P')
+J2 = TypeVar('J2', bound='Json')
 
 
 @runtime_checkable
@@ -74,6 +75,11 @@ class Space:
     def with_whitespace(self, whitespace: Optional[str]) -> Space:
         return self if whitespace is self._whitespace else Space(self._comments, whitespace)
 
+    EMPTY: ClassVar[Space] = None
+
+
+Space.EMPTY = Space([], '')
+
 
 class JsonValue(Tree, Protocol):
     pass
@@ -84,6 +90,7 @@ class JsonKey(Tree, Protocol):
 
 
 T = TypeVar('T', bound=Json)
+
 
 @dataclass
 class JsonRightPadded(Generic[T]):
@@ -119,6 +126,32 @@ class JsonRightPadded(Generic[T]):
         return [x.element for x in list]
 
     @classmethod
-    def with_elements(cls, list: List[JsonRightPadded[T]], elements: List[T]) -> List[JsonRightPadded[T]]:
-        # TODO implement
-        pass
+    def with_elements(cls, before: List[JsonRightPadded[J2]], elements: List[J2]) -> List[JsonRightPadded[J2]]:
+        # a cheaper check for the most common case when there are no changes
+        if len(elements) == len(before):
+            has_changes = False
+            for i in range(len(before)):
+                if before[i].element != elements[i]:
+                    has_changes = True
+                    break
+            if not has_changes:
+                return before
+        elif not elements:
+            return []
+
+        after: List[JsonRightPadded[J2]] = []
+        before_by_id: Dict[UUID, JsonRightPadded[J2]] = {}
+
+        for j in before:
+            if j.element.id in before_by_id:
+                raise Exception("Duplicate key")
+            before_by_id[j.element.id] = j
+
+        for t in elements:
+            found = before_by_id.get(t.id)
+            if found is not None:
+                after.append(found.with_element(t))
+            else:
+                after.append(JsonRightPadded(t, Space.EMPTY, Markers.EMPTY))
+
+        return after
