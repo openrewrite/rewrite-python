@@ -1,4 +1,5 @@
 import ast
+from dataclasses import dataclass
 from pathlib import Path
 
 import rewrite.java.tree as J
@@ -13,6 +14,13 @@ def map_type(node):
 
 
 class ParserVisitor(ast.NodeVisitor):
+    _source: str
+    _cursor: int = 0
+
+    def __init__(self, source: str):
+        super().__init__()
+        self._source = source
+
     def visit_Module(self, node: ast.Module) -> Py.CompilationUnit:
         return Py.CompilationUnit(
             random_id(),

@@ -15,5 +15,5 @@ def test_visitor():
     tree = ast.parse(source)
 
     # Create the visitor and visit the AST
-    visitor = ParserVisitor()
+    visitor = ParserVisitor(source)
     visitor.visit(tree)
