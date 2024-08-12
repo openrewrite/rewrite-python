@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
           show-progress: false
       - uses: gradle/actions/wrapper-validation@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.8"
       - uses: Gr1N/setup-poetry@v8
