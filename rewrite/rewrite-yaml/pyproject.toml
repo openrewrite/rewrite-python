@@ -14,6 +14,18 @@ rewrite-core = { path = "../rewrite-core", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
+mypy = "^1.11.1"
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+strict = true
+
+mypy_path = ["../rewrite-core/src"]
+
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
