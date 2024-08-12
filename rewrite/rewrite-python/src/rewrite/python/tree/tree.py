@@ -3,10 +3,12 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import List, Optional, Protocol, runtime_checkable
+from typing import List, Optional, Protocol, runtime_checkable, TYPE_CHECKING
 from uuid import UUID
 from enum import Enum
 
+if TYPE_CHECKING:
+    from ..visitor import PythonVisitor
 from .support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers
@@ -15,6 +17,15 @@ from rewrite.java.tree import *
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ExceptionType(TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, isExceptionGroup: bool, expression: Expression) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_isExceptionGroup', isExceptionGroup)
+        object.__setattr__(self, '_expression', expression)
+
     _id: UUID
 
     @property
@@ -69,13 +80,21 @@ class ExceptionType(TypeTree):
     def with_expression(self, expression: Expression) -> ExceptionType:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_exception_type(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeHint(TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'TypeHint.Kind', expression: Expression, type: JavaType) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_type', type)
+
     class Kind(Enum):
         RETURN_TYPE = 0
         VARIABLE_TYPE = 1
@@ -134,13 +153,26 @@ class TypeHint(TypeTree):
     def with_type(self, type: JavaType) -> TypeHint:
         return self if type is self._type else replace(self, _type=type)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hint(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class CompilationUnit(JavaSourceFile, SourceFile):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, sourcePath: Path, fileAttributes: Optional[FileAttributes], charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], imports: List[JRightPadded[Import]], statements: List[JRightPadded[Statement]], eof: Space) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_sourcePath', sourcePath)
+        object.__setattr__(self, '_fileAttributes', fileAttributes)
+        object.__setattr__(self, '_charsetName', charsetName)
+        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_imports', imports)
+        object.__setattr__(self, '_statements', statements)
+        object.__setattr__(self, '_eof', eof)
+
     _id: UUID
 
     @property
@@ -270,13 +302,17 @@ class CompilationUnit(JavaSourceFile, SourceFile):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ExpressionStatement(Expression, Statement):
+    def __init__(self, id: UUID, expression: Expression) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_expression', expression)
+
     _id: UUID
 
     @property
@@ -295,13 +331,21 @@ class ExpressionStatement(Expression, Statement):
     def with_expression(self, expression: Expression) -> ExpressionStatement:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_expression_statement(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class KeyValue(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JRightPadded[Expression], value: Expression, type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_key', key)
+        object.__setattr__(self, '_value', value)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -383,13 +427,20 @@ class KeyValue(Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_key_value(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DictLiteral(Expression, TypedTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[KeyValue], type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_elements', elements)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -462,13 +513,18 @@ class DictLiteral(Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_dict_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class PassStatement(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+
     _id: UUID
 
     @property
@@ -496,13 +552,20 @@ class PassStatement(Statement):
     def with_markers(self, markers: Markers) -> PassStatement:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_pass_statement(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TrailingElseWrapper(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement, elseBlock: JLeftPadded[Block]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_statement', statement)
+        object.__setattr__(self, '_elseBlock', elseBlock)
+
     _id: UUID
 
     @property
@@ -575,13 +638,23 @@ class TrailingElseWrapper(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_trailing_else_wrapper(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ComprehensionExpression(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'ComprehensionExpression.Kind', result: Expression, clauses: 'List[ComprehensionExpression.Clause]', suffix: Space, type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_result', result)
+        object.__setattr__(self, '_clauses', clauses)
+        object.__setattr__(self, '_suffix', suffix)
+        object.__setattr__(self, '_type', type)
+
     class Kind(Enum):
         LIST = 0
         SET = 1
@@ -663,6 +736,13 @@ class ComprehensionExpression(Expression):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Condition(Py):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_expression', expression)
+
         _id: UUID
 
         @property
@@ -699,13 +779,21 @@ class ComprehensionExpression(Expression):
         def with_expression(self, expression: Expression) -> ComprehensionExpression.Condition:
             return self if expression is self._expression else replace(self, _expression=expression)
 
-        def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-            # noinspection PyUnresolvedReferences
+        def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_comprehension_expression_condition(self, p)
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Clause(Py):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, iteratorVariable: Expression, iteratedList: JLeftPadded[Expression], conditions: Optional[List[ComprehensionExpression.Condition]]) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_iteratorVariable', iteratorVariable)
+            object.__setattr__(self, '_iteratedList', iteratedList)
+            object.__setattr__(self, '_conditions', conditions)
+
         _id: UUID
 
         @property
@@ -787,17 +875,23 @@ class ComprehensionExpression(Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-            # noinspection PyUnresolvedReferences
+        def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_comprehension_expression_clause(self, p)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_comprehension_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AwaitExpression(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, type: JavaType) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -843,13 +937,21 @@ class AwaitExpression(Expression):
     def with_type(self, type: JavaType) -> AwaitExpression:
         return self if type is self._type else replace(self, _type=type)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_await_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class YieldExpression(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: JLeftPadded[bool], expressions: List[JRightPadded[Expression]], type: JavaType) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_from', from_)
+        object.__setattr__(self, '_expressions', expressions)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -938,13 +1040,20 @@ class YieldExpression(Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_yield_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class VariableScopeStatement(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'VariableScopeStatement.Kind', names: List[JRightPadded[Identifier]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_names', names)
+
     class Kind(Enum):
         GLOBAL = 0
         NONLOCAL = 1
@@ -1021,13 +1130,19 @@ class VariableScopeStatement(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_variable_scope_statement(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class AssertStatement(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expressions: List[JRightPadded[Expression]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_expressions', expressions)
+
     _id: UUID
 
     @property
@@ -1091,13 +1206,19 @@ class AssertStatement(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_assert_statement(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DelStatement(Statement):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, targets: List[JRightPadded[Expression]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_targets', targets)
+
     _id: UUID
 
     @property
@@ -1161,13 +1282,21 @@ class DelStatement(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_del_statement(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SpecialParameter(TypeTree):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'SpecialParameter.Kind', typeHint: Optional[TypeHint], type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_typeHint', typeHint)
+        object.__setattr__(self, '_type', type)
+
     class Kind(Enum):
         KWARGS = 0
         ARGS = 1
@@ -1226,13 +1355,21 @@ class SpecialParameter(TypeTree):
     def with_type(self, type: Optional[JavaType]) -> SpecialParameter:
         return self if type is self._type else replace(self, _type=type)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_special_parameter(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SpecialArgument(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'SpecialArgument.Kind', expression: Expression, type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_type', type)
+
     class Kind(Enum):
         KWARGS = 0
         ARGS = 1
@@ -1291,13 +1428,21 @@ class SpecialArgument(Expression):
     def with_type(self, type: Optional[JavaType]) -> SpecialArgument:
         return self if type is self._type else replace(self, _type=type)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_special_argument(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class NamedArgument(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: Identifier, value: JLeftPadded[Expression], type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_value', value)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1379,13 +1524,21 @@ class NamedArgument(Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_named_argument(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeHintedExpression(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, typeHint: TypeHint, expression: Expression, type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_typeHint', typeHint)
+        object.__setattr__(self, '_expression', expression)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1440,13 +1593,21 @@ class TypeHintedExpression(Expression):
     def with_type(self, type: Optional[JavaType]) -> TypeHintedExpression:
         return self if type is self._type else replace(self, _type=type)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hinted_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ErrorFromExpression(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, error: Expression, from_: JLeftPadded[Expression], type: JavaType) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_error', error)
+        object.__setattr__(self, '_from', from_)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1528,13 +1689,21 @@ class ErrorFromExpression(Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_error_from_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class MatchCase(Expression):
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, pattern: 'MatchCase.Pattern', guard: Optional[JLeftPadded[Expression]], type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_pattern', pattern)
+        object.__setattr__(self, '_guard', guard)
+        object.__setattr__(self, '_type', type)
+
     _id: UUID
 
     @property
@@ -1619,6 +1788,15 @@ class MatchCase(Expression):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Pattern(Expression):
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: 'MatchCase.Pattern.Kind', children: JContainer[Expression], type: Optional[JavaType]) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_kind', kind)
+            object.__setattr__(self, '_children', children)
+            object.__setattr__(self, '_type', type)
+
         class Kind(Enum):
             AS = 0
             CAPTURE = 1
@@ -1718,10 +1896,8 @@ class MatchCase(Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-            # noinspection PyUnresolvedReferences
+        def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_match_case_pattern(self, p)
 
-    def accept_python(self, v: TreeVisitor[Py, P], p: P) -> J:
-        # noinspection PyUnresolvedReferences
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_match_case(self, p)
