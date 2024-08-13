@@ -1,5 +1,4 @@
 import ast
-from dataclasses import dataclass
 from pathlib import Path
 
 import rewrite.java.tree as J
