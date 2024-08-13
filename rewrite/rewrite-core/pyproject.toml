@@ -14,6 +14,7 @@ python = "^3.8"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
 mypy = "^1.11.1"
+poethepoet = "^0.27.0"
 
 [tool.mypy]
 python_version = "3.8"
@@ -23,6 +24,10 @@ strict = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unreachable = true
+
+[tool.poe.tasks]
+check-types = "mypy src"
+test = "pytest"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
