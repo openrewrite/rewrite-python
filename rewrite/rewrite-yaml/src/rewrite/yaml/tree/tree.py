@@ -9,6 +9,7 @@ from enum import Enum
 
 if TYPE_CHECKING:
     from ..visitor import YamlVisitor
+from . import extensions
 from .support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers

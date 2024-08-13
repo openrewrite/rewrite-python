@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Optional, TypeVar
 
 from rewrite import Cursor, Tree
@@ -59,3 +60,8 @@ def visit_left_padded(v: 'JavaVisitor', left: Optional[JLeftPadded[T]], loc: JLe
 def visit_space(v: 'JavaVisitor', space: Optional[Space], loc: Space.Location, p):
     # FIXME support Javadoc
     return space
+
+
+def with_name(method: 'MethodInvocation', name: 'Identifier') -> 'MethodInvocation':
+    # FIXME add type attribution logic
+    return method if name is method.name else replace(method, _name=name)
