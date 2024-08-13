@@ -1,4 +1,4 @@
-from typing import cast, TypeVar
+from typing import cast, TypeVar, Union
 
 from rewrite import TreeVisitor
 from .tree import *
