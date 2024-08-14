@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Protocol, ClassVar, cast
+from typing import List, Protocol, ClassVar, cast, runtime_checkable
 from uuid import UUID
 
 from ..utils import random_id
 
 
+@runtime_checkable
 class Marker(Protocol):
     @property
     def id(self) -> UUID:
@@ -32,7 +33,7 @@ class Markers:
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> Marker:
+    def with_id(self, id: UUID) -> Markers:
         return self if id is self._id else Markers(id, self._markers)
 
     _markers: List[Marker]
