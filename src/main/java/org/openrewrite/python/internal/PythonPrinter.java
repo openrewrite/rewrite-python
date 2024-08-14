@@ -16,11 +16,11 @@
 package org.openrewrite.python.internal;
 
 import lombok.AllArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
 import org.openrewrite.internal.ListUtils;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;

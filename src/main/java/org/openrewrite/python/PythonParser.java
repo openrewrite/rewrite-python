@@ -17,9 +17,9 @@ package org.openrewrite.python;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.*;
 import org.openrewrite.internal.EncodingDetectingInputStream;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
