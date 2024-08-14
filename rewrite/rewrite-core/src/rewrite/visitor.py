@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type
 
+from build.lib.rewrite import TreeVisitor
 from rewrite import SourceFile, Tree, RecipeRunException
 from rewrite.marker import Markers, Marker
 
@@ -10,6 +11,7 @@ O = TypeVar('O')
 T = TypeVar('T', bound=Tree)
 T2 = TypeVar('T2', bound=Tree)
 P = TypeVar('P')
+TV = TypeVar('TV', bound=TreeVisitor[Tree, Any])
 
 
 @dataclass(frozen=True)
@@ -106,3 +108,7 @@ class TreeVisitor(Protocol[T, P]):
 
     def visit_marker(self, marker: Marker, p: P) -> Marker:
         return marker
+
+    def adapt(self, tree_type, visitor_type) -> TV:
+        # FIXME implement the visitor adapting
+        return cast(TV, self)

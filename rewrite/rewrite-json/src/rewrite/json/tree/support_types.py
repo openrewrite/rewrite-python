@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable, Dict, ClassVar
+from typing import List, Optional, Protocol, TypeVar, Generic, runtime_checkable, Dict, ClassVar, Any
 from uuid import UUID
 
-from rewrite import Tree
+from rewrite import Tree, TreeVisitor
 from rewrite.marker import Markers
 
 P = TypeVar('P')
@@ -13,7 +13,12 @@ J2 = TypeVar('J2', bound='Json')
 
 @runtime_checkable
 class Json(Tree, Protocol):
-    pass
+    def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
+        from rewrite.json.visitor import JsonVisitor
+        return self.accept_json(v.adapt(Json, JsonVisitor), p)
+
+    def accept_json(self, v: 'JsonVisitor[P]', p: P) -> Optional['Json']:
+        ...
 
 
 @dataclass(frozen=True)
