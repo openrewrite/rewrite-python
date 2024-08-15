@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..visitor import JavaVisitor
 from . import extensions
 from .support_types import *
-from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -1259,7 +1259,7 @@ class ClassDeclaration(Statement, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class CompilationUnit(JavaSourceFile, SourceFile):
+class CompilationUnit(J, JavaSourceFile, SourceFile):
     _id: UUID
 
     @property
@@ -1412,6 +1412,9 @@ class CompilationUnit(JavaSourceFile, SourceFile):
         object.__setattr__(self, '_imports', imports)
         object.__setattr__(self, '_classes', classes)
         object.__setattr__(self, '_eof', eof)
+
+    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
+        return PrinterFactory.current().create_printer(cursor)
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)

@@ -16,7 +16,7 @@ from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Documents(SourceFile, Yaml):
+class Documents(Yaml, SourceFile):
     _id: UUID
 
     @property
@@ -100,11 +100,11 @@ class Documents(SourceFile, Yaml):
         object.__setattr__(self, '_checksum', checksum)
         object.__setattr__(self, '_documents', documents)
 
-    def accept_yaml(self, v: 'YamlVisitor[P]', p: P) -> Yaml:
-        return v.visit_documents(self, p)
-
-    def printer(self, cursor: Cursor) -> TreeVisitor[Any, PrintOutputCapture[P]]:
+    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
         return PrinterFactory.current().create_printer(cursor)
+
+    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+        return v.visit_documents(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

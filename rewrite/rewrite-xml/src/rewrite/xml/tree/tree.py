@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from ..visitor import XmlVisitor
 from . import extensions
 from .support_types import *
-from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Document(SourceFile):
+class Document(Xml, SourceFile):
     _id: UUID
 
     @property
@@ -129,6 +129,9 @@ class Document(SourceFile):
         object.__setattr__(self, '_prolog', prolog)
         object.__setattr__(self, '_root', root)
         object.__setattr__(self, '_eof', eof)
+
+    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
+        return PrinterFactory.current().create_printer(cursor)
 
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_document(self, p)

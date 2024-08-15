@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..visitor import JsonVisitor
 from . import extensions
 from .support_types import *
-from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -92,7 +92,7 @@ class Array(JsonValue):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Document(SourceFile):
+class Document(Json, SourceFile):
     _id: UUID
 
     @property
@@ -195,6 +195,9 @@ class Document(SourceFile):
         object.__setattr__(self, '_file_attributes', file_attributes)
         object.__setattr__(self, '_value', value)
         object.__setattr__(self, '_eof', eof)
+
+    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
+        return PrinterFactory.current().create_printer(cursor)
 
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_document(self, p)
