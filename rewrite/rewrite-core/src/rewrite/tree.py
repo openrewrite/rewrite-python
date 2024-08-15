@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING
+from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING, Generic, ClassVar, Callable
 from uuid import UUID
 
 from .marker import Markers
@@ -99,3 +99,48 @@ class FileAttributes:
 class Checksum:
     algorithm: str
     value: bytes
+
+
+class PrintOutputCapture(Generic[P]):
+    @dataclass
+    class MarkerPrinter(Protocol):
+        DEFAULT: ClassVar['PrintOutputCapture.MarkerPrinter'] = None
+
+        def before_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
+            return ""
+
+        def before_prefix(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
+            return ""
+
+        def after_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
+            return ""
+
+    def __init__(self, p: P, marker_printer: 'PrintOutputCapture.MarkerPrinter' = None):
+        self._context = p
+        self._marker_printer = marker_printer or PrintOutputCapture.MarkerPrinter.DEFAULT
+        self._out = []
+
+    def get_out(self) -> str:
+        return ''.join(self._out)
+
+    def append(self, text: str = None) -> 'PrintOutputCapture':
+        if text and len(text) > 0:
+            self._out.append(text)
+        return self
+
+    def append_char(self, c: str) -> 'PrintOutputCapture':
+        if len(c) == 1:
+            self._out.append(c)
+        return self
+
+    def clone(self) -> 'PrintOutputCapture':
+        return PrintOutputCapture(self._context, self._marker_printer)
+
+
+@dataclass
+class _DefaultMarkerPrinter(PrintOutputCapture.MarkerPrinter):
+    def before_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
+        return marker.print(cursor, comment_wrapper, False)
+
+
+PrintOutputCapture.MarkerPrinter.DEFAULT = _DefaultMarkerPrinter()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type
+from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar
 
 from rewrite import SourceFile, Tree, RecipeRunException
 from rewrite.marker import Markers, Marker
@@ -14,6 +14,8 @@ P = TypeVar('P')
 
 @dataclass(frozen=True)
 class Cursor:
+    ROOT_VALUE: ClassVar[str] = "root"
+
     parent: Optional[Cursor]
     value: object
     messages: Optional[Dict[str, object]] = None
