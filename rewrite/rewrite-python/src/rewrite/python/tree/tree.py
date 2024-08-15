@@ -54,14 +54,14 @@ class ExceptionType(TypeTree):
     def with_type(self, type: JavaType) -> ExceptionType:
         return self if type is self._type else replace(self, _type=type)
 
-    _is_exception_group: bool
+    _exception_group: bool
 
     @property
-    def is_exception_group(self) -> bool:
-        return self._is_exception_group
+    def exception_group(self) -> bool:
+        return self._exception_group
 
-    def with_is_exception_group(self, is_exception_group: bool) -> ExceptionType:
-        return self if is_exception_group is self._is_exception_group else replace(self, _is_exception_group=is_exception_group)
+    def with_exception_group(self, exception_group: bool) -> ExceptionType:
+        return self if exception_group is self._exception_group else replace(self, _exception_group=exception_group)
 
     _expression: Expression
 
@@ -72,13 +72,13 @@ class ExceptionType(TypeTree):
     def with_expression(self, expression: Expression) -> ExceptionType:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, is_exception_group: bool, expression: Expression) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, exception_group: bool, expression: Expression) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
         object.__setattr__(self, '_markers', markers)
         object.__setattr__(self, '_type', type)
-        object.__setattr__(self, '_is_exception_group', is_exception_group)
+        object.__setattr__(self, '_exception_group', exception_group)
         object.__setattr__(self, '_expression', expression)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
@@ -773,7 +773,7 @@ class ComprehensionExpression(Expression):
             object.__setattr__(self, '_expression', expression)
 
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-            return v.visit_comprehension_expression_condition(self, p)
+            return v.visit_comprehension_condition(self, p)
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
@@ -869,7 +869,7 @@ class ComprehensionExpression(Expression):
             object.__setattr__(self, '_conditions', conditions)
 
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-            return v.visit_comprehension_expression_clause(self, p)
+            return v.visit_comprehension_clause(self, p)
 
     def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: ComprehensionExpression.Kind, result: Expression, clauses: List[ComprehensionExpression.Clause], suffix: Space, type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622

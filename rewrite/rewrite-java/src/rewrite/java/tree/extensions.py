@@ -1,6 +1,5 @@
 from typing import Optional, TypeVar, TYPE_CHECKING
 
-from rewrite import Cursor
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
 
 if TYPE_CHECKING:

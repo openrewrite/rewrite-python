@@ -88,13 +88,13 @@ class PythonVisitor(JavaVisitor[P]):
         comprehension_expression = comprehension_expression.with_suffix(self.visit_space(comprehension_expression.suffix, PySpace.Location.COMPREHENSION_EXPRESSION_SUFFIX, p))
         return comprehension_expression
 
-    def visit_comprehension_expression_condition(self, condition: ComprehensionExpression.Condition, p: P) -> J:
+    def visit_comprehension_condition(self, condition: ComprehensionExpression.Condition, p: P) -> J:
         condition = condition.with_prefix(self.visit_space(condition.prefix, PySpace.Location.COMPREHENSION_EXPRESSION_CONDITION_PREFIX, p))
         condition = condition.with_markers(self.visit_markers(condition.markers, p))
         condition = condition.with_expression(self.visit_and_cast(condition.expression, Expression, p))
         return condition
 
-    def visit_comprehension_expression_clause(self, clause: ComprehensionExpression.Clause, p: P) -> J:
+    def visit_comprehension_clause(self, clause: ComprehensionExpression.Clause, p: P) -> J:
         clause = clause.with_prefix(self.visit_space(clause.prefix, PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_PREFIX, p))
         clause = clause.with_markers(self.visit_markers(clause.markers, p))
         clause = clause.with_iterator_variable(self.visit_and_cast(clause.iterator_variable, Expression, p))
