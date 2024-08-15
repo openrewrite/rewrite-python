@@ -15,12 +15,12 @@
  */
 package org.openrewrite.python.internal;
 
+import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.signature.SignatureReader;
 import org.objectweb.asm.signature.SignatureVisitor;
-import org.openrewrite.internal.lang.Nullable;
 
 import java.io.IOException;
 import java.net.URL;

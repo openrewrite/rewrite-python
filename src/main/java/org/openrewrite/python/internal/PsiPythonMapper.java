@@ -25,9 +25,9 @@ import com.intellij.psi.util.QualifiedName;
 import com.jetbrains.python.PyTokenTypes;
 import com.jetbrains.python.psi.*;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.internal.ListUtils;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
@@ -1801,7 +1801,7 @@ public class PsiPythonMapper {
         );
     }
 
-    private @Nullable Py.TypeHint mapTypeHintNullable(@Nullable PyAnnotation element) {
+    private Py.@Nullable TypeHint mapTypeHintNullable(@Nullable PyAnnotation element) {
         if (element == null) return null;
         return mapTypeHint(element);
     }
