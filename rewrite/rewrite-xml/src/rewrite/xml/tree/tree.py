@@ -9,6 +9,7 @@ from enum import Enum
 
 if TYPE_CHECKING:
     from ..visitor import XmlVisitor
+from . import extensions
 from .support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers
@@ -16,20 +17,6 @@ from rewrite.marker import Markers
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(SourceFile):
-    def __init__(self, id: UUID, sourcePath: Path, prefixUnsafe: str, markers: Markers, charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], fileAttributes: Optional[FileAttributes], prolog: Prolog, root: Tag, eof: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_sourcePath', sourcePath)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_charsetName', charsetName)
-        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
-        object.__setattr__(self, '_checksum', checksum)
-        object.__setattr__(self, '_fileAttributes', fileAttributes)
-        object.__setattr__(self, '_prolog', prolog)
-        object.__setattr__(self, '_root', root)
-        object.__setattr__(self, '_eof', eof)
-
     _id: UUID
 
     @property
@@ -129,21 +116,26 @@ class Document(SourceFile):
     def with_eof(self, eof: str) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
+    def __init__(self, id: UUID, source_path: Path, prefix_unsafe: str, markers: Markers, charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], file_attributes: Optional[FileAttributes], prolog: Prolog, root: Tag, eof: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_source_path', source_path)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_charset_name', charset_name)
+        object.__setattr__(self, '_charset_bom_marked', charset_bom_marked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_file_attributes', file_attributes)
+        object.__setattr__(self, '_prolog', prolog)
+        object.__setattr__(self, '_root', root)
+        object.__setattr__(self, '_eof', eof)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_document(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Prolog(Xml):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, xmlDecl: Optional[XmlDecl], misc: List[Misc], jspDirectives: List[JspDirective]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_xmlDecl', xmlDecl)
-        object.__setattr__(self, '_misc', misc)
-        object.__setattr__(self, '_jspDirectives', jspDirectives)
-
     _id: UUID
 
     @property
@@ -198,21 +190,21 @@ class Prolog(Xml):
     def with_jsp_directives(self, jsp_directives: List[JspDirective]) -> Prolog:
         return self if jsp_directives is self._jsp_directives else replace(self, _jsp_directives=jsp_directives)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, xml_decl: Optional[XmlDecl], misc: List[Misc], jsp_directives: List[JspDirective]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_xml_decl', xml_decl)
+        object.__setattr__(self, '_misc', misc)
+        object.__setattr__(self, '_jsp_directives', jsp_directives)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_prolog(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class XmlDecl(Misc):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: str, attributes: List[Attribute], beforeTagDelimiterPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-        object.__setattr__(self, '_attributes', attributes)
-        object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
     _id: UUID
 
     @property
@@ -267,21 +259,21 @@ class XmlDecl(Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> XmlDecl:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: str, attributes: List[Attribute], before_tag_delimiter_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_attributes', attributes)
+        object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_xml_decl(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ProcessingInstruction(Content, Misc):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: str, processingInstructions: CharData, beforeTagDelimiterPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-        object.__setattr__(self, '_processingInstructions', processingInstructions)
-        object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
     _id: UUID
 
     @property
@@ -336,23 +328,21 @@ class ProcessingInstruction(Content, Misc):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> ProcessingInstruction:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: str, processing_instructions: CharData, before_tag_delimiter_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_processing_instructions', processing_instructions)
+        object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_processing_instruction(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Tag(Content):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: str, attributes: List[Attribute], content: Optional[List[Content]], closing: Optional[Tag.Closing], beforeTagDelimiterPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-        object.__setattr__(self, '_attributes', attributes)
-        object.__setattr__(self, '_content', content)
-        object.__setattr__(self, '_closing', closing)
-        object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
     _id: UUID
 
     @property
@@ -428,14 +418,6 @@ class Tag(Content):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Closing(Xml):
-        def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: str, beforeTagDelimiterPrefix: str) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_name', name)
-            object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
         _id: UUID
 
         @property
@@ -481,8 +463,27 @@ class Tag(Content):
         def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Tag.Closing:
             return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
+        def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: str, before_tag_delimiter_prefix: str) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_name', name)
+            object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
+
         def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
             return v.visit_tag_closing(self, p)
+
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: str, attributes: List[Attribute], content: Optional[List[Content]], closing: Optional[Tag.Closing], before_tag_delimiter_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_attributes', attributes)
+        object.__setattr__(self, '_content', content)
+        object.__setattr__(self, '_closing', closing)
+        object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
 
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_tag(self, p)
@@ -490,15 +491,6 @@ class Tag(Content):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Attribute(Xml):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, key: Ident, beforeEquals: str, value: Attribute.Value) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_key', key)
-        object.__setattr__(self, '_beforeEquals', beforeEquals)
-        object.__setattr__(self, '_value', value)
-
     _id: UUID
 
     @property
@@ -556,14 +548,6 @@ class Attribute(Xml):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Value(Xml):
-        def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, quote: Attribute.Value.Quote, value: str) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_quote', quote)
-            object.__setattr__(self, '_value', value)
-
         class Quote(Enum):
             Double = 0
             Single = 1
@@ -613,8 +597,25 @@ class Attribute(Xml):
         def with_value(self, value: str) -> Attribute.Value:
             return self if value is self._value else replace(self, _value=value)
 
+        def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, quote: Attribute.Value.Quote, value: str) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_quote', quote)
+            object.__setattr__(self, '_value', value)
+
         def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
             return v.visit_attribute_value(self, p)
+
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, key: Ident, before_equals: str, value: Attribute.Value) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_key', key)
+        object.__setattr__(self, '_before_equals', before_equals)
+        object.__setattr__(self, '_value', value)
 
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_attribute(self, p)
@@ -622,15 +623,6 @@ class Attribute(Xml):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class CharData(Content):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, cdata: bool, text: str, afterText: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_cdata', cdata)
-        object.__setattr__(self, '_text', text)
-        object.__setattr__(self, '_afterText', afterText)
-
     _id: UUID
 
     @property
@@ -685,19 +677,21 @@ class CharData(Content):
     def with_after_text(self, after_text: str) -> CharData:
         return self if after_text is self._after_text else replace(self, _after_text=after_text)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, cdata: bool, text: str, after_text: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_cdata', cdata)
+        object.__setattr__(self, '_text', text)
+        object.__setattr__(self, '_after_text', after_text)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_char_data(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Comment(Content, Misc):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, text: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_text', text)
-
     _id: UUID
 
     @property
@@ -734,23 +728,19 @@ class Comment(Content, Misc):
     def with_text(self, text: str) -> Comment:
         return self if text is self._text else replace(self, _text=text)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, text: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_text', text)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_comment(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DocTypeDecl(Misc):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: Ident, externalId: Optional[Ident], internalSubset: List[Ident], externalSubsets: Optional[DocTypeDecl.ExternalSubsets], beforeTagDelimiterPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-        object.__setattr__(self, '_externalId', externalId)
-        object.__setattr__(self, '_internalSubset', internalSubset)
-        object.__setattr__(self, '_externalSubsets', externalSubsets)
-        object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
     _id: UUID
 
     @property
@@ -826,13 +816,6 @@ class DocTypeDecl(Misc):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class ExternalSubsets(Xml):
-        def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, elements: List[Element]) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_elements', elements)
-
         _id: UUID
 
         @property
@@ -869,8 +852,26 @@ class DocTypeDecl(Misc):
         def with_elements(self, elements: List[Element]) -> DocTypeDecl.ExternalSubsets:
             return self if elements is self._elements else replace(self, _elements=elements)
 
+        def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, elements: List[Element]) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_elements', elements)
+
         def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
             return v.visit_doc_type_decl_external_subsets(self, p)
+
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: Ident, external_id: Optional[Ident], internal_subset: List[Ident], external_subsets: Optional[DocTypeDecl.ExternalSubsets], before_tag_delimiter_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+        object.__setattr__(self, '_external_id', external_id)
+        object.__setattr__(self, '_internal_subset', internal_subset)
+        object.__setattr__(self, '_external_subsets', external_subsets)
+        object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
 
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_doc_type_decl(self, p)
@@ -878,14 +879,6 @@ class DocTypeDecl(Misc):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Element(Xml):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, subset: List[Ident], beforeTagDelimiterPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_subset', subset)
-        object.__setattr__(self, '_beforeTagDelimiterPrefix', beforeTagDelimiterPrefix)
-
     _id: UUID
 
     @property
@@ -931,19 +924,20 @@ class Element(Xml):
     def with_before_tag_delimiter_prefix(self, before_tag_delimiter_prefix: str) -> Element:
         return self if before_tag_delimiter_prefix is self._before_tag_delimiter_prefix else replace(self, _before_tag_delimiter_prefix=before_tag_delimiter_prefix)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, subset: List[Ident], before_tag_delimiter_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_subset', subset)
+        object.__setattr__(self, '_before_tag_delimiter_prefix', before_tag_delimiter_prefix)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_element(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Ident(Xml):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, name: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-
     _id: UUID
 
     @property
@@ -980,22 +974,19 @@ class Ident(Xml):
     def with_name(self, name: str) -> Ident:
         return self if name is self._name else replace(self, _name=name)
 
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, name: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_ident(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JspDirective(Content):
-    def __init__(self, id: UUID, prefixUnsafe: str, markers: Markers, beforeTypePrefix: str, type: str, attributes: List[Attribute], beforeDirectiveEndPrefix: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefixUnsafe', prefixUnsafe)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_beforeTypePrefix', beforeTypePrefix)
-        object.__setattr__(self, '_type', type)
-        object.__setattr__(self, '_attributes', attributes)
-        object.__setattr__(self, '_beforeDirectiveEndPrefix', beforeDirectiveEndPrefix)
-
     _id: UUID
 
     @property
@@ -1058,6 +1049,16 @@ class JspDirective(Content):
 
     def with_before_directive_end_prefix(self, before_directive_end_prefix: str) -> JspDirective:
         return self if before_directive_end_prefix is self._before_directive_end_prefix else replace(self, _before_directive_end_prefix=before_directive_end_prefix)
+
+    def __init__(self, id: UUID, prefix_unsafe: str, markers: Markers, before_type_prefix: str, type: str, attributes: List[Attribute], before_directive_end_prefix: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix_unsafe', prefix_unsafe)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_before_type_prefix', before_type_prefix)
+        object.__setattr__(self, '_type', type)
+        object.__setattr__(self, '_attributes', attributes)
+        object.__setattr__(self, '_before_directive_end_prefix', before_directive_end_prefix)
 
     def accept_xml(self, v: XmlVisitor[P], p: P) -> Xml:
         return v.visit_jsp_directive(self, p)

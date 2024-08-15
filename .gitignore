@@ -6,14 +6,3 @@ example-data/
 
 # Ignore all the .idea directory
 .idea/*
-
-# But keep the following essential configuration files
-!.idea/modules.xml
-# Avoid adding workspace.xml if user-specific settings are present
-# !.idea/workspace.xml
-!.idea/libraries/
-!.idea/*.iml
-!.idea/misc.xml
-!.idea/vcs.xml
-!.idea/codestyles/
-!.idea/inspectionProfiles/

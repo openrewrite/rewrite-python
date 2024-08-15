@@ -1,7 +1,11 @@
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, TYPE_CHECKING
 
-from rewrite import Cursor, Tree
+from rewrite import Cursor
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+
+if TYPE_CHECKING:
+    from ..visitor import JavaVisitor
+    from .tree import *
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
@@ -59,3 +63,8 @@ def visit_left_padded(v: 'JavaVisitor', left: Optional[JLeftPadded[T]], loc: JLe
 def visit_space(v: 'JavaVisitor', space: Optional[Space], loc: Space.Location, p):
     # FIXME support Javadoc
     return space
+
+
+def with_name(method: 'MethodInvocation', name: 'Identifier') -> 'MethodInvocation':
+    # FIXME add type attribution logic
+    return method if name is method.name else replace(method, _name=name)

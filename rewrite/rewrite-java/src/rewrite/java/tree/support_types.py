@@ -6,7 +6,7 @@ from enum import Enum, auto
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast
 from uuid import UUID
 
-from rewrite import Tree, SourceFile
+from rewrite import Tree, SourceFile, TreeVisitor
 from rewrite.marker import Markers
 
 P = TypeVar('P')
@@ -14,7 +14,12 @@ P = TypeVar('P')
 
 @runtime_checkable
 class J(Tree, Protocol):
-    pass
+    def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
+        from rewrite.java.visitor import JavaVisitor
+        return self.accept_java(v.adapt(J, JavaVisitor), p)
+
+    def accept_java(self, v: 'JavaVisitor[P]', p: P) -> Optional['J']:
+        ...
 
 
 @dataclass(frozen=True)

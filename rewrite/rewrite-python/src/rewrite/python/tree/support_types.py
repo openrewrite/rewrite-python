@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Protocol, TypeVar, runtime_checkable
+from typing import Protocol, TypeVar, runtime_checkable, Any, Optional
 
-from rewrite import Tree
+from rewrite import Tree, TreeVisitor
 from rewrite.java.tree import J
+
+
+P = TypeVar('P')
 
 
 @runtime_checkable
 class Py(Tree, Protocol):
-    pass
+    def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
+        from rewrite.python.visitor import PythonVisitor
+        return self.accept_python(v.adapt(Py, PythonVisitor), p)
+
+    def accept_python(self, v: 'PythonVisitor[P]', p: P) -> Optional['Py']:
+        ...
 
 
 class PySpace:

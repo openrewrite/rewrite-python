@@ -9,6 +9,7 @@ from enum import Enum
 
 if TYPE_CHECKING:
     from ..visitor import JsonVisitor
+from . import extensions
 from .support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
 from rewrite.marker import Markers
@@ -16,13 +17,6 @@ from rewrite.marker import Markers
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Array(JsonValue):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, values: List[JsonRightPadded[JsonValue]]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_values', values)
-
     _id: UUID
 
     @property
@@ -86,25 +80,19 @@ class Array(JsonValue):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, values: List[JsonRightPadded[JsonValue]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_values', values)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_array(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Document(SourceFile):
-    def __init__(self, id: UUID, sourcePath: Path, prefix: Space, markers: Markers, charsetName: Optional[str], charsetBomMarked: bool, checksum: Optional[Checksum], fileAttributes: Optional[FileAttributes], value: JsonValue, eof: Space) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_sourcePath', sourcePath)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_charsetName', charsetName)
-        object.__setattr__(self, '_charsetBomMarked', charsetBomMarked)
-        object.__setattr__(self, '_checksum', checksum)
-        object.__setattr__(self, '_fileAttributes', fileAttributes)
-        object.__setattr__(self, '_value', value)
-        object.__setattr__(self, '_eof', eof)
-
     _id: UUID
 
     @property
@@ -195,18 +183,25 @@ class Document(SourceFile):
     def with_eof(self, eof: Space) -> Document:
         return self if eof is self._eof else replace(self, _eof=eof)
 
+    def __init__(self, id: UUID, source_path: Path, prefix: Space, markers: Markers, charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], file_attributes: Optional[FileAttributes], value: JsonValue, eof: Space) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_source_path', source_path)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_charset_name', charset_name)
+        object.__setattr__(self, '_charset_bom_marked', charset_bom_marked)
+        object.__setattr__(self, '_checksum', checksum)
+        object.__setattr__(self, '_file_attributes', file_attributes)
+        object.__setattr__(self, '_value', value)
+        object.__setattr__(self, '_eof', eof)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_document(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Empty(JsonValue):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-
     _id: UUID
 
     @property
@@ -234,19 +229,18 @@ class Empty(JsonValue):
     def with_markers(self, markers: Markers) -> Empty:
         return self if markers is self._markers else replace(self, _markers=markers)
 
+    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_empty(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Identifier(JsonKey):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: str) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-
     _id: UUID
 
     @property
@@ -283,20 +277,19 @@ class Identifier(JsonKey):
     def with_name(self, name: str) -> Identifier:
         return self if name is self._name else replace(self, _name=name)
 
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: str) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_name', name)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_identifier(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Literal(JsonValue, JsonKey):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, source: str, value: object) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_source', source)
-        object.__setattr__(self, '_value', value)
-
     _id: UUID
 
     @property
@@ -342,20 +335,20 @@ class Literal(JsonValue, JsonKey):
     def with_value(self, value: object) -> Literal:
         return self if value is self._value else replace(self, _value=value)
 
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, source: str, value: object) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_source', source)
+        object.__setattr__(self, '_value', value)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Member(Json):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JsonRightPadded[JsonKey], value: JsonValue) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_key', key)
-        object.__setattr__(self, '_value', value)
-
     _id: UUID
 
     @property
@@ -428,19 +421,20 @@ class Member(Json):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JsonRightPadded[JsonKey], value: JsonValue) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_key', key)
+        object.__setattr__(self, '_value', value)
+
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_member(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class JsonObject(JsonValue):
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, members: List[JsonRightPadded[Json]]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_members', members)
-
     _id: UUID
 
     @property
@@ -503,6 +497,13 @@ class JsonObject(JsonValue):
                 p = JsonObject.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
+
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, members: List[JsonRightPadded[Json]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_members', members)
 
     def accept_json(self, v: JsonVisitor[P], p: P) -> Json:
         return v.visit_object(self, p)

@@ -1,9 +1,9 @@
-from typing import cast, TypeVar
+from typing import cast, TypeVar, Union
 
-from rewrite import TreeVisitor
-from .tree import *
-
-P = TypeVar('P')
+from rewrite import SourceFile, TreeVisitor
+from .tree.extensions import *
+from .tree.support_types import *
+from .tree.tree import *
 
 # noinspection DuplicatedCode
 class XmlVisitor(TreeVisitor[Xml, P]):
