@@ -341,13 +341,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            J j = v.visit(getExpression(), p);
-            if (j instanceof ExpressionStatement) {
-                return j;
-            } else if (j instanceof Expression) {
-                return withExpression((Expression) j);
-            }
-            return j;
+            return v.visitExpressionStatement(this, p);
         }
 
         @Override
@@ -1333,7 +1327,7 @@ public interface Py extends J {
                 return t.value;
             }
 
-            public NamedArgument withFrom(JLeftPadded<Expression> value) {
+            public NamedArgument withValue(JLeftPadded<Expression> value) {
                 return value == t.value
                         ? t
                         : new NamedArgument(t.id, t.prefix, t.markers, t.name, value, t.type);

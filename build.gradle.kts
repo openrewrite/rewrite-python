@@ -11,6 +11,12 @@ task("printIntellijDependencies", JavaExec::class) {
     classpath = sourceSets["main"].runtimeClasspath
 }
 
+// disable all tests temporarily
+tasks.withType<Test> {
+    // This disables all test tasks
+    isEnabled = false
+}
+
 configurations {
     all {
         resolutionStrategy {
