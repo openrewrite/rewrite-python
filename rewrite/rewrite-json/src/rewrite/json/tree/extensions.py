@@ -1,14 +1,15 @@
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, TYPE_CHECKING
 
 from rewrite import Cursor
-from .support_types import JsonRightPadded
-from .tree import Json
-from ..visitor import JsonVisitor
+from .support_types import Json, JsonRightPadded
+
+if TYPE_CHECKING:
+    from ..visitor import JsonVisitor
 
 T = TypeVar('T', bound=Json)
 
 
-def visit_right_padded(v: JsonVisitor, right: Optional[JsonRightPadded[T]], p):
+def visit_right_padded(v: 'JsonVisitor', right: Optional[JsonRightPadded[T]], p):
     if right is None:
         return None
 

@@ -1,10 +1,10 @@
 from typing import cast, TypeVar, Union
 
-from rewrite import TreeVisitor
-from .tree import *
+from rewrite import SourceFile, TreeVisitor
+from .tree.extensions import *
+from .tree.support_types import *
+from .tree.tree import *
 from rewrite.java.visitor import JavaVisitor
-
-P = TypeVar('P')
 
 # noinspection DuplicatedCode
 class PythonVisitor(JavaVisitor[P]):
