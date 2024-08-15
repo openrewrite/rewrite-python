@@ -1,8 +1,11 @@
-from dataclasses import replace
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, TYPE_CHECKING
 
-from rewrite import Cursor, Tree
+from rewrite import Cursor
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+
+if TYPE_CHECKING:
+    from ..visitor import JavaVisitor
+    from .tree import *
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
