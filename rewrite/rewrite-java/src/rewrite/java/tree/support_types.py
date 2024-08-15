@@ -273,7 +273,18 @@ class MethodCall(Tree, Protocol):
 
 
 class JavaType(Protocol):
-    pass
+    class FullyQualified:
+        pass
+    class Class:
+        pass
+    class Parameterized:
+        pass
+    class Primitive:
+        pass
+    class Method:
+        pass
+    class Variable:
+        pass
 
 
 T = TypeVar('T')
