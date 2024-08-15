@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.8"
-      - uses: Gr1N/setup-poetry@v8
+      - uses: Gr1N/setup-poetry@v9
       - run: poetry --version
       - uses: gradle/actions/setup-gradle@v4
       - name: set-up-jdk
