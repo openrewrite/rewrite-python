@@ -802,12 +802,12 @@ class Block(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, statik: JRightPadded[bool], statements: List[JRightPadded[Statement]], end: Space) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, static: JRightPadded[bool], statements: List[JRightPadded[Statement]], end: Space) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
         object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_statik', statik)
+        object.__setattr__(self, '_static', static)
         object.__setattr__(self, '_statements', statements)
         object.__setattr__(self, '_end', end)
 
@@ -1237,7 +1237,7 @@ class ClassDeclaration(Statement, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, leading_annotations: List[Annotation], modifiers: List[Modifier], kind: ClassDeclaration.Kind, name: Identifier, type_parameters: Optional[JContainer[TypeParameter]], primary_constructor: Optional[JContainer[Statement]], extendings: Optional[JLeftPadded[TypeTree]], implementings: Optional[JContainer[TypeTree]], permitting: Optional[JContainer[TypeTree]], body: Block, type: Optional[JavaType.FullyQualified]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, leading_annotations: List[Annotation], modifiers: List[Modifier], kind: ClassDeclaration.Kind, name: Identifier, type_parameters: Optional[JContainer[TypeParameter]], primary_constructor: Optional[JContainer[Statement]], extends: Optional[JLeftPadded[TypeTree]], implements: Optional[JContainer[TypeTree]], permits: Optional[JContainer[TypeTree]], body: Block, type: Optional[JavaType.FullyQualified]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1248,9 +1248,9 @@ class ClassDeclaration(Statement, TypedTree):
         object.__setattr__(self, '_name', name)
         object.__setattr__(self, '_type_parameters', type_parameters)
         object.__setattr__(self, '_primary_constructor', primary_constructor)
-        object.__setattr__(self, '_extendings', extendings)
-        object.__setattr__(self, '_implementings', implementings)
-        object.__setattr__(self, '_permitting', permitting)
+        object.__setattr__(self, '_extends', extends)
+        object.__setattr__(self, '_implements', implements)
+        object.__setattr__(self, '_permits', permits)
         object.__setattr__(self, '_body', body)
         object.__setattr__(self, '_type', type)
 
@@ -2624,12 +2624,12 @@ class Import(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, statik: JLeftPadded[bool], qualid: FieldAccess, alias: Optional[JLeftPadded[Identifier]]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, static: JLeftPadded[bool], qualid: FieldAccess, alias: Optional[JLeftPadded[Identifier]]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
         object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_statik', statik)
+        object.__setattr__(self, '_static', static)
         object.__setattr__(self, '_qualid', qualid)
         object.__setattr__(self, '_alias', alias)
 
@@ -3544,7 +3544,7 @@ class MethodDeclaration(Statement, TypedTree):
                 object.__setattr__(self, '_annotations', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, leading_annotations: List[Annotation], modifiers: List[Modifier], type_parameters: Optional[TypeParameters], return_type_expression: Optional[TypeTree], name: MethodDeclaration.IdentifierWithAnnotations, parameters: JContainer[Statement], throwz: Optional[JContainer[NameTree]], body: Optional[Block], default_value: Optional[JLeftPadded[Expression]], method_type: Optional[JavaType.Method]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, leading_annotations: List[Annotation], modifiers: List[Modifier], type_parameters: Optional[TypeParameters], return_type_expression: Optional[TypeTree], name: MethodDeclaration.IdentifierWithAnnotations, parameters: JContainer[Statement], throws: Optional[JContainer[NameTree]], body: Optional[Block], default_value: Optional[JLeftPadded[Expression]], method_type: Optional[JavaType.Method]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -3555,7 +3555,7 @@ class MethodDeclaration(Statement, TypedTree):
         object.__setattr__(self, '_return_type_expression', return_type_expression)
         object.__setattr__(self, '_name', name)
         object.__setattr__(self, '_parameters', parameters)
-        object.__setattr__(self, '_throwz', throwz)
+        object.__setattr__(self, '_throws', throws)
         object.__setattr__(self, '_body', body)
         object.__setattr__(self, '_default_value', default_value)
         object.__setattr__(self, '_method_type', method_type)
@@ -4158,13 +4158,13 @@ class NewClass(Statement, Expression, TypedTree, MethodCall):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, enclosing: Optional[JRightPadded[Expression]], nooh: Space, clazz: Optional[TypeTree], arguments: JContainer[Expression], body: Optional[Block], constructor_type: Optional[JavaType.Method]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, enclosing: Optional[JRightPadded[Expression]], new: Space, clazz: Optional[TypeTree], arguments: JContainer[Expression], body: Optional[Block], constructor_type: Optional[JavaType.Method]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
         object.__setattr__(self, '_markers', markers)
         object.__setattr__(self, '_enclosing', enclosing)
-        object.__setattr__(self, '_nooh', nooh)
+        object.__setattr__(self, '_new', new)
         object.__setattr__(self, '_clazz', clazz)
         object.__setattr__(self, '_arguments', arguments)
         object.__setattr__(self, '_body', body)
@@ -5217,7 +5217,7 @@ class Try(Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, resources: Optional[JContainer[Try.Resource]], body: Block, catches: List[Try.Catch], finallie: Optional[JLeftPadded[Block]]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, resources: Optional[JContainer[Try.Resource]], body: Block, catches: List[Try.Catch], finally_: Optional[JLeftPadded[Block]]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -5225,7 +5225,7 @@ class Try(Statement):
         object.__setattr__(self, '_resources', resources)
         object.__setattr__(self, '_body', body)
         object.__setattr__(self, '_catches', catches)
-        object.__setattr__(self, '_finallie', finallie)
+        object.__setattr__(self, '_finally', finally_)
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_try(self, p)
