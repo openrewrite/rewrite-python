@@ -60,13 +60,13 @@ class PrinterFactory(Protocol):
 
     @classmethod
     def current(cls) -> PrinterFactory:
-        result = getattr(cls._thread_local, 'context', None)
+        result = getattr(PrinterFactory._thread_local, 'context', None)
         if result is None:
-            raise ValueError("No PrinterFactor has been set")
+            raise ValueError("No PrinterFactory has been set")
         return result
 
     def set_current(self):
-        self.__class__._thread_local.context = self
+        PrinterFactory._thread_local.context = self
 
     def create_printer(self, cursor: Cursor) -> TreeVisitor[Any, PrintOutputCapture[P]]:
         ...

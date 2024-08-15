@@ -11,12 +11,12 @@ if TYPE_CHECKING:
     from ..visitor import YamlVisitor
 from . import extensions
 from .support_types import *
-from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite.marker import Markers
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Documents(SourceFile):
+class Documents(SourceFile, Yaml):
     _id: UUID
 
     @property
@@ -100,8 +100,11 @@ class Documents(SourceFile):
         object.__setattr__(self, '_checksum', checksum)
         object.__setattr__(self, '_documents', documents)
 
-    def accept_yaml(self, v: YamlVisitor[P], p: P) -> Yaml:
+    def accept_yaml(self, v: 'YamlVisitor[P]', p: P) -> Yaml:
         return v.visit_documents(self, p)
+
+    def printer(self, cursor: Cursor) -> TreeVisitor[Any, PrintOutputCapture[P]]:
+        return PrinterFactory.current().create_printer(cursor)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
