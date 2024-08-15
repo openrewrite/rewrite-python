@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rewrite-xml"
-version = "0.0.0-dev"  # This will be replaced by the GitHub Actions workflow
+version = "0.0.0"  # This will be replaced by the GitHub Actions workflow
 description = "XML functionality for the OpenRewrite library"
 authors = ["Moderne Inc. <support@moderne.io>"]
 license = "Apache-2.0"

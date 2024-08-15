@@ -144,7 +144,7 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments
 
 [[package]]
 name = "rewrite-core"
-version = "0.0.0-dev"
+version = "0.0.0"
 description = "Core functionality for the OpenRewrite library"
 optional = false
 python-versions = "^3.8"
