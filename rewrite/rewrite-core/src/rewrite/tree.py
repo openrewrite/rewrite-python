@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,7 @@ from .marker import Markers
 
 if TYPE_CHECKING:
     from . import TreeVisitor
+    from .visitor import Cursor
 
 P = TypeVar('P')
 
@@ -37,6 +39,13 @@ class Tree(Protocol):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         return v.default_value(self, p)
 
+    def print(self, cursor: 'Cursor', capture: 'PrintOutputCapture[P]') -> str:
+        self.printer(cursor).visit(self, capture, cursor)
+        return capture.get_out()
+
+    def printer(self, cursor: 'Cursor') -> 'TreeVisitor[Any, PrintOutputCapture[P]]':
+        return cursor.first_enclosing_or_throw(SourceFile).printer(cursor)
+
     def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
             return self.id == cast(Tree, other).id
@@ -44,6 +53,23 @@ class Tree(Protocol):
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+
+class PrinterFactory(Protocol):
+    _thread_local = threading.local()
+
+    @classmethod
+    def current(cls) -> PrinterFactory:
+        result = getattr(cls._thread_local, 'context', None)
+        if result is None:
+            raise ValueError("No PrinterFactor has been set")
+        return result
+
+    def set_current(self):
+        self.__class__._thread_local.context = self
+
+    def create_printer(self, cursor: Cursor) -> TreeVisitor[Any, PrintOutputCapture[P]]:
+        ...
 
 
 @runtime_checkable

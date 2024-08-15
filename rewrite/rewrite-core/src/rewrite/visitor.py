@@ -23,6 +23,20 @@ class Cursor:
     def get_message(self, key: str, default_value: O) -> O:
         return default_value if self.messages is None else cast(O, self.messages.get(key))
 
+    def first_enclosing_or_throw(self, type: Type[P]) -> P:
+        result = self.first_enclosing(type)
+        if result is None:
+            raise ValueError(f"Expected to find enclosing {T.__name__}")
+        return result
+
+    def first_enclosing(self, type: Type[P]) -> P:
+        c = self
+        while c is not None:
+            if isinstance(c.value, type):
+                return c.value
+            c = c.parent
+        return None
+
 
 class TreeVisitor(Protocol[T, P]):
     _visit_count: int = 0
@@ -62,7 +76,7 @@ class TreeVisitor(Protocol[T, P]):
 
         t: Optional[T] = None
         is_acceptable = tree.is_acceptable(self, p) and (
-                    not isinstance(tree, SourceFile) or self.is_acceptable(tree, p))
+                not isinstance(tree, SourceFile) or self.is_acceptable(tree, p))
 
         try:
             if is_acceptable:
@@ -73,7 +87,7 @@ class TreeVisitor(Protocol[T, P]):
                     if t is not None:
                         t = self.post_visit(t, p)
 
-            self.cursor = self._cursor.parent # type: ignore
+            self.cursor = self._cursor.parent  # type: ignore
 
             if top_level:
                 if t is not None and self._after_visit is not None:
