@@ -1259,7 +1259,7 @@ class ClassDeclaration(Statement, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class CompilationUnit(J, JavaSourceFile, SourceFile):
+class CompilationUnit(JavaSourceFile, SourceFile):
     _id: UUID
 
     @property

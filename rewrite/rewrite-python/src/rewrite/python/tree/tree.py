@@ -17,7 +17,7 @@ from rewrite.java.tree import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ExceptionType(TypeTree):
+class ExceptionType(Py, TypeTree):
     _id: UUID
 
     @property
@@ -86,7 +86,7 @@ class ExceptionType(TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class TypeHint(TypeTree):
+class TypeHint(Py, TypeTree):
     class Kind(Enum):
         RETURN_TYPE = 0
         VARIABLE_TYPE = 1
@@ -315,7 +315,7 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ExpressionStatement(Expression, Statement):
+class ExpressionStatement(Py, Expression, Statement):
     _id: UUID
 
     @property
@@ -344,7 +344,7 @@ class ExpressionStatement(Expression, Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class KeyValue(Expression, TypedTree):
+class KeyValue(Py, Expression, TypedTree):
     _id: UUID
 
     @property
@@ -440,7 +440,7 @@ class KeyValue(Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class DictLiteral(Expression, TypedTree):
+class DictLiteral(Py, Expression, TypedTree):
     _id: UUID
 
     @property
@@ -526,7 +526,7 @@ class DictLiteral(Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class PassStatement(Statement):
+class PassStatement(Py, Statement):
     _id: UUID
 
     @property
@@ -565,7 +565,7 @@ class PassStatement(Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class TrailingElseWrapper(Statement):
+class TrailingElseWrapper(Py, Statement):
     _id: UUID
 
     @property
@@ -651,7 +651,7 @@ class TrailingElseWrapper(Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ComprehensionExpression(Expression):
+class ComprehensionExpression(Py, Expression):
     class Kind(Enum):
         LIST = 0
         SET = 1
@@ -891,7 +891,7 @@ class ComprehensionExpression(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class AwaitExpression(Expression):
+class AwaitExpression(Py, Expression):
     _id: UUID
 
     @property
@@ -950,7 +950,7 @@ class AwaitExpression(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class YieldExpression(Expression):
+class YieldExpression(Py, Expression):
     _id: UUID
 
     @property
@@ -1053,7 +1053,7 @@ class YieldExpression(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class VariableScopeStatement(Statement):
+class VariableScopeStatement(Py, Statement):
     class Kind(Enum):
         GLOBAL = 0
         NONLOCAL = 1
@@ -1143,7 +1143,7 @@ class VariableScopeStatement(Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class AssertStatement(Statement):
+class AssertStatement(Py, Statement):
     _id: UUID
 
     @property
@@ -1219,7 +1219,7 @@ class AssertStatement(Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class DelStatement(Statement):
+class DelStatement(Py, Statement):
     _id: UUID
 
     @property
@@ -1295,7 +1295,7 @@ class DelStatement(Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class SpecialParameter(TypeTree):
+class SpecialParameter(Py, TypeTree):
     class Kind(Enum):
         KWARGS = 0
         ARGS = 1
@@ -1368,7 +1368,7 @@ class SpecialParameter(TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class SpecialArgument(Expression):
+class SpecialArgument(Py, Expression):
     class Kind(Enum):
         KWARGS = 0
         ARGS = 1
@@ -1441,7 +1441,7 @@ class SpecialArgument(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class NamedArgument(Expression):
+class NamedArgument(Py, Expression):
     _id: UUID
 
     @property
@@ -1537,7 +1537,7 @@ class NamedArgument(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class TypeHintedExpression(Expression):
+class TypeHintedExpression(Py, Expression):
     _id: UUID
 
     @property
@@ -1606,7 +1606,7 @@ class TypeHintedExpression(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ErrorFromExpression(Expression):
+class ErrorFromExpression(Py, Expression):
     _id: UUID
 
     @property
@@ -1702,7 +1702,7 @@ class ErrorFromExpression(Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class MatchCase(Expression):
+class MatchCase(Py, Expression):
     _id: UUID
 
     @property
@@ -1786,7 +1786,7 @@ class MatchCase(Expression):
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
-    class Pattern(Expression):
+    class Pattern(Py, Expression):
         class Kind(Enum):
             AS = 0
             CAPTURE = 1
