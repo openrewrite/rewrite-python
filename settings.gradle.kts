@@ -12,28 +12,30 @@ plugins {
     id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
 }
 
-gradleEnterprise {
-    val isCiServer = System.getenv("CI")?.equals("true") ?: false
+develocity {
     server = "https://ge.openrewrite.org/"
 
+    val isCiServer = System.getenv("CI")?.equals("true") ?: false
+    val accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
+    val authenticated = !accessKey.isNullOrBlank()
     buildCache {
-        remote(gradleEnterprise.buildCache) {
+        remote(develocity.buildCache) {
             isEnabled = true
-            val accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
-            isPush = isCiServer && !accessKey.isNullOrBlank()
+            isPush = isCiServer && authenticated
         }
     }
 
     buildScan {
         capture {
-            isTaskInputFiles = true
+            fileFingerprints = true
         }
 
-        isUploadInBackground = !isCiServer
+        publishing {
+            onlyIf {
+                authenticated
+            }
+        }
 
-        publishAlways()
-        this as com.gradle.enterprise.gradleplugin.internal.extension.BuildScanExtensionWithHiddenFeatures
-        publishIfAuthenticated()
+        uploadInBackground = !isCiServer
     }
 }
-
