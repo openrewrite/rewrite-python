@@ -80,3 +80,22 @@ class ParserVisitor(ast.NodeVisitor):
         # Call generic_visit to continue the traversal
         self.generic_visit(node)
         return result
+
+    def visit_Assert(self, node):
+        return Py.AssertStatement(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            [JRightPadded(self.visit(expr), Space.EMPTY, Markers.EMPTY) for expr in ([node.test, node.msg] if node.msg else [node.test])]
+        )
+
+    def visit_Constant(self, node):
+        return J.Literal(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            node.value,
+            str(node.value),
+            None,
+            None
+        )
