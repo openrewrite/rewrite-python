@@ -57,7 +57,7 @@ public final class ParserAssertions {
     }
 
     public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
-        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, null);
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, RemotePythonParser.builder().languageLevel(languageLevel), before, null);
         acceptSpec(spec, python);
         return python;
     }
@@ -69,12 +69,12 @@ public final class ParserAssertions {
 
     public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
                                      Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
-        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, s -> after);
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, RemotePythonParser.builder().languageLevel(languageLevel), before, s -> after);
         acceptSpec(spec, python);
         return python;
     }
 
-    private static void acceptSpec(Consumer<SourceSpec<Py.CompilationUnit>> spec, SourceSpec<Py.CompilationUnit> python) {
+    public static void acceptSpec(Consumer<SourceSpec<Py.CompilationUnit>> spec, SourceSpec<Py.CompilationUnit> python) {
         Consumer<Py.CompilationUnit> userSuppliedAfterRecipe = python.getAfterRecipe();
         python.afterRecipe(userSuppliedAfterRecipe::accept);
         spec.andThen(isFullyParsed()).accept(python);
