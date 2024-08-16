@@ -82,6 +82,7 @@ class Space:
         return self if whitespace is self._whitespace else Space(self._comments, whitespace)
 
     EMPTY: ClassVar[Space] = None
+    SINGLE_SPACE: ClassVar[Space] = None
 
     class Location(Enum):
         ANY = auto()
@@ -238,6 +239,7 @@ class Space:
 
 
 Space.EMPTY = Space([], '')
+Space.SINGLE_SPACE = Space([], ' ')
 
 
 class JavaSourceFile(SourceFile, Protocol):
