@@ -8,7 +8,7 @@ pluginManagement {
 rootProject.name = "rewrite-python"
 
 plugins {
-    id("com.gradle.enterprise") version "latest.release"
+    id("com.gradle.develocity") version "latest.release"
     id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
 }
 
