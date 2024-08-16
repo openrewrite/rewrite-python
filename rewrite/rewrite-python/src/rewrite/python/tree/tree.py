@@ -207,6 +207,10 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
 
     _charset_name: Optional[str]
 
+    @property
+    def charset_name(self) -> Optional[str]:
+        return self._charset_name
+
     def with_charset_name(self, charset_name: Optional[str]) -> CompilationUnit:
         return self if charset_name is self._charset_name else replace(self, _charset_name=charset_name)
 
