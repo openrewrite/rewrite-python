@@ -99,3 +99,14 @@ class ParserVisitor(ast.NodeVisitor):
             None,
             None
         )
+
+    def visit_Name(self, node):
+        return J.Identifier(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            [],
+            node.id,
+            None,
+            None
+        )
