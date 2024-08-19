@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import List, Protocol, ClassVar, cast, runtime_checkable
+from typing import List, Protocol, ClassVar, cast, runtime_checkable, TYPE_CHECKING
 from uuid import UUID
 
-from ..parser import Parser
+if TYPE_CHECKING:
+    from ..parser import Parser
 from ..utils import random_id
 
 
@@ -63,7 +64,7 @@ Markers.EMPTY = Markers(random_id(), [])
 @dataclass(frozen=True, eq=False)
 class ParseExceptionResult(Marker):
     @classmethod
-    def build(cls, parser: Parser, exception: Exception, message: str = None) -> ParseExceptionResult:
+    def build(cls, parser: 'Parser', exception: Exception, message: str = None) -> ParseExceptionResult:
         return cls(random_id(), type(parser).__name__, type(exception).__name__, str(exception), message)
 
     _id: UUID

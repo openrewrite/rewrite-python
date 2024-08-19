@@ -1,11 +1,12 @@
 import ast
+from _ast import AST
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, cast
 
-import rewrite.java.tree as J
-import rewrite.python.tree as Py
+import rewrite.java.tree as j
+import rewrite.python.tree as py
 from rewrite import random_id
-from rewrite.java.tree import Space, JRightPadded, JContainer, JLeftPadded
+from rewrite.java.tree import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J
 from rewrite.marker import Markers
 
 J2 = TypeVar('J2', bound=J)
@@ -20,9 +21,9 @@ class ParserVisitor(ast.NodeVisitor):
         self._source = source
 
     def visit_Assert(self, node):
-        return J.Assert(
+        return j.Assert(
             random_id(),
-            Space.EMPTY,
+            self.__source_before(),
             Markers.EMPTY,
             self.__convert(node.test),
             self.__convert(node.msg)
@@ -37,29 +38,31 @@ class ParserVisitor(ast.NodeVisitor):
         return result
 
     def visit_Constant(self, node):
-        return J.Literal(
+        # noinspection PyTypeChecker
+        type_: JavaType.Primitive = self.__map_type(node)
+        return j.Literal(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
             node.value,
             str(node.value),
             None,
-            None,  # FIXME
+            type_,
         )
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> J.MethodDeclaration:
-        body = J.Block(
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
+        body = j.Block(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
             JRightPadded(False, Space.EMPTY, Markers.EMPTY),
-            [JRightPadded(self.visit(stmt), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
-                JRightPadded(J.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)],
+            [JRightPadded(self.visit(cast(AST, stmt)), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
+                JRightPadded(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)],
             Space.EMPTY
         )
         return_type_expression = self.visit(node.returns) if node.returns else None
 
-        return J.MethodDeclaration(
+        return j.MethodDeclaration(
             random_id(),
             Space([], ' '),
             Markers.EMPTY,
@@ -67,7 +70,7 @@ class ParserVisitor(ast.NodeVisitor):
             [],
             None,
             return_type_expression,
-            J.MethodDeclaration.IdentifierWithAnnotations(J.Identifier(
+            j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
                 random_id(),
                 Space.EMPTY,
                 Markers.EMPTY,
@@ -83,8 +86,8 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
-    def visit_Module(self, node: ast.Module) -> Py.CompilationUnit:
-        return Py.CompilationUnit(
+    def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
+        return py.CompilationUnit(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
@@ -94,14 +97,14 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             None,
             [],
-            [JRightPadded(self.visit(stmt), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
-                JRightPadded(J.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)]
+            [JRightPadded(self.visit(cast(AST, stmt)), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
+                JRightPadded(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)]
             ,
             Space.EMPTY
         )
 
     def visit_Name(self, node):
-        return J.Identifier(
+        return j.Identifier(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
@@ -124,21 +127,33 @@ class ParserVisitor(ast.NodeVisitor):
         return JLeftPadded(space, self.__convert(node), Markers.EMPTY)
 
     def __source_before(self) -> Space:
-        result = []
+        prefix = None
+        whitespace = []
+        comments = []
         while self._cursor < len(self._source):
             char = self._source[self._cursor]
             if char.isspace():
-                result.append(char)
+                whitespace.append(char)
             elif char == '#':
-                # TODO create TextComment
+                if comments:
+                    comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+                else:
+                    prefix = ''.join(whitespace)
+                whitespace = []
+                comment = []
                 while self._cursor < len(self._source) and self._source[self._cursor] != '\n':
-                    result.append(self._source[self._cursor])
+                    comment.append(self._source[self._cursor])
                     self._cursor += 1
-                result.append('\n')
+                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < len(self._source) else '', Markers.EMPTY))
             else:
                 break
             self._cursor += 1
-        return Space([], ''.join(result))
 
-    def __map_type(self, node):
+        if not comments:
+            prefix = ''.join(whitespace)
+        elif whitespace:
+            comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+        return Space(comments, prefix)
+
+    def __map_type(self, node) -> Optional[JavaType]:
         return None

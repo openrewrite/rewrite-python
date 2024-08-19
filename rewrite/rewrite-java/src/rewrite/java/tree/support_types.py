@@ -3,11 +3,15 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast
+from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
+    TYPE_CHECKING
 from uuid import UUID
 
 from rewrite import Tree, SourceFile, TreeVisitor
 from rewrite.marker import Markers
+
+if TYPE_CHECKING:
+    from ..visitor import JavaVisitor
 
 P = TypeVar('P')
 
@@ -15,7 +19,6 @@ P = TypeVar('P')
 @runtime_checkable
 class J(Tree, Protocol):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
-        from rewrite.java.visitor import JavaVisitor
         return self.accept_java(v.adapt(J, JavaVisitor), p)
 
     def accept_java(self, v: 'JavaVisitor[P]', p: P) -> Optional['J']:
@@ -23,7 +26,7 @@ class J(Tree, Protocol):
 
 
 @dataclass(frozen=True)
-class Comment:
+class Comment(Protocol):
     _multiline: bool
 
     @property
@@ -31,7 +34,7 @@ class Comment:
         return self._multiline
 
     def with_multiline(self, multiline: bool) -> Comment:
-        return self if multiline is self._multiline else Comment(multiline, self._text, self._suffix, self._markers)
+        ...
 
     _text: str
 
@@ -40,7 +43,7 @@ class Comment:
         return self._text
 
     def with_text(self, text: str) -> Comment:
-        return self if text is self._text else Comment(self._multiline, text, self._suffix, self._markers)
+        ...
 
     _suffix: str
 
@@ -49,7 +52,7 @@ class Comment:
         return self._suffix
 
     def with_suffix(self, suffix: str) -> Comment:
-        return self if suffix is self._suffix else Comment(self._multiline, self._text, suffix, self._markers)
+        ...
 
     _markers: Markers
 
@@ -58,7 +61,22 @@ class Comment:
         return self._markers
 
     def with_markers(self, markers: Markers) -> Comment:
-        return self if markers is self._markers else Comment(self._multiline, self._text, self._suffix, markers)
+        ...
+
+
+@dataclass(frozen=True)
+class TextComment(Comment):
+    def with_multiline(self, multiline: bool) -> Comment:
+        return self if multiline is self._multiline else TextComment(multiline, self._text, self._suffix, self._markers)
+
+    def with_text(self, text: str) -> Comment:
+        return self if text is self._text else TextComment(self._multiline, text, self._suffix, self._markers)
+
+    def with_suffix(self, suffix: str) -> Comment:
+        return self if suffix is self._suffix else TextComment(self._multiline, self._text, suffix, self._markers)
+
+    def with_markers(self, markers: Markers) -> Comment:
+        return self if markers is self._markers else TextComment(self._multiline, self._text, self._suffix, markers)
 
 
 @dataclass(frozen=True)
@@ -277,14 +295,19 @@ class MethodCall(Tree, Protocol):
 class JavaType(Protocol):
     class FullyQualified:
         pass
+
     class Class:
         pass
+
     class Parameterized:
         pass
+
     class Primitive:
         pass
+
     class Method:
         pass
+
     class Variable:
         pass
 
@@ -403,6 +426,7 @@ class JRightPadded(Generic[T]):
 
         def __init__(self, after_location: Space.Location):
             self.after_location = after_location
+
 
 @dataclass(frozen=True)
 class JLeftPadded(Generic[T]):
@@ -531,15 +555,16 @@ class JContainer(Generic[T]):
     def empty(cls) -> JContainer[T]:
         return cast(JContainer[T], JContainer.EMPTY)
 
-
     class Location(Enum):
         ANNOTATION_ARGUMENTS = (Space.Location.ANNOTATION_ARGUMENTS, JRightPadded.Location.ANNOTATION_ARGUMENT)
         CASE = (Space.Location.CASE, JRightPadded.Location.CASE)
         CASE_EXPRESSION = (Space.Location.CASE_EXPRESSION, JRightPadded.Location.CASE_EXPRESSION)
         IMPLEMENTS = (Space.Location.IMPLEMENTS, JRightPadded.Location.IMPLEMENTS)
         LANGUAGE_EXTENSION = (Space.Location.LANGUAGE_EXTENSION, JRightPadded.Location.LANGUAGE_EXTENSION)
-        METHOD_DECLARATION_PARAMETERS = (Space.Location.METHOD_DECLARATION_PARAMETERS, JRightPadded.Location.METHOD_DECLARATION_PARAMETER)
-        METHOD_INVOCATION_ARGUMENTS = (Space.Location.METHOD_INVOCATION_ARGUMENTS, JRightPadded.Location.METHOD_INVOCATION_ARGUMENT)
+        METHOD_DECLARATION_PARAMETERS = (
+            Space.Location.METHOD_DECLARATION_PARAMETERS, JRightPadded.Location.METHOD_DECLARATION_PARAMETER)
+        METHOD_INVOCATION_ARGUMENTS = (
+            Space.Location.METHOD_INVOCATION_ARGUMENTS, JRightPadded.Location.METHOD_INVOCATION_ARGUMENT)
         NEW_ARRAY_INITIALIZER = (Space.Location.NEW_ARRAY_INITIALIZER, JRightPadded.Location.NEW_ARRAY_INITIALIZER)
         NEW_CLASS_ARGUMENTS = (Space.Location.NEW_CLASS_ARGUMENTS, JRightPadded.Location.NEW_CLASS_ARGUMENTS)
         PERMITS = (Space.Location.PERMITS, JRightPadded.Location.PERMITS)

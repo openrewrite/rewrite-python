@@ -2,13 +2,13 @@ import unittest
 import ast
 import textwrap
 
-from rewrite.python.parser.parser_visitor import ParserVisitor
+from rewrite.python.__parser_visitor__ import ParserVisitor
 
 
 class TestParserVisitor(unittest.TestCase):
     def test_visitor(self):
         # language=Python
-        source = textwrap.dedent("""
+        source = textwrap.dedent("""\
             def bar(x):
                 x = x + 1
                 return x
@@ -22,8 +22,9 @@ class TestParserVisitor(unittest.TestCase):
         visitor.visit(tree)
 
     def test_assert(self):
-        # language=Python
-        source = textwrap.dedent("""
+        # language=python
+        source = textwrap.dedent("""\
+               # assert
             assert True
             """)
 

@@ -9,6 +9,7 @@ from rewrite.marker import Markers, Marker
 O = TypeVar('O')
 T = TypeVar('T', bound=Tree)
 T2 = TypeVar('T2', bound=Tree)
+TV = TypeVar('TV', bound='TreeVisitor[Any, Any]')
 P = TypeVar('P')
 
 
@@ -123,6 +124,6 @@ class TreeVisitor(Protocol[T, P]):
     def visit_marker(self, marker: Marker, p: P) -> Marker:
         return marker
 
-    def adapt(self, tree_type, visitor_type) -> TreeVisitor[Tree, Any]:
+    def adapt(self, tree_type, visitor_type: Type[TV]) -> TV:
         # FIXME implement the visitor adapting
         return self

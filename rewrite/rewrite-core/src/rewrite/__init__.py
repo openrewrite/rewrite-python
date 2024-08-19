@@ -4,6 +4,7 @@ from .execution import ExecutionContext, DelegatingExecutionContext, InMemoryExe
 from .tree import Checksum, FileAttributes, SourceFile, Tree, PrintOutputCapture, PrinterFactory
 from .utils import random_id
 from .visitor import Cursor, TreeVisitor
+from .parser import *
 
 __all__ = [
     'Checksum',
@@ -20,4 +21,9 @@ __all__ = [
     'InMemoryExecutionContext',
     'Recipe',
     'RecipeRunException',
+    'Parser',
+    'ParserInput',
+    'ParseError',
+    'ParserBuilder',
+    'ParseExceptionResult'
 ]
