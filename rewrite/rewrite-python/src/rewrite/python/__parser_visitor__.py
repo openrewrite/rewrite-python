@@ -29,14 +29,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.msg)
         )
 
-    def visit_Assign(self, node: ast.Assign):
-        targets = [target.id for target in node.targets if isinstance(target, ast.Name)]
-        value = node.value
-        result = f"Assignment to: {', '.join(targets)} = {ast.dump(value)}"
-        # Call generic_visit to continue the traversal
-        self.generic_visit(node)
-        return result
-
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
         type_: JavaType.Primitive = self.__map_type(node)
@@ -55,9 +47,9 @@ class ParserVisitor(ast.NodeVisitor):
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
-            JRightPadded(False, Space.EMPTY, Markers.EMPTY),
-            [JRightPadded(self.visit(cast(AST, stmt)), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
-                JRightPadded(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)],
+            self.__pad_right(False, Space.EMPTY),
+            [self.__pad_right(self.__convert(cast(AST, stmt)), Space.EMPTY) for stmt in node.body] if node.body else [
+                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             Space.EMPTY
         )
         return_type_expression = self.visit(node.returns) if node.returns else None
@@ -97,9 +89,8 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             None,
             [],
-            [JRightPadded(self.visit(cast(AST, stmt)), Space.EMPTY, Markers.EMPTY) for stmt in node.body] if node.body else [
-                JRightPadded(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)]
-            ,
+            [self.__pad_right(self.visit(cast(AST, stmt)), Space.EMPTY) for stmt in node.body] if node.body else [
+                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             Space.EMPTY
         )
 
@@ -120,11 +111,11 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
-    def __pad_right(self, node, space: Space) -> JRightPadded[J2]:
-        return JRightPadded(self.__convert(node), space, Markers.EMPTY)
+    def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
+        return JRightPadded(tree, space, Markers.EMPTY)
 
-    def __pad_left(self, node, space: Space) -> JLeftPadded[J2]:
-        return JLeftPadded(space, self.__convert(node), Markers.EMPTY)
+    def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
+        return JLeftPadded(space, tree, Markers.EMPTY)
 
     def __source_before(self) -> Space:
         prefix = None
