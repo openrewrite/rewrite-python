@@ -189,8 +189,6 @@ public class PsiPythonMapper {
         try {
             if (element instanceof PyAugAssignmentStatement) {
                 return singletonList(mapAugAssignmentStatement((PyAugAssignmentStatement) element));
-            } else if (element instanceof PyAssertStatement) {
-                return singletonList(mapAssertStatement((PyAssertStatement) element));
             } else if (element instanceof PyAssignmentStatement) {
                 return singletonList(mapAssignmentStatement((PyAssignmentStatement) element));
             } else if (element instanceof PyBreakStatement) {
@@ -1109,15 +1107,6 @@ public class PsiPythonMapper {
                 )))
         );
 
-    }
-
-    public Statement mapAssertStatement(PyAssertStatement element) {
-        return new Py.AssertStatement(
-                randomId(),
-                spaceBefore(element),
-                EMPTY,
-                mapExpressionsAsRightPadded(element.getArguments())
-        );
     }
 
     private static final Map<IElementType, J.AssignmentOperation.Type> augAssignmentOps;

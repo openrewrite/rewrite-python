@@ -1,7 +1,10 @@
-from typing import Protocol, Any
+from typing import Protocol, Any, ClassVar
 
 
 class ExecutionContext(Protocol):
+    REQUIRE_PRINT_EQUALS_INPUT: ClassVar[str] = "org.openrewrite.requirePrintEqualsInput"
+    CHARSET: ClassVar[str] = "org.openrewrite.parser.charset"
+
     def get_message(self, key: str, default_value=None) -> Any:
         ...
 

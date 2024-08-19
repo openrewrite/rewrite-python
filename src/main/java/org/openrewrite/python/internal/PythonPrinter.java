@@ -455,7 +455,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
         beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
         if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
-                else_.getBody() instanceof J.If) {
+            else_.getBody() instanceof J.If) {
             p.append("el");
         } else {
             p.append("else");
@@ -513,7 +513,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             // anything with decorators
             final boolean delegateReindentToElement =
                     statement instanceof J.ClassDeclaration
-                            || statement instanceof J.MethodDeclaration;
+                    || statement instanceof J.MethodDeclaration;
 
             if (statementGroup == null || !statementGroup.containsIndex(i + 1)) {
                 if (!isFirst && !lastCharIs(p, '\n')) {
@@ -1313,19 +1313,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         p.append("await");
         visit(await.getExpression(), p);
         return await;
-    }
-
-    @Override
-    public J visitAssertStatement(Py.AssertStatement assert_, PrintOutputCapture<P> p) {
-        visitSpace(assert_.getPrefix(), PySpace.Location.ASSERT_PREFIX, p);
-        p.append("assert");
-        visitRightPadded(
-                assert_.getPadding().getExpressions(),
-                PyRightPadded.Location.ASSERT_ELEMENT,
-                ",",
-                p
-        );
-        return assert_;
     }
 
     @Override

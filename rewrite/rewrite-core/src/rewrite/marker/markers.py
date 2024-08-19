@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import List, Protocol, ClassVar, cast, runtime_checkable
 from uuid import UUID
 
+from ..parser import Parser
 from ..utils import random_id
 
 
@@ -57,3 +58,55 @@ class Markers:
 
 
 Markers.EMPTY = Markers(random_id(), [])
+
+
+@dataclass(frozen=True, eq=False)
+class ParseExceptionResult(Marker):
+    @classmethod
+    def build(cls, parser: Parser, exception: Exception, message: str = None) -> ParseExceptionResult:
+        return cls(random_id(), type(parser).__name__, type(exception).__name__, str(exception), message)
+
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> ParseExceptionResult:
+        return self if id is self._id else replace(self, _id=id)
+
+    _parser_type: str
+
+    @property
+    def parser_type(self) -> str:
+        return self._parser_type
+
+    def with_parser_type(self, parser_type: str) -> ParseExceptionResult:
+        return self if parser_type is self._parser_type else replace(self, _parser_type=parser_type)
+
+    _exception_type: str
+
+    @property
+    def exception_type(self) -> str:
+        return self._exception_type
+
+    def with_exception_type(self, exception_type: str) -> ParseExceptionResult:
+        return self if exception_type is self._exception_type else replace(self, _exception_type=exception_type)
+
+    _exception_message: str
+
+    @property
+    def exception_message(self) -> str:
+        return self._exception_message
+
+    def with_exception_message(self, exception_message: str) -> ParseExceptionResult:
+        return self if exception_message is self._exception_message else replace(self, _exception_message=exception_message)
+
+    _message: str
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+    def with_message(self, message: str) -> ParseExceptionResult:
+        return self if message is self._message else replace(self, _message=message)

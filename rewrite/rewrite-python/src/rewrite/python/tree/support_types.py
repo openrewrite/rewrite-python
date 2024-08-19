@@ -16,7 +16,7 @@ class Py(Tree, Protocol):
         from rewrite.python.visitor import PythonVisitor
         return self.accept_python(v.adapt(Py, PythonVisitor), p)
 
-    def accept_python(self, v: 'PythonVisitor[P]', p: P) -> Optional['Py']:
+    def accept_python(self, v: 'PythonVisitor[P]', p: P) -> Optional['J']:
         ...
 
 

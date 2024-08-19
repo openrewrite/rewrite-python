@@ -11,7 +11,7 @@ from uuid import UUID
 from .marker import Markers
 
 if TYPE_CHECKING:
-    from . import TreeVisitor
+    from . import TreeVisitor, random_id
     from .visitor import Cursor
 
 P = TypeVar('P')

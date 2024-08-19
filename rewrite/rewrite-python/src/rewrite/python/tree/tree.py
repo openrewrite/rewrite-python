@@ -15,6 +15,7 @@ from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cur
 from rewrite.marker import Markers
 from rewrite.java.tree import *
 
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ExceptionType(Py, TypeTree):
@@ -72,7 +73,8 @@ class ExceptionType(Py, TypeTree):
     def with_expression(self, expression: Expression) -> ExceptionType:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, exception_group: bool, expression: Expression) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, exception_group: bool,
+                 expression: Expression) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -83,6 +85,7 @@ class ExceptionType(Py, TypeTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_exception_type(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -145,7 +148,8 @@ class TypeHint(Py, TypeTree):
     def with_type(self, type: JavaType) -> TypeHint:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: TypeHint.Kind, expression: Expression, type: JavaType) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: TypeHint.Kind, expression: Expression,
+                 type: JavaType) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -156,6 +160,7 @@ class TypeHint(Py, TypeTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hint(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -221,7 +226,8 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
         return self._charset_bom_marked
 
     def with_charset_bom_marked(self, charset_bom_marked: bool) -> CompilationUnit:
-        return self if charset_bom_marked is self._charset_bom_marked else replace(self, _charset_bom_marked=charset_bom_marked)
+        return self if charset_bom_marked is self._charset_bom_marked else replace(self,
+                                                                                   _charset_bom_marked=charset_bom_marked)
 
     _checksum: Optional[Checksum]
 
@@ -293,7 +299,10 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, source_path: Path, file_attributes: Optional[FileAttributes], charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], imports: List[JRightPadded[J.Import]], statements: List[JRightPadded[Statement]], eof: Space) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, source_path: Path,
+                 file_attributes: Optional[FileAttributes], charset_name: Optional[str], charset_bom_marked: bool,
+                 checksum: Optional[Checksum], imports: List[JRightPadded[J.Import]],
+                 statements: List[JRightPadded[Statement]], eof: Space) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -312,6 +321,7 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -341,6 +351,7 @@ class ExpressionStatement(Py, Expression, Statement):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_expression_statement(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -426,7 +437,8 @@ class KeyValue(Py, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JRightPadded[Expression], value: Expression, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JRightPadded[Expression], value: Expression,
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -437,6 +449,7 @@ class KeyValue(Py, Expression, TypedTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_key_value(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -513,7 +526,8 @@ class DictLiteral(Py, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[KeyValue], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[KeyValue],
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -523,6 +537,7 @@ class DictLiteral(Py, Expression, TypedTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_dict_literal(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -562,6 +577,7 @@ class PassStatement(Py, Statement):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_pass_statement(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -638,7 +654,8 @@ class TrailingElseWrapper(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement, else_block: JLeftPadded[J.Block]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement,
+                 else_block: JLeftPadded[J.Block]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -648,6 +665,7 @@ class TrailingElseWrapper(Py, Statement):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_trailing_else_wrapper(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -816,7 +834,8 @@ class ComprehensionExpression(Py, Expression):
             return self._iterator_variable
 
         def with_iterator_variable(self, iterator_variable: Expression) -> ComprehensionExpression.Clause:
-            return self if iterator_variable is self._iterator_variable else replace(self, _iterator_variable=iterator_variable)
+            return self if iterator_variable is self._iterator_variable else replace(self,
+                                                                                     _iterator_variable=iterator_variable)
 
         _iterated_list: JLeftPadded[Expression]
 
@@ -833,7 +852,8 @@ class ComprehensionExpression(Py, Expression):
         def conditions(self) -> Optional[List[ComprehensionExpression.Condition]]:
             return self._conditions
 
-        def with_conditions(self, conditions: Optional[List[ComprehensionExpression.Condition]]) -> ComprehensionExpression.Clause:
+        def with_conditions(self, conditions: Optional[
+            List[ComprehensionExpression.Condition]]) -> ComprehensionExpression.Clause:
             return self if conditions is self._conditions else replace(self, _conditions=conditions)
 
         @dataclass
@@ -845,7 +865,8 @@ class ComprehensionExpression(Py, Expression):
                 return self._t._iterated_list
 
             def with_iterated_list(self, iterated_list: JLeftPadded[Expression]) -> ComprehensionExpression.Clause:
-                return self._t if self._t._iterated_list is iterated_list else replace(self._t, _iterated_list=iterated_list)
+                return self._t if self._t._iterated_list is iterated_list else replace(self._t,
+                                                                                       _iterated_list=iterated_list)
 
         _padding: weakref.ReferenceType[PaddingHelper] = None
 
@@ -863,7 +884,9 @@ class ComprehensionExpression(Py, Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, iterator_variable: Expression, iterated_list: JLeftPadded[Expression], conditions: Optional[List[ComprehensionExpression.Condition]]) -> None:
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, iterator_variable: Expression,
+                     iterated_list: JLeftPadded[Expression],
+                     conditions: Optional[List[ComprehensionExpression.Condition]]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
@@ -875,7 +898,9 @@ class ComprehensionExpression(Py, Expression):
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_comprehension_clause(self, p)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: ComprehensionExpression.Kind, result: Expression, clauses: List[ComprehensionExpression.Clause], suffix: Space, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: ComprehensionExpression.Kind,
+                 result: Expression, clauses: List[ComprehensionExpression.Clause], suffix: Space,
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -888,6 +913,7 @@ class ComprehensionExpression(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_comprehension_expression(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -947,6 +973,7 @@ class AwaitExpression(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_await_expression(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1039,7 +1066,8 @@ class YieldExpression(Py, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: JLeftPadded[bool], expressions: List[JRightPadded[Expression]], type: JavaType) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: JLeftPadded[bool],
+                 expressions: List[JRightPadded[Expression]], type: JavaType) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1050,6 +1078,7 @@ class YieldExpression(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_yield_expression(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1130,7 +1159,8 @@ class VariableScopeStatement(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScopeStatement.Kind, names: List[JRightPadded[J.Identifier]]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScopeStatement.Kind,
+                 names: List[JRightPadded[J.Identifier]]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1140,6 +1170,7 @@ class VariableScopeStatement(Py, Statement):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_variable_scope_statement(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1217,6 +1248,7 @@ class AssertStatement(Py, Statement):
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_assert_statement(self, p)
 
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class DelStatement(Py, Statement):
@@ -1293,6 +1325,7 @@ class DelStatement(Py, Statement):
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_del_statement(self, p)
 
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class SpecialParameter(Py, TypeTree):
@@ -1354,7 +1387,8 @@ class SpecialParameter(Py, TypeTree):
     def with_type(self, type: Optional[JavaType]) -> SpecialParameter:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialParameter.Kind, type_hint: Optional[TypeHint], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialParameter.Kind,
+                 type_hint: Optional[TypeHint], type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1365,6 +1399,7 @@ class SpecialParameter(Py, TypeTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_special_parameter(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1427,7 +1462,8 @@ class SpecialArgument(Py, Expression):
     def with_type(self, type: Optional[JavaType]) -> SpecialArgument:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialArgument.Kind, expression: Expression, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialArgument.Kind, expression: Expression,
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1438,6 +1474,7 @@ class SpecialArgument(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_special_argument(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1523,7 +1560,8 @@ class NamedArgument(Py, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: J.Identifier, value: JLeftPadded[Expression], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: J.Identifier, value: JLeftPadded[Expression],
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1534,6 +1572,7 @@ class NamedArgument(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_named_argument(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1592,7 +1631,8 @@ class TypeHintedExpression(Py, Expression):
     def with_type(self, type: Optional[JavaType]) -> TypeHintedExpression:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, type_hint: TypeHint, expression: Expression, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, type_hint: TypeHint, expression: Expression,
+                 type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1603,6 +1643,7 @@ class TypeHintedExpression(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hinted_expression(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1688,7 +1729,8 @@ class ErrorFromExpression(Py, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, error: Expression, from_: JLeftPadded[Expression], type: JavaType) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, error: Expression, from_: JLeftPadded[Expression],
+                 type: JavaType) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1699,6 +1741,7 @@ class ErrorFromExpression(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_error_from_expression(self, p)
+
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1886,7 +1929,8 @@ class MatchCase(Py, Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: MatchCase.Pattern.Kind, children: JContainer[Expression], type: Optional[JavaType]) -> None:
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: MatchCase.Pattern.Kind,
+                     children: JContainer[Expression], type: Optional[JavaType]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
@@ -1898,7 +1942,8 @@ class MatchCase(Py, Expression):
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_match_case_pattern(self, p)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, pattern: MatchCase.Pattern, guard: Optional[JLeftPadded[Expression]], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, pattern: MatchCase.Pattern,
+                 guard: Optional[JLeftPadded[Expression]], type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
