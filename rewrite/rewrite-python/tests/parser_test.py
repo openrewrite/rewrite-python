@@ -33,5 +33,5 @@ class TestParserVisitor:
         visitor = ParserVisitor(source)
         cu = visitor.visit(tree)
         assert cu is not None
-        printed = cu.print(Cursor(None, cu), PrintOutputCapture(0))
+        printed = cu.print_all()
         assert printed == 'assertTrue'

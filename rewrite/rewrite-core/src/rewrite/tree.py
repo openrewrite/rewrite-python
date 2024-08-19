@@ -93,7 +93,8 @@ class SourceFile(Tree, Protocol):
         ...
 
     def print_all(self) -> str:
-        ...
+        from .visitor import Cursor
+        return self.print(Cursor(None, Cursor.ROOT_VALUE), PrintOutputCapture(0))
 
     def print_equals_input(self, input: 'ParserInput', ctx: ExecutionContext) -> bool:
         printed = self.print_all()
