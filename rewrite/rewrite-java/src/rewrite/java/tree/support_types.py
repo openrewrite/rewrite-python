@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import weakref
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum, auto
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
     TYPE_CHECKING
@@ -67,16 +67,16 @@ class Comment(Protocol):
 @dataclass(frozen=True)
 class TextComment(Comment):
     def with_multiline(self, multiline: bool) -> Comment:
-        return self if multiline is self._multiline else TextComment(multiline, self._text, self._suffix, self._markers)
+        return self if multiline is self._multiline else replace(self, _multiline=multiline)
 
     def with_text(self, text: str) -> Comment:
-        return self if text is self._text else TextComment(self._multiline, text, self._suffix, self._markers)
+        return self if text is self._text else replace(self, _text=text)
 
     def with_suffix(self, suffix: str) -> Comment:
-        return self if suffix is self._suffix else TextComment(self._multiline, self._text, suffix, self._markers)
+        return self if suffix is self._suffix else replace(self, _suffix=suffix)
 
     def with_markers(self, markers: Markers) -> Comment:
-        return self if markers is self._markers else TextComment(self._multiline, self._text, self._suffix, markers)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
 
 @dataclass(frozen=True)
@@ -88,7 +88,7 @@ class Space:
         return self._comments
 
     def with_comments(self, comments: List[Comment]) -> Space:
-        return self if comments is self._comments else Space(comments, self._whitespace)
+        return self if comments is self._comments else replace(self, _comments=comments)
 
     _whitespace: Optional[str]
 
@@ -97,7 +97,7 @@ class Space:
         return self._whitespace
 
     def with_whitespace(self, whitespace: Optional[str]) -> Space:
-        return self if whitespace is self._whitespace else Space(self._comments, whitespace)
+        return self if whitespace is self._whitespace else replace(self, _whitespace=whitespace)
 
     EMPTY: ClassVar[Space] = None
     SINGLE_SPACE: ClassVar[Space] = None
@@ -325,7 +325,7 @@ class JRightPadded(Generic[T]):
         return self._element
 
     def with_element(self, element: T) -> JRightPadded[T]:
-        return self if element is self._element else JRightPadded(element, self._after, self._markers)
+        return self if element is self._element else replace(self, _element=element)
 
     _after: Space
 
@@ -334,7 +334,7 @@ class JRightPadded(Generic[T]):
         return self._after
 
     def with_after(self, after: Space) -> JRightPadded[T]:
-        return self if after is self._after else JRightPadded(self._element, after, self._markers)
+        return self if after is self._after else replace(self, _after=after)
 
     _markers: Markers
 
@@ -343,7 +343,7 @@ class JRightPadded(Generic[T]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JRightPadded[T]:
-        return self if markers is self._markers else JRightPadded(self._element, self._after, markers)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     @classmethod
     def get_elements(cls, padded_list: List[JRightPadded[T]]) -> List[T]:
@@ -437,7 +437,7 @@ class JLeftPadded(Generic[T]):
         return self._before
 
     def with_before(self, before: Space) -> JLeftPadded[T]:
-        return self if before is self._before else JLeftPadded(before, self._element, self._markers)
+        return self if before is self._before else replace(self, _before=before)
 
     _element: T
 
@@ -446,7 +446,7 @@ class JLeftPadded(Generic[T]):
         return self._element
 
     def with_element(self, element: T) -> JLeftPadded[T]:
-        return self if element is self._element else JLeftPadded(self._before, element, self._markers)
+        return self if element is self._element else replace(self, _element=element)
 
     _markers: Markers
 
@@ -455,7 +455,7 @@ class JLeftPadded(Generic[T]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JLeftPadded[T]:
-        return self if markers is self._markers else JLeftPadded(self._before, self._element, markers)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     class Location(Enum):
         ARRAY_TYPE_DIMENSION = Space.Location.DIMENSION_PREFIX
@@ -493,7 +493,7 @@ class JContainer(Generic[T]):
         return self._before
 
     def with_before(self, before: Space) -> JContainer[T]:
-        return self if before is self._before else JContainer(before, self._elements, self._markers)
+        return self if before is self._before else replace(self, _before=before)
 
     _elements: List[JRightPadded[T]]
 
@@ -511,7 +511,7 @@ class JContainer(Generic[T]):
         return self._markers
 
     def with_markers(self, markers: Markers) -> JContainer[T]:
-        return self if markers is self._markers else JContainer(self._before, self._elements, markers)
+        return self if markers is self._markers else replace(self, _markers=markers)
 
     @dataclass
     class PaddingHelper:
