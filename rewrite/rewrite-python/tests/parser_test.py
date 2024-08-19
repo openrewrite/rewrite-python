@@ -24,7 +24,6 @@ class TestParserVisitor(unittest.TestCase):
     def test_assert(self):
         # language=python
         source = textwrap.dedent("""\
-               # assert
             assert True
             """)
 

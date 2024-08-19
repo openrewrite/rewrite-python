@@ -45,7 +45,7 @@ class ParserInput:
 class ParseError(SourceFile):
     @classmethod
     def build(cls, parser: 'Parser', input: ParserInput, relative_to: Path, ctx: ExecutionContext, exception: Exception,
-              erroneous: SourceFile) -> 'ParseError':
+              erroneous: Optional[SourceFile]) -> 'ParseError':
         return cls(random_id(),
                    Markers(random_id(), [ParseExceptionResult.build(parser, exception)]),
                    input.path.relative_to(relative_to) if relative_to else input.path,
@@ -117,13 +117,13 @@ class ParseError(SourceFile):
     def with_checksum(self, checksum: Optional[Checksum]) -> 'ParseError':
         return self if checksum is self._checksum else replace(self, _checksum=checksum)
 
-    _erroneous: SourceFile
+    _erroneous: Optional[SourceFile]
 
     @property
-    def erroneous(self) -> SourceFile:
+    def erroneous(self) -> Optional[SourceFile]:
         return self._erroneous
 
-    def with_erroneous(self, erroneous: SourceFile) -> 'ParseError':
+    def with_erroneous(self, erroneous: Optional[SourceFile]) -> 'ParseError':
         return self if erroneous is self._erroneous else replace(self, _erroneous=erroneous)
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture]:
