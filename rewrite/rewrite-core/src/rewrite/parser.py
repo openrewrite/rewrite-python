@@ -1,38 +1,43 @@
 import io
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Iterable, Optional
+from time import time_ns
+from typing import Iterable, Optional, Callable
 from uuid import UUID
 
 from rewrite import SourceFile, ExecutionContext, TreeVisitor, Cursor, random_id
 from rewrite.marker import Markers
 from rewrite.marker.markers import ParseExceptionResult
+from rewrite.result import Result
 from rewrite.tree import Checksum, FileAttributes, PrinterFactory, Tree, PrintOutputCapture
 
 
-class Result:
-    def diff(self, source: SourceFile, printed, path) -> str:
-        pass
-
-
-class ParserInput(ABC):
+@dataclass(frozen=True, eq=False)
+class ParserInput:
     _path: Path
 
     @property
     def path(self) -> Path:
         return self._path
 
-    _file_attributes: FileAttributes
+    _file_attributes: Optional[FileAttributes]
 
     @property
-    def file_attributes(self) -> FileAttributes:
+    def file_attributes(self) -> Optional[FileAttributes]:
         return self._file_attributes
 
-    @abstractmethod
-    def get_source(self, ctx: ExecutionContext) -> io.IOBase:
-        pass
+    _synthetic: bool
+
+    @property
+    def synthetic(self) -> bool:
+        return self._synthetic
+
+    _source: Callable[[], io.IOBase]
+
+    @property
+    def source(self) -> Callable[[], io.IOBase]:
+        return self._source
 
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
@@ -139,27 +144,32 @@ class Parser(ABC):
     def source_path_from_source_text(self, prefix: Path, source_code: str) -> Path:
         pass
 
-    def require_print_equals_input(self, source_file: SourceFile, input: ParserInput, relative_to: Optional[Path],
-                                   ctx: ExecutionContext) -> SourceFile:
+    def require_print_equals_input(self, source_file: SourceFile, parser_input: ParserInput,
+                                   relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
         if ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True) and not source_file.print_equals_input(
-                input, ctx):
-            diff = Result.diff(input.get_source(ctx).read(), source_file.print_all(), input.path)
-            return (ParseError.build(self, input, relative_to, ctx,
+                parser_input, ctx):
+            diff = Result.diff(
+                parser_input.source().read(),
+                source_file.print_all(),
+                parser_input.path
+            )
+            return (ParseError.build(self, parser_input, relative_to, ctx,
                                      Exception(f"{source_file.source_path} is not print idempotent. \n{diff}"),
                                      source_file))
         return source_file
 
-    def parse(self, source_files: Iterable[Path], relative_to: Optional[Path], ctx: ExecutionContext) -> Iterable[
-        SourceFile]:
-        inputs = [ParserInput(path, lambda: open(path, 'rb')) for path in source_files]
+    def parse(self, source_files: Iterable[Path], relative_to: Optional[Path], ctx: ExecutionContext) -> Iterable[SourceFile]:
+        inputs = [ParserInput(path, None, False, lambda: io.FileIO(path)) for path in source_files]
         return self.parse_inputs(inputs, relative_to, ctx)
 
     def parse_strings(self, *sources: str) -> Iterable[SourceFile]:
         return self.__parse_strings_with_context(ExecutionContext(), *sources)
 
     def __parse_strings_with_context(self, ctx: ExecutionContext, *sources: str) -> Iterable[SourceFile]:
-        inputs = [ParserInput(self.source_path_from_source_text(Path(str(os.urandom(16))), source),
-                              lambda: io.BytesIO(source.encode('utf-8')), True) for source in sources]
+        inputs = [ParserInput(self.source_path_from_source_text(Path(str(time_ns())), source),
+                              None,
+                              True,
+                              lambda: io.StringIO(source)) for source in sources]
         return self.parse_inputs(inputs, None, ctx)
 
     def accept_input(self, parser_input: ParserInput) -> bool:

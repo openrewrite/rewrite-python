@@ -11,7 +11,7 @@ from uuid import UUID
 from .marker import Markers
 
 if TYPE_CHECKING:
-    from . import TreeVisitor, random_id
+    from . import TreeVisitor, ExecutionContext
     from .visitor import Cursor
 
 P = TypeVar('P')
@@ -75,6 +75,10 @@ class PrinterFactory(Protocol):
 @runtime_checkable
 class SourceFile(Tree, Protocol):
     @property
+    def charset_name(self) -> Optional[str]:
+        ...
+
+    @property
     def source_path(self) -> Path:
         ...
 
@@ -87,6 +91,13 @@ class SourceFile(Tree, Protocol):
 
     def with_file_attributes(self, file_attributes: Optional[FileAttributes]) -> SourceFile:
         ...
+
+    def print_all(self) -> str:
+        ...
+
+    def print_equals_input(self, input: 'ParserInput', ctx: ExecutionContext) -> bool:
+        printed = self.print_all()
+        return printed == input.source().read().decode(self.charset_name if self.charset_name else 'utf-8')
 
 
 @dataclass(frozen=True)
