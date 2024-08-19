@@ -114,6 +114,22 @@ type = "directory"
 url = "../rewrite-java"
 
 [[package]]
+name = "rewrite-remote-test"
+version = "0.0.0"
+description = "Remoting testing functionality for the OpenRewrite library"
+optional = false
+python-versions = "^3.8"
+files = []
+develop = true
+
+[package.dependencies]
+rewrite-core = {path = "../../../../openrewrite/rewrite-python/rewrite/rewrite-core", develop = true}
+
+[package.source]
+type = "directory"
+url = "../../../../moderneinc/rewrite-remote/python/rewrite-remote-test"
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -127,4 +143,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "2c2a5e05c166a38362f7fb6b76d707470d0edaee1db3812e6b93fb4f5fa38310"
+content-hash = "13e1ccc5bc9bdbb8d4a74f0ebf6738fc8ebfada84436a0d8a3e3ad556d262cbd"

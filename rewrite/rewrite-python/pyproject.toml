@@ -15,6 +15,7 @@ rewrite-java = { path = "../rewrite-java", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
+rewrite-remote-test = { path = "../../../../moderneinc/rewrite-remote/python/rewrite-remote-test", develop = true }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

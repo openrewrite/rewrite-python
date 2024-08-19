@@ -17,6 +17,10 @@
       <sourceFolder url="file://$MODULE_DIR$/rewrite-python/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rewrite-python/tests" isTestSource="true" />
     </content>
+    <content url="file://$MODULE_DIR$/rewrite-test">
+      <sourceFolder url="file://$MODULE_DIR$/rewrite-test/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/rewrite-test/tests" isTestSource="true" />
+    </content>
     <content url="file://$MODULE_DIR$/rewrite-xml">
       <sourceFolder url="file://$MODULE_DIR$/rewrite-xml/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/rewrite-xml/tests" isTestSource="true" />

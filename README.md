@@ -28,9 +28,9 @@ In the setup described here it is at the time of writing important that the GitH
    python3.8 -m venv ~/.venv
    source ~/.venv/bin/activate
    ```
-4. Switch to `moderneinc/rewrite-remote` and install all dependencies using Poetry
+4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Poetry
    ```shell
-   cd ~/git/moderneinc/rewrite-remote
+   cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote-test
    poetry install
    ```
 5. Open `~/git/openrewrite/rewrite-python/rewrite` in IDEA (or PyCharm)
