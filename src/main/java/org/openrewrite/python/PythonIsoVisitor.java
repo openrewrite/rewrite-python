@@ -23,11 +23,6 @@ import org.openrewrite.python.tree.Py;
 public class PythonIsoVisitor<P> extends PythonVisitor<P> {
 
     @Override
-    public Py.AssertStatement visitAssertStatement(Py.AssertStatement ogAssert, P p) {
-        return (Py.AssertStatement) super.visitAssertStatement(ogAssert, p);
-    }
-
-    @Override
     public Py.AwaitExpression visitAwaitExpression(Py.AwaitExpression ogAwait, P p) {
         return (Py.AwaitExpression) super.visitAwaitExpression(ogAwait, p);
     }
