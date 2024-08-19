@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 
-from rewrite import Cursor
+from rewrite import Cursor, PrintOutputCapture
 from rewrite.python.__parser_visitor__ import ParserVisitor
 
 
@@ -33,5 +33,5 @@ class TestParserVisitor:
         visitor = ParserVisitor(source)
         cu = visitor.visit(tree)
         assert cu is not None
-        print(rewrite_remote.client.print(Cursor(None, cu)))
+        printed = cu.print(Cursor(None, cu), PrintOutputCapture(0))
 
