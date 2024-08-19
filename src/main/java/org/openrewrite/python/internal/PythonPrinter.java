@@ -219,6 +219,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitAssert(J.Assert assert_, PrintOutputCapture<P> p) {
+        beforeSyntax(assert_, Location.ASSERT_PREFIX, p);
+        p.append("assert");
+        visit(assert_.getCondition(), p);
+        if (assert_.getDetail() != null) {
+            visitLeftPadded(assert_.getDetail(), JLeftPadded.Location.ASSERT_DETAIL, p);
+        }
+        afterSyntax(assert_, p);
+        return assert_;
+    }
+
+    @Override
     public J visitIdentifier(J.Identifier ident, PrintOutputCapture<P> p) {
         beforeSyntax(ident, Space.Location.IDENTIFIER_PREFIX, p);
         p.append(ident.getSimpleName());
