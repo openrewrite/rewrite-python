@@ -133,16 +133,6 @@ class PythonVisitor(JavaVisitor[P]):
         variable_scope_statement = variable_scope_statement.padding.with_names([self.visit_right_padded(v, PyRightPadded.Location.VARIABLE_SCOPE_STATEMENT_NAMES, p) for v in variable_scope_statement.padding.names])
         return variable_scope_statement
 
-    def visit_assert_statement(self, assert_statement: AssertStatement, p: P) -> J:
-        assert_statement = assert_statement.with_prefix(self.visit_space(assert_statement.prefix, PySpace.Location.ASSERT_STATEMENT_PREFIX, p))
-        temp_statement = cast(Statement, self.visit_statement(assert_statement, p))
-        if not isinstance(temp_statement, AssertStatement):
-            return temp_statement
-        assert_statement = cast(AssertStatement, temp_statement)
-        assert_statement = assert_statement.with_markers(self.visit_markers(assert_statement.markers, p))
-        assert_statement = assert_statement.padding.with_expressions([self.visit_right_padded(v, PyRightPadded.Location.ASSERT_STATEMENT_EXPRESSIONS, p) for v in assert_statement.padding.expressions])
-        return assert_statement
-
     def visit_del_statement(self, del_statement: DelStatement, p: P) -> J:
         del_statement = del_statement.with_prefix(self.visit_space(del_statement.prefix, PySpace.Location.DEL_STATEMENT_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(del_statement, p))
