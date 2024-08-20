@@ -20,24 +20,37 @@ class ParserVisitor(ast.NodeVisitor):
         super().__init__()
         self._source = source
 
+    def visit_arguments(self, node):
+        prefix = self.__source_before('(')
+        return JContainer(prefix, [], Markers.EMPTY)
+
     def visit_Assert(self, node):
         return j.Assert(
             random_id(),
-            self.__source_before(),
+            self.__source_before('assert'),
             Markers.EMPTY,
             self.__convert(node.test),
-            self.__pad_left(Space.EMPTY, self.__convert(node.msg)) if node.msg else None,
+            self.__pad_left(self.__source_before(','), self.__convert(node.msg)) if node.msg else None,
         )
 
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
         type_: JavaType.Primitive = self.__map_type(node)
+        prefix = self.__whitespace()
+        if isinstance(node.value, str):
+            # FIXME also check for any of the following prefixes: [rRuUbBfF] (can also be combined as in `ur` or `rf`)
+            value_source = self._source[self._cursor:self._cursor + len(node.value) + 2]
+            self._cursor += len(node.value) + 2
+        else:
+            # FIXME probably not correct for numbers like `0x2A` or `0o52` or `0b101010` or `4j`
+            value_source = self.__skip(str(node.value))
+
         return j.Literal(
             random_id(),
-            Space.EMPTY,
+            prefix,
             Markers.EMPTY,
             node.value,
-            str(node.value),
+            value_source,
             None,
             type_,
         )
@@ -45,16 +58,16 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
         prefix = self.__source_before('def')
         name = j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
-                random_id(),
-                self.__source_before(node.name),
-                Markers.EMPTY,
-                [],
-                node.name,
-                None,
-                None
-            ), [])
+            random_id(),
+            self.__source_before(node.name),
+            Markers.EMPTY,
+            [],
+            node.name,
+            None,
+            None
+        ), [])
 
-        params = JContainer.empty()
+        params = self.visit_arguments(node.args)
         return_type = self.__convert(node.returns) if node.returns else None
 
         body = j.Block(
@@ -94,15 +107,16 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             None,
             [],
-            [self.__pad_right(self.visit(cast(AST, stmt)), Space.EMPTY) for stmt in node.body] if node.body else [
+            [self.__pad_right(self.visit(cast(AST, stmt)), self.__whitespace()) for stmt in
+             node.body] if node.body else [
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
-            Space.EMPTY
+            self.__whitespace()
         )
 
     def visit_Name(self, node):
         return j.Identifier(
             random_id(),
-            Space.EMPTY,
+            self.__source_before(node.id),
             Markers.EMPTY,
             [],
             node.id,
@@ -135,6 +149,12 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor = delim_index + len(until_delim)
         return space
 
+    def __skip(self, token: Optional[str]) -> Optional[str]:
+        if token is None:
+            return None
+        if self._source.startswith(token, self._cursor):
+            self._cursor += len(token)
+        return token
 
     def __whitespace(self) -> Space:
         prefix = None
@@ -154,7 +174,8 @@ class ParserVisitor(ast.NodeVisitor):
                 while self._cursor < len(self._source) and self._source[self._cursor] != '\n':
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
-                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < len(self._source) else '', Markers.EMPTY))
+                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < len(self._source) else '',
+                                            Markers.EMPTY))
             else:
                 break
             self._cursor += 1

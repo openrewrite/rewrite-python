@@ -3,12 +3,11 @@ import textwrap
 
 import pytest
 
-from rewrite import Cursor, PrintOutputCapture
 from rewrite.python.__parser_visitor__ import ParserVisitor
 
 
 class TestParserVisitor:
-    def test_visitor(self):
+    def test_visitor(self, rewrite_remote):
         # language=Python
         source = textwrap.dedent("""\
             def bar(x):
@@ -21,17 +20,17 @@ class TestParserVisitor:
 
         # Create the visitor and visit the AST
         visitor = ParserVisitor(source)
-        visitor.visit(tree)
+        cu = visitor.visit(tree)
+        assert cu is not None
 
     def test_assert(self, rewrite_remote):
         # language=python
         source = textwrap.dedent("""\
-            assert True
+            assert True, 'apa'
             """)
 
         tree = ast.parse(source)
         visitor = ParserVisitor(source)
         cu = visitor.visit(tree)
         assert cu is not None
-        printed = cu.print_all()
-        assert printed == 'assertTrue'
+        assert cu.print_all() == source
