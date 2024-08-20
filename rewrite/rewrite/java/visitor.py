@@ -1,9 +1,9 @@
 from typing import cast, TypeVar, Union
 
-from .. import SourceFile, TreeVisitor
-from .tree.extensions import *
-from .tree.support_types import *
-from .tree.tree import *
+from rewrite import SourceFile, TreeVisitor
+from _extensions import *
+from support_types import *
+from tree import *
 
 # noinspection DuplicatedCode
 class JavaVisitor(TreeVisitor[J, P]):

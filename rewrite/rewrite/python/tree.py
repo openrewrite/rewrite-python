@@ -9,8 +9,8 @@ from enum import Enum
 
 if TYPE_CHECKING:
     from ..visitor import PythonVisitor
-import extensions
-from .support_types import *
+import _extensions
+from support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite import Markers
 from rewrite.java.tree import *

@@ -6,8 +6,12 @@ from time import time_ns
 from typing import Iterable, Optional, Callable
 from uuid import UUID
 
-from rewrite import SourceFile, ExecutionContext, Checksum, FileAttributes, ParseExceptionResult, Result, random_id, \
-    Markers, Cursor, TreeVisitor, Tree, PrintOutputCapture, PrinterFactory
+from .utils import random_id
+from .result import Result
+from .tree import SourceFile, Tree, PrintOutputCapture, PrinterFactory, FileAttributes, Checksum
+from .execution import ExecutionContext
+from .visitor import TreeVisitor, Cursor
+from .markers import Markers, ParseExceptionResult
 
 
 @dataclass(frozen=True, eq=False)

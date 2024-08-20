@@ -6,7 +6,7 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from .parser import Parser
-from rewrite import random_id
+from .utils import random_id
 
 
 @runtime_checkable
