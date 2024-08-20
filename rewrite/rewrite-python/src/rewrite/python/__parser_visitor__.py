@@ -221,7 +221,7 @@ class ParserVisitor(ast.NodeVisitor):
         comments = []
         while self._cursor < len(self._source):
             char = self._source[self._cursor]
-            if char.isspace():
+            if char.isspace() or char == '\\':
                 whitespace.append(char)
             elif char == '#':
                 if comments:
