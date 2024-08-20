@@ -38,14 +38,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
             None
         )
-        if node.annotation:
-            # FIXME where to put this prefix?
-            type_prefix = self.__source_before(':')
-            type_expression = self.__convert(node.annotation)
-        else:
-            type_expression = None
-
-        var = j.VariableDeclarations.NamedVariable(
+        var = self.__pad_right(j.VariableDeclarations.NamedVariable(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
@@ -53,7 +46,10 @@ class ParserVisitor(ast.NodeVisitor):
             [],
             self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None,
             self.__map_type(node)
-        )
+        ), self.__source_before(':') if node.annotation else Space.EMPTY)
+
+        type_expression = self.__convert(node.annotation) if node.annotation else None
+
         return j.VariableDeclarations(
             random_id(),
             prefix,
