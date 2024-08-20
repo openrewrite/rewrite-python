@@ -11,7 +11,7 @@ P = TypeVar('P')
 
 
 @runtime_checkable
-class Py(Tree, Protocol):
+class Py(J, Protocol):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         from rewrite.python.visitor import PythonVisitor
         return self.accept_python(v.adapt(Py, PythonVisitor), p)

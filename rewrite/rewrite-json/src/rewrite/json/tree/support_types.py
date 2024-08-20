@@ -86,11 +86,11 @@ class Space:
 Space.EMPTY = Space([], '')
 
 
-class JsonValue(Tree, Protocol):
+class JsonValue(Json, Protocol):
     pass
 
 
-class JsonKey(Tree, Protocol):
+class JsonKey(Json, Protocol):
     pass
 
 

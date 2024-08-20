@@ -18,5 +18,5 @@ class Yaml(Tree, Protocol):
         ...
 
 
-class YamlKey(Protocol):
+class YamlKey(Yaml, Protocol):
     pass

@@ -224,7 +224,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         p.append("assert");
         visit(assert_.getCondition(), p);
         if (assert_.getDetail() != null) {
-            visitLeftPadded(assert_.getDetail(), JLeftPadded.Location.ASSERT_DETAIL, p);
+            visitLeftPadded(",", assert_.getDetail(), JLeftPadded.Location.ASSERT_DETAIL, p);
         }
         afterSyntax(assert_, p);
         return assert_;
