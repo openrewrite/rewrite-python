@@ -43,6 +43,19 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
+        name = j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                [],
+                node.name,
+                None,
+                None
+            ), [])
+
+        params = JContainer.empty()
+        return_type = self.__convert(node.returns) if node.returns else None
+
         body = j.Block(
             random_id(),
             Space.EMPTY,
@@ -52,26 +65,17 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             Space.EMPTY
         )
-        return_type_expression = self.visit(node.returns) if node.returns else None
 
         return j.MethodDeclaration(
             random_id(),
-            Space([], ' '),
+            Space.EMPTY,
             Markers.EMPTY,
             [],
             [],
             None,
-            return_type_expression,
-            j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
-                random_id(),
-                Space.EMPTY,
-                Markers.EMPTY,
-                [],
-                node.name,
-                None,
-                None
-            ), []),
-            JContainer.empty(),
+            return_type,
+            name,
+            params,
             None,
             body,
             None,
