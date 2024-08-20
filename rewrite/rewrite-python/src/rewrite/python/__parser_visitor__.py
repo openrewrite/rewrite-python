@@ -26,7 +26,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__source_before(),
             Markers.EMPTY,
             self.__convert(node.test),
-            self.__convert(node.msg)
+            self.__pad_left(Space.EMPTY, self.__convert(node.msg)) if node.msg else None,
         )
 
     def visit_Constant(self, node):
