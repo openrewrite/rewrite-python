@@ -43,9 +43,10 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
+        prefix = self.__source_before('def')
         name = j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
                 random_id(),
-                Space.EMPTY,
+                self.__source_before(node.name),
                 Markers.EMPTY,
                 [],
                 node.name,
@@ -68,7 +69,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         return j.MethodDeclaration(
             random_id(),
-            Space.EMPTY,
+            prefix,
             Markers.EMPTY,
             [],
             [],
@@ -121,7 +122,21 @@ class ParserVisitor(ast.NodeVisitor):
     def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
         return JLeftPadded(space, tree, Markers.EMPTY)
 
-    def __source_before(self) -> Space:
+    def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:
+        delim_index = self.__position_of_next(until_delim, stop)
+        if delim_index == -1:
+            return Space.EMPTY
+
+        if delim_index == self._cursor:
+            self._cursor = self._cursor + len(until_delim)
+            return Space.EMPTY
+
+        space = self.__whitespace()
+        self._cursor = delim_index + len(until_delim)
+        return space
+
+
+    def __whitespace(self) -> Space:
         prefix = None
         whitespace = []
         comments = []
@@ -149,6 +164,29 @@ class ParserVisitor(ast.NodeVisitor):
         elif whitespace:
             comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
         return Space(comments, prefix)
+
+    def __position_of_next(self, until_delim: str, stop: str = None) -> int:
+        in_single_line_comment = False
+
+        delim_index = self._cursor
+        while delim_index < len(self._source) - len(until_delim) + 1:
+            if in_single_line_comment:
+                if self._source[delim_index] == '\n':
+                    in_single_line_comment = False
+            else:
+                if self._source[delim_index] == '#':
+                    in_single_line_comment = True
+
+            if not in_single_line_comment:
+                if stop is not None and self._source[delim_index] == stop:
+                    return -1  # reached stop word before finding the delimiter
+
+                if self._source.startswith(until_delim, delim_index):
+                    break  # found it!
+
+            delim_index += 1
+
+        return -1 if delim_index > len(self._source) - len(until_delim) else delim_index
 
     def __map_type(self, node) -> Optional[JavaType]:
         return None
