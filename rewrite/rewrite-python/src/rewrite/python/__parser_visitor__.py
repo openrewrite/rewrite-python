@@ -71,6 +71,35 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_left(self.__source_before(','), self.__convert(node.msg)) if node.msg else None,
         )
 
+    def visit_BoolOp(self, node):
+        # Get the operator as a string (can be 'or', 'and', etc.)
+        if isinstance(node.op, ast.Or):
+            op = j.Binary.Type.Or
+            op_str = 'or'
+        elif isinstance(node.op, ast.And):
+            op = j.Binary.Type.And
+            op_str = 'and'
+        else:
+            raise ValueError(f"Unsupported Boolean operation: {node.op}")
+
+        binaries = []
+        prefix = self.__whitespace()
+        left = self.__convert(node.values[0])
+        for i, right_expr in enumerate(node.values[1:], 1):
+            left = j.Binary(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                left,
+                self.__pad_left(self.__source_before(op_str), op),
+                self.__convert(right_expr),
+                self.__map_type(node)
+            )
+            binaries.append(left)
+            prefix = self.__whitespace() if i < len(node.values) - 1 else Space.EMPTY
+
+        return binaries[-1]
+
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
         type_: JavaType.Primitive = self.__map_type(node)
