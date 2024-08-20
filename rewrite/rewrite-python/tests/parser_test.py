@@ -22,7 +22,7 @@ class TestParserVisitor:
         cu = visitor.visit(tree)
         assert cu is not None
         # FIXME looks like the printer is having some issues
-        assert cu.print_all() == " bar(x str, y = 'foo')\n    assert True\n"
+        assert cu.print_all() == "def bar(x str, y = 'foo')\n    assert True\n"
 
     def test_assert(self, rewrite_remote):
         # language=python

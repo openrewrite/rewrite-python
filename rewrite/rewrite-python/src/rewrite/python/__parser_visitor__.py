@@ -94,7 +94,29 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
-        prefix = self.__source_before('def')
+        save_cursor = self._cursor
+        async_prefix = self.__source_before('async')
+        modifiers = []
+        if save_cursor != self._cursor:
+            modifiers.append(j.Modifier(
+                random_id(),
+                async_prefix,
+                Markers.EMPTY,
+                'async',
+                j.Modifier.Type.Async,
+                []
+            ))
+        save_cursor = self._cursor
+        def_prefix = self.__source_before('def')
+        if save_cursor != self._cursor:
+            modifiers.append(j.Modifier(
+                random_id(),
+                def_prefix,
+                Markers.EMPTY,
+                'def',
+                j.Modifier.Type.Default,
+                []
+            ))
         name = j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
             random_id(),
             self.__source_before(node.name),
@@ -119,10 +141,10 @@ class ParserVisitor(ast.NodeVisitor):
 
         return j.MethodDeclaration(
             random_id(),
-            prefix,
+            Space.EMPTY,
             Markers.EMPTY,
             [],
-            [],
+            modifiers,
             None,
             return_type,
             name,

@@ -7,6 +7,7 @@ from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, r
     TYPE_CHECKING
 from uuid import UUID
 
+from mypy.stubgen import EMPTY
 from rewrite import Tree, SourceFile, TreeVisitor
 from rewrite.marker import Markers
 
@@ -99,6 +100,9 @@ class Space:
 
     def with_whitespace(self, whitespace: Optional[str]) -> Space:
         return self if whitespace is self._whitespace else replace(self, _whitespace=whitespace)
+
+    def is_empty(self) -> bool:
+        return len(self._comments) == 0 and (self._whitespace is None or self._whitespace == '')
 
     EMPTY: ClassVar[Space] = None
     SINGLE_SPACE: ClassVar[Space] = None
