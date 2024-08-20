@@ -1,38 +1,16 @@
-import ast
+from rewrite.test import rewrite_run, python
 
 
-def test_none(rewrite_remote):
-    # language=python
-    source = textwrap.dedent("""\
-        assert None
-        """)
-
-    tree = ast.parse(source)
-    visitor = ParserVisitor(source)
-    cu = visitor.visit(tree)
-    assert cu.print_all() == source
+# language=python
+def test_none():
+    rewrite_run(python("assert None"))
 
 
-def test_boolean(rewrite_remote):
-    # language=python
-    source = textwrap.dedent("""\
-        assert True or False
-        """)
-
-    tree = ast.parse(source)
-    visitor = ParserVisitor(source)
-    cu = visitor.visit(tree)
-    assert cu.print_all() == source
+# language=python
+def test_boolean():
+    rewrite_run(python("assert True or False"))
 
 
-# noinspection PyUnreachableCode
-def test_number(rewrite_remote):
-    # language=python
-    source = textwrap.dedent("""\
-        assert 0 or 0.0
-        """)
-
-    tree = ast.parse(source)
-    visitor = ParserVisitor(source)
-    cu = visitor.visit(tree)
-    assert cu.print_all() == source
+# language=python
+def test_number():
+    rewrite_run(python("assert 0 or 0.0"))

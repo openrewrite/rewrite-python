@@ -3,7 +3,9 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from rewrite import Parser, ParserInput, ExecutionContext, SourceFile, ParseError
+from rewrite.parser import require_print_equals_input, ParserBuilder
 from _parser_visitor import ParserVisitor
+from rewrite.python.tree import Py, CompilationUnit
 
 
 class PythonParser(Parser):
@@ -15,7 +17,7 @@ class PythonParser(Parser):
             try:
                 tree = ast.parse(source_str, source.path)
                 cu = ParserVisitor(source_str).visit(tree)
-                cu = self.require_print_equals_input(cu, source, relative_to, ctx)
+                cu = require_print_equals_input(self, cu, source, relative_to, ctx)
             except Exception as e:
                 cu = ParseError.build(self, source, relative_to, ctx, e, None)
             yield cu
@@ -25,3 +27,12 @@ class PythonParser(Parser):
 
     def source_path_from_source_text(self, prefix: Path, source_code: str) -> Path:
         return prefix / 'source.py'
+
+
+class PythonParserBuilder(ParserBuilder):
+    def __init__(self):
+        self._source_file_type = type(CompilationUnit)
+        self._dsl_name = 'python'
+
+    def build(self) -> Parser:
+        return PythonParser()

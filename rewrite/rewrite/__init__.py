@@ -21,6 +21,7 @@ __all__ = [
     'ExecutionContext',
     'DelegatingExecutionContext',
     'InMemoryExecutionContext',
+    'Marker',
     'Markers',
     'Recipe',
     'RecipeRunException',

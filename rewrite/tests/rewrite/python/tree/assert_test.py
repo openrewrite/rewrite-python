@@ -1,31 +1,24 @@
-import ast
-import textwrap
-
-from rewrite.python.__parser_visitor__ import ParserVisitor
+from rewrite.test import rewrite_run, python
 
 
-def test_formatting(rewrite_remote):
-    # language=python
-    source = textwrap.dedent("""\
-        assert \\
-        True \\
-        ,\\
-        'foo'
-        """)
+# language=python
+def test_formatting():
+    rewrite_run(
+        python(
+            """\
+            assert \\
+            True \\
+            ,\\
+            'foo'
+            """,
+        ),
+    )
 
-    tree = ast.parse(source)
-    visitor = ParserVisitor(source)
-    cu = visitor.visit(tree)
-    assert cu.print_all() == source
 
-
-def test_with_message(rewrite_remote):
-    # language=python
-    source = textwrap.dedent("""\
-        assert True, 'foo'
-        """)
-
-    tree = ast.parse(source)
-    visitor = ParserVisitor(source)
-    cu = visitor.visit(tree)
-    assert cu.print_all() == source
+# language=python
+def test_with_message():
+    rewrite_run(
+        python(
+            "assert True, 'foo'"
+        )
+    )

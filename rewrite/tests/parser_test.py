@@ -1,9 +1,7 @@
 import ast
 import textwrap
 
-import pytest
-
-from rewrite.python.__parser_visitor__ import ParserVisitor
+from rewrite.python._parser_visitor import ParserVisitor
 
 
 class TestParserVisitor:

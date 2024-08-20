@@ -126,11 +126,10 @@ class ParseError(SourceFile):
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture]:
         return PrinterFactory.current().create_printer(cursor)
 
-
 class Parser(ABC):
     @abstractmethod
-    def parse_inputs(self, sources: Iterable[ParserInput], relative_to: Optional[Path], ctx: ExecutionContext) -> \
-            Iterable[SourceFile]:
+    def parse_inputs(self, sources: Iterable[ParserInput], relative_to: Optional[Path],
+                     ctx: ExecutionContext) -> Iterable[SourceFile]:
         pass
 
     @abstractmethod
@@ -140,20 +139,6 @@ class Parser(ABC):
     @abstractmethod
     def source_path_from_source_text(self, prefix: Path, source_code: str) -> Path:
         pass
-
-    def require_print_equals_input(self, source_file: SourceFile, parser_input: ParserInput,
-                                   relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
-        if ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True) and not source_file.print_equals_input(
-                parser_input, ctx):
-            diff = Result.diff(
-                parser_input.source().read(),
-                source_file.print_all(),
-                parser_input.path
-            )
-            return (ParseError.build(self, parser_input, relative_to, ctx,
-                                     Exception(f"{source_file.source_path} is not print idempotent. \n{diff}"),
-                                     source_file))
-        return source_file
 
     def parse(self, source_files: Iterable[Path], relative_to: Optional[Path], ctx: ExecutionContext) -> Iterable[SourceFile]:
         inputs = [ParserInput(path, None, False, lambda: io.FileIO(path)) for path in source_files]
@@ -189,12 +174,27 @@ class ParserBuilder(ABC):
     def source_file_type(self) -> type:
         return self._source_file_type
 
-    _dsl_name: str
+    _dsl_name: Optional[str]
 
     @property
-    def dsl_name(self) -> str:
+    def dsl_name(self) -> Optional[str]:
         return self._dsl_name
 
     @abstractmethod
     def build(self) -> Parser:
         pass
+
+
+def require_print_equals_input(parser: Parser, source_file: SourceFile, parser_input: ParserInput,
+                                   relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
+    if ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True) and not source_file.print_equals_input(
+            parser_input, ctx):
+        diff = Result.diff(
+            parser_input.source().read(),
+            source_file.print_all(),
+            parser_input.path
+        )
+        return (ParseError.build(parser, parser_input, relative_to, ctx,
+                                 Exception(f"{source_file.source_path} is not print idempotent. \n{diff}"),
+                                 source_file))
+    return source_file
