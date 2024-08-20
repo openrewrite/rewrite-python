@@ -3,6 +3,4 @@ build/
 out/
 bin/
 example-data/
-
-# Ignore all the .idea directory
-.idea/*
+.idea/
