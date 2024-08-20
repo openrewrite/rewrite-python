@@ -21,8 +21,50 @@ class ParserVisitor(ast.NodeVisitor):
         self._source = source
 
     def visit_arguments(self, node):
+        first_with_default = len(node.args) - len(node.defaults)
         prefix = self.__source_before('(')
-        return JContainer(prefix, [], Markers.EMPTY)
+        args = JContainer(prefix, [self.__pad_right(self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None), self.__source_before(',')) for i, a in enumerate(node.args)], Markers.EMPTY)
+        self.__skip(')')
+        return args
+
+    def map_arg(self, node, default=None):
+        prefix = self.__source_before(node.arg)
+        name = j.Identifier(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            [],
+            node.arg,
+            self.__map_type(node),
+            None
+        )
+        if node.annotation:
+            # FIXME where to put this prefix?
+            type_prefix = self.__source_before(':')
+            type_expression = self.__convert(node.annotation)
+        else:
+            type_expression = None
+
+        var = j.VariableDeclarations.NamedVariable(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            name,
+            [],
+            self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None,
+            self.__map_type(node)
+        )
+        return j.VariableDeclarations(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            [],
+            [],
+            type_expression,
+            None,
+            [],
+            [var],
+        )
 
     def visit_Assert(self, node):
         return j.Assert(
@@ -69,10 +111,9 @@ class ParserVisitor(ast.NodeVisitor):
 
         params = self.visit_arguments(node.args)
         return_type = self.__convert(node.returns) if node.returns else None
-
         body = j.Block(
             random_id(),
-            Space.EMPTY,
+            self.__source_before(':'),
             Markers.EMPTY,
             self.__pad_right(False, Space.EMPTY),
             [self.__pad_right(self.__convert(cast(AST, stmt)), Space.EMPTY) for stmt in node.body] if node.body else [

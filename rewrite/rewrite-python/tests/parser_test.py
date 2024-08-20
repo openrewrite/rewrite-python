@@ -10,7 +10,7 @@ class TestParserVisitor:
     def test_visitor(self, rewrite_remote):
         # language=Python
         source = textwrap.dedent("""\
-            def bar(x):
+            def bar(x: str, y = 'foo'):
                 x = x + 1
                 return x
             """)
@@ -26,7 +26,7 @@ class TestParserVisitor:
     def test_assert(self, rewrite_remote):
         # language=python
         source = textwrap.dedent("""\
-            assert True, 'apa'
+            assert True, 'apa' # foo
             """)
 
         tree = ast.parse(source)
