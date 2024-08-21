@@ -122,13 +122,84 @@ class ParserVisitor(ast.NodeVisitor):
 
         return binaries[-1]
 
+    def visit_Call(self, node):
+        prefix = self.__whitespace()
+        if isinstance(node.func, ast.Name):
+            name = cast(j.Identifier, self.__convert(node.func))
+            parens_prefix = self.__source_before('(')
+            args = JContainer(parens_prefix, [self.__pad_right(self.__convert(a), self.__source_before(',')) for a in node.args], Markers.EMPTY)
+            self.__skip(')')
+
+            return j.MethodInvocation(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                None, # TODO
+                None,
+                name,
+                args,  # TODO
+                self.__map_type(node)
+            )
+        elif isinstance(node.func, ast.Attribute):
+            select = self.__pad_right(self.__convert(node.func.value), self.__source_before('.'))
+            name = j.Identifier(
+                random_id(),
+                self.__source_before(node.func.attr),
+                Markers.EMPTY,
+                [],
+                node.func.attr,
+                self.__map_type(node.func.value),
+                None
+            )
+            parens_prefix = self.__source_before('(')
+            args = JContainer(parens_prefix,
+                              [self.__pad_right(self.__convert(a), self.__source_before(',')) for a in
+                               node.args] if node.args else [
+                                  self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+                              Markers.EMPTY)
+
+            self.__skip(')')
+
+            return j.MethodInvocation(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                select,
+                None,
+                name,
+                args,  # TODO
+                self.__map_type(node)
+            )
+        else:
+            raise NotImplementedError("Calls to functions other than methods are not yet supported")
+
+    def visit_Compare(self, node):
+        if len(node.ops) != 1:
+            raise NotImplementedError("Multiple comparisons are not yet supported")
+
+        return j.Binary(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.left),
+            self._map_binary_operator(node.ops[0]),
+            self.__convert(node.comparators[0]),
+            self.__map_type(node)
+        )
+
     def _map_binary_operator(self, op) -> JLeftPadded[j.Binary.Type]:
         operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
             ast.Add: (j.Binary.Type.Addition, '+'),
             ast.And: (j.Binary.Type.And, 'and'),
             ast.Div: (j.Binary.Type.Division, '/'),
+            ast.Eq: (j.Binary.Type.Equal, '=='),
+            ast.Gt: (j.Binary.Type.GreaterThan, '>'),
+            ast.GtE: (j.Binary.Type.GreaterThanOrEqual, '>='),
+            ast.Lt: (j.Binary.Type.LessThan, '<'),
+            ast.LtE: (j.Binary.Type.LessThanOrEqual, '<='),
             ast.Mod: (j.Binary.Type.Modulo, '%'),
             ast.Mult: (j.Binary.Type.Multiplication, '*'),
+            ast.NotEq: (j.Binary.Type.NotEqual, '!='),
             ast.Or: (j.Binary.Type.Or, 'or'),
             ast.Sub: (j.Binary.Type.Subtraction, '-'),
         }
