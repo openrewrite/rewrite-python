@@ -13,18 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@NullMarked
+@NonNullFields
 package org.openrewrite.python.marker;
 
-import lombok.Value;
-import lombok.With;
-import org.openrewrite.marker.Marker;
-import org.openrewrite.python.PythonParser;
-
-import java.util.UUID;
-
-@Value
-@With
-public class PythonVersion implements Marker {
-    UUID id;
-    PythonParser.LanguageLevel languageLevel;
-}
+import org.jspecify.annotations.NullMarked;
+import org.openrewrite.internal.lang.NonNullFields;

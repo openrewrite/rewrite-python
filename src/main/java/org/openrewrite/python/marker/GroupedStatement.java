@@ -17,7 +17,7 @@ package org.openrewrite.python.marker;
 
 import lombok.Value;
 import lombok.With;
-import org.openrewrite.internal.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.java.tree.JRightPadded;
 import org.openrewrite.java.tree.Statement;
 import org.openrewrite.marker.Marker;

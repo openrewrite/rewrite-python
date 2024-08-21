@@ -15,16 +15,13 @@
  */
 package org.openrewrite.python;
 
-
 import org.intellij.lang.annotations.Language;
-import org.openrewrite.internal.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.test.SourceSpec;
 import org.openrewrite.test.SourceSpecs;
 
 import java.util.function.Consumer;
-
-import static org.openrewrite.python.PythonParser.LanguageLevel.PYTHON_312;
 
 public final class Assertions {
     private Assertions() {
@@ -32,42 +29,23 @@ public final class Assertions {
 
     public static SourceSpecs python(@Language("py") @Nullable String before) {
         return python(before, s -> {
-        }, PYTHON_312);
+        });
     }
 
     public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<Py.CompilationUnit>> spec) {
-        return python(before, spec, PYTHON_312);
-    }
-
-    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after) {
-        return python(before, after, s -> {
-        }, PYTHON_312);
-    }
-
-    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
-                                     Consumer<SourceSpec<Py.CompilationUnit>> spec) {
-        return python(before, after, spec, PYTHON_312);
-    }
-
-    public static SourceSpecs python(@Language("py") @Nullable String before, PythonParser.LanguageLevel languageLevel) {
-        return python(before, s -> {
-        }, languageLevel);
-    }
-
-    public static SourceSpecs python(@Language("py") @Nullable String before, Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
-        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, null);
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, null);
         spec.accept(python);
         return python;
     }
 
-    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after, PythonParser.LanguageLevel languageLevel) {
+    public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after) {
         return python(before, after, s -> {
-        }, languageLevel);
+        });
     }
 
     public static SourceSpecs python(@Language("py") @Nullable String before, @Language("py") String after,
-                                     Consumer<SourceSpec<Py.CompilationUnit>> spec, PythonParser.LanguageLevel languageLevel) {
-        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder().languageLevel(languageLevel), before, s -> after);
+                                     Consumer<SourceSpec<Py.CompilationUnit>> spec) {
+        SourceSpec<Py.CompilationUnit> python = new SourceSpec<>(Py.CompilationUnit.class, null, PythonParser.builder(), before, s -> after);
         spec.accept(python);
         return python;
     }

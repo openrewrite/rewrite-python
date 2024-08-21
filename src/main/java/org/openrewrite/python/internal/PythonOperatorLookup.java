@@ -15,7 +15,7 @@
  */
 package org.openrewrite.python.internal;
 
-import org.openrewrite.internal.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public abstract class PythonOperatorLookup {
     private PythonOperatorLookup() {}

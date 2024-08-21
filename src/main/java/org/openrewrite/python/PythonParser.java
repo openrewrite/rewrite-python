@@ -17,18 +17,22 @@ package org.openrewrite.python;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.*;
 import org.openrewrite.internal.EncodingDetectingInputStream;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.JavaTypeCache;
-import org.openrewrite.python.internal.PsiPythonMapper;
 import org.openrewrite.python.tree.Py;
+import org.openrewrite.remote.ReceiverContext;
+import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,10 +44,10 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PythonParser implements Parser {
-    private final LanguageLevel languageLevel;
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
+    private @Nullable RemotingClient client;
 
     @Override
     public Stream<SourceFile> parse(String... sources) {
@@ -70,12 +74,29 @@ public class PythonParser implements Parser {
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
+        if (client == null) {
+            client = RemotingClient.create(ctx, PythonParser.class, () -> {
+                try {
+                    return new Socket(InetAddress.getLoopbackAddress(), 54321);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
         return acceptedInputs(inputs).map(input -> {
             Path path = input.getRelativePath(relativeTo);
             parsingListener.startedParsing(input);
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
-                Py.CompilationUnit py = new PsiPythonMapper(path, is.getCharset(), is.isCharsetBomMarked(), styles, mapLanguageLevel(languageLevel))
-                        .mapSource(is.readFully());
+                SourceFile parsed = client.runUsingSocket((socket, messenger) -> messenger.sendRequest(generator -> {
+                    generator.writeString("parse-python");
+                    generator.writeString(is.readFully());
+                }, parser -> {
+                    Tree tree = new ReceiverContext(client.getContext().newReceiver(parser), client.getContext()).receiveTree(null);
+                    return (SourceFile) tree;
+                }, socket));
+
+                Py.CompilationUnit py = (Py.CompilationUnit) parsed;
                 parsingListener.parsed(input, py);
                 return requirePrintEqualsInput(py, input, relativeTo, ctx);
             } catch (Throwable t) {
@@ -83,88 +104,6 @@ public class PythonParser implements Parser {
                 return ParseError.build(this, input, relativeTo, ctx, t);
             }
         });
-    }
-
-    public enum LanguageLevel {
-        PYTHON_24,
-        PYTHON_25,
-        PYTHON_26,
-        PYTHON_27,
-        PYTHON_30,
-        PYTHON_31,
-        PYTHON_32,
-        PYTHON_33,
-        PYTHON_34,
-        PYTHON_35,
-        PYTHON_36,
-        PYTHON_37,
-        PYTHON_38,
-        PYTHON_39,
-        PYTHON_310,
-        PYTHON_311,
-        PYTHON_312
-    }
-
-    private static com.jetbrains.python.psi.LanguageLevel mapLanguageLevel(LanguageLevel languageLevel) {
-        com.jetbrains.python.psi.LanguageLevel level;
-        switch (languageLevel) {
-            case PYTHON_24:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON24;
-                break;
-            case PYTHON_25:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON25;
-                break;
-            case PYTHON_26:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON26;
-                break;
-            case PYTHON_27:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON27;
-                break;
-            case PYTHON_30:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON30;
-                break;
-            case PYTHON_31:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON31;
-                break;
-            case PYTHON_32:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON32;
-                break;
-            case PYTHON_33:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON33;
-                break;
-            case PYTHON_34:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON34;
-                break;
-            case PYTHON_35:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON35;
-                break;
-            case PYTHON_36:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON36;
-                break;
-            case PYTHON_37:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON37;
-                break;
-            case PYTHON_38:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON38;
-                break;
-            case PYTHON_39:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON39;
-                break;
-            case PYTHON_310:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON310;
-                break;
-            case PYTHON_311:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON311;
-                break;
-            case PYTHON_312:
-                level = com.jetbrains.python.psi.LanguageLevel.PYTHON312;
-                break;
-            default:
-                level = com.jetbrains.python.psi.LanguageLevel.getLatest();
-                break;
-        }
-
-        return level;
     }
 
     @Override
@@ -175,6 +114,9 @@ public class PythonParser implements Parser {
     @Override
     public PythonParser reset() {
         typeCache.clear();
+        if (client != null) {
+            client.getContext().reset();
+        }
         return this;
     }
 
@@ -189,7 +131,6 @@ public class PythonParser implements Parser {
 
     @SuppressWarnings("unused")
     public static class Builder extends Parser.Builder {
-        private LanguageLevel languageLevel = LanguageLevel.PYTHON_312;
         private JavaTypeCache typeCache = new JavaTypeCache();
         private boolean logCompilationWarningsAndErrors;
         private final Collection<NamedStyles> styles = new ArrayList<>();
@@ -215,14 +156,9 @@ public class PythonParser implements Parser {
             return this;
         }
 
-        public Builder languageLevel(LanguageLevel languageLevel) {
-            this.languageLevel = languageLevel;
-            return this;
-        }
-
         @Override
         public PythonParser build() {
-            return new PythonParser(languageLevel, styles, logCompilationWarningsAndErrors, typeCache);
+            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache);
         }
 
         @Override

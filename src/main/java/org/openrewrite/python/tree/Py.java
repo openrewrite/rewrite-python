@@ -18,8 +18,8 @@ package org.openrewrite.python.tree;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.*;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.java.internal.TypesInUse;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
@@ -67,7 +67,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @Data
     final class ExceptionType implements Py, TypeTree {
         @With
@@ -95,8 +95,10 @@ public interface Py extends J {
         }
     }
 
+    @Getter
+    @With
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class TypeHint implements Py, TypeTree {
 
@@ -105,31 +107,14 @@ public interface Py extends J {
             VARIABLE_TYPE,
         }
 
-        @Getter
-        @With
         @EqualsAndHashCode.Include
         UUID id;
 
-        @Getter
-        @With
         Space prefix;
-
-        @Getter
-        @With
         Markers markers;
-
-        @Getter
-        @With
         Kind kind;
-
-        @Getter
-        @With
         Expression expression;
-
-        @Getter
-        @With
         JavaType type;
-
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
@@ -140,7 +125,7 @@ public interface Py extends J {
 
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class CompilationUnit implements Py, JavaSourceFile, SourceFile {
@@ -319,17 +304,16 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @AllArgsConstructor
     final class ExpressionStatement implements Py, Expression, Statement {
         @With
-        @Getter
         UUID id;
 
         @With
-        @Getter
         Expression expression;
 
         // For backwards compatibility with older ASTs before there was an id field
@@ -383,7 +367,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class KeyValue implements Py, Expression, TypedTree {
@@ -464,7 +448,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class DictLiteral implements Py, Expression, TypedTree {
@@ -540,21 +524,19 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @AllArgsConstructor
     final class PassStatement implements Py, Statement {
         @With
-        @Getter
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @Override
@@ -571,7 +553,7 @@ public interface Py extends J {
 
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class TrailingElseWrapper implements Py, Statement {
@@ -647,8 +629,9 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class ComprehensionExpression implements Py, Expression {
 
@@ -657,35 +640,27 @@ public interface Py extends J {
         }
 
         @With
-        @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @With
-        @Getter
         Kind kind;
 
         @With
-        @Getter
         Expression result;
 
-        @Getter
         @With
         List<Clause> clauses;
 
         @With
-        @Getter
         Space suffix;
 
-        @Getter
         @With
         @Nullable
         JavaType type;
@@ -701,25 +676,22 @@ public interface Py extends J {
             return new CoordinateBuilder.Expression(this);
         }
 
+        @Getter
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+        @EqualsAndHashCode(callSuper = false)
         @RequiredArgsConstructor
         public static final class Condition implements Py {
             @With
-            @Getter
             @EqualsAndHashCode.Include
             UUID id;
 
             @With
-            @Getter
             Space prefix;
 
             @With
-            @Getter
             Markers markers;
 
             @With
-            @Getter
             Expression expression;
 
             @Override
@@ -730,7 +702,7 @@ public interface Py extends J {
         }
 
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+        @EqualsAndHashCode(callSuper = false)
         @RequiredArgsConstructor
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
         public static final class Clause implements Py {
@@ -805,29 +777,25 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class AwaitExpression implements Py, Expression {
         @With
-        @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @With
-        @Getter
         Expression expression;
 
         @With
-        @Getter
         JavaType type;
 
         @Override
@@ -843,7 +811,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class YieldExpression implements Py, Expression {
@@ -941,7 +909,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class VariableScopeStatement implements Py, Statement {
@@ -1025,7 +993,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class DelStatement implements Py, Statement {
@@ -1097,8 +1065,9 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class SpecialParameter implements Py, TypeTree {
 
@@ -1108,29 +1077,23 @@ public interface Py extends J {
         }
 
         @With
-        @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @With
-        @Getter
         Kind kind;
 
         @With
-        @Getter
         @Nullable
         TypeHint typeHint;
 
         @With
-        @Getter
         @Nullable
         JavaType type;
 
@@ -1140,8 +1103,9 @@ public interface Py extends J {
         }
     }
 
+    @Getter
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class SpecialArgument implements Py, Expression {
 
@@ -1151,28 +1115,22 @@ public interface Py extends J {
         }
 
         @With
-        @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @With
-        @Getter
         Kind kind;
 
         @With
-        @Getter
         Expression expression;
 
         @With
-        @Getter
         @Nullable
         JavaType type;
 
@@ -1188,7 +1146,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class NamedArgument implements Py, Expression {
@@ -1262,33 +1220,28 @@ public interface Py extends J {
     }
 
 
+    @Getter
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     final class TypeHintedExpression implements Py, Expression {
         @With
-        @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
         @With
-        @Getter
         Space prefix;
 
         @With
-        @Getter
         Markers markers;
 
         @With
-        @Getter
         TypeHint typeHint;
 
         @With
-        @Getter
         Expression expression;
 
         @With
-        @Getter
         @Nullable
         JavaType type;
 
@@ -1304,7 +1257,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class ErrorFromExpression implements Py, Expression {
@@ -1388,7 +1341,7 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+    @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class MatchCase implements Py, Expression {
@@ -1474,7 +1427,7 @@ public interface Py extends J {
         }
 
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-        @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = false)
+        @EqualsAndHashCode(callSuper = false)
         @RequiredArgsConstructor
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
         public final static class Pattern implements Py, Expression {

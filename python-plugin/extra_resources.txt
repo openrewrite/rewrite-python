@@ -1,3 +1,0 @@
-messages/PyParserBundle.properties
-messages/PyPsiBundle.properties
-misc/registry.properties

@@ -25,6 +25,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
 
+@SuppressWarnings("PyUnresolvedReferences")
 class MethodInvocationTest implements RewriteTest {
 
     @ParameterizedTest
@@ -39,17 +40,23 @@ class MethodInvocationTest implements RewriteTest {
         """,
     })
     void python2Print(@Language("py") String print) {
-        rewriteRun(python(print, PythonParser.LanguageLevel.PYTHON_27));
+        rewriteRun(python(print));
     }
 
     @ParameterizedTest
     //language=py
     @ValueSource(strings = {
-      "print()", "print( )",
-      "print(42)", "print( 42 )", "print(1, 2, 3, 4)",
-      "print( 1, 2, 3, 4 )", "print(1 , 2 , 3 , 4)",
+      "print()",
+      "print( )",
+      "print(42)",
+      "print( 42 )",
+      "print(1, 2, 3, 4)",
+      "print( 1, 2, 3, 4 )",
+      "print(1 , 2 , 3 , 4)",
       "print(1, 2, 3, 4, sep='+')",
-      "print(1, 2, a=1, b=2)", "print(1, 2, a =1, b =2)", "print(1, 2, a= 1, b= 2)",
+      "print(1, 2, a=1, b=2)",
+      "print(1, 2, a =1, b =2)",
+      "print(1, 2, a= 1, b= 2)",
     })
     void print(@Language("py") String print) {
         rewriteRun(python(print));
@@ -124,7 +131,7 @@ class MethodInvocationTest implements RewriteTest {
               class Foo:
                   def foo ( ) :
                       pass
-            """
+              """
           )
         );
     }

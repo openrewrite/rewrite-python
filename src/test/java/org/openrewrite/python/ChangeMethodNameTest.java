@@ -29,23 +29,23 @@ class ChangeMethodNameTest implements RewriteTest {
         spec.recipe(new ChangeMethodName("print", "println", true));
     }
 
+    @SuppressWarnings("PyUnresolvedReferences")
     @DocumentExample
     @Test
     void renameMethod() {
         rewriteRun(
           python(
             """
-              class Foo:
-                  def foo() :
-                      print("hello")
+            class Foo:
+                def foo(self) :
+                    print("hello")
             """,
             """
-              class Foo:
-                  def foo() :
-                      println("hello")
+            class Foo:
+                def foo(self) :
+                    println("hello")
             """
           )
         );
     }
-
 }

@@ -21,7 +21,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.openrewrite.Issue;
 import org.openrewrite.test.RewriteTest;
 
-import static org.openrewrite.python.tree.ParserAssertions.python;
+import static org.openrewrite.python.Assertions.python;
 
 class VariableScopeTest implements RewriteTest {
     @ParameterizedTest

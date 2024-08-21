@@ -17,11 +17,13 @@ package org.openrewrite.python;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.openrewrite.*;
-import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.ExecutionContext;
+import org.openrewrite.Option;
+import org.openrewrite.Recipe;
+import org.openrewrite.TreeVisitor;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.java.tree.J;
 
-@Incubating(since = "0.3.1")
 @Value
 @EqualsAndHashCode(callSuper = false)
 public class ChangeMethodName extends Recipe {
@@ -38,7 +40,7 @@ public class ChangeMethodName extends Recipe {
 
     @Option(displayName = "Ignore type definition",
             description = "When set to `true` the definition of the old type will be left untouched. " +
-                    "This is useful when you're replacing usage of a class but don't want to rename it.",
+                          "This is useful when you're replacing usage of a class but don't want to rename it.",
             required = false)
     @Nullable
     Boolean ignoreDefinition;
