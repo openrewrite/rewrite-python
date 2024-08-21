@@ -1,7 +1,7 @@
 from typing import cast, TypeVar, Union
 
 from rewrite import SourceFile, TreeVisitor
-from ._extensions import *
+from .extensions import *
 from .support_types import *
 from .tree import *
 

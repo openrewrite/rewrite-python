@@ -8,9 +8,8 @@ from uuid import UUID
 from enum import Enum
 
 if TYPE_CHECKING:
-    from ..visitor import JavaVisitor
-import _extensions
-from support_types import *
+    from .visitor import JavaVisitor
+from .support_types import *
 from rewrite import Checksum, FileAttributes, Markers, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode

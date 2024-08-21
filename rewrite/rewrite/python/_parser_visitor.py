@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Optional, TypeVar, cast
 
 from rewrite.java import tree as j
-import tree as py
+from . import tree as py
 from rewrite import random_id
-from rewrite.java.tree import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J
 
 J2 = TypeVar('J2', bound=J)
 

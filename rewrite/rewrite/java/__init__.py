@@ -13,6 +13,16 @@ __all__ = [
     'JRightPadded',
     'Space',
     'JavaVisitor',
+
+    # AST interfaces
+    'JavaSourceFile',
+    'TypeTree',
+    'TypedTree',
+    'NameTree',
+    'Expression',
+    'Statement',
+
+    # AST types
     'AnnotatedType',
     'Annotation',
     'ArrayAccess',
