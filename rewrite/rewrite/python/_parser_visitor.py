@@ -295,6 +295,23 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
+    def visit_IfExp(self, node):
+        # TODO check if we actually want to use `J.Ternary` as it requires "reversing" some of the padding
+        prefix = self.__whitespace()
+        true_expr = self.__convert(node.body)
+        true_part = self.__pad_left(self.__source_before('if'), true_expr)
+        condition = self.__convert(node.test)
+        false_part = self.__pad_left(self.__source_before('else'), self.__convert(node.orelse))
+        return j.Ternary(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            condition,
+            true_part,
+            false_part,
+            self.__map_type(node)
+        )
+
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
         return j.Lambda(
