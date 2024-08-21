@@ -201,7 +201,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_List(self, node):
         prefix = self.__source_before('[')
-        elements = JContainer(prefix, [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
+        elements = JContainer(Space.EMPTY, [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
                               Markers.EMPTY)
         self.__skip(']')
         return j.NewArray(
