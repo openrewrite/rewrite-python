@@ -4,8 +4,8 @@ from typing import Iterable, Optional
 
 from rewrite import Parser, ParserInput, ExecutionContext, SourceFile, ParseError
 from rewrite.parser import require_print_equals_input, ParserBuilder
-from _parser_visitor import ParserVisitor
-from rewrite.python.tree import Py, CompilationUnit
+from ._parser_visitor import ParserVisitor
+from .tree import Py, CompilationUnit
 
 
 class PythonParser(Parser):

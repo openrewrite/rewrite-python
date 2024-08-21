@@ -1,10 +1,10 @@
 from typing import Optional, TypeVar, TYPE_CHECKING
 
 from rewrite.java.tree import J, JContainer, JRightPadded, JLeftPadded, Space
-from support_types import PyContainer, PyRightPadded, PyLeftPadded, PySpace
+from .support_types import PyContainer, PyRightPadded, PyLeftPadded, PySpace
 
 if TYPE_CHECKING:
-    from ..visitor import PythonVisitor
+    from .visitor import PythonVisitor
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)

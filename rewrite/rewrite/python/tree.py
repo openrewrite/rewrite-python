@@ -13,7 +13,7 @@ import _extensions
 from support_types import *
 from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
 from rewrite import Markers
-from rewrite.java.tree import *
+from rewrite.java import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

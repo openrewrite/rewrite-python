@@ -11,7 +11,7 @@ from rewrite import Tree, SourceFile, TreeVisitor
 from rewrite import Markers
 
 if TYPE_CHECKING:
-    from ..visitor import JavaVisitor
+    from .visitor import JavaVisitor
 
 P = TypeVar('P')
 

@@ -1,6 +1,6 @@
 from typing import Optional, TypeVar, TYPE_CHECKING
 
-from support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
 
 if TYPE_CHECKING:
     from ..visitor import JavaVisitor
