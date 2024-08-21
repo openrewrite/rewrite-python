@@ -54,13 +54,8 @@ tests/__pycache__/
 # System-specific files (macOS)
 .DS_Store
 
-# Virtual environments
-.env/
-.venv/
-.env.bak/
-.venv.bak/
-env/
-venv/
-
 # Distribution / Packages
 dist/
+
+!**/.venv/lib
+!**/.venv/bin

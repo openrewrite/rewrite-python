@@ -22,3 +22,12 @@ def test_with_message():
             "assert True, 'foo'"
         )
     )
+
+
+# language=python
+def test_assert():
+    rewrite_run(
+        python(
+            "assert True"
+        )
+    )
