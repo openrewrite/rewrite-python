@@ -22,7 +22,9 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_arguments(self, node):
         first_with_default = len(node.args) - len(node.defaults)
         prefix = self.__source_before('(')
-        args = JContainer(prefix, [self.__pad_right(self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None), self.__source_before(',')) for i, a in enumerate(node.args)], Markers.EMPTY)
+        args = JContainer(prefix, [self.__pad_right(
+            self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
+            self.__source_before(',')) for i, a in enumerate(node.args)], Markers.EMPTY)
         self.__skip(')')
         return args
 
@@ -69,6 +71,20 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.test),
             self.__pad_left(self.__source_before(','), self.__convert(node.msg)) if node.msg else None,
         )
+
+    def visit_Assign(self, node):
+        if (len(node.targets) == 1):
+            return j.Assignment(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert(node.targets[0]),
+                self.__pad_left(self.__source_before('='), self.__convert(node.value)),
+                self.__map_type(node.value)
+            )
+        else:
+            # FIXME implement me
+            raise NotImplementedError("Multiple assignments are not yet supported")
 
     def visit_BoolOp(self, node):
         # Get the operator as a string (can be 'or', 'and', etc.)
