@@ -283,7 +283,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitAssignment(J.Assignment assignment, PrintOutputCapture<P> p) {
         final String symbol;
-        if (getCursor().getParentTreeCursor().getValue() instanceof J.Block) {
+        if (getCursor().getParentTreeCursor().getValue() instanceof J.Block || getCursor().getParentTreeCursor().getValue() instanceof Py.CompilationUnit) {
             symbol = "=";
         } else {
             symbol = ":=";
