@@ -1,12 +1,14 @@
 import ast
 from _ast import AST
+from io import BytesIO
 from pathlib import Path
+from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple
 
-from rewrite.java import tree as j
-from . import tree as py
 from rewrite import random_id
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J
+from rewrite.java import tree as j
+from . import tree as py
 
 J2 = TypeVar('J2', bound=J)
 
@@ -121,12 +123,15 @@ class ParserVisitor(ast.NodeVisitor):
         type_: JavaType.Primitive = self.__map_type(node)
         prefix = self.__whitespace()
         if isinstance(node.value, str):
-            # FIXME also check for any of the following prefixes: [rRuUbBfF] (can also be combined as in `ur` or `rf`)
-            value_source = self._source[self._cursor:self._cursor + len(node.value) + 2]
-            self._cursor += len(node.value) + 2
+            tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+            next(tokens) # skip ENCODING token
+            value_source = next(tokens).string
+            self._cursor += len(value_source)
         else:
-            # FIXME probably not correct for numbers like `0x2A` or `0o52` or `0b101010` or `4j`
-            value_source = self.__skip(str(node.value))
+            start = self._cursor
+            while self._cursor < len(self._source) and not self._source[self._cursor].isspace():
+                self._cursor += 1
+            value_source = self._source[start:self._cursor]
 
         return j.Literal(
             random_id(),
