@@ -268,22 +268,27 @@ class JavaSourceFile(SourceFile, Protocol):
     pass
 
 
+@runtime_checkable
 class Expression(J, Protocol):
     pass
 
 
+@runtime_checkable
 class Statement(J, Protocol):
     pass
 
 
+@runtime_checkable
 class TypedTree(J, Protocol):
     pass
 
 
+@runtime_checkable
 class NameTree(TypedTree, Protocol):
     pass
 
 
+@runtime_checkable
 class TypeTree(NameTree, Protocol):
     pass
 

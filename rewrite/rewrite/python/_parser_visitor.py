@@ -6,7 +6,7 @@ from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J, Statement
 from rewrite.java import tree as j
 from . import tree as py
 
@@ -127,14 +127,16 @@ class ParserVisitor(ast.NodeVisitor):
         if isinstance(node.func, ast.Name):
             name = cast(j.Identifier, self.__convert(node.func))
             parens_prefix = self.__source_before('(')
-            args = JContainer(parens_prefix, [self.__pad_right(self.__convert(a), self.__source_before(',')) for a in node.args], Markers.EMPTY)
+            args = JContainer(parens_prefix,
+                              [self.__pad_right(self.__convert(a), self.__source_before(',')) for a in node.args],
+                              Markers.EMPTY)
             self.__skip(')')
 
             return j.MethodInvocation(
                 random_id(),
                 prefix,
                 Markers.EMPTY,
-                None, # TODO
+                None,  # TODO
                 None,
                 name,
                 args,  # TODO
@@ -155,7 +157,8 @@ class ParserVisitor(ast.NodeVisitor):
             args = JContainer(parens_prefix,
                               [self.__pad_right(self.__convert(a), self.__source_before(',')) for a in
                                node.args] if node.args else [
-                                  self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+                                  self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
+                                                   Space.EMPTY)],
                               Markers.EMPTY)
 
             self.__skip(')')
@@ -216,7 +219,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         # TODO temporary solution
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens) # skip ENCODING token
+        next(tokens)  # skip ENCODING token
         value_source = next(tokens).string
         self._cursor += len(value_source)
 
@@ -294,7 +297,8 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_List(self, node):
         prefix = self.__source_before('[')
-        elements = JContainer(Space.EMPTY, [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
+        elements = JContainer(Space.EMPTY,
+                              [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
                               Markers.EMPTY)
         self.__skip(']')
         return j.NewArray(
@@ -335,6 +339,14 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+    def visit_Return(self, node):
+        return j.Return(
+            random_id(),
+            self.__source_before('return'),
+            Markers.EMPTY,
+            self.__convert(node.value) if node.value else None
+        )
+
     def __convert(self, node) -> Optional[J]:
         if node:
             if isinstance(node, ast.expr):
@@ -347,7 +359,7 @@ class ParserVisitor(ast.NodeVisitor):
                         prefix,
                         Markers.EMPTY,
                         self.__pad_right(e, r)
-                    ), (node.lineno,node.col_offset)))
+                    ), (node.lineno, node.col_offset)))
                     # handle nested parens
                     result = self.__convert(node)
                 else:
@@ -356,7 +368,8 @@ class ParserVisitor(ast.NodeVisitor):
 
                 save_cursor = self._cursor
                 suffix = self.__whitespace()
-                if len(self._parentheses_stack) > 0 and self._cursor < len(self._source) and self._source[self._cursor] == ')' and self._parentheses_stack[-1][1] == (node.lineno, node.col_offset):
+                if len(self._parentheses_stack) > 0 and self._cursor < len(self._source) and self._source[
+                    self._cursor] == ')' and self._parentheses_stack[-1][1] == (node.lineno, node.col_offset):
                     self._cursor += 1
                     result = self._parentheses_stack.pop()[0](result, suffix)
                 else:

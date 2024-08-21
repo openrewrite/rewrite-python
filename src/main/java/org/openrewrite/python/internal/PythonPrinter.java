@@ -479,29 +479,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitBlock(J.Block block, PrintOutputCapture<P> p) {
-        visitPythonExtraPadding(block, PythonExtraPadding.Location.BEFORE_COMPOUND_BLOCK_COLON, p);
+        beforeSyntax(block, Location.BLOCK_PREFIX, p);
+        p.append(':');
 
-        String parentIndent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
-
-        String newIndent;
-        Space prefixWithoutIndent;
-        if (block.getPrefix().getLastWhitespace().contains("\n")) {
-            String blockIndent = block.getPrefix().getIndent();
-            newIndent = parentIndent == null ? blockIndent : parentIndent + blockIndent;
-            prefixWithoutIndent = PySpace.stripIndent(block.getPrefix(), "\n" + blockIndent);
-        } else {
-            // inline block
-            newIndent = "";
-            prefixWithoutIndent = block.getPrefix();
-        }
-
-        getCursor().putMessage(BLOCK_INDENT_KEY, newIndent);
-
-        if (parentIndent != null) {
-            p.append(":");
-        }
-
-        beforeSyntax(prefixWithoutIndent, block.getMarkers(), Space.Location.BLOCK_PREFIX, p);
         visitStatements(block.getPadding().getStatements(), p);
         visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
         afterSyntax(block, p);
