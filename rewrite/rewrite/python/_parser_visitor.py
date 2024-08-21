@@ -25,7 +25,7 @@ class ParserVisitor(ast.NodeVisitor):
     def generic_visit(self, node):
         return super().generic_visit(node)
 
-    def visit_arguments(self, node):
+    def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
         first_with_default = len(node.args) - len(node.defaults)
         prefix = self.__source_before('(')
         args = JContainer(prefix, [self.__pad_right(
@@ -293,6 +293,26 @@ class ParserVisitor(ast.NodeVisitor):
             body,
             None,
             self.__map_type(node),
+        )
+
+    def visit_Lambda(self, node):
+        first_with_default = len(node.args.args) - len(node.args.defaults)
+        return j.Lambda(
+            random_id(),
+            self.__source_before('lambda'),
+            Markers.EMPTY,
+            j.Lambda.Parameters(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                False,
+                [self.__pad_right(
+                    self.map_arg(a, node.args.defaults[i - len(node.args.defaults)] if i >= first_with_default else None),
+                    self.__source_before(',')) for i, a in enumerate(node.args.args)]
+            ),
+            self.__source_before(':'),
+            self.__convert(node.body),
+            self.__map_type(node)
         )
 
     def visit_List(self, node):
