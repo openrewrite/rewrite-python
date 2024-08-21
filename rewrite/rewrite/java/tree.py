@@ -9,8 +9,9 @@ from enum import Enum
 
 if TYPE_CHECKING:
     from .visitor import JavaVisitor
+from . import extensions
 from .support_types import *
-from rewrite import Checksum, FileAttributes, Markers, SourceFile, Tree, TreeVisitor, Cursor, PrintOutputCapture, PrinterFactory
+from rewrite import Checksum, FileAttributes, SourceFile, Tree, TreeVisitor, Markers, Cursor, PrintOutputCapture, PrinterFactory
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

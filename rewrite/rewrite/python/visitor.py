@@ -1,6 +1,6 @@
 from typing import cast, TypeVar, Union
 
-from .. import SourceFile, TreeVisitor
+from rewrite import SourceFile, TreeVisitor
 from .extensions import *
 from .support_types import *
 from .tree import *
