@@ -199,6 +199,21 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
+    def visit_List(self, node):
+        prefix = self.__source_before('[')
+        elements = JContainer(prefix, [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
+                              Markers.EMPTY)
+        self.__skip(']')
+        return j.NewArray(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            None,
+            [],
+            elements,
+            self.__map_type(node)
+        )
+
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
         return py.CompilationUnit(
             random_id(),
