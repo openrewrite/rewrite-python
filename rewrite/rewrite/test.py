@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional, Callable
 from uuid import UUID
 
-from exceptiongroup import catch
 from rewrite.remote import RemotingContext, RemotePrinterFactory
 from rewrite.remote.server import register_remoting_factories
 
@@ -70,11 +69,11 @@ def rewrite_run(*sources: list[SourceSpec]):
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).exception_message}'
 
-                    assert spec.before == source_file.print_all()
+                    assert source_file.print_all() == spec.before
 
                     if spec.after is not None:
                         after = spec.after(source_file.print_all())
-                        assert spec.before == after
+                        assert after == spec.before
                     break
     except Exception:
         raise
