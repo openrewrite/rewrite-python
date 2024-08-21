@@ -58,8 +58,12 @@ dependencies {
     testImplementation("org.junit-pioneer:junit-pioneer:latest.release")
     testImplementation("org.openrewrite:rewrite-test")
 
-    testImplementation("org.openrewrite:rewrite-remote:latest.integration")
-    testImplementation("org.openrewrite:rewrite-remote-java:latest.integration")
+    testImplementation("org.openrewrite:rewrite-remote:latest.integration") {
+        exclude(group = "org.openrewrite", module = "rewrite-python")
+    }
+    testImplementation("org.openrewrite:rewrite-remote-java:latest.integration") {
+        exclude(group = "org.openrewrite", module = "rewrite-python")
+    }
     testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
