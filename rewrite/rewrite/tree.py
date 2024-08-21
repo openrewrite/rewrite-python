@@ -98,7 +98,7 @@ class SourceFile(Tree, Protocol):
 
     def print_equals_input(self, input: 'ParserInput', ctx: ExecutionContext) -> bool:
         printed = self.print_all()
-        return printed == input.source().read().decode(self.charset_name if self.charset_name else 'utf-8')
+        return printed == input.source().read()
 
 
 @dataclass(frozen=True)

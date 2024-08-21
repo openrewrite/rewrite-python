@@ -47,6 +47,12 @@ class Markers:
     def with_markers(self, markers: List[Marker]) -> Markers:
         return self if markers is self._markers else Markers(self._id, markers)
 
+    def find_first(self, type: type):
+        for marker in self.markers:
+            if isinstance(marker, type):
+                return marker
+        return None
+
     EMPTY: ClassVar[Markers]
 
     def __eq__(self, other: object) -> bool:

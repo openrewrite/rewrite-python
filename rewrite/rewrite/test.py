@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Optional, Callable
 from uuid import UUID
 
+from exceptiongroup import catch
 from rewrite.remote import RemotingContext, RemotePrinterFactory
 from rewrite.remote.server import register_remoting_factories
 
-from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id
+from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
+    ExecutionContext
 from rewrite.python.parser import PythonParserBuilder
 
 
@@ -56,6 +58,8 @@ def rewrite_run(*sources: list[SourceSpec]):
 
     try:
         ctx = InMemoryExecutionContext()
+        ctx.put_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, False)
+
         for source in sources:
             for spec in source:
                 parser = spec.parser.build()
@@ -63,10 +67,17 @@ def rewrite_run(*sources: list[SourceSpec]):
                     else parser.source_path_from_source_text(Path('.'), spec.before)
                 for source_file in parser.parse_inputs(
                         [ParserInput(source_path, None, True, lambda: StringIO(spec.before))], None, ctx):
+                    if isinstance(source_file, ParseError):
+                        assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).exception_message}'
+
+                    assert spec.before == source_file.print_all()
+
                     if spec.after is not None:
                         after = spec.after(source_file.print_all())
                         assert spec.before == after
                     break
+    except Exception:
+        raise
     finally:
         remoting_context.close()
 

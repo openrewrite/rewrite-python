@@ -27,7 +27,10 @@ class InMemoryExecutionContext(ExecutionContext):
     _messages: dict[str, Any] = {}
 
     def get_message(self, key: str, default_value=None) -> Any:
-        return self._messages[str] if key in self._messages else default_value
+        return self._messages[key] if key in self._messages else default_value
+
+    def put_message(self, key: str, value: Any):
+        self._messages[key] = value
 
 
 class RecipeRunException(Exception):

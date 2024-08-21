@@ -1,5 +1,9 @@
 __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
+# helps pytest to rewrite the assert statements in test.py
+import pytest
+pytest.register_assert_rewrite("rewrite.test")
+
 from .execution import ExecutionContext, DelegatingExecutionContext, InMemoryExecutionContext, Recipe, RecipeRunException
 from .markers import *
 from .tree import Checksum, FileAttributes, SourceFile, Tree, PrintOutputCapture, PrinterFactory
