@@ -1,7 +1,7 @@
 import ast
 from _ast import AST
 from pathlib import Path
-from typing import Optional, TypeVar, cast
+from typing import Optional, TypeVar, cast, Callable, List, Tuple
 
 from rewrite.java import tree as j
 from . import tree as py
@@ -14,6 +14,7 @@ J2 = TypeVar('J2', bound=J)
 class ParserVisitor(ast.NodeVisitor):
     _source: str
     _cursor: int = 0
+    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], Tuple[int, int]]] = []
 
     def __init__(self, source: str):
         super().__init__()
@@ -244,7 +245,33 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert(self, node) -> Optional[J]:
         if node:
-            return self.visit(node)
+            if isinstance(node, ast.expr):
+                save_cursor = self._cursor
+                prefix = self.__whitespace()
+                if self._source[self._cursor] == '(':
+                    self._cursor += 1
+                    self._parentheses_stack.append((lambda e, r: j.Parentheses(
+                        random_id(),
+                        prefix,
+                        Markers.EMPTY,
+                        self.__pad_right(e, r)
+                    ), (node.lineno,node.col_offset)))
+                    # handle nested parens
+                    result = self.__convert(node)
+                else:
+                    self._cursor = save_cursor
+                    result = self.visit(node)
+
+                save_cursor = self._cursor
+                suffix = self.__whitespace()
+                if len(self._parentheses_stack) > 0 and self._cursor < len(self._source) and self._source[self._cursor] == ')' and self._parentheses_stack[-1][1] == (node.lineno, node.col_offset):
+                    self._cursor += 1
+                    result = self._parentheses_stack.pop()[0](result, suffix)
+                else:
+                    self._cursor = save_cursor
+                return result
+            else:
+                return self.visit(node)
         else:
             return None
 
