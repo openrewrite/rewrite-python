@@ -8,7 +8,9 @@ def test_none():
 
 def test_boolean():
     # language=python
-    rewrite_run(python("assert True or False"))
+    rewrite_run(python("assert True"))
+    # language=python
+    rewrite_run(python("assert False"))
 
 
 def test_dec_int():

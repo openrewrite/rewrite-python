@@ -3,7 +3,7 @@ from _ast import AST
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize
-from typing import Optional, TypeVar, cast, Callable, List, Tuple
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J
@@ -21,6 +21,9 @@ class ParserVisitor(ast.NodeVisitor):
     def __init__(self, source: str):
         super().__init__()
         self._source = source
+
+    def generic_visit(self, node):
+        return super().generic_visit(node)
 
     def visit_arguments(self, node):
         first_with_default = len(node.args) - len(node.defaults)
@@ -89,49 +92,62 @@ class ParserVisitor(ast.NodeVisitor):
             # FIXME implement me
             raise NotImplementedError("Multiple assignments are not yet supported")
 
-    def visit_BoolOp(self, node):
-        # Get the operator as a string (can be 'or', 'and', etc.)
-        if isinstance(node.op, ast.Or):
-            op = j.Binary.Type.Or
-            op_str = 'or'
-        elif isinstance(node.op, ast.And):
-            op = j.Binary.Type.And
-            op_str = 'and'
-        else:
-            raise ValueError(f"Unsupported Boolean operation: {node.op}")
+    def visit_BinOp(self, node):
+        return j.Binary(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.left),
+            self._map_binary_operator(node.op),
+            self.__convert(node.right),
+            self.__map_type(node)
+        )
 
+    def visit_BoolOp(self, node):
         binaries = []
         prefix = self.__whitespace()
         left = self.__convert(node.values[0])
-        for i, right_expr in enumerate(node.values[1:], 1):
+        for right_expr in node.values[1:]:
             left = j.Binary(
                 random_id(),
                 prefix,
                 Markers.EMPTY,
                 left,
-                self.__pad_left(self.__source_before(op_str), op),
+                self._map_binary_operator(node.op),
                 self.__convert(right_expr),
                 self.__map_type(node)
             )
             binaries.append(left)
-            prefix = self.__whitespace() if i < len(node.values) - 1 else Space.EMPTY
+            prefix = Space.EMPTY
 
         return binaries[-1]
+
+    def _map_binary_operator(self, op) -> JLeftPadded[j.Binary.Type]:
+        operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
+            ast.Add: (j.Binary.Type.Addition, '+'),
+            ast.And: (j.Binary.Type.And, 'and'),
+            ast.Div: (j.Binary.Type.Division, '/'),
+            ast.Mod: (j.Binary.Type.Modulo, '%'),
+            ast.Mult: (j.Binary.Type.Multiplication, '*'),
+            ast.Or: (j.Binary.Type.Or, 'or'),
+            ast.Sub: (j.Binary.Type.Subtraction, '-'),
+        }
+        try:
+            op, op_str = operation_map[type(op)]
+        except KeyError:
+            raise ValueError(f"Unsupported operator: {op}")
+        return self.__pad_left(self.__source_before(op_str), op)
 
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
         type_: JavaType.Primitive = self.__map_type(node)
         prefix = self.__whitespace()
-        if isinstance(node.value, str):
-            tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-            next(tokens) # skip ENCODING token
-            value_source = next(tokens).string
-            self._cursor += len(value_source)
-        else:
-            start = self._cursor
-            while self._cursor < len(self._source) and not self._source[self._cursor].isspace():
-                self._cursor += 1
-            value_source = self._source[start:self._cursor]
+
+        # TODO temporary solution
+        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        next(tokens) # skip ENCODING token
+        value_source = next(tokens).string
+        self._cursor += len(value_source)
 
         return j.Literal(
             random_id(),
