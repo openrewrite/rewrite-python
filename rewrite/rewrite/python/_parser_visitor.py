@@ -194,16 +194,21 @@ class ParserVisitor(ast.NodeVisitor):
         operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
             ast.Add: (j.Binary.Type.Addition, '+'),
             ast.And: (j.Binary.Type.And, 'and'),
+            ast.BitAnd: (j.Binary.Type.BitAnd, '&'),
+            ast.BitOr: (j.Binary.Type.BitOr, '|'),
+            ast.BitXor: (j.Binary.Type.BitXor, '^'),
             ast.Div: (j.Binary.Type.Division, '/'),
             ast.Eq: (j.Binary.Type.Equal, '=='),
             ast.Gt: (j.Binary.Type.GreaterThan, '>'),
             ast.GtE: (j.Binary.Type.GreaterThanOrEqual, '>='),
+            ast.LShift: (j.Binary.Type.LeftShift, '<<'),
             ast.Lt: (j.Binary.Type.LessThan, '<'),
             ast.LtE: (j.Binary.Type.LessThanOrEqual, '<='),
             ast.Mod: (j.Binary.Type.Modulo, '%'),
             ast.Mult: (j.Binary.Type.Multiplication, '*'),
             ast.NotEq: (j.Binary.Type.NotEqual, '!='),
             ast.Or: (j.Binary.Type.Or, 'or'),
+            ast.RShift: (j.Binary.Type.RightShift, '>>'),
             ast.Sub: (j.Binary.Type.Subtraction, '-'),
         }
         try:
@@ -384,6 +389,17 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value) if node.value else None
         )
 
+    def visit_UnaryOp(self, node):
+        mapped = self._map_unary_operator(node.op)
+        return j.Unary(
+            random_id(),
+            self.__source_before(mapped[1]),
+            Markers.EMPTY,
+            self.__pad_left(Space.EMPTY, mapped[0]),
+            self.__convert(node.operand),
+            self.__map_type(node)
+        )
+
     def __convert(self, node) -> Optional[J]:
         if node:
             if isinstance(node, ast.expr):
@@ -498,3 +514,12 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __map_type(self, node) -> Optional[JavaType]:
         return None
+
+    def _map_unary_operator(self, op) -> Tuple[j.Unary.Type, str]:
+        operation_map: Dict[Type[ast], Tuple[j.Unary.Type, str]] = {
+            ast.Invert: (j.Unary.Type.Complement, '~'),
+            ast.Not: (j.Unary.Type.Not, 'not'),
+            ast.UAdd: (j.Unary.Type.Positive, '+'),
+            ast.USub: (j.Unary.Type.Negative, '-'),
+        }
+        return operation_map[type(op)]
