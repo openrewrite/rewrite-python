@@ -55,11 +55,15 @@ def test_string_with_flags():
 
 def test_multiline_string_with_flags():
     # language=python
-    rewrite_run(python("""\
-    assert '''this is a
-    multiline string
-    '''
-    """))
+    rewrite_run(
+        python(
+            """\
+            assert '''this is a
+            multiline string
+            '''
+            """
+        )
+    )
 
 
 def test_double_quoted_string():
