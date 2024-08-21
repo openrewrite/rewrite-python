@@ -19,7 +19,7 @@ P = TypeVar('P')
 @runtime_checkable
 class J(Tree, Protocol):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
-        from ..visitor import JavaVisitor
+        from .visitor import JavaVisitor
         return self.accept_java(v.adapt(J, JavaVisitor), p)
 
     def accept_java(self, v: 'JavaVisitor[P]', p: P) -> Optional['J']:

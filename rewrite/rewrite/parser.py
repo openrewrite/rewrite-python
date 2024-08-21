@@ -191,8 +191,8 @@ class ParserBuilder(ABC):
 
 def require_print_equals_input(parser: Parser, source_file: SourceFile, parser_input: ParserInput,
                                    relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
-    if ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True) and not source_file.print_equals_input(
-            parser_input, ctx):
+    required = ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True)
+    if (required and not source_file.print_equals_input(parser_input, ctx)):
         diff = Result.diff(
             parser_input.source().read(),
             source_file.print_all(),

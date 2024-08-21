@@ -12,7 +12,7 @@ P = TypeVar('P')
 @runtime_checkable
 class Py(J, Protocol):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
-        from ..visitor import PythonVisitor
+        from .visitor import PythonVisitor
         return self.accept_python(v.adapt(Py, PythonVisitor), p)
 
     def accept_python(self, v: 'PythonVisitor[P]', p: P) -> Optional['J']:

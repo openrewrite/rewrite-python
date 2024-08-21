@@ -24,8 +24,10 @@ class DelegatingExecutionContext(ExecutionContext):
 
 
 class InMemoryExecutionContext(ExecutionContext):
-    # FIXME implement
-    pass
+    _messages: dict[str, Any] = {}
+
+    def get_message(self, key: str, default_value=None) -> Any:
+        return self._messages[str] if key in self._messages else default_value
 
 
 class RecipeRunException(Exception):
