@@ -420,12 +420,11 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY
         )
         self.__skip(']')
-        return j.NewArray(
+        return py.CollectionLiteral(
             random_id(),
             prefix,
             Markers.EMPTY,
-            None,
-            [],
+            py.CollectionLiteral.Kind.LIST,
             elements,
             self.__map_type(node)
         )
