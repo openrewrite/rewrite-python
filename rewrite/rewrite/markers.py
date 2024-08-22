@@ -1,4 +1,5 @@
 from __future__ import annotations
+import traceback
 
 from dataclasses import dataclass, replace
 from typing import List, Protocol, ClassVar, cast, runtime_checkable, TYPE_CHECKING
@@ -70,8 +71,9 @@ Markers.EMPTY = Markers(random_id(), [])
 @dataclass(frozen=True, eq=False)
 class ParseExceptionResult(Marker):
     @classmethod
-    def build(cls, parser: 'Parser', exception: Exception, message: str = None) -> ParseExceptionResult:
-        return cls(random_id(), type(parser).__name__, type(exception).__name__, str(exception), message)
+    def build(cls, parser: 'Parser', exception: Exception) -> ParseExceptionResult:
+        return cls(random_id(), type(parser).__name__, type(exception).__name__,
+                   traceback.format_exc(), None)
 
     _id: UUID
 

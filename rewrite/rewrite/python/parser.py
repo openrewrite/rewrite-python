@@ -19,7 +19,7 @@ class PythonParser(Parser):
                 cu = ParserVisitor(source_str).visit(tree)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
             except Exception as e:
-                cu = ParseError.build(self, source, relative_to, ctx, e, None)
+                cu = ParseError.build(self, source, relative_to, ctx, e)
             yield cu
 
     def accept(self, path: Path) -> bool:

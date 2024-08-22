@@ -8,6 +8,7 @@ from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
     Semicolon, TrailingComma
 from rewrite.java import tree as j
+
 from . import tree as py
 
 J2 = TypeVar('J2', bound=J)
@@ -111,6 +112,291 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value),
             self.__map_type(node)
         )
+
+    def visit_Interactive(self, node):
+        raise NotImplementedError("Implement visit_Interactive!")
+
+    def visit_Expression(self, node):
+        raise NotImplementedError("Implement visit_Expression!")
+
+    def visit_AsyncFunctionDef(self, node):
+        raise NotImplementedError("Implement visit_AsyncFunctionDef!")
+
+    def visit_ClassDef(self, node):
+        raise NotImplementedError("Implement visit_ClassDef!")
+
+    def visit_Delete(self, node):
+        return py.DelStatement(
+            random_id(),
+            self.__source_before('del'),
+            Markers.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.targets) - 1) for i, e in
+             enumerate(node.targets)]
+        )
+
+    def visit_AnnAssign(self, node):
+        raise NotImplementedError("Implement visit_AnnAssign!")
+
+    def visit_For(self, node):
+        raise NotImplementedError("Implement visit_For!")
+
+    def visit_AsyncFor(self, node):
+        raise NotImplementedError("Implement visit_AsyncFor!")
+
+    def visit_While(self, node):
+        raise NotImplementedError("Implement visit_While!")
+
+    def visit_If(self, node):
+        raise NotImplementedError("Implement visit_If!")
+
+    def visit_With(self, node):
+        raise NotImplementedError("Implement visit_With!")
+
+    def visit_AsyncWith(self, node):
+        raise NotImplementedError("Implement visit_AsyncWith!")
+
+    def visit_Raise(self, node):
+        raise NotImplementedError("Implement visit_Raise!")
+
+    def visit_Try(self, node):
+        raise NotImplementedError("Implement visit_Try!")
+
+    def visit_Import(self, node):
+        raise NotImplementedError("Implement visit_Import!")
+
+    def visit_ImportFrom(self, node):
+        raise NotImplementedError("Implement visit_ImportFrom!")
+
+    def visit_Global(self, node):
+        raise NotImplementedError("Implement visit_Global!")
+
+    def visit_Nonlocal(self, node):
+        raise NotImplementedError("Implement visit_Nonlocal!")
+
+    def visit_Expr(self, node):
+        raise NotImplementedError("Implement visit_Expr!")
+
+    def visit_Pass(self, node):
+        raise NotImplementedError("Implement visit_Pass!")
+
+    def visit_Break(self, node):
+        raise NotImplementedError("Implement visit_Break!")
+
+    def visit_Continue(self, node):
+        raise NotImplementedError("Implement visit_Continue!")
+
+    def visit_GeneratorExp(self, node):
+        raise NotImplementedError("Implement visit_GeneratorExp!")
+
+    def visit_Yield(self, node):
+        raise NotImplementedError("Implement visit_Yield!")
+
+    def visit_YieldFrom(self, node):
+        raise NotImplementedError("Implement visit_YieldFrom!")
+
+    def visit_FormattedValue(self, node):
+        raise NotImplementedError("Implement visit_FormattedValue!")
+
+    def visit_JoinedStr(self, node):
+        raise NotImplementedError("Implement visit_JoinedStr!")
+
+    def visit_NamedExpr(self, node):
+        raise NotImplementedError("Implement visit_NamedExpr!")
+
+    def visit_TypeIgnore(self, node):
+        raise NotImplementedError("Implement visit_TypeIgnore!")
+
+    def visit_Attribute(self, node):
+        raise NotImplementedError("Implement visit_Attribute!")
+
+    def visit_Del(self, node):
+        raise NotImplementedError("Implement visit_Del!")
+
+    def visit_Load(self, node):
+        raise NotImplementedError("Implement visit_Load!")
+
+    def visit_Store(self, node):
+        raise NotImplementedError("Implement visit_Store!")
+
+    def visit_And(self, node):
+        raise NotImplementedError("Implement visit_And!")
+
+    def visit_Or(self, node):
+        raise NotImplementedError("Implement visit_Or!")
+
+    def visit_Add(self, node):
+        raise NotImplementedError("Implement visit_Add!")
+
+    def visit_BitAnd(self, node):
+        raise NotImplementedError("Implement visit_BitAnd!")
+
+    def visit_BitOr(self, node):
+        raise NotImplementedError("Implement visit_BitOr!")
+
+    def visit_BitXor(self, node):
+        raise NotImplementedError("Implement visit_BitXor!")
+
+    def visit_Div(self, node):
+        raise NotImplementedError("Implement visit_Div!")
+
+    def visit_FloorDiv(self, node):
+        raise NotImplementedError("Implement visit_FloorDiv!")
+
+    def visit_LShift(self, node):
+        raise NotImplementedError("Implement visit_LShift!")
+
+    def visit_Mod(self, node):
+        raise NotImplementedError("Implement visit_Mod!")
+
+    def visit_Mult(self, node):
+        raise NotImplementedError("Implement visit_Mult!")
+
+    def visit_MatMult(self, node):
+        raise NotImplementedError("Implement visit_MatMult!")
+
+    def visit_Pow(self, node):
+        raise NotImplementedError("Implement visit_Pow!")
+
+    def visit_RShift(self, node):
+        raise NotImplementedError("Implement visit_RShift!")
+
+    def visit_Sub(self, node):
+        raise NotImplementedError("Implement visit_Sub!")
+
+    def visit_Invert(self, node):
+        raise NotImplementedError("Implement visit_Invert!")
+
+    def visit_Not(self, node):
+        raise NotImplementedError("Implement visit_Not!")
+
+    def visit_UAdd(self, node):
+        raise NotImplementedError("Implement visit_UAdd!")
+
+    def visit_USub(self, node):
+        raise NotImplementedError("Implement visit_USub!")
+
+    def visit_Eq(self, node):
+        raise NotImplementedError("Implement visit_Eq!")
+
+    def visit_Gt(self, node):
+        raise NotImplementedError("Implement visit_Gt!")
+
+    def visit_GtE(self, node):
+        raise NotImplementedError("Implement visit_GtE!")
+
+    def visit_In(self, node):
+        raise NotImplementedError("Implement visit_In!")
+
+    def visit_Is(self, node):
+        raise NotImplementedError("Implement visit_Is!")
+
+    def visit_IsNot(self, node):
+        raise NotImplementedError("Implement visit_IsNot!")
+
+    def visit_Lt(self, node):
+        raise NotImplementedError("Implement visit_Lt!")
+
+    def visit_LtE(self, node):
+        raise NotImplementedError("Implement visit_LtE!")
+
+    def visit_NotEq(self, node):
+        raise NotImplementedError("Implement visit_NotEq!")
+
+    def visit_NotIn(self, node):
+        raise NotImplementedError("Implement visit_NotIn!")
+
+    def visit_ExceptHandler(self, node):
+        raise NotImplementedError("Implement visit_ExceptHandler!")
+
+    def visit_arg(self, node):
+        raise NotImplementedError("Implement visit_arg!")
+
+    def visit_keyword(self, node):
+        raise NotImplementedError("Implement visit_keyword!")
+
+    def visit_alias(self, node):
+        raise NotImplementedError("Implement visit_alias!")
+
+    def visit_withitem(self, node):
+        raise NotImplementedError("Implement visit_withitem!")
+
+    def visit_Match(self, node):
+        raise NotImplementedError("Implement visit_Match!")
+
+    def visit_match_case(self, node):
+        raise NotImplementedError("Implement visit_match_case!")
+
+    def visit_MatchValue(self, node):
+        raise NotImplementedError("Implement visit_MatchValue!")
+
+    def visit_MatchSequence(self, node):
+        raise NotImplementedError("Implement visit_MatchSequence!")
+
+    def visit_MatchSingleton(self, node):
+        raise NotImplementedError("Implement visit_MatchSingleton!")
+
+    def visit_MatchStar(self, node):
+        raise NotImplementedError("Implement visit_MatchStar!")
+
+    def visit_MatchMapping(self, node):
+        raise NotImplementedError("Implement visit_MatchMapping!")
+
+    def visit_MatchClass(self, node):
+        raise NotImplementedError("Implement visit_MatchClass!")
+
+    def visit_MatchAs(self, node):
+        raise NotImplementedError("Implement visit_MatchAs!")
+
+    def visit_MatchOr(self, node):
+        raise NotImplementedError("Implement visit_MatchOr!")
+
+    def visit_TryStar(self, node):
+        raise NotImplementedError("Implement visit_TryStar!")
+
+    def visit_TypeVar(self, node):
+        raise NotImplementedError("Implement visit_TypeVar!")
+
+    def visit_ParamSpec(self, node):
+        raise NotImplementedError("Implement visit_ParamSpec!")
+
+    def visit_TypeVarTuple(self, node):
+        raise NotImplementedError("Implement visit_TypeVarTuple!")
+
+    def visit_TypeAlias(self, node):
+        raise NotImplementedError("Implement visit_TypeAlias!")
+
+    def visit_ExtSlice(self, node):
+        raise NotImplementedError("Implement visit_ExtSlice!")
+
+    def visit_Index(self, node):
+        raise NotImplementedError("Implement visit_Index!")
+
+    def visit_Suite(self, node):
+        raise NotImplementedError("Implement visit_Suite!")
+
+    def visit_AugLoad(self, node):
+        raise NotImplementedError("Implement visit_AugLoad!")
+
+    def visit_AugStore(self, node):
+        raise NotImplementedError("Implement visit_AugStore!")
+
+    def visit_Param(self, node):
+        raise NotImplementedError("Implement visit_Param!")
+
+    def visit_Num(self, node):
+        raise NotImplementedError("Implement visit_Num!")
+
+    def visit_Str(self, node):
+        raise NotImplementedError("Implement visit_Str!")
+
+    def visit_Bytes(self, node):
+        raise NotImplementedError("Implement visit_Bytes!")
+
+    def visit_NameConstant(self, node):
+        raise NotImplementedError("Implement visit_NameConstant!")
+
+    def visit_Ellipsis(self, node):
+        raise NotImplementedError("Implement visit_Ellipsis!")
 
     def visit_BinOp(self, node):
         return j.Binary(
@@ -267,7 +553,8 @@ class ParserVisitor(ast.NodeVisitor):
                 Space.EMPTY,
                 [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
                                   Space.EMPTY)] if not node.keys else
-                [self._map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in enumerate(zip(node.keys, node.values))],
+                [self._map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in
+                 enumerate(zip(node.keys, node.values))],
                 Markers.EMPTY
             ),
             self.__map_type(node)
@@ -307,7 +594,8 @@ class ParserVisitor(ast.NodeVisitor):
             )
         else:
             element = py.KeyValue(random_id(), self.__whitespace(), Markers.EMPTY,
-                                  self.__pad_right(self.__convert(key), self.__source_before(':')), self.__convert(value),
+                                  self.__pad_right(self.__convert(key), self.__source_before(':')),
+                                  self.__convert(value),
                                   self.__map_type(value))
         return self.__pad_list_element(element, last)
 
@@ -402,7 +690,8 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 False,
                 [self.__pad_right(
-                    self.map_arg(a, node.args.defaults[i - len(node.args.defaults)] if i >= first_with_default else None),
+                    self.map_arg(a,
+                                 node.args.defaults[i - len(node.args.defaults)] if i >= first_with_default else None),
                     self.__source_before(',')) for i, a in enumerate(node.args.args)]
             ),
             self.__source_before(':'),
@@ -501,7 +790,8 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__source_before('{')
         elements = JContainer(
             Space.EMPTY,
-            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in
+             enumerate(node.elts)] if node.elts else
             [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
@@ -536,7 +826,9 @@ class ParserVisitor(ast.NodeVisitor):
             lower = self.__pad_right(self.__convert(node.lower), self.__source_before(':'))
         else:
             lower = self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':'))
-        upper = self.__pad_right(self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':') if node.step else self.__whitespace('\n'))
+        upper = self.__pad_right(
+            self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+            self.__source_before(':') if node.step else self.__whitespace('\n'))
         step = self.__pad_right(self.__convert(node.step), self.__whitespace('\n')) if node.step else None
         return py.SliceExpression(
             random_id(),
@@ -576,7 +868,8 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__source_before('(')
         elements = JContainer(
             Space.EMPTY,
-            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in
+             enumerate(node.elts)] if node.elts else
             [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
@@ -648,7 +941,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __pad_list_element(self, element: J, last: bool = False) -> JRightPadded[J]:
         padding = self.__whitespace()
         markers = Markers.EMPTY
-        if last and self._source[self._cursor] == ',':
+        if last and self._cursor < len(self._source) and self._source[self._cursor] == ',':
             self._cursor += 1
             markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
         elif not last:

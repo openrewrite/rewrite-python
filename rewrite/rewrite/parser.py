@@ -46,7 +46,7 @@ class ParserInput:
 class ParseError(SourceFile):
     @classmethod
     def build(cls, parser: 'Parser', input: ParserInput, relative_to: Path, ctx: ExecutionContext, exception: Exception,
-              erroneous: Optional[SourceFile]) -> 'ParseError':
+              erroneous: Optional[SourceFile] = None) -> 'ParseError':
         return cls(random_id(),
                    Markers(random_id(), [ParseExceptionResult.build(parser, exception)]),
                    input.path.relative_to(relative_to) if relative_to else input.path,
