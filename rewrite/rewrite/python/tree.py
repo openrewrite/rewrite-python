@@ -1934,3 +1934,113 @@ class MatchCase(Py, Expression):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_match_case(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class SliceExpression(Py, Expression, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> SliceExpression:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> SliceExpression:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> SliceExpression:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _start: Optional[JRightPadded[Expression]]
+
+    @property
+    def start(self) -> Optional[Expression]:
+        return self._start.element
+
+    def with_start(self, start: Optional[Expression]) -> SliceExpression:
+        return self.padding.with_start(JRightPadded.with_element(self._start, start))
+
+    _stop: Optional[JRightPadded[Expression]]
+
+    @property
+    def stop(self) -> Optional[Expression]:
+        return self._stop.element
+
+    def with_stop(self, stop: Optional[Expression]) -> SliceExpression:
+        return self.padding.with_stop(JRightPadded.with_element(self._stop, stop))
+
+    _step: Optional[JRightPadded[Expression]]
+
+    @property
+    def step(self) -> Optional[Expression]:
+        return self._step.element
+
+    def with_step(self, step: Optional[Expression]) -> SliceExpression:
+        return self.padding.with_step(JRightPadded.with_element(self._step, step))
+
+    @dataclass
+    class PaddingHelper:
+        _t: SliceExpression
+
+        @property
+        def start(self) -> Optional[JRightPadded[Expression]]:
+            return self._t._start
+
+        def with_start(self, start: Optional[JRightPadded[Expression]]) -> SliceExpression:
+            return self._t if self._t._start is start else replace(self._t, _start=start)
+
+        @property
+        def stop(self) -> Optional[JRightPadded[Expression]]:
+            return self._t._stop
+
+        def with_stop(self, stop: Optional[JRightPadded[Expression]]) -> SliceExpression:
+            return self._t if self._t._stop is stop else replace(self._t, _stop=stop)
+
+        @property
+        def step(self) -> Optional[JRightPadded[Expression]]:
+            return self._t._step
+
+        def with_step(self, step: Optional[JRightPadded[Expression]]) -> SliceExpression:
+            return self._t if self._t._step is step else replace(self._t, _step=step)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: SliceExpression.PaddingHelper
+        if self._padding is None:
+            p = SliceExpression.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = SliceExpression.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, start: Optional[JRightPadded[Expression]], stop: Optional[JRightPadded[Expression]], step: Optional[JRightPadded[Expression]]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_start', start)
+        object.__setattr__(self, '_stop', stop)
+        object.__setattr__(self, '_step', step)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_slice_expression(self, p)

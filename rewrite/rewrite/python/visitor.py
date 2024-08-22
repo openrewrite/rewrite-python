@@ -223,6 +223,18 @@ class PythonVisitor(JavaVisitor[P]):
         pattern = pattern.padding.with_children(self.visit_container(pattern.padding.children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, p))
         return pattern
 
+    def visit_slice_expression(self, slice_expression: SliceExpression, p: P) -> J:
+        slice_expression = slice_expression.with_prefix(self.visit_space(slice_expression.prefix, PySpace.Location.SLICE_EXPRESSION_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(slice_expression, p))
+        if not isinstance(temp_expression, SliceExpression):
+            return temp_expression
+        slice_expression = cast(SliceExpression, temp_expression)
+        slice_expression = slice_expression.with_markers(self.visit_markers(slice_expression.markers, p))
+        slice_expression = slice_expression.padding.with_start(self.visit_right_padded(slice_expression.padding.start, PyRightPadded.Location.SLICE_EXPRESSION_START, p))
+        slice_expression = slice_expression.padding.with_stop(self.visit_right_padded(slice_expression.padding.stop, PyRightPadded.Location.SLICE_EXPRESSION_STOP, p))
+        slice_expression = slice_expression.padding.with_step(self.visit_right_padded(slice_expression.padding.step, PyRightPadded.Location.SLICE_EXPRESSION_STEP, p))
+        return slice_expression
+
     def visit_container(self, container: Optional[JContainer[J2]], loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if isinstance(loc, JContainer.Location):
             return super().visit_container(container, loc, p)

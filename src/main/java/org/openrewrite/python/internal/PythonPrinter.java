@@ -504,6 +504,21 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitSliceExpression(Py.SliceExpression slice, PrintOutputCapture<P> p) {
+        beforeSyntax(slice, PySpace.Location.SLICE_EXPRESSION_PREFIX, p);
+        visitRightPadded(slice.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p);
+        p.append(':');
+        if (slice.getPadding().getStop() != null) {
+            visitRightPadded(slice.getPadding().getStop(), PyRightPadded.Location.SLICE_EXPRESSION_STOP, p);
+            if (slice.getPadding().getStep() != null) {
+                p.append(':');
+                visitRightPadded(slice.getPadding().getStep(), PyRightPadded.Location.SLICE_EXPRESSION_STEP, p);
+            }
+        }
+        return slice;
+    }
+
+    @Override
     public J visitStarExpression(Py.StarExpression star, PrintOutputCapture<P> p) {
         beforeSyntax(star, PySpace.Location.STAR_EXPRESSION_PREFIX, p);
         switch (star.getKind()) {

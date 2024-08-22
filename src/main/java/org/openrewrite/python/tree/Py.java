@@ -1617,4 +1617,127 @@ public interface Py extends J {
 
         }
     }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class SliceExpression implements Py, Expression, TypedTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        @Nullable
+        JRightPadded<Expression> start;
+
+        public @Nullable Expression getStart() {
+            return start != null ? start.getElement() : null;
+        }
+
+        public SliceExpression withStart(@Nullable Expression start) {
+            return getPadding().withStart(JRightPadded.withElement(this.start, start));
+        }
+
+        @Nullable
+        JRightPadded<Expression> stop;
+
+        public @Nullable Expression getStop() {
+            return stop != null ? stop.getElement() : null;
+        }
+
+        public SliceExpression withStop(@Nullable Expression stop) {
+            return getPadding().withStop(JRightPadded.withElement(this.stop, stop));
+        }
+
+        @Nullable
+        JRightPadded<Expression> step;
+
+        public @Nullable Expression getStep() {
+            return step != null ? step.getElement() : null;
+        }
+
+        public SliceExpression withStep(@Nullable Expression step) {
+            return getPadding().withStep(JRightPadded.withElement(this.step, step));
+        }
+
+        @Override
+        public @Nullable JavaType getType() {
+            return null;
+        }
+
+        @Override
+        public <T extends J> T withType(@Nullable JavaType type) {
+            //noinspection unchecked
+            return (T) this;
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitSliceExpression(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final SliceExpression t;
+
+            public @Nullable JRightPadded<Expression> getStart() {
+                return t.start;
+            }
+
+            public SliceExpression withStart(@Nullable JRightPadded<Expression> start) {
+                return t.start == start ? t : new SliceExpression(t.id, t.prefix, t.markers, start, t.stop, t.step);
+            }
+
+            public @Nullable JRightPadded<Expression> getStop() {
+                return t.stop;
+            }
+
+            public SliceExpression withStop(@Nullable JRightPadded<Expression> stop) {
+                return t.stop == stop ? t : new SliceExpression(t.id, t.prefix, t.markers, t.start, stop, t.step);
+            }
+
+            public @Nullable JRightPadded<Expression> getStep() {
+                return t.step;
+            }
+
+            public SliceExpression withStep(@Nullable JRightPadded<Expression> step) {
+                return t.step == step ? t : new SliceExpression(t.id, t.prefix, t.markers, t.start, step, t.step);
+            }
+        }
+    }
+
 }

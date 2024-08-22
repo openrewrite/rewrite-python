@@ -369,4 +369,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         arg = arg.withType(visitType(arg.getType(), p));
         return arg;
     }
+
+    public J visitSliceExpression(Py.SliceExpression slice, P p) {
+        Py.SliceExpression sl = slice;
+        sl = sl.withPrefix(visitSpace(sl.getPrefix(), PySpace.Location.SLICE_EXPRESSION_PREFIX, p));
+        sl = sl.withMarkers(visitMarkers(sl.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(sl, p);
+        if (!(temp instanceof Py.SliceExpression)) {
+            return temp;
+        } else {
+            sl = (Py.SliceExpression) temp;
+        }
+        sl = sl.getPadding().withStart(visitRightPadded(sl.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p));
+        sl = sl.getPadding().withStop(visitRightPadded(sl.getPadding().getStop(), PyRightPadded.Location.SLICE_EXPRESSION_STOP, p));
+        sl = sl.getPadding().withStep(visitRightPadded(sl.getPadding().getStep(), PyRightPadded.Location.SLICE_EXPRESSION_STEP, p));
+        return sl;
+    }
 }

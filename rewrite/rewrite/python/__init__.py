@@ -33,5 +33,6 @@ __all__ = [
     'NamedArgument',
     'TypeHintedExpression',
     'ErrorFromExpression',
-    'MatchCase'
+    'MatchCase',
+    'SliceExpression'
 ]

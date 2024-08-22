@@ -463,6 +463,23 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+    def visit_Slice(self, node):
+        prefix = self.__whitespace()
+        if node.lower:
+            lower = self.__pad_right(self.__convert(node.lower), self.__source_before(':'))
+        else:
+            lower = self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':'))
+        upper = self.__pad_right(self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':') if node.step else self.__whitespace('\n'))
+        step = self.__pad_right(self.__convert(node.step), self.__whitespace('\n')) if node.step else None
+        return py.SliceExpression(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            lower,
+            upper,
+            step
+        )
+
     def visit_Starred(self, node):
         return py.StarExpression(
             random_id(),
@@ -471,6 +488,21 @@ class ParserVisitor(ast.NodeVisitor):
             py.StarExpression.Kind.LIST,
             self.__convert(node.value),
             self.__map_type(node),
+        )
+
+    def visit_Subscript(self, node):
+        return j.ArrayAccess(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.value),
+            j.ArrayDimension(
+                random_id(),
+                self.__source_before('['),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.slice), self.__source_before(']'))
+            ),
+            self.__map_type(node)
         )
 
     def visit_Tuple(self, node):
