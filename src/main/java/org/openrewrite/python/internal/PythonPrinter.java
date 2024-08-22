@@ -614,6 +614,62 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitAssignmentOperation(J.AssignmentOperation assignOp, PrintOutputCapture<P> p) {
+            String keyword = "";
+            switch (assignOp.getOperator()) {
+                case Addition:
+                    keyword = "+=";
+                    break;
+                case Subtraction:
+                    keyword = "-=";
+                    break;
+                case Multiplication:
+                    keyword = "*=";
+                    break;
+                case Division:
+                    keyword = "/=";
+                    break;
+                case Modulo:
+                    keyword = "%=";
+                    break;
+                case BitAnd:
+                    keyword = "&=";
+                    break;
+                case BitOr:
+                    keyword = "|=";
+                    break;
+                case BitXor:
+                    keyword = "^=";
+                    break;
+                case LeftShift:
+                    keyword = "<<=";
+                    break;
+                case RightShift:
+                    keyword = ">>=";
+                    break;
+                case UnsignedRightShift:
+                    keyword = ">>>=";
+                    break;
+                case Exponentiation:
+                    keyword = "**=";
+                    break;
+                case FloorDivision:
+                    keyword = "//=";
+                    break;
+                case MatrixMultiplication:
+                    keyword = "@=";
+                    break;
+            }
+            beforeSyntax(assignOp, Location.ASSIGNMENT_OPERATION_PREFIX, p);
+            visit(assignOp.getVariable(), p);
+            visitSpace(assignOp.getPadding().getOperator().getBefore(), Location.ASSIGNMENT_OPERATION_OPERATOR, p);
+            p.append(keyword);
+            visit(assignOp.getAssignment(), p);
+            afterSyntax(assignOp, p);
+            return assignOp;
+        }
+
+        @Override
         public J visitBinary(J.Binary binary, PrintOutputCapture<P> p) {
             String keyword = "";
             switch (binary.getOperator()) {

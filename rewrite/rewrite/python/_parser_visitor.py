@@ -92,6 +92,17 @@ class ParserVisitor(ast.NodeVisitor):
             # FIXME implement me
             raise NotImplementedError("Multiple assignments are not yet supported")
 
+    def visit_AugAssign(self, node):
+        return j.AssignmentOperation(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.target),
+            self._map_assignment_operator(node.op),
+            self.__convert(node.value),
+            self.__map_type(node)
+        )
+
     def visit_BinOp(self, node):
         return j.Binary(
             random_id(),
@@ -484,7 +495,8 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = None
         whitespace = []
         comments = []
-        while self._cursor < len(self._source):
+        source_len = len(self._source)
+        while self._cursor < source_len:
             char = self._source[self._cursor]
             if stop is not None and char == stop:
                 break
@@ -497,10 +509,10 @@ class ParserVisitor(ast.NodeVisitor):
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
-                while self._cursor < len(self._source) and self._source[self._cursor] != '\n':
+                while self._cursor < source_len and self._source[self._cursor] != '\n':
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
-                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < len(self._source) else '',
+                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < source_len else '',
                                             Markers.EMPTY))
             else:
                 break
@@ -546,3 +558,25 @@ class ParserVisitor(ast.NodeVisitor):
             ast.USub: (j.Unary.Type.Negative, '-'),
         }
         return operation_map[type(op)]
+
+    def _map_assignment_operator(self, op):
+        operation_map: Dict[Type[ast], Tuple[j.AssignmentOperation.Type, str]] = {
+            ast.Add: (j.AssignmentOperation.Type.Addition, '+='),
+            ast.BitAnd: (j.AssignmentOperation.Type.BitAnd, '&='),
+            ast.BitOr: (j.AssignmentOperation.Type.BitOr, '|='),
+            ast.BitXor: (j.AssignmentOperation.Type.BitXor, '^='),
+            ast.Div: (j.AssignmentOperation.Type.Division, '/='),
+            ast.Pow: (j.AssignmentOperation.Type.Exponentiation, '**='),
+            ast.FloorDiv: (j.AssignmentOperation.Type.FloorDivision, '//='),
+            ast.LShift: (j.AssignmentOperation.Type.LeftShift, '<<='),
+            ast.MatMult: (j.AssignmentOperation.Type.MatrixMultiplication, '@='),
+            ast.Mod: (j.AssignmentOperation.Type.Modulo, '%='),
+            ast.Mult: (j.AssignmentOperation.Type.Multiplication, '*='),
+            ast.RShift: (j.AssignmentOperation.Type.RightShift, '>>='),
+            ast.Sub: (j.AssignmentOperation.Type.Subtraction, '-='),
+        }
+        try:
+            op, op_str = operation_map[type(op)]
+        except KeyError:
+            raise ValueError(f"Unsupported operator: {op}")
+        return self.__pad_left(self.__source_before(op_str), op)
