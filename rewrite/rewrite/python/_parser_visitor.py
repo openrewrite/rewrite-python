@@ -280,7 +280,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__source_before(':'),
             Markers.EMPTY,
             self.__pad_right(False, Space.EMPTY),
-            [self.__padded_statement(stmt) for stmt in node.body] if node.body else [
+            [self.__pad_statement(stmt) for stmt in node.body] if node.body else [
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             Space.EMPTY
         )
@@ -365,7 +365,7 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             None,
             [],
-            [self.__padded_statement(stmt) for stmt in node.body] if node.body else [
+            [self.__pad_statement(stmt) for stmt in node.body] if node.body else [
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             self.__whitespace()
         )
@@ -433,7 +433,7 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
-    def __padded_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
+    def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
         save_cursor = self._cursor
         padding = self.__source_before(';')
