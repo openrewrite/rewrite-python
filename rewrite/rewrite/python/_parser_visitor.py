@@ -6,7 +6,8 @@ from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J, Statement
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J, Statement, \
+    Semicolon
 from rewrite.java import tree as j
 from . import tree as py
 
@@ -279,7 +280,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__source_before(':'),
             Markers.EMPTY,
             self.__pad_right(False, Space.EMPTY),
-            [self.__pad_right(self.__convert(cast(AST, stmt)), Space.EMPTY) for stmt in node.body] if node.body else [
+            [self.__padded_statement(stmt) for stmt in node.body] if node.body else [
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             Space.EMPTY
         )
@@ -364,8 +365,7 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             None,
             [],
-            [self.__pad_right(self.visit(cast(AST, stmt)), self.__whitespace()) for stmt in
-             node.body] if node.body else [
+            [self.__padded_statement(stmt) for stmt in node.body] if node.body else [
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             self.__whitespace()
         )
@@ -432,6 +432,12 @@ class ParserVisitor(ast.NodeVisitor):
                 return self.visit(node)
         else:
             return None
+
+    def __padded_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
+        statement = self.__convert(stmt)
+        padding = self.__source_before(';')
+        markers = Markers.EMPTY.with_markers([Semicolon(random_id())]) if self._source[self._cursor - 1] == ';' else Markers.EMPTY
+        return JRightPadded(statement, padding, markers)
 
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
         return JRightPadded(tree, space, Markers.EMPTY)

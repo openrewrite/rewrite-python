@@ -935,6 +935,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public <M extends Marker> M visitMarker(Marker marker, PrintOutputCapture<P> p) {
+            if (marker instanceof Semicolon) {
+                p.append(';');
+            }
+            //noinspection unchecked
+            return (M) marker;
+        }
+
+        @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
@@ -1184,9 +1193,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         protected void printStatementTerminator(Statement s, PrintOutputCapture<P> p) {
-            if (s.getMarkers().findFirst(Semicolon.class).isPresent()) {
-                p.append(";");
-            }
+            // optional semicolons are handled in `visitMarker()`
         }
 
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {

@@ -2,6 +2,7 @@ __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 
 from .support_types import *
 from .visitor import *
+from .markers import *
 
 __all__ = [
     'Comment',
@@ -21,6 +22,9 @@ __all__ = [
     'NameTree',
     'Expression',
     'Statement',
+
+    # Markers
+    'Semicolon',
 
     # AST types
     'AnnotatedType',
