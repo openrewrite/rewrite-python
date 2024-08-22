@@ -437,7 +437,7 @@ class ParserVisitor(ast.NodeVisitor):
         statement = self.__convert(stmt)
         save_cursor = self._cursor
         padding = self.__source_before(';')
-        markers = Markers.EMPTY.with_markers([Semicolon(random_id())]) if save_cursor != self._cursor else Markers.EMPTY
+        markers = Markers.EMPTY.with_markers([Semicolon(random_id())]) if save_cursor != self._cursor and self._source[self._cursor - 1] == ';' else Markers.EMPTY
         return JRightPadded(statement, padding, markers)
 
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
