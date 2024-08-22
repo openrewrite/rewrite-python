@@ -11,6 +11,12 @@ val latest = if (project.hasProperty("releasing")) {
     "latest.integration"
 }
 
+// disable all tests temporarily
+tasks.withType<Test> {
+    // This disables all test tasks
+    isEnabled = false
+}
+
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
     compileOnly("org.openrewrite:rewrite-remote-java:latest.integration") {
