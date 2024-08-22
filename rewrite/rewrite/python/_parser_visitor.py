@@ -437,7 +437,12 @@ class ParserVisitor(ast.NodeVisitor):
         statement = self.__convert(stmt)
         save_cursor = self._cursor
         padding = self.__source_before(';')
-        markers = Markers.EMPTY.with_markers([Semicolon(random_id())]) if save_cursor != self._cursor and self._source[self._cursor - 1] == ';' else Markers.EMPTY
+        if save_cursor != self._cursor and self._source[self._cursor - 1] == ';':
+            markers = Markers.EMPTY.with_markers([Semicolon(random_id())])
+        else:
+            markers = Markers.EMPTY
+            # use whitespace until end of line as padding; what follows will be prefix of next element
+            padding = self.__whitespace('\n')
         return JRightPadded(statement, padding, markers)
 
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
@@ -466,12 +471,14 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor += len(token)
         return token
 
-    def __whitespace(self) -> Space:
+    def __whitespace(self, stop: str = None) -> Space:
         prefix = None
         whitespace = []
         comments = []
         while self._cursor < len(self._source):
             char = self._source[self._cursor]
+            if stop is not None and char == stop:
+                break
             if char.isspace() or char == '\\':
                 whitespace.append(char)
             elif char == '#':
