@@ -275,6 +275,26 @@ class ParserVisitor(ast.NodeVisitor):
         self.__skip('}')
         return dict
 
+    def visit_DictComp(self, node):
+        self.__skip('for')
+        return py.ComprehensionExpression(
+            random_id(),
+            self.__source_before('{'),
+            Markers.EMPTY,
+            py.ComprehensionExpression.Kind.DICT,
+            py.KeyValue(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.key), self.__source_before(':')),
+                self.__convert(node.value),
+                self.__map_type(node.value)
+            ),
+            cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
+            self.__source_before('}'),
+            self.__map_type(node)
+        )
+
     def _map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
         if key is None:
             element = py.StarExpression(
@@ -493,6 +513,21 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             py.CollectionLiteral.Kind.SET,
             elements,
+            self.__map_type(node)
+        )
+
+    def visit_SetComp(self, node):
+        prefix = self.__source_before('{')
+        result = self.__convert(node.elt)
+        self.__skip('for')
+        return py.ComprehensionExpression(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            py.ComprehensionExpression.Kind.SET,
+            result,
+            cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
+            self.__source_before('}'),
             self.__map_type(node)
         )
 
