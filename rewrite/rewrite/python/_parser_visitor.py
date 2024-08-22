@@ -258,6 +258,30 @@ class ParserVisitor(ast.NodeVisitor):
             type_,
         )
 
+    def visit_Dict(self, node):
+        dict = py.DictLiteral(
+            random_id(),
+            self.__source_before('{'),
+            Markers.EMPTY,
+            JContainer(
+                Space.EMPTY,
+                [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
+                                  Space.EMPTY)] if not node.keys else
+                [self.__pad_list_element(py.KeyValue(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    self.__pad_right(self.__convert(k), self.__source_before(':')),
+                    self.__convert(v),
+                    self.__map_type(v)
+                    ), i == len(node.keys) - 1) for i, (k, v) in enumerate(zip(node.keys, node.values))],
+                Markers.EMPTY
+            ),
+            self.__map_type(node)
+        )
+        self.__skip('}')
+        return dict
+
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
         save_cursor = self._cursor
         async_prefix = self.__source_before('async')
@@ -360,7 +384,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_List(self, node):
         prefix = self.__source_before('[')
         elements = JContainer(Space.EMPTY,
-                              [self.__pad_list_element(e, last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
+                              [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
                               Markers.EMPTY)
         self.__skip(']')
         return j.NewArray(
@@ -474,8 +498,7 @@ class ParserVisitor(ast.NodeVisitor):
             markers = Markers.EMPTY
         return JRightPadded(statement, padding, markers)
 
-    def __pad_list_element(self, tree: Union[ast.expr, ast.stmt], last: bool = False) -> JRightPadded[J]:
-        element = self.__convert(tree)
+    def __pad_list_element(self, element: J, last: bool = False) -> JRightPadded[J]:
         padding = self.__whitespace()
         markers = Markers.EMPTY
         if last and self._source[self._cursor] == ',':

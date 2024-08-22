@@ -110,13 +110,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitDictLiteral(Py.DictLiteral dict, PrintOutputCapture<P> p) {
         beforeSyntax(dict, PySpace.Location.DICT_LITERAL_PREFIX, p);
-        if (dict.getElements().isEmpty()) {
-            p.append("{");
-            visitPythonExtraPadding(dict, PythonExtraPadding.Location.EMPTY_INITIALIZER, p);
-            p.append("}");
-        } else {
-            visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);
-        }
+        visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);
         afterSyntax(dict, p);
         return dict;
     }
@@ -1481,6 +1475,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             JRightPadded<? extends J> node = nodes.get(i);
             visit(node.getElement(), p);
             visitSpace(node.getAfter(), location.getAfterLocation(), p);
+            visitMarkers(node.getMarkers(), p);
             if (i < nodes.size() - 1) {
                 p.append(suffixBetween);
             }
