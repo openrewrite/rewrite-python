@@ -66,6 +66,26 @@ class PythonVisitor(JavaVisitor[P]):
         collection_literal = collection_literal.padding.with_elements(self.visit_container(collection_literal.padding.elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, p))
         return collection_literal
 
+    def visit_formatted_string(self, formatted_string: FormattedString, p: P) -> J:
+        formatted_string = formatted_string.with_prefix(self.visit_space(formatted_string.prefix, PySpace.Location.FORMATTED_STRING_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(formatted_string, p))
+        if not isinstance(temp_expression, FormattedString):
+            return temp_expression
+        formatted_string = cast(FormattedString, temp_expression)
+        formatted_string = formatted_string.with_markers(self.visit_markers(formatted_string.markers, p))
+        formatted_string = formatted_string.padding.with_parts(self.visit_container(formatted_string.padding.parts, PyContainer.Location.FORMATTED_STRING_PARTS, p))
+        return formatted_string
+
+    def visit_formatted_value(self, formatted_value: FormattedValue, p: P) -> J:
+        formatted_value = formatted_value.with_prefix(self.visit_space(formatted_value.prefix, PySpace.Location.FORMATTED_VALUE_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(formatted_value, p))
+        if not isinstance(temp_expression, FormattedValue):
+            return temp_expression
+        formatted_value = cast(FormattedValue, temp_expression)
+        formatted_value = formatted_value.with_markers(self.visit_markers(formatted_value.markers, p))
+        formatted_value = formatted_value.with_expression(self.visit_and_cast(formatted_value.expression, Expression, p))
+        return formatted_value
+
     def visit_pass_statement(self, pass_statement: PassStatement, p: P) -> J:
         pass_statement = pass_statement.with_prefix(self.visit_space(pass_statement.prefix, PySpace.Location.PASS_STATEMENT_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(pass_statement, p))

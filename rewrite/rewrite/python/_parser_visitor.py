@@ -390,6 +390,28 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+    def visit_JoinedStr(self, node):
+        prefix = self.__whitespace()
+        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        next(tokens)  # skip ENCODING token
+        value_source = next(tokens).string
+        delimiter = value_source[0:2]
+        return py.FormattedString(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            delimiter,
+            JContainer(Space.EMPTY, [self.__pad_right(self.__convert(p), Space.EMPTY) for p in node.values], Markers.EMPTY)
+        )
+
+    def visit_FormattedValue(self, node):
+        return py.FormattedValue(
+            random_id(),
+            Space.EMPTY,
+            Markers.EMPTY,
+            self.__convert(node.value),
+        )
+
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
         return j.Lambda(
@@ -606,7 +628,7 @@ class ParserVisitor(ast.NodeVisitor):
             if isinstance(node, ast.expr) and not isinstance(node, ast.Tuple):
                 save_cursor = self._cursor
                 prefix = self.__whitespace()
-                if self._source[self._cursor] == '(':
+                if self._cursor < len(self._source) and self._source[self._cursor] == '(':
                     self._cursor += 1
                     self._parentheses_stack.append((lambda e, r: j.Parentheses(
                         random_id(),
