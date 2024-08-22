@@ -410,6 +410,39 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+    def visit_ListComp(self, node):
+        prefix = self.__source_before('[')
+        result = self.__convert(node.elt)
+        self.__skip('for')
+        return py.ComprehensionExpression(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            py.ComprehensionExpression.Kind.LIST,
+            result,
+            cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
+            self.__source_before(']'),
+            self.__map_type(node)
+        )
+
+    def visit_comprehension(self, node):
+        return py.ComprehensionExpression.Clause(
+            random_id(),
+            self.__source_before('for'),
+            Markers.EMPTY,
+            self.__convert(node.target),
+            self.__pad_left(self.__source_before('in'), self.__convert(node.iter)),
+            [self._map_comprehension_condition(i) for i in node.ifs] if node.ifs else []
+        )
+
+    def _map_comprehension_condition(self, i):
+        return py.ComprehensionExpression.Condition(
+            random_id(),
+            self.__source_before('if'),
+            Markers.EMPTY,
+            self.__convert(i)
+        )
+
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
         return py.CompilationUnit(
             random_id(),
