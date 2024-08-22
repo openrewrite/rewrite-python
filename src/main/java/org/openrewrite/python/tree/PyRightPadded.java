@@ -18,14 +18,16 @@ package org.openrewrite.python.tree;
 public class PyRightPadded {
     public enum Location {
         ASSERT_ELEMENT(PySpace.Location.ASSERT_ELEMENT_SUFFIX),
+        COLLECTION_LITERAL_ELEMENT(PySpace.Location.COLLECTION_LITERAL_ELEMENT_SUFFIX),
         DEL_ELEMENT(PySpace.Location.DEL_ELEMENT_SUFFIX),
-        DICT_LITERAL_ELEMENT(PySpace.Location.DICT_LITERAL_ELEMENT_SUFFIX),
         DICT_ENTRY_KEY(PySpace.Location.DICT_ENTRY_KEY_SUFFIX),
+        DICT_LITERAL_ELEMENT(PySpace.Location.DICT_LITERAL_ELEMENT_SUFFIX),
         KEY_VALUE_KEY_SUFFIX(PySpace.Location.KEY_VALUE_SUFFIX),
         MATCH_PATTERN_ELEMENT(PySpace.Location.MATCH_PATTERN_ELEMENT_SUFFIX),
         TOP_LEVEL_STATEMENT_SUFFIX(PySpace.Location.TOP_LEVEL_STATEMENT),
         VARIABLE_SCOPE_ELEMENT(PySpace.Location.VARIABLE_SCOPE_NAME_SUFFIX),
-        YIELD_ELEMENT(PySpace.Location.YIELD_ELEMENT_SUFFIX);
+        YIELD_ELEMENT(PySpace.Location.YIELD_ELEMENT_SUFFIX),
+        ;
 
         private final PySpace.Location afterLocation;
 

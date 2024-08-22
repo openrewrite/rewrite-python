@@ -56,6 +56,16 @@ class PythonVisitor(JavaVisitor[P]):
         dict_literal = dict_literal.padding.with_elements(self.visit_container(dict_literal.padding.elements, PyContainer.Location.DICT_LITERAL_ELEMENTS, p))
         return dict_literal
 
+    def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
+        collection_literal = collection_literal.with_prefix(self.visit_space(collection_literal.prefix, PySpace.Location.COLLECTION_LITERAL_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(collection_literal, p))
+        if not isinstance(temp_expression, CollectionLiteral):
+            return temp_expression
+        collection_literal = cast(CollectionLiteral, temp_expression)
+        collection_literal = collection_literal.with_markers(self.visit_markers(collection_literal.markers, p))
+        collection_literal = collection_literal.padding.with_elements(self.visit_container(collection_literal.padding.elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, p))
+        return collection_literal
+
     def visit_pass_statement(self, pass_statement: PassStatement, p: P) -> J:
         pass_statement = pass_statement.with_prefix(self.visit_space(pass_statement.prefix, PySpace.Location.PASS_STATEMENT_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(pass_statement, p))

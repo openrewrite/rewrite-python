@@ -108,6 +108,24 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitCollectionLiteral(Py.CollectionLiteral coll, PrintOutputCapture<P> p) {
+        beforeSyntax(coll, PySpace.Location.COLLECTION_LITERAL_PREFIX, p);
+        switch (coll.getKind()) {
+            case LIST:
+                visitContainer("[", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "]", p);
+                break;
+            case SET:
+                visitContainer("{", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "}", p);
+                break;
+            case TUPLE:
+                visitContainer("(", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", ")", p);
+                break;
+        }
+        afterSyntax(coll, p);
+        return coll;
+    }
+
+    @Override
     public J visitDictLiteral(Py.DictLiteral dict, PrintOutputCapture<P> p) {
         beforeSyntax(dict, PySpace.Location.DICT_LITERAL_PREFIX, p);
         visitContainer("{", dict.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, ",", "}", p);

@@ -469,13 +469,13 @@ public interface Py extends J {
         @With
         Markers markers;
 
-        JContainer<KeyValue> elements;
+        JContainer<Expression> elements;
 
-        public List<KeyValue> getElements() {
+        public List<Expression> getElements() {
             return elements.getElements();
         }
 
-        public DictLiteral withElements(List<KeyValue> elements) {
+        public DictLiteral withElements(List<Expression> elements) {
             return getPadding().withElements(JContainer.withElements(this.elements, elements));
         }
 
@@ -514,12 +514,98 @@ public interface Py extends J {
         public static class Padding {
             private final DictLiteral t;
 
-            public JContainer<KeyValue> getElements() {
+            public JContainer<Expression> getElements() {
                 return t.elements;
             }
 
-            public DictLiteral withElements(JContainer<KeyValue> elements) {
+            public DictLiteral withElements(JContainer<Expression> elements) {
                 return t.elements == elements ? t : new DictLiteral(t.id, t.prefix, t.markers, elements, t.type);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class CollectionLiteral implements Py, Expression, TypedTree {
+
+        public enum Kind {
+            LIST, SET, TUPLE
+        }
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        @Getter
+        @With
+        Kind kind;
+
+        JContainer<Expression> elements;
+
+        public List<Expression> getElements() {
+            return elements.getElements();
+        }
+
+        public CollectionLiteral withElements(List<Expression> elements) {
+            return getPadding().withElements(JContainer.withElements(this.elements, elements));
+        }
+
+        @Getter
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitCollectionLiteral(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final CollectionLiteral t;
+
+            public JContainer<Expression> getElements() {
+                return t.elements;
+            }
+
+            public CollectionLiteral withElements(JContainer<Expression> elements) {
+                return t.elements == elements ? t : new CollectionLiteral(t.id, t.prefix, t.markers, t.kind, elements, t.type);
             }
         }
     }

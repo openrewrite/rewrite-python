@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Protocol, TypeVar, runtime_checkable, Any, Optional
+from typing import Protocol, TypeVar, runtime_checkable, Any, Optional, TYPE_CHECKING
 
 from rewrite import TreeVisitor
 from rewrite.java.tree import J
+
+if TYPE_CHECKING:
+    from .visitor import PythonVisitor
 
 P = TypeVar('P')
 
@@ -24,6 +27,8 @@ class PySpace:
         ASSERT_STATEMENT_EXPRESSION_SUFFIX = auto()
         ASSERT_STATEMENT_PREFIX = auto()
         AWAIT_EXPRESSION_PREFIX = auto()
+        COLLECTION_LITERAL_ELEMENT_SUFFIX = auto()
+        COLLECTION_LITERAL_PREFIX = auto()
         COMPILATION_UNIT_STATEMENT_PREFIX = auto()
         COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST = auto()
         COMPREHENSION_EXPRESSION_CLAUSE_PREFIX = auto()
@@ -53,8 +58,8 @@ class PySpace:
         NAMED_ARGUMENT = auto()
         NAMED_ARGUMENT_PREFIX = auto()
         PASS_STATEMENT_PREFIX = auto()
-        STAR_EXPRESSION_PREFIX = auto()
         SPECIAL_PARAMETER_PREFIX = auto()
+        STAR_EXPRESSION_PREFIX = auto()
         TOP_LEVEL_STATEMENT = auto()
         TRAILING_ELSE_WRAPPER_PREFIX = auto()
         TYPE_HINTED_EXPRESSION_PREFIX = auto()
@@ -73,6 +78,7 @@ J2 = TypeVar('J2', bound=J)
 class PyRightPadded:
     class Location(Enum):
         ASSERT_STATEMENT_EXPRESSIONS = PySpace.Location.ASSERT_STATEMENT_EXPRESSION_SUFFIX
+        COLLECTION_LITERAL_ELEMENT = PySpace.Location.COLLECTION_LITERAL_ELEMENT_SUFFIX
         COMPILATION_UNIT_STATEMENTS = PySpace.Location.COMPILATION_UNIT_STATEMENT_PREFIX
         DEL_STATEMENT_TARGETS = PySpace.Location.DEL_STATEMENT_TARGET_SUFFIX
         DICT_LITERAL_ELEMENT = PySpace.Location.DICT_LITERAL_ELEMENT_SUFFIX
@@ -102,6 +108,7 @@ class PyLeftPadded:
 
 class PyContainer:
     class Location(Enum):
+        COLLECTION_LITERAL_ELEMENTS = (PySpace.Location.COLLECTION_LITERAL_PREFIX, PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT)
         DICT_LITERAL_ELEMENTS = (PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT)
         MATCH_CASE_PATTERN_CHILDREN = (PySpace.Location.MATCH_CASE_PATTERN_CHILDREN_PREFIX, PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD)
 

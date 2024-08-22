@@ -392,9 +392,13 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_List(self, node):
         prefix = self.__source_before('[')
-        elements = JContainer(Space.EMPTY,
-                              [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
-                              Markers.EMPTY)
+        elements = JContainer(
+            Space.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in
+             enumerate(node.elts)] if node.elts else
+            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            Markers.EMPTY
+        )
         self.__skip(']')
         return j.NewArray(
             random_id(),
@@ -441,6 +445,24 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value) if node.value else None
         )
 
+    def visit_Set(self, node):
+        prefix = self.__source_before('{')
+        elements = JContainer(
+            Space.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            Markers.EMPTY
+        )
+        self.__skip('}')
+        return py.CollectionLiteral(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            py.CollectionLiteral.Kind.SET,
+            elements,
+            self.__map_type(node)
+        )
+
     def visit_Starred(self, node):
         return py.StarExpression(
             random_id(),
@@ -449,6 +471,24 @@ class ParserVisitor(ast.NodeVisitor):
             py.StarExpression.Kind.LIST,
             self.__convert(node.value),
             self.__map_type(node),
+        )
+
+    def visit_Tuple(self, node):
+        prefix = self.__source_before('(')
+        elements = JContainer(
+            Space.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            Markers.EMPTY
+        )
+        self.__skip(')')
+        return py.CollectionLiteral(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            py.CollectionLiteral.Kind.TUPLE,
+            elements,
+            self.__map_type(node)
         )
 
     def visit_UnaryOp(self, node):
@@ -464,7 +504,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert(self, node) -> Optional[J]:
         if node:
-            if isinstance(node, ast.expr):
+            if isinstance(node, ast.expr) and not isinstance(node, ast.Tuple):
                 save_cursor = self._cursor
                 prefix = self.__whitespace()
                 if self._source[self._cursor] == '(':

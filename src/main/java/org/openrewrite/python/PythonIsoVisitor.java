@@ -48,6 +48,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.CollectionLiteral visitCollectionLiteral(Py.CollectionLiteral coll, P p) {
+        return (Py.CollectionLiteral) super.visitCollectionLiteral(coll, p);
+    }
+
+    @Override
     public Py.DictLiteral visitDictLiteral(Py.DictLiteral dict, P p) {
         return (Py.DictLiteral) super.visitDictLiteral(dict, p);
     }

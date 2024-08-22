@@ -63,6 +63,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return e;
     }
 
+    public J visitCollectionLiteral(Py.CollectionLiteral coll, P p) {
+        Py.CollectionLiteral c = coll;
+        c = c.withPrefix(visitSpace(c.getPrefix(), PySpace.Location.COLLECTION_LITERAL_PREFIX, p));
+        c = c.withMarkers(visitMarkers(c.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(c, p);
+        if (!(temp instanceof Py.CollectionLiteral)) {
+            return temp;
+        } else {
+            c = (Py.CollectionLiteral) temp;
+        }
+        c = c.getPadding().withElements(visitContainer(c.getPadding().getElements(), PyContainer.Location.DICT_LITERAL_ELEMENTS, p));
+        return c;
+    }
+
     public J visitDictLiteral(Py.DictLiteral dict, P p) {
         Py.DictLiteral d = dict;
         d = d.withPrefix(visitSpace(d.getPrefix(), PySpace.Location.DICT_LITERAL_PREFIX, p));

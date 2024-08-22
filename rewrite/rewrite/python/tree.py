@@ -467,13 +467,13 @@ class DictLiteral(Py, Expression, TypedTree):
     def with_markers(self, markers: Markers) -> DictLiteral:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _elements: JContainer[KeyValue]
+    _elements: JContainer[Expression]
 
     @property
-    def elements(self) -> List[KeyValue]:
+    def elements(self) -> List[Expression]:
         return self._elements.elements
 
-    def with_elements(self, elements: List[KeyValue]) -> DictLiteral:
+    def with_elements(self, elements: List[Expression]) -> DictLiteral:
         return self.padding.with_elements(JContainer.with_elements(self._elements, elements))
 
     _type: Optional[JavaType]
@@ -490,10 +490,10 @@ class DictLiteral(Py, Expression, TypedTree):
         _t: DictLiteral
 
         @property
-        def elements(self) -> JContainer[KeyValue]:
+        def elements(self) -> JContainer[Expression]:
             return self._t._elements
 
-        def with_elements(self, elements: JContainer[KeyValue]) -> DictLiteral:
+        def with_elements(self, elements: JContainer[Expression]) -> DictLiteral:
             return self._t if self._t._elements is elements else replace(self._t, _elements=elements)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
@@ -512,7 +512,7 @@ class DictLiteral(Py, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[KeyValue], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[Expression], type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -522,6 +522,107 @@ class DictLiteral(Py, Expression, TypedTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_dict_literal(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class CollectionLiteral(Py, Expression, TypedTree):
+    class Kind(Enum):
+        LIST = 0
+        SET = 1
+        TUPLE = 2
+
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> CollectionLiteral:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> CollectionLiteral:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> CollectionLiteral:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _kind: Kind
+
+    @property
+    def kind(self) -> Kind:
+        return self._kind
+
+    def with_kind(self, kind: Kind) -> CollectionLiteral:
+        return self if kind is self._kind else replace(self, _kind=kind)
+
+    _elements: JContainer[Expression]
+
+    @property
+    def elements(self) -> List[Expression]:
+        return self._elements.elements
+
+    def with_elements(self, elements: List[Expression]) -> CollectionLiteral:
+        return self.padding.with_elements(JContainer.with_elements(self._elements, elements))
+
+    _type: Optional[JavaType]
+
+    @property
+    def type(self) -> Optional[JavaType]:
+        return self._type
+
+    def with_type(self, type: Optional[JavaType]) -> CollectionLiteral:
+        return self if type is self._type else replace(self, _type=type)
+
+    @dataclass
+    class PaddingHelper:
+        _t: CollectionLiteral
+
+        @property
+        def elements(self) -> JContainer[Expression]:
+            return self._t._elements
+
+        def with_elements(self, elements: JContainer[Expression]) -> CollectionLiteral:
+            return self._t if self._t._elements is elements else replace(self._t, _elements=elements)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: CollectionLiteral.PaddingHelper
+        if self._padding is None:
+            p = CollectionLiteral.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = CollectionLiteral.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: CollectionLiteral.Kind, elements: JContainer[Expression], type: Optional[JavaType]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_kind', kind)
+        object.__setattr__(self, '_elements', elements)
+        object.__setattr__(self, '_type', type)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_collection_literal(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

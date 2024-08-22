@@ -19,6 +19,7 @@ __all__ = [
     'TypeHint',
     'ExpressionStatement',
     'KeyValue',
+    'CollectionLiteral',
     'DictLiteral',
     'PassStatement',
     'TrailingElseWrapper',
