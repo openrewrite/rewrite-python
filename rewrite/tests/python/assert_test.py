@@ -1,8 +1,8 @@
 from rewrite.test import rewrite_run, python
 
 
-# language=python
 def test_formatting():
+    # language=python
     rewrite_run(
         python(
             """\
@@ -15,11 +15,11 @@ def test_formatting():
     )
 
 
-# language=python
 def test_with_message():
+    # language=python
     rewrite_run(python("assert True, 'foo'"))
 
 
-# language=python
 def test_assert():
+    # language=python
     rewrite_run(python("assert True"))

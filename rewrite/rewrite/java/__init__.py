@@ -25,6 +25,7 @@ __all__ = [
 
     # Markers
     'Semicolon',
+    'TrailingComma',
 
     # AST types
     'AnnotatedType',

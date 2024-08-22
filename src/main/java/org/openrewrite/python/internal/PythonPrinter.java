@@ -23,6 +23,7 @@ import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.marker.Semicolon;
+import org.openrewrite.java.marker.TrailingComma;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.Import;
 import org.openrewrite.java.tree.Space.Location;
@@ -938,6 +939,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public <M extends Marker> M visitMarker(Marker marker, PrintOutputCapture<P> p) {
             if (marker instanceof Semicolon) {
                 p.append(';');
+            } else if (marker instanceof TrailingComma) {
+                p.append(',');
+                visitSpace(((TrailingComma) marker).getSuffix(), Location.ANY, p);
             }
             //noinspection unchecked
             return (M) marker;

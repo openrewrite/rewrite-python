@@ -1,13 +1,12 @@
 import ast
-from _ast import AST
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Union
 
-from rewrite import random_id
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, Markers, TextComment, J, Statement, \
-    Semicolon
+from rewrite import random_id, Markers
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
+    Semicolon, TrailingComma
 from rewrite.java import tree as j
 from . import tree as py
 
@@ -341,7 +340,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_List(self, node):
         prefix = self.__source_before('[')
         elements = JContainer(Space.EMPTY,
-                              [self.__pad_right(self.__convert(e), self.__source_before(',')) for e in node.elts],
+                              [self.__pad_list_element(e, last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
                               Markers.EMPTY)
         self.__skip(']')
         return j.NewArray(
@@ -444,6 +443,16 @@ class ParserVisitor(ast.NodeVisitor):
             # use whitespace until end of line as padding; what follows will be prefix of next element
             padding = self.__whitespace('\n')
         return JRightPadded(statement, padding, markers)
+
+    def __pad_list_element(self, tree: Union[ast.expr, ast.stmt], last: bool = False) -> JRightPadded[J]:
+        element = self.__convert(tree)
+        save_cursor = self._cursor
+        padding = self.__source_before(',')
+        if last and save_cursor != self._cursor and self._source[self._cursor - 1] == ',':
+            markers = Markers.EMPTY.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
+        else:
+            markers = Markers.EMPTY
+        return JRightPadded(element, padding, markers)
 
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
         return JRightPadded(tree, space, Markers.EMPTY)
