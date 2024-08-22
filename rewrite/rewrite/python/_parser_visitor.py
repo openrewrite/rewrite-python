@@ -267,20 +267,29 @@ class ParserVisitor(ast.NodeVisitor):
                 Space.EMPTY,
                 [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
                                   Space.EMPTY)] if not node.keys else
-                [self.__pad_list_element(py.KeyValue(
-                    random_id(),
-                    self.__whitespace(),
-                    Markers.EMPTY,
-                    self.__pad_right(self.__convert(k), self.__source_before(':')),
-                    self.__convert(v),
-                    self.__map_type(v)
-                    ), i == len(node.keys) - 1) for i, (k, v) in enumerate(zip(node.keys, node.values))],
+                [self._map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in enumerate(zip(node.keys, node.values))],
                 Markers.EMPTY
             ),
             self.__map_type(node)
         )
         self.__skip('}')
         return dict
+
+    def _map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
+        if key is None:
+            element = py.StarExpression(
+                random_id(),
+                self.__source_before('**'),
+                Markers.EMPTY,
+                py.StarExpression.Kind.DICT,
+                self.__convert(value),
+                self.__map_type(value),
+            )
+        else:
+            element = py.KeyValue(random_id(), self.__whitespace(), Markers.EMPTY,
+                                  self.__pad_right(self.__convert(key), self.__source_before(':')), self.__convert(value),
+                                  self.__map_type(value))
+        return self.__pad_list_element(element, last)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
         save_cursor = self._cursor
@@ -441,7 +450,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value),
             self.__map_type(node),
         )
-        pass
 
     def visit_UnaryOp(self, node):
         mapped = self._map_unary_operator(node.op)
