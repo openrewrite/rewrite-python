@@ -180,10 +180,10 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Pass!")
 
     def visit_Break(self, node):
-        raise NotImplementedError("Implement visit_Break!")
+        return j.Break(random_id(), self.__source_before('break'), Markers.EMPTY, None)
 
     def visit_Continue(self, node):
-        raise NotImplementedError("Implement visit_Continue!")
+        return j.Continue(random_id(), self.__source_before('continue'), Markers.EMPTY, None)
 
     def visit_GeneratorExp(self, node):
         raise NotImplementedError("Implement visit_GeneratorExp!")
