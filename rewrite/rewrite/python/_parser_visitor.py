@@ -103,6 +103,15 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+    def visit_Await(self, node):
+        return py.AwaitExpression(
+            random_id(),
+            self.__source_before('await'),
+            Markers.EMPTY,
+            self.__convert(node.value),
+            self.__map_type(node)
+        )
+
     def visit_BinOp(self, node):
         return j.Binary(
             random_id(),
