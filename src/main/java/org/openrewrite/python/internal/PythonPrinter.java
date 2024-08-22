@@ -22,6 +22,7 @@ import org.openrewrite.Tree;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.marker.OmitParentheses;
+import org.openrewrite.java.marker.Semicolon;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.Import;
 import org.openrewrite.java.tree.Space.Location;
@@ -1002,6 +1003,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             return newArray;
         }
 
+        @Override
         public J visitSwitch(J.Switch sw, PrintOutputCapture<P> p) {
             beforeSyntax(sw, Space.Location.SWITCH_PREFIX, p);
             p.append("match");
@@ -1178,6 +1180,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
             afterSyntax(multiVariable, p);
             return multiVariable;
+        }
+
+        @Override
+        protected void printStatementTerminator(Statement s, PrintOutputCapture<P> p) {
+            if (s.getMarkers().findFirst(Semicolon.class).isPresent()) {
+                p.append(";");
+            }
         }
 
         private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
