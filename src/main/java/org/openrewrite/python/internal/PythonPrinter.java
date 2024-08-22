@@ -492,19 +492,19 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitSpecialArgument(Py.SpecialArgument arg, PrintOutputCapture<P> p) {
-        beforeSyntax(arg, PySpace.Location.SPECIAL_ARG_PREFIX, p);
-        switch (arg.getKind()) {
-            case ARGS:
+    public J visitStarExpression(Py.StarExpression star, PrintOutputCapture<P> p) {
+        beforeSyntax(star, PySpace.Location.STAR_EXPRESSION_PREFIX, p);
+        switch (star.getKind()) {
+            case LIST:
                 p.append("*");
                 break;
-            case KWARGS:
+            case DICT:
                 p.append("**");
                 break;
         }
-        visit(arg.getExpression(), p);
-        afterSyntax(arg, p);
-        return arg;
+        visit(star.getExpression(), p);
+        afterSyntax(star, p);
+        return star;
     }
 
     @Override

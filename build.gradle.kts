@@ -1,7 +1,7 @@
 plugins {
-    id("org.openrewrite.build.language-library") version "latest.integration"
-    id("nebula.release") version "17.1.0"
+    id("org.openrewrite.build.recipe-library") version "latest.release"
 }
+
 group = "org.openrewrite"
 description = "Rewrite Python"
 

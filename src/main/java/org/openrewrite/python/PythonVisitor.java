@@ -326,15 +326,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return wrapper;
     }
 
-    public J visitSpecialArgument(Py.SpecialArgument ogArg, P p) {
-        Py.SpecialArgument arg = ogArg;
-        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.SPECIAL_ARG_PREFIX, p));
+    public J visitStarExpression(Py.StarExpression star, P p) {
+        Py.StarExpression arg = star;
+        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.STAR_EXPRESSION_PREFIX, p));
         arg = arg.withMarkers(visitMarkers(arg.getMarkers(), p));
         Expression temp = (Expression) visitExpression(arg, p);
-        if (!(temp instanceof Py.SpecialArgument)) {
+        if (!(temp instanceof Py.StarExpression)) {
             return temp;
         } else {
-            arg = (Py.SpecialArgument) temp;
+            arg = (Py.StarExpression) temp;
         }
         arg = arg.withExpression(visitAndCast(arg.getExpression(), p));
         arg = arg.withType(visitType(arg.getType(), p));

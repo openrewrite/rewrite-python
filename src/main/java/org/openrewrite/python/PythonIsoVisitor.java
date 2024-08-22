@@ -88,8 +88,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.SpecialArgument visitSpecialArgument(Py.SpecialArgument ogArg, P p) {
-        return (Py.SpecialArgument) super.visitSpecialArgument(ogArg, p);
+    public Py.StarExpression visitStarExpression(Py.StarExpression star, P p) {
+        return (Py.StarExpression) super.visitStarExpression(star, p);
     }
 
     @Override

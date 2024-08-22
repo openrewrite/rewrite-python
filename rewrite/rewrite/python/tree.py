@@ -1292,10 +1292,10 @@ class SpecialParameter(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class SpecialArgument(Py, Expression):
+class StarExpression(Py, Expression):
     class Kind(Enum):
-        KWARGS = 0
-        ARGS = 1
+        LIST = 0
+        DICT = 1
 
     _id: UUID
 
@@ -1303,7 +1303,7 @@ class SpecialArgument(Py, Expression):
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> SpecialArgument:
+    def with_id(self, id: UUID) -> StarExpression:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1312,7 +1312,7 @@ class SpecialArgument(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> SpecialArgument:
+    def with_prefix(self, prefix: Space) -> StarExpression:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1321,7 +1321,7 @@ class SpecialArgument(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> SpecialArgument:
+    def with_markers(self, markers: Markers) -> StarExpression:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _kind: Kind
@@ -1330,7 +1330,7 @@ class SpecialArgument(Py, Expression):
     def kind(self) -> Kind:
         return self._kind
 
-    def with_kind(self, kind: Kind) -> SpecialArgument:
+    def with_kind(self, kind: Kind) -> StarExpression:
         return self if kind is self._kind else replace(self, _kind=kind)
 
     _expression: Expression
@@ -1339,7 +1339,7 @@ class SpecialArgument(Py, Expression):
     def expression(self) -> Expression:
         return self._expression
 
-    def with_expression(self, expression: Expression) -> SpecialArgument:
+    def with_expression(self, expression: Expression) -> StarExpression:
         return self if expression is self._expression else replace(self, _expression=expression)
 
     _type: Optional[JavaType]
@@ -1348,10 +1348,10 @@ class SpecialArgument(Py, Expression):
     def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: Optional[JavaType]) -> SpecialArgument:
+    def with_type(self, type: Optional[JavaType]) -> StarExpression:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialArgument.Kind, expression: Expression, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: StarExpression.Kind, expression: Expression, type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1361,7 +1361,7 @@ class SpecialArgument(Py, Expression):
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_special_argument(self, p)
+        return v.visit_star_expression(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

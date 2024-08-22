@@ -28,7 +28,7 @@ __all__ = [
     'VariableScopeStatement',
     'DelStatement',
     'SpecialParameter',
-    'SpecialArgument',
+    'StarExpression',
     'NamedArgument',
     'TypeHintedExpression',
     'ErrorFromExpression',

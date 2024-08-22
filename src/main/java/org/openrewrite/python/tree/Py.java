@@ -1107,11 +1107,11 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
-    final class SpecialArgument implements Py, Expression {
+    final class StarExpression implements Py, Expression {
 
         public enum Kind {
-            KWARGS,
-            ARGS,
+            LIST,
+            DICT,
         }
 
         @With
@@ -1136,7 +1136,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitSpecialArgument(this, p);
+            return v.visitStarExpression(this, p);
         }
 
         @Override

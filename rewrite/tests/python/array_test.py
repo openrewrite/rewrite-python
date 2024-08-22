@@ -8,4 +8,4 @@ def test_empty():
 
 def test_trailing_comma():
     # language=python
-    rewrite_run(python("a = [1 ,  ]"))
+    rewrite_run(python("a = [1, 2,  ]"))

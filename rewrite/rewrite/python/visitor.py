@@ -149,15 +149,15 @@ class PythonVisitor(JavaVisitor[P]):
         special_parameter = special_parameter.with_type_hint(self.visit_and_cast(special_parameter.type_hint, TypeHint, p))
         return special_parameter
 
-    def visit_special_argument(self, special_argument: SpecialArgument, p: P) -> J:
-        special_argument = special_argument.with_prefix(self.visit_space(special_argument.prefix, PySpace.Location.SPECIAL_ARGUMENT_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(special_argument, p))
-        if not isinstance(temp_expression, SpecialArgument):
+    def visit_star_expression(self, star_expression: StarExpression, p: P) -> J:
+        star_expression = star_expression.with_prefix(self.visit_space(star_expression.prefix, PySpace.Location.STAR_EXPRESSION_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(star_expression, p))
+        if not isinstance(temp_expression, StarExpression):
             return temp_expression
-        special_argument = cast(SpecialArgument, temp_expression)
-        special_argument = special_argument.with_markers(self.visit_markers(special_argument.markers, p))
-        special_argument = special_argument.with_expression(self.visit_and_cast(special_argument.expression, Expression, p))
-        return special_argument
+        star_expression = cast(StarExpression, temp_expression)
+        star_expression = star_expression.with_markers(self.visit_markers(star_expression.markers, p))
+        star_expression = star_expression.with_expression(self.visit_and_cast(star_expression.expression, Expression, p))
+        return star_expression
 
     def visit_named_argument(self, named_argument: NamedArgument, p: P) -> J:
         named_argument = named_argument.with_prefix(self.visit_space(named_argument.prefix, PySpace.Location.NAMED_ARGUMENT_PREFIX, p))

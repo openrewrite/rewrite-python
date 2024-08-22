@@ -408,6 +408,17 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value) if node.value else None
         )
 
+    def visit_Starred(self, node):
+        return py.StarExpression(
+            random_id(),
+            self.__source_before('*'),
+            Markers.EMPTY,
+            py.StarExpression.Kind.LIST,
+            self.__convert(node.value),
+            self.__map_type(node),
+        )
+        pass
+
     def visit_UnaryOp(self, node):
         mapped = self._map_unary_operator(node.op)
         return j.Unary(
@@ -454,23 +465,24 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
-        save_cursor = self._cursor
-        padding = self.__source_before(';')
-        if save_cursor != self._cursor and self._source[self._cursor - 1] == ';':
+        # use whitespace until end of line as padding; what follows will be prefix of next element
+        padding = self.__whitespace('\n')
+        if self._cursor < len(self._source) and self._source[self._cursor] == ';':
+            self._cursor += 1
             markers = Markers.EMPTY.with_markers([Semicolon(random_id())])
         else:
             markers = Markers.EMPTY
-            # use whitespace until end of line as padding; what follows will be prefix of next element
-            padding = self.__whitespace('\n')
         return JRightPadded(statement, padding, markers)
 
     def __pad_list_element(self, tree: Union[ast.expr, ast.stmt], last: bool = False) -> JRightPadded[J]:
         element = self.__convert(tree)
-        save_cursor = self._cursor
-        padding = self.__source_before(',')
-        if last and save_cursor != self._cursor and self._source[self._cursor - 1] == ',':
-            markers = Markers.EMPTY.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
-        else:
+        padding = self.__whitespace()
+        markers = Markers.EMPTY
+        if last and self._source[self._cursor] == ',':
+            self._cursor += 1
+            markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
+        elif not last:
+            self._cursor += 1
             markers = Markers.EMPTY
         return JRightPadded(element, padding, markers)
 

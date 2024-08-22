@@ -53,7 +53,7 @@ class PySpace:
         NAMED_ARGUMENT = auto()
         NAMED_ARGUMENT_PREFIX = auto()
         PASS_STATEMENT_PREFIX = auto()
-        SPECIAL_ARGUMENT_PREFIX = auto()
+        STAR_EXPRESSION_PREFIX = auto()
         SPECIAL_PARAMETER_PREFIX = auto()
         TOP_LEVEL_STATEMENT = auto()
         TRAILING_ELSE_WRAPPER_PREFIX = auto()
