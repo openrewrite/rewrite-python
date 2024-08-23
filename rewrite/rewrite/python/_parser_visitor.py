@@ -1,4 +1,5 @@
 import ast
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from random import random
@@ -19,6 +20,15 @@ class ParserVisitor(ast.NodeVisitor):
     _source: str
     _cursor: int = 0
     _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], Tuple[int, int]]] = []
+
+    @property
+    def _source_after_cursor(self) -> str:
+        return self._slow_source_after_cursor(self._source, self._cursor)
+
+    @staticmethod
+    @lru_cache
+    def _slow_source_after_cursor(source: str, cursor: int) -> str:
+        return source[cursor:]
 
     def __init__(self, source: str):
         super().__init__()
@@ -136,7 +146,19 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AnnAssign!")
 
     def visit_For(self, node):
-        raise NotImplementedError("Implement visit_For!")
+        return j.ForEachLoop(
+            random_id(),
+            self.__source_before('for'),
+            Markers.EMPTY,
+            j.ForEachLoop.Control(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.target), self.__source_before('in')),
+                self.__pad_right(self.__convert(node.iter), Space.EMPTY),
+            ),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
 
     def visit_AsyncFor(self, node):
         raise NotImplementedError("Implement visit_AsyncFor!")
@@ -172,7 +194,12 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Nonlocal!")
 
     def visit_Pass(self, node):
-        raise NotImplementedError("Implement visit_Pass!")
+        # FIXME rename PassStatement to Pass
+        return py.PassStatement(
+            random_id(),
+            self.__source_before('pass'),
+            Markers.EMPTY,
+        )
 
     def visit_Break(self, node):
         return j.Break(random_id(), self.__source_before('break'), Markers.EMPTY, None)
@@ -525,15 +552,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         params = self.visit_arguments(node.args)
         return_type = self.__convert(node.returns) if node.returns else None
-        body = j.Block(
-            random_id(),
-            self.__source_before(':'),
-            Markers.EMPTY,
-            self.__pad_right(False, Space.EMPTY),
-            [self.__pad_statement(stmt) for stmt in node.body] if node.body else [
-                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
-            Space.EMPTY
-        )
+        body = self.__convert_block(node.body)
 
         return j.MethodDeclaration(
             random_id(),
@@ -816,6 +835,20 @@ class ParserVisitor(ast.NodeVisitor):
                 return self.visit(node)
         else:
             return None
+
+    def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
+        return [self.__convert(tree) for tree in trees]
+
+    def __convert_block(self, statements: List[ast.stmt], prefix: str = ':') -> j.Block:
+        return j.Block(
+            random_id(),
+            self.__source_before(prefix),
+            Markers.EMPTY,
+            JRightPadded(False, Space.EMPTY, Markers.EMPTY),
+            [self.__pad_statement(stmt) for stmt in statements] if statements else [
+                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
+            Space.EMPTY
+        )
 
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
