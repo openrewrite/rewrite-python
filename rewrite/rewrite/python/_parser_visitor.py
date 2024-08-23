@@ -252,7 +252,25 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_TypeIgnore!")
 
     def visit_Attribute(self, node):
-        raise NotImplementedError("Implement visit_Attribute!")
+        return j.FieldAccess(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.value),
+            self.__pad_left(
+                self.__source_before('.'),
+                j.Identifier(
+                    random_id(),
+                    self.__source_before(node.attr),
+                    Markers.EMPTY,
+                    [],
+                    node.attr,
+                    None,
+                    None
+                )
+            ),
+            self.__map_type(node),
+        )
 
     def visit_Del(self, node):
         raise NotImplementedError("Implement visit_Del!")
