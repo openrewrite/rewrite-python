@@ -191,8 +191,7 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Nonlocal!")
 
     def visit_Pass(self, node):
-        # FIXME rename PassStatement to Pass
-        return py.PassStatement(
+        return py.Pass(
             random_id(),
             self.__source_before('pass'),
             Markers.EMPTY,

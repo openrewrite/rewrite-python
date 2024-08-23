@@ -66,14 +66,14 @@ class PythonVisitor(JavaVisitor[P]):
         collection_literal = collection_literal.padding.with_elements(self.visit_container(collection_literal.padding.elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, p))
         return collection_literal
 
-    def visit_pass_statement(self, pass_statement: PassStatement, p: P) -> J:
-        pass_statement = pass_statement.with_prefix(self.visit_space(pass_statement.prefix, PySpace.Location.PASS_STATEMENT_PREFIX, p))
-        temp_statement = cast(Statement, self.visit_statement(pass_statement, p))
-        if not isinstance(temp_statement, PassStatement):
+    def visit_pass(self, pass_: Pass, p: P) -> J:
+        pass_ = pass_.with_prefix(self.visit_space(pass_.prefix, PySpace.Location.PASS_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(pass_, p))
+        if not isinstance(temp_statement, Pass):
             return temp_statement
-        pass_statement = cast(PassStatement, temp_statement)
-        pass_statement = pass_statement.with_markers(self.visit_markers(pass_statement.markers, p))
-        return pass_statement
+        pass_ = cast(Pass, temp_statement)
+        pass_ = pass_.with_markers(self.visit_markers(pass_.markers, p))
+        return pass_
 
     def visit_trailing_else_wrapper(self, trailing_else_wrapper: TrailingElseWrapper, p: P) -> J:
         trailing_else_wrapper = trailing_else_wrapper.with_prefix(self.visit_space(trailing_else_wrapper.prefix, PySpace.Location.TRAILING_ELSE_WRAPPER_PREFIX, p))

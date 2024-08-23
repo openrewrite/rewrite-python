@@ -162,7 +162,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitPassStatement(Py.PassStatement pass, PrintOutputCapture<P> p) {
+    public J visitPass(Py.Pass pass, PrintOutputCapture<P> p) {
         beforeSyntax(pass, PySpace.Location.PASS_PREFIX, p);
         p.append("pass");
         afterSyntax(pass, p);

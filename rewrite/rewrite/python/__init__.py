@@ -21,7 +21,7 @@ __all__ = [
     'KeyValue',
     'CollectionLiteral',
     'DictLiteral',
-    'PassStatement',
+    'Pass',
     'TrailingElseWrapper',
     'ComprehensionExpression',
     'AwaitExpression',

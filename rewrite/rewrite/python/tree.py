@@ -626,14 +626,14 @@ class CollectionLiteral(Py, Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class PassStatement(Py, Statement):
+class Pass(Py, Statement):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> PassStatement:
+    def with_id(self, id: UUID) -> Pass:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -642,7 +642,7 @@ class PassStatement(Py, Statement):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> PassStatement:
+    def with_prefix(self, prefix: Space) -> Pass:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -651,7 +651,7 @@ class PassStatement(Py, Statement):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> PassStatement:
+    def with_markers(self, markers: Markers) -> Pass:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     def __init__(self, id: UUID, prefix: Space, markers: Markers) -> None:
@@ -661,7 +661,7 @@ class PassStatement(Py, Statement):
         object.__setattr__(self, '_markers', markers)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_pass_statement(self, p)
+        return v.visit_pass(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

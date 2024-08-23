@@ -102,8 +102,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return visitStatement(stmt, p);
     }
 
-    public J visitPassStatement(Py.PassStatement ogPass, P p) {
-        Py.PassStatement pass = ogPass;
+    public J visitPass(Py.Pass pass, P p) {
         pass = pass.withPrefix(visitSpace(pass.getPrefix(), PySpace.Location.PASS_PREFIX, p));
         pass = pass.withMarkers(visitMarkers(pass.getMarkers(), p));
         return visitStatement(pass, p);

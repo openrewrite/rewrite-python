@@ -615,7 +615,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @AllArgsConstructor
-    final class PassStatement implements Py, Statement {
+    final class Pass implements Py, Statement {
         @With
         UUID id;
 
@@ -627,7 +627,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitPassStatement(this, p);
+            return v.visitPass(this, p);
         }
 
         @Transient

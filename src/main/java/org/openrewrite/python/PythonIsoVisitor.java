@@ -88,8 +88,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.PassStatement visitPassStatement(Py.PassStatement ogPass, P p) {
-        return (Py.PassStatement) super.visitPassStatement(ogPass, p);
+    public Py.Pass visitPass(Py.Pass ogPass, P p) {
+        return (Py.Pass) super.visitPass(ogPass, p);
     }
 
     @Override

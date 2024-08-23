@@ -59,7 +59,7 @@ class PySpace:
         MATCH_PATTERN_PREFIX = auto()
         NAMED_ARGUMENT = auto()
         NAMED_ARGUMENT_PREFIX = auto()
-        PASS_STATEMENT_PREFIX = auto()
+        PASS_PREFIX = auto()
         SLICE_EXPRESSION_PREFIX = auto()
         SLICE_EXPRESSION_START_SUFFIX = auto()
         SLICE_EXPRESSION_STEP_SUFFIX = auto()
