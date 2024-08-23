@@ -1,6 +1,7 @@
 import ast
 from io import BytesIO
 from pathlib import Path
+from random import random
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Union
 
@@ -116,9 +117,6 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Interactive(self, node):
         raise NotImplementedError("Implement visit_Interactive!")
 
-    def visit_Expression(self, node):
-        raise NotImplementedError("Implement visit_Expression!")
-
     def visit_AsyncFunctionDef(self, node):
         raise NotImplementedError("Implement visit_AsyncFunctionDef!")
 
@@ -173,9 +171,6 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Nonlocal(self, node):
         raise NotImplementedError("Implement visit_Nonlocal!")
 
-    def visit_Expr(self, node):
-        raise NotImplementedError("Implement visit_Expr!")
-
     def visit_Pass(self, node):
         raise NotImplementedError("Implement visit_Pass!")
 
@@ -189,7 +184,7 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_GeneratorExp!")
 
     def visit_Yield(self, node):
-        raise NotImplementedError("Implement visit_Yield!")
+        return py.Yield(random_id(), self.__source_before('yield'), Markers.EMPTY, False, self.__convert(node.value))
 
     def visit_YieldFrom(self, node):
         raise NotImplementedError("Implement visit_YieldFrom!")
@@ -199,9 +194,6 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_JoinedStr(self, node):
         raise NotImplementedError("Implement visit_JoinedStr!")
-
-    def visit_NamedExpr(self, node):
-        raise NotImplementedError("Implement visit_NamedExpr!")
 
     def visit_TypeIgnore(self, node):
         raise NotImplementedError("Implement visit_TypeIgnore!")
@@ -218,113 +210,11 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Store(self, node):
         raise NotImplementedError("Implement visit_Store!")
 
-    def visit_And(self, node):
-        raise NotImplementedError("Implement visit_And!")
-
-    def visit_Or(self, node):
-        raise NotImplementedError("Implement visit_Or!")
-
-    def visit_Add(self, node):
-        raise NotImplementedError("Implement visit_Add!")
-
-    def visit_BitAnd(self, node):
-        raise NotImplementedError("Implement visit_BitAnd!")
-
-    def visit_BitOr(self, node):
-        raise NotImplementedError("Implement visit_BitOr!")
-
-    def visit_BitXor(self, node):
-        raise NotImplementedError("Implement visit_BitXor!")
-
-    def visit_Div(self, node):
-        raise NotImplementedError("Implement visit_Div!")
-
-    def visit_FloorDiv(self, node):
-        raise NotImplementedError("Implement visit_FloorDiv!")
-
-    def visit_LShift(self, node):
-        raise NotImplementedError("Implement visit_LShift!")
-
-    def visit_Mod(self, node):
-        raise NotImplementedError("Implement visit_Mod!")
-
-    def visit_Mult(self, node):
-        raise NotImplementedError("Implement visit_Mult!")
-
-    def visit_MatMult(self, node):
-        raise NotImplementedError("Implement visit_MatMult!")
-
-    def visit_Pow(self, node):
-        raise NotImplementedError("Implement visit_Pow!")
-
-    def visit_RShift(self, node):
-        raise NotImplementedError("Implement visit_RShift!")
-
-    def visit_Sub(self, node):
-        raise NotImplementedError("Implement visit_Sub!")
-
-    def visit_Invert(self, node):
-        raise NotImplementedError("Implement visit_Invert!")
-
-    def visit_Not(self, node):
-        raise NotImplementedError("Implement visit_Not!")
-
-    def visit_UAdd(self, node):
-        raise NotImplementedError("Implement visit_UAdd!")
-
-    def visit_USub(self, node):
-        raise NotImplementedError("Implement visit_USub!")
-
-    def visit_Eq(self, node):
-        raise NotImplementedError("Implement visit_Eq!")
-
-    def visit_Gt(self, node):
-        raise NotImplementedError("Implement visit_Gt!")
-
-    def visit_GtE(self, node):
-        raise NotImplementedError("Implement visit_GtE!")
-
-    def visit_In(self, node):
-        raise NotImplementedError("Implement visit_In!")
-
-    def visit_Is(self, node):
-        raise NotImplementedError("Implement visit_Is!")
-
-    def visit_IsNot(self, node):
-        raise NotImplementedError("Implement visit_IsNot!")
-
-    def visit_Lt(self, node):
-        raise NotImplementedError("Implement visit_Lt!")
-
-    def visit_LtE(self, node):
-        raise NotImplementedError("Implement visit_LtE!")
-
-    def visit_NotEq(self, node):
-        raise NotImplementedError("Implement visit_NotEq!")
-
-    def visit_NotIn(self, node):
-        raise NotImplementedError("Implement visit_NotIn!")
-
     def visit_ExceptHandler(self, node):
         raise NotImplementedError("Implement visit_ExceptHandler!")
 
-    def visit_arg(self, node):
-        raise NotImplementedError("Implement visit_arg!")
-
-    def visit_keyword(self, node):
-        raise NotImplementedError("Implement visit_keyword!")
-
-    def visit_alias(self, node):
-        raise NotImplementedError("Implement visit_alias!")
-
-    def visit_withitem(self, node):
-        raise NotImplementedError("Implement visit_withitem!")
-
     def visit_Match(self, node):
         raise NotImplementedError("Implement visit_Match!")
-
-    def visit_match_case(self, node):
-        raise NotImplementedError("Implement visit_match_case!")
 
     def visit_MatchValue(self, node):
         raise NotImplementedError("Implement visit_MatchValue!")
