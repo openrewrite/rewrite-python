@@ -6,8 +6,7 @@ from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id, Markers
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
-    Semicolon, TrailingComma
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma
 from rewrite.java import tree as j
 from . import tree as py, PyComment
 
@@ -234,7 +233,14 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_YieldFrom(self, node):
-        raise NotImplementedError("Implement visit_YieldFrom!")
+        return py.YieldExpression(
+            random_id(),
+            self.__source_before('yield'),
+            Markers.EMPTY,
+            self.__pad_left(self.__source_before('from'), True),
+            [self.__pad_right(self.__convert(node.value), self.__whitespace())],
+            self.__map_type(node)
+        )
 
     def visit_FormattedValue(self, node):
         raise NotImplementedError("Implement visit_FormattedValue!")
