@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import replace, dataclass
 from enum import Enum, auto
 from typing import Protocol, TypeVar, runtime_checkable, Any, Optional, TYPE_CHECKING
 
 from rewrite import TreeVisitor
 from rewrite.java.tree import J
+from ..java import Comment
 
 if TYPE_CHECKING:
     from .visitor import PythonVisitor
@@ -122,3 +124,20 @@ class PyContainer:
         def __init__(self, before_location: PySpace.Location, element_location: PyRightPadded.Location):
             self.before_location = before_location
             self.element_location = element_location
+
+
+@dataclass(frozen=True)
+class PyComment(Comment):
+
+    _aligned_to_indent: bool
+
+    @property
+    def aligned_to_indent(self) -> bool:
+        return self._aligned_to_indent
+
+    def with_aligned_to_indent(self, aligned_to_indent: bool) -> Comment:
+        return self if aligned_to_indent is self._aligned_to_indent else replace(self, _aligned_to_indent=aligned_to_indent)
+
+    @property
+    def multiline(self) -> bool:
+        return False

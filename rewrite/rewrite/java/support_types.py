@@ -28,13 +28,8 @@ class J(Tree, Protocol):
 
 @dataclass(frozen=True)
 class Comment(Protocol):
-    _multiline: bool
-
     @property
     def multiline(self) -> bool:
-        return self._multiline
-
-    def with_multiline(self, multiline: bool) -> Comment:
         ...
 
     _text: str
@@ -44,7 +39,7 @@ class Comment(Protocol):
         return self._text
 
     def with_text(self, text: str) -> Comment:
-        ...
+        return self if text is self._text else replace(self, _text=text)
 
     _suffix: str
 
@@ -53,7 +48,7 @@ class Comment(Protocol):
         return self._suffix
 
     def with_suffix(self, suffix: str) -> Comment:
-        ...
+        return self if suffix is self._suffix else replace(self, _suffix=suffix)
 
     _markers: Markers
 
@@ -62,22 +57,26 @@ class Comment(Protocol):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Comment:
-        ...
+        return self if markers is self._markers else replace(self, _markers=markers)
 
 
 @dataclass(frozen=True)
 class TextComment(Comment):
+    _multiline: bool
+
+    @property
+    def multiline(self) -> bool:
+        return self._multiline
+
     def with_multiline(self, multiline: bool) -> Comment:
         return self if multiline is self._multiline else replace(self, _multiline=multiline)
 
-    def with_text(self, text: str) -> Comment:
-        return self if text is self._text else replace(self, _text=text)
-
-    def with_suffix(self, suffix: str) -> Comment:
-        return self if suffix is self._suffix else replace(self, _suffix=suffix)
-
-    def with_markers(self, markers: Markers) -> Comment:
-        return self if markers is self._markers else replace(self, _markers=markers)
+    # IMPORTANT: This explicit constructor aligns the parameter order with the Java side
+    def __init__(self, multiline: bool, text: str, suffix: str, markers: Markers) -> None:
+        object.__setattr__(self, '_multiline', multiline)
+        object.__setattr__(self, '_text', text)
+        object.__setattr__(self, '_suffix', suffix)
+        object.__setattr__(self, '_markers', markers)
 
 
 @dataclass(frozen=True)

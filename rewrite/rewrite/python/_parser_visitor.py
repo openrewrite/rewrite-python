@@ -9,7 +9,7 @@ from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
     Semicolon, TrailingComma
 from rewrite.java import tree as j
-from . import tree as py
+from . import tree as py, PyComment
 
 J2 = TypeVar('J2', bound=J)
 
@@ -929,11 +929,12 @@ class ParserVisitor(ast.NodeVisitor):
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
+                self._cursor += 1
                 while self._cursor < source_len and self._source[self._cursor] != '\n':
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
-                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < source_len else '',
-                                            Markers.EMPTY))
+                comments.append(PyComment(''.join(comment), '\n' if self._cursor < source_len else '',
+                                            Markers.EMPTY, False))
             else:
                 break
             self._cursor += 1

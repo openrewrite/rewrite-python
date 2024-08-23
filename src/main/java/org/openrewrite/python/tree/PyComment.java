@@ -24,6 +24,7 @@ import org.openrewrite.marker.Markers;
 
 @Value
 public class PyComment implements Comment {
+    @With
     String text;
 
     @With
