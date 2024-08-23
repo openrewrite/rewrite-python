@@ -206,7 +206,16 @@ class ParserVisitor(ast.NodeVisitor):
         return j.Continue(random_id(), self.__source_before('continue'), Markers.EMPTY, None)
 
     def visit_GeneratorExp(self, node):
-        raise NotImplementedError("Implement visit_GeneratorExp!")
+        return py.ComprehensionExpression(
+            random_id(),
+            self.__source_before('('),
+            Markers.EMPTY,
+            py.ComprehensionExpression.Kind.GENERATOR,
+            self.__convert(node.elt),
+            cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
+            self.__source_before(')'),
+            self.__map_type(node)
+        )
 
     def visit_Expr(self, node):
         return py.ExpressionStatement(
@@ -491,7 +500,6 @@ class ParserVisitor(ast.NodeVisitor):
         return dict
 
     def visit_DictComp(self, node):
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
             self.__source_before('{'),
@@ -639,15 +647,12 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_ListComp(self, node):
-        prefix = self.__source_before('[')
-        result = self.__convert(node.elt)
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
-            prefix,
+            self.__source_before('['),
             Markers.EMPTY,
             py.ComprehensionExpression.Kind.LIST,
-            result,
+            self.__convert(node.elt),
             cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
             self.__source_before(']'),
             self.__map_type(node)
@@ -726,15 +731,12 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_SetComp(self, node):
-        prefix = self.__source_before('{')
-        result = self.__convert(node.elt)
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
-            prefix,
+            self.__source_before('{'),
             Markers.EMPTY,
             py.ComprehensionExpression.Kind.SET,
-            result,
+            self.__convert(node.elt),
             cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
             self.__source_before('}'),
             self.__map_type(node)
@@ -816,7 +818,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert(self, node) -> Optional[J]:
         if node:
-            if isinstance(node, ast.expr) and not isinstance(node, ast.Tuple):
+            if isinstance(node, ast.expr) and not isinstance(node, (ast.Tuple, ast.GeneratorExp)):
                 save_cursor = self._cursor
                 prefix = self.__whitespace()
                 if self._source[self._cursor] == '(':

@@ -44,3 +44,18 @@ def test_dict_comprehension_with_if():
 def test_dict_comprehension_with_multiple_ifs():
     # language=python
     rewrite_run(python("a = {e:None for e in range(10) if e > 1 if e < 10}"))
+
+
+def test_basic_generator():
+    # language=python
+    rewrite_run(python("a = (n * 2 for n in range(10))"))
+
+
+def test_generator_with_if():
+    # language=python
+    rewrite_run(python("a = {e:e for e in range(10) if e > 1}"))
+
+
+def test_generator_with_multiple_ifs():
+    # language=python
+    rewrite_run(python("a = {e:None for e in range(10) if e > 1 if e < 10}"))
