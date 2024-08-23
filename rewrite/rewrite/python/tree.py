@@ -343,6 +343,109 @@ class ExpressionStatement(Py, Expression, Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class MultiImport(Py, Statement):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> MultiImport:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> MultiImport:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> MultiImport:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _from: Optional[JRightPadded[NameTree]]
+
+    @property
+    def from_(self) -> Optional[NameTree]:
+        return self._from.element
+
+    def with_from(self, from_: Optional[NameTree]) -> MultiImport:
+        return self.padding.with_from(JRightPadded.with_element(self._from, from_))
+
+    _parenthesized: bool
+
+    @property
+    def parenthesized(self) -> bool:
+        return self._parenthesized
+
+    def with_parenthesized(self, parenthesized: bool) -> MultiImport:
+        return self if parenthesized is self._parenthesized else replace(self, _parenthesized=parenthesized)
+
+    _names: JContainer[Import]
+
+    @property
+    def names(self) -> List[Import]:
+        return self._names.elements
+
+    def with_names(self, names: List[Import]) -> MultiImport:
+        return self.padding.with_names(JContainer.with_elements(self._names, names))
+
+    @dataclass
+    class PaddingHelper:
+        _t: MultiImport
+
+        @property
+        def from_(self) -> Optional[JRightPadded[NameTree]]:
+            return self._t._from
+
+        def with_from(self, from_: Optional[JRightPadded[NameTree]]) -> MultiImport:
+            return self._t if self._t._from is from_ else replace(self._t, _from=from_)
+
+        @property
+        def names(self) -> JContainer[Import]:
+            return self._t._names
+
+        def with_names(self, names: JContainer[Import]) -> MultiImport:
+            return self._t if self._t._names is names else replace(self._t, _names=names)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: MultiImport.PaddingHelper
+        if self._padding is None:
+            p = MultiImport.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = MultiImport.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: Optional[JRightPadded[NameTree]], parenthesized: bool, names: JContainer[J.Import]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_from', from_)
+        object.__setattr__(self, '_parenthesized', parenthesized)
+        object.__setattr__(self, '_names', names)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_multi_import(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class KeyValue(Py, Expression, TypedTree):
     _id: UUID
 

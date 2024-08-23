@@ -57,6 +57,10 @@ class PySpace:
         MATCH_CASE_PREFIX = auto()
         MATCH_PATTERN_ELEMENT_SUFFIX = auto()
         MATCH_PATTERN_PREFIX = auto()
+        MULTI_IMPORT_FROM_SUFFIX = auto()
+        MULTI_IMPORT_NAME_PREFIX = auto()
+        MULTI_IMPORT_NAME_SUFFIX = auto()
+        MULTI_IMPORT_PREFIX = auto()
         NAMED_ARGUMENT = auto()
         NAMED_ARGUMENT_PREFIX = auto()
         PASS_PREFIX = auto()
@@ -91,6 +95,8 @@ class PyRightPadded:
         KEY_VALUE_KEY = PySpace.Location.DICT_ENTRY_KEY_SUFFIX
         KEY_VALUE_KEY_SUFFIX = PySpace.Location.KEY_VALUE_SUFFIX
         MATCH_CASE_PATTERN_CHILD = PySpace.Location.MATCH_PATTERN_ELEMENT_SUFFIX
+        MULTI_IMPORT_FROM = PySpace.Location.MULTI_IMPORT_FROM_SUFFIX
+        MULTI_IMPORT_NAME = PySpace.Location.MULTI_IMPORT_NAME_SUFFIX
         SLICE_EXPRESSION_START = PySpace.Location.SLICE_EXPRESSION_START_SUFFIX
         SLICE_EXPRESSION_STEP = PySpace.Location.SLICE_EXPRESSION_STEP_SUFFIX
         SLICE_EXPRESSION_STOP = PySpace.Location.SLICE_EXPRESSION_STOP_SUFFIX
@@ -120,6 +126,7 @@ class PyContainer:
         COLLECTION_LITERAL_ELEMENTS = (PySpace.Location.COLLECTION_LITERAL_PREFIX, PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT)
         DICT_LITERAL_ELEMENTS = (PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT)
         MATCH_CASE_PATTERN_CHILDREN = (PySpace.Location.MATCH_CASE_PATTERN_CHILDREN_PREFIX, PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD)
+        MULTI_IMPORT_NAMES = (PySpace.Location.MULTI_IMPORT_NAME_PREFIX, PyRightPadded.Location.MULTI_IMPORT_NAME)
 
         def __init__(self, before_location: PySpace.Location, element_location: PyRightPadded.Location):
             self.before_location = before_location

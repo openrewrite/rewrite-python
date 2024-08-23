@@ -300,6 +300,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return case_;
     }
 
+    public J visitMultiImport(Py.MultiImport multiImport_, P p) {
+        Py.MultiImport mi = multiImport_;
+        mi = mi.withPrefix(visitSpace(mi.getPrefix(), PySpace.Location.MULTI_IMPORT_PREFIX, p));
+        mi = mi.withMarkers(visitMarkers(mi.getMarkers(), p));
+        mi = mi.getPadding().withFrom(visitRightPadded(mi.getPadding().getFrom(), PyRightPadded.Location.MULTI_IMPORT_FROM, p));
+        mi = mi.getPadding().withNames(visitContainer(mi.getPadding().getNames(), PyContainer.Location.MULTI_IMPORT_NAMES, p));
+        return mi;
+    }
+
     public J visitSpecialParameter(Py.SpecialParameter ogParam, P p) {
         Py.SpecialParameter param = ogParam;
         param = param.withPrefix(visitSpace(param.getPrefix(), PySpace.Location.SPECIAL_PARAM_PREFIX, p));

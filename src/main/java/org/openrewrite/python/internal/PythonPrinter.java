@@ -134,6 +134,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitMultiImport(Py.MultiImport multiImport_, PrintOutputCapture<P> p) {
+        beforeSyntax(multiImport_, PySpace.Location.MULTI_IMPORT_PREFIX, p);
+        if (multiImport_.getFrom() != null) {
+            p.append("from");
+            visitRightPadded(multiImport_.getPadding().getFrom(), PyRightPadded.Location.MULTI_IMPORT_FROM, p);
+        }
+        p.append("import");
+        if (multiImport_.isParenthesized()) {
+            visitContainer("(", multiImport_.getPadding().getNames(), PyContainer.Location.MULTI_IMPORT_NAMES, ",", ")", p);
+        } else {
+            visitContainer("", multiImport_.getPadding().getNames(), PyContainer.Location.MULTI_IMPORT_NAMES, ",", "", p);
+        }
+        afterSyntax(multiImport_, p);
+        return multiImport_;
+    }
+
+    @Override
     public J visitKeyValue(Py.KeyValue keyValue, PrintOutputCapture<P> p) {
         beforeSyntax(keyValue, PySpace.Location.KEY_VALUE_PREFIX, p);
         visitRightPadded(keyValue.getPadding().getKey(), PyRightPadded.Location.KEY_VALUE_KEY_SUFFIX, p);
@@ -891,74 +908,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitImport(Import im, PrintOutputCapture<P> p) {
-            List<Import> statementGroup = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_CURSOR_KEY);
-            if (statementGroup != null) {
-                Integer statementGroupIndex = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY);
-                if (statementGroupIndex == null) {
-                    throw new IllegalStateException();
-                }
-                if (statementGroupIndex != statementGroup.size() - 1) {
-                    return im;
-                }
-            }
-
-            if (statementGroup == null) {
-                statementGroup = Collections.singletonList(im);
-            }
-
-            boolean printParens = im.getMarkers().findFirst(ImportParens.class).isPresent();
-//        boolean hasNewline;
-//        {
-//            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
-//            ContainsNewlineVisitor hasNewlineVisitor = new ContainsNewlineVisitor();
-//            for (Import inGroup : statementGroup) {
-//                inGroup.acceptJava(hasNewlineVisitor, hasNewlineHolder);
-//                if (hasNewlineHolder.get()) {
-//                    break;
-//                }
-//            }
-//            hasNewline = hasNewlineHolder.get();
-//        }
-
             beforeSyntax(im, Space.Location.IMPORT_PREFIX, p);
-            boolean isFrom = im.getQualid().getSimpleName().isEmpty();
-            if (isFrom) {
-                p.append("import");
+            if (im.getQualid().getTarget() instanceof J.Empty) {
+                visit(im.getQualid().getName(), p);
             } else {
-                p.append("from");
-                visit(im.getQualid().getTarget(), p);
-                visitSpace(im.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                p.append("import");
+                visit(im.getQualid(), p);
             }
-
-            if (printParens) {
-                visitPythonExtraPadding(im, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
-                p.append("(");
-            }
-
-            for (int i = 0; i < statementGroup.size(); i++) {
-                Import inGroup = statementGroup.get(i);
-                if (i != 0) {
-                    p.append(",");
-                }
-                if (isFrom) {
-                    visit(inGroup.getQualid().getTarget(), p);
-                } else {
-                    visit(inGroup.getQualid().getName(), p);
-                }
-                if (inGroup.getPadding().getAlias() != null) {
-                    visitSpace(inGroup.getPadding().getAlias().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                    p.append("as");
-                    visit(inGroup.getAlias(), p);
-                }
-            }
-
-            if (printParens) {
-                visitPythonExtraPadding(im, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
-                p.append(")");
-            }
-
-
+            visitLeftPadded("as", im.getPadding().getAlias(), JLeftPadded.Location.IMPORT_ALIAS_PREFIX, p);
             afterSyntax(im, p);
             return im;
         }

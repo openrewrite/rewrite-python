@@ -183,15 +183,15 @@ public interface Py extends J {
             return withCharsetName(charset.name());
         }
 
-        List<JRightPadded<Import>> imports;
+        List<JRightPadded<J.Import>> imports;
 
         @Override
-        public List<Import> getImports() {
+        public List<J.Import> getImports() {
             return JRightPadded.getElements(imports);
         }
 
         @Override
-        public Py.CompilationUnit withImports(List<Import> imports) {
+        public Py.CompilationUnit withImports(List<J.Import> imports) {
             return getPadding().withImports(JRightPadded.withElements(this.imports, imports));
         }
 
@@ -283,12 +283,12 @@ public interface Py extends J {
             private final Py.CompilationUnit t;
 
             @Override
-            public List<JRightPadded<Import>> getImports() {
+            public List<JRightPadded<J.Import>> getImports() {
                 return t.imports;
             }
 
             @Override
-            public Py.CompilationUnit withImports(List<JRightPadded<Import>> imports) {
+            public Py.CompilationUnit withImports(List<JRightPadded<J.Import>> imports) {
                 return t.imports == imports ? t : new Py.CompilationUnit(t.id, t.prefix, t.markers, t.sourcePath, t.fileAttributes, t.charsetName, t.charsetBomMarked, null,
                         imports, t.statements, t.eof);
             }
@@ -363,6 +363,105 @@ public interface Py extends J {
         @Override
         public CoordinateBuilder.Statement getCoordinates() {
             return new CoordinateBuilder.Statement(this);
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class MultiImport implements Py, Statement {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @Getter
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        @Nullable
+        JRightPadded<NameTree> from;
+
+        public @Nullable NameTree getFrom() {
+            return from == null ? null : from.getElement();
+        }
+
+        public MultiImport withFrom(NameTree from) {
+            return getPadding().withFrom(JRightPadded.withElement(this.from, from));
+        }
+
+        @Getter
+        @With
+        boolean parenthesized;
+
+        JContainer<J.Import> names;
+
+        public List<J.Import> getNames() {
+            return this.names.getElements();
+        }
+
+        public MultiImport withNames(List<J.Import> names) {
+            return getPadding().withNames(JContainer.withElements(this.names, names));
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitMultiImport(this, p);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final MultiImport t;
+
+            public @Nullable JRightPadded<NameTree> getFrom() {
+                return t.from;
+            }
+
+            public MultiImport withFrom(@Nullable JRightPadded<NameTree> from) {
+                return t.from == from ? t : new MultiImport(t.id, t.prefix, t.markers, from, t.parenthesized, t.names);
+            }
+            public JContainer<Import> getNames() {
+                return t.names;
+            }
+
+            public MultiImport withNames(JContainer<J.Import> names) {
+                return t.names == names ? t : new MultiImport(t.id, t.prefix, t.markers, t.from, t.parenthesized, names);
+            }
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        @Override
+        public String toString() {
+            return withPrefix(Space.EMPTY).printTrimmed(new PythonPrinter<>());
         }
     }
 

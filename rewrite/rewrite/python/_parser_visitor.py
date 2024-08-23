@@ -1,12 +1,14 @@
 import ast
 from functools import lru_cache
 from io import BytesIO
+from lib2to3.fixer_util import parenthesize
 from pathlib import Path
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id, Markers
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
+    NameTree
 from rewrite.java import tree as j
 from . import tree as py, PyComment
 
@@ -179,10 +181,102 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Try!")
 
     def visit_Import(self, node):
-        raise NotImplementedError("Implement visit_Import!")
+        # TODO only use `MultiImport` when necessary (requires corresponding changes to printer)
+        return py.MultiImport(
+            random_id(),
+            self.__source_before('import'),
+            Markers.EMPTY,
+            None,
+            False,
+            JContainer(
+                Space.EMPTY,
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                 enumerate(node.names)],
+                Markers.EMPTY
+            )
+        )
 
     def visit_ImportFrom(self, node):
-        raise NotImplementedError("Implement visit_ImportFrom!")
+        prefix = self.__source_before('from')
+        from_ = self.__pad_right(self._map_to_name(node.module), self.__source_before('import'))
+        names_prefix = self.__whitespace()
+        if parenthesized := self._source[self._cursor] == '(':
+            self.__skip('(')
+        multi_import = py.MultiImport(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            from_,
+            parenthesized,
+            JContainer(
+                names_prefix,
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                 enumerate(node.names)],
+                Markers.EMPTY
+            )
+        )
+        if parenthesized:
+            self.__skip(')')
+        return multi_import
+
+    def visit_alias(self, node):
+        return j.Import(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__pad_left(Space.EMPTY, False),
+            self._map_to_qualified_name(node.name),
+            None if not node.asname else
+            self.__pad_left(
+                self.__source_before('as'),
+                j.Identifier(
+                    random_id(),
+                    self.__source_before(node.asname),
+                    Markers.EMPTY,
+                    [],
+                    node.asname,
+                    None,
+                    None
+                )
+            )
+        )
+
+    def _map_to_qualified_name(self, name: str) -> j.FieldAccess:
+        if not '.' in name:
+            return j.FieldAccess(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+                self.__pad_left(
+                    Space.EMPTY,
+                    self._map_to_name(name)
+                ),
+                None
+            )
+        return cast(j.FieldAccess, self._map_to_name(name))
+
+    def _map_to_name(self, name: str) -> NameTree:
+        return self._map_to_name0(name.split('.'))
+
+    def _map_to_name0(self, parts: List[str]) -> NameTree:
+        if len(parts) == 1:
+            return j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                         None)
+        else:
+            return j.FieldAccess(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self._map_to_name0(parts[:-1]),
+                self.__pad_left(
+                    self.__source_before('.'),
+                    j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                                 None),
+                ),
+                None
+            )
+
 
     def visit_Global(self, node):
         raise NotImplementedError("Implement visit_Global!")

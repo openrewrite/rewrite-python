@@ -35,6 +35,17 @@ class PythonVisitor(JavaVisitor[P]):
         expression_statement = expression_statement.with_expression(self.visit_and_cast(expression_statement.expression, Expression, p))
         return expression_statement
 
+    def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
+        multi_import = multi_import.with_prefix(self.visit_space(multi_import.prefix, PySpace.Location.MULTI_IMPORT_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(multi_import, p))
+        if not isinstance(temp_statement, MultiImport):
+            return temp_statement
+        multi_import = cast(MultiImport, temp_statement)
+        multi_import = multi_import.with_markers(self.visit_markers(multi_import.markers, p))
+        multi_import = multi_import.padding.with_from(self.visit_right_padded(multi_import.padding.from_, PyRightPadded.Location.MULTI_IMPORT_FROM, p))
+        multi_import = multi_import.padding.with_names(self.visit_container(multi_import.padding.names, PyContainer.Location.MULTI_IMPORT_NAMES, p))
+        return multi_import
+
     def visit_key_value(self, key_value: KeyValue, p: P) -> J:
         key_value = key_value.with_prefix(self.visit_space(key_value.prefix, PySpace.Location.KEY_VALUE_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(key_value, p))

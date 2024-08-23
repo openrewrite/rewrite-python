@@ -83,6 +83,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.MultiImport visitMultiImport(Py.MultiImport multiImport_, P p) {
+        return (Py.MultiImport) super.visitMultiImport(multiImport_, p);
+    }
+
+    @Override
     public Py.NamedArgument visitNamedArgument(Py.NamedArgument ogArg, P p) {
         return (Py.NamedArgument) super.visitNamedArgument(ogArg, p);
     }
