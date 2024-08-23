@@ -2,15 +2,13 @@ import ast
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from random import random
 from tokenize import tokenize
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Union
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
     Semicolon, TrailingComma
 from rewrite.java import tree as j
-
 from . import tree as py
 
 J2 = TypeVar('J2', bound=J)

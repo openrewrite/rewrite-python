@@ -264,6 +264,7 @@ Space.EMPTY = Space([], '')
 Space.SINGLE_SPACE = Space([], ' ')
 
 
+@runtime_checkable
 class JavaSourceFile(SourceFile, Protocol):
     pass
 
@@ -293,11 +294,13 @@ class TypeTree(NameTree, Protocol):
     pass
 
 
-class Loop(Tree, Protocol):
+@runtime_checkable
+class Loop(Statement, Protocol):
     pass
 
 
-class MethodCall(Tree, Protocol):
+@runtime_checkable
+class MethodCall(Expression, Protocol):
     pass
 
 
