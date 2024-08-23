@@ -934,7 +934,7 @@ class ParserVisitor(ast.NodeVisitor):
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
                 comments.append(PyComment(''.join(comment), '\n' if self._cursor < source_len else '',
-                                            Markers.EMPTY, False))
+                                            False, Markers.EMPTY))
             else:
                 break
             self._cursor += 1

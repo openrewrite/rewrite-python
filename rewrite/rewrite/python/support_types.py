@@ -4,7 +4,7 @@ from dataclasses import replace, dataclass
 from enum import Enum, auto
 from typing import Protocol, TypeVar, runtime_checkable, Any, Optional, TYPE_CHECKING
 
-from rewrite import TreeVisitor
+from rewrite import TreeVisitor, Markers
 from rewrite.java.tree import J
 from ..java import Comment
 
@@ -141,3 +141,10 @@ class PyComment(Comment):
     @property
     def multiline(self) -> bool:
         return False
+
+    # IMPORTANT: This explicit constructor aligns the parameter order with the Java side
+    def __init__(self, text: str, suffix: str, aligned_to_indent: bool, markers: Markers) -> None:
+        object.__setattr__(self, '_text', text)
+        object.__setattr__(self, '_suffix', suffix)
+        object.__setattr__(self, '_aligned_to_indent', aligned_to_indent)
+        object.__setattr__(self, '_markers', markers)
