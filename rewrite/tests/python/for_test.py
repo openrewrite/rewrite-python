@@ -6,7 +6,7 @@ def test_for():
     rewrite_run(
         python(
             """\
-            for x in xs:
+            for x in [1]:
                 pass
             """
         )
@@ -17,7 +17,7 @@ def test_for_with_else():
     rewrite_run(
         python(
             """\
-            for x in xs:
+            for x in [1]:
                 pass
             else:
                 pass
