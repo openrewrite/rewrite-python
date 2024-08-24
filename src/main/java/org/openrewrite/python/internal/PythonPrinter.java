@@ -745,10 +745,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     keyword = ">=";
                     break;
                 case Equal:
-                    keyword = "is";
+                    keyword = "==";
                     break;
                 case NotEqual:
-                    keyword = "is not";
+                    keyword = "!=";
                     break;
                 case BitAnd:
                     keyword = "&";
@@ -873,15 +873,25 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<P> p) {
+            beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
+            visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, "", p);
+            afterSyntax(controlParens, p);
+            return controlParens;
+        }
+
+        @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
             beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
                 else_.getBody() instanceof J.If) {
                 p.append("el");
+                visit(else_.getBody(), p);
             } else {
                 p.append("else");
+                p.append(':');
+                visit(else_.getBody(), p);
             }
-            visit(else_.getBody(), p);
             afterSyntax(else_, p);
             return else_;
         }
@@ -904,6 +914,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(forEachLoop.getBody(), p);
             afterSyntax(forEachLoop, p);
             return forEachLoop;
+        }
+
+        @Override
+        public J visitIf(J.If iff, PrintOutputCapture<P> p) {
+            beforeSyntax(iff, Space.Location.IF_PREFIX, p);
+            p.append("if");
+            visit(iff.getIfCondition(), p);
+            p.append(":");
+            visitStatement(iff.getPadding().getThenPart(), JRightPadded.Location.IF_THEN, p);
+            visit(iff.getElsePart(), p);
+            afterSyntax(iff, p);
+            return iff;
         }
 
         @Override

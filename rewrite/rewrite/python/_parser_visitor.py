@@ -1,7 +1,6 @@
 import ast
 from functools import lru_cache
 from io import BytesIO
-from lib2to3.fixer_util import parenthesize
 from pathlib import Path
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
@@ -90,7 +89,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Assign(self, node):
-        if (len(node.targets) == 1):
+        if len(node.targets) == 1:
             return j.Assignment(
                 random_id(),
                 self.__whitespace(),
@@ -166,7 +165,32 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_While!")
 
     def visit_If(self, node):
-        raise NotImplementedError("Implement visit_If!")
+        prefix = self.__source_before('if')
+        condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
+                                         self.__pad_right(self.__convert(node.test), self.__source_before(':')))
+        then = self.__pad_right(
+            self.__convert(node.body[0]) if len(node.body) == 1 else self.__convert_block(node.body, ':'), Space.EMPTY)
+        elze = None
+        if len(node.orelse) > 0:
+            elze = j.If.Else(
+                random_id(),
+                # TODO technically there could be space between else and ':' but likely not common
+                self.__source_before('el') if isinstance(node.orelse[0], ast.If) else self.__source_before('else:'),
+                Markers.EMPTY,
+                self.__pad_right(
+                    # this is always a zero or one element list
+                    self.__convert(node.orelse[0]),
+                    Space.EMPTY
+                )
+            )
+        return j.If(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            condition,
+            then,
+            elze
+        )
 
     def visit_With(self, node):
         raise NotImplementedError("Implement visit_With!")
@@ -255,28 +279,6 @@ class ParserVisitor(ast.NodeVisitor):
                 None
             )
         return cast(j.FieldAccess, self._map_to_name(name))
-
-    def _map_to_name(self, name: str) -> NameTree:
-        return self._map_to_name0(name.split('.'))
-
-    def _map_to_name0(self, parts: List[str]) -> NameTree:
-        if len(parts) == 1:
-            return j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
-                         None)
-        else:
-            return j.FieldAccess(
-                random_id(),
-                self.__whitespace(),
-                Markers.EMPTY,
-                self._map_to_name0(parts[:-1]),
-                self.__pad_left(
-                    self.__source_before('.'),
-                    j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
-                                 None),
-                ),
-                None
-            )
-
 
     def visit_Global(self, node):
         raise NotImplementedError("Implement visit_Global!")
@@ -966,6 +968,27 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
+    def _map_to_name(self, name: str) -> NameTree:
+        return self._map_to_name0(name.split('.'))
+
+    def _map_to_name0(self, parts: List[str]) -> NameTree:
+        if len(parts) == 1:
+            return j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                                None)
+        else:
+            return j.FieldAccess(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self._map_to_name0(parts[:-1]),
+                self.__pad_left(
+                    self.__source_before('.'),
+                    j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                                 None),
+                ),
+                None
+            )
+
     def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
 
@@ -1051,7 +1074,7 @@ class ParserVisitor(ast.NodeVisitor):
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
                 comments.append(PyComment(''.join(comment), '\n' if self._cursor < source_len else '',
-                                            False, Markers.EMPTY))
+                                          False, Markers.EMPTY))
             else:
                 break
             self._cursor += 1
