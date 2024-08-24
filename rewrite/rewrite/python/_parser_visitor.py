@@ -114,7 +114,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Await(self, node):
-        return py.AwaitExpression(
+        return py.Await(
             random_id(),
             self.__source_before('await'),
             Markers.EMPTY,
@@ -132,7 +132,7 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_ClassDef!")
 
     def visit_Delete(self, node):
-        return py.DelStatement(
+        return py.Del(
             random_id(),
             self.__source_before('del'),
             Markers.EMPTY,
@@ -329,7 +329,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Yield(self, node):
-        return py.YieldExpression(
+        return py.Yield(
             random_id(),
             self.__source_before('yield'),
             Markers.EMPTY,
@@ -339,7 +339,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_YieldFrom(self, node):
-        return py.YieldExpression(
+        return py.Yield(
             random_id(),
             self.__source_before('yield'),
             Markers.EMPTY,
@@ -641,11 +641,11 @@ class ParserVisitor(ast.NodeVisitor):
 
     def _map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
         if key is None:
-            element = py.StarExpression(
+            element = py.Star(
                 random_id(),
                 self.__source_before('**'),
                 Markers.EMPTY,
-                py.StarExpression.Kind.DICT,
+                py.Star.Kind.DICT,
                 self.__convert(value),
                 self.__map_type(value),
             )
@@ -873,7 +873,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
             self.__source_before(':') if node.step else self.__whitespace('\n'))
         step = self.__pad_right(self.__convert(node.step), self.__whitespace('\n')) if node.step else None
-        return py.SliceExpression(
+        return py.Slice(
             random_id(),
             prefix,
             Markers.EMPTY,
@@ -883,11 +883,11 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Starred(self, node):
-        return py.StarExpression(
+        return py.Star(
             random_id(),
             self.__source_before('*'),
             Markers.EMPTY,
-            py.StarExpression.Kind.LIST,
+            py.Star.Kind.LIST,
             self.__convert(node.value),
             self.__map_type(node),
         )

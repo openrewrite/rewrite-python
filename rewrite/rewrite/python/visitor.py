@@ -123,46 +123,46 @@ class PythonVisitor(JavaVisitor[P]):
         clause = clause.with_conditions([self.visit_and_cast(v, ComprehensionExpression.Condition, p) for v in clause.conditions])
         return clause
 
-    def visit_await_expression(self, await_expression: AwaitExpression, p: P) -> J:
-        await_expression = await_expression.with_prefix(self.visit_space(await_expression.prefix, PySpace.Location.AWAIT_EXPRESSION_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(await_expression, p))
-        if not isinstance(temp_expression, AwaitExpression):
+    def visit_await(self, await_: Await, p: P) -> J:
+        await_ = await_.with_prefix(self.visit_space(await_.prefix, PySpace.Location.AWAIT_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(await_, p))
+        if not isinstance(temp_expression, Await):
             return temp_expression
-        await_expression = cast(AwaitExpression, temp_expression)
-        await_expression = await_expression.with_markers(self.visit_markers(await_expression.markers, p))
-        await_expression = await_expression.with_expression(self.visit_and_cast(await_expression.expression, Expression, p))
-        return await_expression
+        await_ = cast(Await, temp_expression)
+        await_ = await_.with_markers(self.visit_markers(await_.markers, p))
+        await_ = await_.with_expression(self.visit_and_cast(await_.expression, Expression, p))
+        return await_
 
-    def visit_yield_expression(self, yield_expression: YieldExpression, p: P) -> J:
-        yield_expression = yield_expression.with_prefix(self.visit_space(yield_expression.prefix, PySpace.Location.YIELD_EXPRESSION_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(yield_expression, p))
-        if not isinstance(temp_expression, YieldExpression):
+    def visit_yield(self, yield_: Yield, p: P) -> J:
+        yield_ = yield_.with_prefix(self.visit_space(yield_.prefix, PySpace.Location.YIELD_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(yield_, p))
+        if not isinstance(temp_expression, Yield):
             return temp_expression
-        yield_expression = cast(YieldExpression, temp_expression)
-        yield_expression = yield_expression.with_markers(self.visit_markers(yield_expression.markers, p))
-        yield_expression = yield_expression.padding.with_from(self.visit_left_padded(yield_expression.padding.from_, PyLeftPadded.Location.YIELD_EXPRESSION_FROM, p))
-        yield_expression = yield_expression.padding.with_expressions([self.visit_right_padded(v, PyRightPadded.Location.YIELD_EXPRESSION_EXPRESSIONS, p) for v in yield_expression.padding.expressions])
-        return yield_expression
+        yield_ = cast(Yield, temp_expression)
+        yield_ = yield_.with_markers(self.visit_markers(yield_.markers, p))
+        yield_ = yield_.padding.with_from(self.visit_left_padded(yield_.padding.from_, PyLeftPadded.Location.YIELD_FROM, p))
+        yield_ = yield_.padding.with_expressions([self.visit_right_padded(v, PyRightPadded.Location.YIELD_EXPRESSIONS, p) for v in yield_.padding.expressions])
+        return yield_
 
-    def visit_variable_scope_statement(self, variable_scope_statement: VariableScopeStatement, p: P) -> J:
-        variable_scope_statement = variable_scope_statement.with_prefix(self.visit_space(variable_scope_statement.prefix, PySpace.Location.VARIABLE_SCOPE_STATEMENT_PREFIX, p))
-        temp_statement = cast(Statement, self.visit_statement(variable_scope_statement, p))
-        if not isinstance(temp_statement, VariableScopeStatement):
+    def visit_variable_scope(self, variable_scope: VariableScope, p: P) -> J:
+        variable_scope = variable_scope.with_prefix(self.visit_space(variable_scope.prefix, PySpace.Location.VARIABLE_SCOPE_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(variable_scope, p))
+        if not isinstance(temp_statement, VariableScope):
             return temp_statement
-        variable_scope_statement = cast(VariableScopeStatement, temp_statement)
-        variable_scope_statement = variable_scope_statement.with_markers(self.visit_markers(variable_scope_statement.markers, p))
-        variable_scope_statement = variable_scope_statement.padding.with_names([self.visit_right_padded(v, PyRightPadded.Location.VARIABLE_SCOPE_STATEMENT_NAMES, p) for v in variable_scope_statement.padding.names])
-        return variable_scope_statement
+        variable_scope = cast(VariableScope, temp_statement)
+        variable_scope = variable_scope.with_markers(self.visit_markers(variable_scope.markers, p))
+        variable_scope = variable_scope.padding.with_names([self.visit_right_padded(v, PyRightPadded.Location.VARIABLE_SCOPE_NAMES, p) for v in variable_scope.padding.names])
+        return variable_scope
 
-    def visit_del_statement(self, del_statement: DelStatement, p: P) -> J:
-        del_statement = del_statement.with_prefix(self.visit_space(del_statement.prefix, PySpace.Location.DEL_STATEMENT_PREFIX, p))
-        temp_statement = cast(Statement, self.visit_statement(del_statement, p))
-        if not isinstance(temp_statement, DelStatement):
+    def visit_del(self, del_: Del, p: P) -> J:
+        del_ = del_.with_prefix(self.visit_space(del_.prefix, PySpace.Location.DEL_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(del_, p))
+        if not isinstance(temp_statement, Del):
             return temp_statement
-        del_statement = cast(DelStatement, temp_statement)
-        del_statement = del_statement.with_markers(self.visit_markers(del_statement.markers, p))
-        del_statement = del_statement.padding.with_targets([self.visit_right_padded(v, PyRightPadded.Location.DEL_STATEMENT_TARGETS, p) for v in del_statement.padding.targets])
-        return del_statement
+        del_ = cast(Del, temp_statement)
+        del_ = del_.with_markers(self.visit_markers(del_.markers, p))
+        del_ = del_.padding.with_targets([self.visit_right_padded(v, PyRightPadded.Location.DEL_TARGETS, p) for v in del_.padding.targets])
+        return del_
 
     def visit_special_parameter(self, special_parameter: SpecialParameter, p: P) -> J:
         special_parameter = special_parameter.with_prefix(self.visit_space(special_parameter.prefix, PySpace.Location.SPECIAL_PARAMETER_PREFIX, p))
@@ -170,15 +170,15 @@ class PythonVisitor(JavaVisitor[P]):
         special_parameter = special_parameter.with_type_hint(self.visit_and_cast(special_parameter.type_hint, TypeHint, p))
         return special_parameter
 
-    def visit_star_expression(self, star_expression: StarExpression, p: P) -> J:
-        star_expression = star_expression.with_prefix(self.visit_space(star_expression.prefix, PySpace.Location.STAR_EXPRESSION_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(star_expression, p))
-        if not isinstance(temp_expression, StarExpression):
+    def visit_star(self, star: Star, p: P) -> J:
+        star = star.with_prefix(self.visit_space(star.prefix, PySpace.Location.STAR_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(star, p))
+        if not isinstance(temp_expression, Star):
             return temp_expression
-        star_expression = cast(StarExpression, temp_expression)
-        star_expression = star_expression.with_markers(self.visit_markers(star_expression.markers, p))
-        star_expression = star_expression.with_expression(self.visit_and_cast(star_expression.expression, Expression, p))
-        return star_expression
+        star = cast(Star, temp_expression)
+        star = star.with_markers(self.visit_markers(star.markers, p))
+        star = star.with_expression(self.visit_and_cast(star.expression, Expression, p))
+        return star
 
     def visit_named_argument(self, named_argument: NamedArgument, p: P) -> J:
         named_argument = named_argument.with_prefix(self.visit_space(named_argument.prefix, PySpace.Location.NAMED_ARGUMENT_PREFIX, p))
@@ -202,16 +202,16 @@ class PythonVisitor(JavaVisitor[P]):
         type_hinted_expression = type_hinted_expression.with_expression(self.visit_and_cast(type_hinted_expression.expression, Expression, p))
         return type_hinted_expression
 
-    def visit_error_from_expression(self, error_from_expression: ErrorFromExpression, p: P) -> J:
-        error_from_expression = error_from_expression.with_prefix(self.visit_space(error_from_expression.prefix, PySpace.Location.ERROR_FROM_EXPRESSION_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(error_from_expression, p))
-        if not isinstance(temp_expression, ErrorFromExpression):
+    def visit_error_from(self, error_from: ErrorFrom, p: P) -> J:
+        error_from = error_from.with_prefix(self.visit_space(error_from.prefix, PySpace.Location.ERROR_FROM_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(error_from, p))
+        if not isinstance(temp_expression, ErrorFrom):
             return temp_expression
-        error_from_expression = cast(ErrorFromExpression, temp_expression)
-        error_from_expression = error_from_expression.with_markers(self.visit_markers(error_from_expression.markers, p))
-        error_from_expression = error_from_expression.with_error(self.visit_and_cast(error_from_expression.error, Expression, p))
-        error_from_expression = error_from_expression.padding.with_from(self.visit_left_padded(error_from_expression.padding.from_, PyLeftPadded.Location.ERROR_FROM_EXPRESSION_FROM, p))
-        return error_from_expression
+        error_from = cast(ErrorFrom, temp_expression)
+        error_from = error_from.with_markers(self.visit_markers(error_from.markers, p))
+        error_from = error_from.with_error(self.visit_and_cast(error_from.error, Expression, p))
+        error_from = error_from.padding.with_from(self.visit_left_padded(error_from.padding.from_, PyLeftPadded.Location.ERROR_FROM_FROM, p))
+        return error_from
 
     def visit_match_case(self, match_case: MatchCase, p: P) -> J:
         match_case = match_case.with_prefix(self.visit_space(match_case.prefix, PySpace.Location.MATCH_CASE_PREFIX, p))
@@ -234,17 +234,17 @@ class PythonVisitor(JavaVisitor[P]):
         pattern = pattern.padding.with_children(self.visit_container(pattern.padding.children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, p))
         return pattern
 
-    def visit_slice_expression(self, slice_expression: SliceExpression, p: P) -> J:
-        slice_expression = slice_expression.with_prefix(self.visit_space(slice_expression.prefix, PySpace.Location.SLICE_EXPRESSION_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(slice_expression, p))
-        if not isinstance(temp_expression, SliceExpression):
+    def visit_slice(self, slice: Slice, p: P) -> J:
+        slice = slice.with_prefix(self.visit_space(slice.prefix, PySpace.Location.SLICE_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(slice, p))
+        if not isinstance(temp_expression, Slice):
             return temp_expression
-        slice_expression = cast(SliceExpression, temp_expression)
-        slice_expression = slice_expression.with_markers(self.visit_markers(slice_expression.markers, p))
-        slice_expression = slice_expression.padding.with_start(self.visit_right_padded(slice_expression.padding.start, PyRightPadded.Location.SLICE_EXPRESSION_START, p))
-        slice_expression = slice_expression.padding.with_stop(self.visit_right_padded(slice_expression.padding.stop, PyRightPadded.Location.SLICE_EXPRESSION_STOP, p))
-        slice_expression = slice_expression.padding.with_step(self.visit_right_padded(slice_expression.padding.step, PyRightPadded.Location.SLICE_EXPRESSION_STEP, p))
-        return slice_expression
+        slice = cast(Slice, temp_expression)
+        slice = slice.with_markers(self.visit_markers(slice.markers, p))
+        slice = slice.padding.with_start(self.visit_right_padded(slice.padding.start, PyRightPadded.Location.SLICE_START, p))
+        slice = slice.padding.with_stop(self.visit_right_padded(slice.padding.stop, PyRightPadded.Location.SLICE_STOP, p))
+        slice = slice.padding.with_step(self.visit_right_padded(slice.padding.step, PyRightPadded.Location.SLICE_STEP, p))
+        return slice
 
     def visit_container(self, container: Optional[JContainer[J2]], loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if isinstance(loc, JContainer.Location):

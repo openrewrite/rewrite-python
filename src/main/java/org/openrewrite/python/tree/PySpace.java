@@ -15,8 +15,8 @@
  */
 package org.openrewrite.python.tree;
 
-import org.openrewrite.internal.ListUtils;
 import org.jspecify.annotations.Nullable;
+import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.Space;
 import org.openrewrite.marker.Markers;
@@ -351,11 +351,11 @@ public final class PySpace {
         NAMED_ARGUMENT_PREFIX,
         PASS_PREFIX,
         SLICE_EXPRESSION_PREFIX,
-        SLICE_EXPRESSION_START_SUFFIX,
-        SLICE_EXPRESSION_STEP_SUFFIX,
-        SLICE_EXPRESSION_STOP_SUFFIX,
+        SLICE_START_SUFFIX,
+        SLICE_STEP_SUFFIX,
+        SLICE_STOP_SUFFIX,
         SPECIAL_PARAM_PREFIX,
-        STAR_EXPRESSION_PREFIX,
+        STAR_PREFIX,
         TOP_LEVEL_STATEMENT,
         TRAILING_ELSE_WRAPPER_PREFIX,
         TYPE_HINTED_EXPRESSION_PREFIX,

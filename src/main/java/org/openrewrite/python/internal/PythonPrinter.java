@@ -33,7 +33,6 @@ import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.*;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -246,7 +245,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitAwaitExpression(Py.AwaitExpression await, PrintOutputCapture<P> p) {
+    public J visitAwait(Py.Await await, PrintOutputCapture<P> p) {
         visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p);
         p.append("await");
         visit(await.getExpression(), p);
@@ -254,7 +253,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitYieldExpression(Py.YieldExpression yield, PrintOutputCapture<P> p) {
+    public J visitYield(Py.Yield yield, PrintOutputCapture<P> p) {
         visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p);
         p.append("yield");
 
@@ -273,7 +272,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitVariableScopeStatement(Py.VariableScopeStatement scope, PrintOutputCapture<P> p) {
+    public J visitVariableScope(Py.VariableScope scope, PrintOutputCapture<P> p) {
         visitSpace(scope.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p);
         switch (scope.getKind()) {
             case GLOBAL:
@@ -294,7 +293,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitDelStatement(Py.DelStatement del, PrintOutputCapture<P> p) {
+    public J visitDel(Py.Del del, PrintOutputCapture<P> p) {
         visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p);
         p.append("del");
         visitRightPadded(
@@ -317,7 +316,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitErrorFromExpression(Py.ErrorFromExpression expr, PrintOutputCapture<P> p) {
+    public J visitErrorFrom(Py.ErrorFrom expr, PrintOutputCapture<P> p) {
         beforeSyntax(expr, PySpace.Location.ERROR_FROM_PREFIX, p);
         visit(expr.getError(), p);
         visitSpace(expr.getPadding().getFrom().getBefore(), PySpace.Location.ERROR_FROM_SOURCE, p);
@@ -521,7 +520,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitSliceExpression(Py.SliceExpression slice, PrintOutputCapture<P> p) {
+    public J visitSlice(Py.Slice slice, PrintOutputCapture<P> p) {
         beforeSyntax(slice, PySpace.Location.SLICE_EXPRESSION_PREFIX, p);
         visitRightPadded(slice.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p);
         p.append(':');
@@ -536,8 +535,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitStarExpression(Py.StarExpression star, PrintOutputCapture<P> p) {
-        beforeSyntax(star, PySpace.Location.STAR_EXPRESSION_PREFIX, p);
+    public J visitStar(Py.Star star, PrintOutputCapture<P> p) {
+        beforeSyntax(star, PySpace.Location.STAR_PREFIX, p);
         switch (star.getKind()) {
             case LIST:
                 p.append("*");

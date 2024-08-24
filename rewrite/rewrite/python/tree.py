@@ -1094,14 +1094,14 @@ class ComprehensionExpression(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class AwaitExpression(Py, Expression):
+class Await(Py, Expression):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> AwaitExpression:
+    def with_id(self, id: UUID) -> Await:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1110,7 +1110,7 @@ class AwaitExpression(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> AwaitExpression:
+    def with_prefix(self, prefix: Space) -> Await:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1119,7 +1119,7 @@ class AwaitExpression(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> AwaitExpression:
+    def with_markers(self, markers: Markers) -> Await:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _expression: Expression
@@ -1128,7 +1128,7 @@ class AwaitExpression(Py, Expression):
     def expression(self) -> Expression:
         return self._expression
 
-    def with_expression(self, expression: Expression) -> AwaitExpression:
+    def with_expression(self, expression: Expression) -> Await:
         return self if expression is self._expression else replace(self, _expression=expression)
 
     _type: JavaType
@@ -1137,7 +1137,7 @@ class AwaitExpression(Py, Expression):
     def type(self) -> JavaType:
         return self._type
 
-    def with_type(self, type: JavaType) -> AwaitExpression:
+    def with_type(self, type: JavaType) -> Await:
         return self if type is self._type else replace(self, _type=type)
 
     def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, type: JavaType) -> None:
@@ -1149,18 +1149,18 @@ class AwaitExpression(Py, Expression):
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_await_expression(self, p)
+        return v.visit_await(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class YieldExpression(Py, Expression):
+class Yield(Py, Expression):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> YieldExpression:
+    def with_id(self, id: UUID) -> Yield:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1169,7 +1169,7 @@ class YieldExpression(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> YieldExpression:
+    def with_prefix(self, prefix: Space) -> Yield:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1178,7 +1178,7 @@ class YieldExpression(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> YieldExpression:
+    def with_markers(self, markers: Markers) -> Yield:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _from: JLeftPadded[bool]
@@ -1187,7 +1187,7 @@ class YieldExpression(Py, Expression):
     def from_(self) -> bool:
         return self._from.element
 
-    def with_from(self, from_: bool) -> YieldExpression:
+    def with_from(self, from_: bool) -> Yield:
         return self.padding.with_from(JLeftPadded.with_element(self._from, from_))
 
     _expressions: List[JRightPadded[Expression]]
@@ -1196,7 +1196,7 @@ class YieldExpression(Py, Expression):
     def expressions(self) -> List[Expression]:
         return JRightPadded.get_elements(self._expressions)
 
-    def with_expressions(self, expressions: List[Expression]) -> YieldExpression:
+    def with_expressions(self, expressions: List[Expression]) -> Yield:
         return self.padding.with_expressions(JRightPadded.with_elements(self._expressions, expressions))
 
     _type: JavaType
@@ -1205,40 +1205,40 @@ class YieldExpression(Py, Expression):
     def type(self) -> JavaType:
         return self._type
 
-    def with_type(self, type: JavaType) -> YieldExpression:
+    def with_type(self, type: JavaType) -> Yield:
         return self if type is self._type else replace(self, _type=type)
 
     @dataclass
     class PaddingHelper:
-        _t: YieldExpression
+        _t: Yield
 
         @property
         def from_(self) -> JLeftPadded[bool]:
             return self._t._from
 
-        def with_from(self, from_: JLeftPadded[bool]) -> YieldExpression:
+        def with_from(self, from_: JLeftPadded[bool]) -> Yield:
             return self._t if self._t._from is from_ else replace(self._t, _from=from_)
 
         @property
         def expressions(self) -> List[JRightPadded[Expression]]:
             return self._t._expressions
 
-        def with_expressions(self, expressions: List[JRightPadded[Expression]]) -> YieldExpression:
+        def with_expressions(self, expressions: List[JRightPadded[Expression]]) -> Yield:
             return self._t if self._t._expressions is expressions else replace(self._t, _expressions=expressions)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: YieldExpression.PaddingHelper
+        p: Yield.PaddingHelper
         if self._padding is None:
-            p = YieldExpression.PaddingHelper(self)
+            p = Yield.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = YieldExpression.PaddingHelper(self)
+                p = Yield.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
@@ -1252,11 +1252,11 @@ class YieldExpression(Py, Expression):
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_yield_expression(self, p)
+        return v.visit_yield(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class VariableScopeStatement(Py, Statement):
+class VariableScope(Py, Statement):
     class Kind(Enum):
         GLOBAL = 0
         NONLOCAL = 1
@@ -1267,7 +1267,7 @@ class VariableScopeStatement(Py, Statement):
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> VariableScopeStatement:
+    def with_id(self, id: UUID) -> VariableScope:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1276,7 +1276,7 @@ class VariableScopeStatement(Py, Statement):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> VariableScopeStatement:
+    def with_prefix(self, prefix: Space) -> VariableScope:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1285,7 +1285,7 @@ class VariableScopeStatement(Py, Statement):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> VariableScopeStatement:
+    def with_markers(self, markers: Markers) -> VariableScope:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _kind: Kind
@@ -1294,7 +1294,7 @@ class VariableScopeStatement(Py, Statement):
     def kind(self) -> Kind:
         return self._kind
 
-    def with_kind(self, kind: Kind) -> VariableScopeStatement:
+    def with_kind(self, kind: Kind) -> VariableScope:
         return self if kind is self._kind else replace(self, _kind=kind)
 
     _names: List[JRightPadded[Identifier]]
@@ -1303,37 +1303,37 @@ class VariableScopeStatement(Py, Statement):
     def names(self) -> List[Identifier]:
         return JRightPadded.get_elements(self._names)
 
-    def with_names(self, names: List[Identifier]) -> VariableScopeStatement:
+    def with_names(self, names: List[Identifier]) -> VariableScope:
         return self.padding.with_names(JRightPadded.with_elements(self._names, names))
 
     @dataclass
     class PaddingHelper:
-        _t: VariableScopeStatement
+        _t: VariableScope
 
         @property
         def names(self) -> List[JRightPadded[Identifier]]:
             return self._t._names
 
-        def with_names(self, names: List[JRightPadded[Identifier]]) -> VariableScopeStatement:
+        def with_names(self, names: List[JRightPadded[Identifier]]) -> VariableScope:
             return self._t if self._t._names is names else replace(self._t, _names=names)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: VariableScopeStatement.PaddingHelper
+        p: VariableScope.PaddingHelper
         if self._padding is None:
-            p = VariableScopeStatement.PaddingHelper(self)
+            p = VariableScope.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = VariableScopeStatement.PaddingHelper(self)
+                p = VariableScope.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScopeStatement.Kind, names: List[JRightPadded[Identifier]]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScope.Kind, names: List[JRightPadded[Identifier]]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1342,18 +1342,18 @@ class VariableScopeStatement(Py, Statement):
         object.__setattr__(self, '_names', names)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_variable_scope_statement(self, p)
+        return v.visit_variable_scope(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class DelStatement(Py, Statement):
+class Del(Py, Statement):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> DelStatement:
+    def with_id(self, id: UUID) -> Del:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1362,7 +1362,7 @@ class DelStatement(Py, Statement):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> DelStatement:
+    def with_prefix(self, prefix: Space) -> Del:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1371,7 +1371,7 @@ class DelStatement(Py, Statement):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> DelStatement:
+    def with_markers(self, markers: Markers) -> Del:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _targets: List[JRightPadded[Expression]]
@@ -1380,33 +1380,33 @@ class DelStatement(Py, Statement):
     def targets(self) -> List[Expression]:
         return JRightPadded.get_elements(self._targets)
 
-    def with_targets(self, targets: List[Expression]) -> DelStatement:
+    def with_targets(self, targets: List[Expression]) -> Del:
         return self.padding.with_targets(JRightPadded.with_elements(self._targets, targets))
 
     @dataclass
     class PaddingHelper:
-        _t: DelStatement
+        _t: Del
 
         @property
         def targets(self) -> List[JRightPadded[Expression]]:
             return self._t._targets
 
-        def with_targets(self, targets: List[JRightPadded[Expression]]) -> DelStatement:
+        def with_targets(self, targets: List[JRightPadded[Expression]]) -> Del:
             return self._t if self._t._targets is targets else replace(self._t, _targets=targets)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: DelStatement.PaddingHelper
+        p: Del.PaddingHelper
         if self._padding is None:
-            p = DelStatement.PaddingHelper(self)
+            p = Del.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = DelStatement.PaddingHelper(self)
+                p = Del.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
@@ -1418,7 +1418,7 @@ class DelStatement(Py, Statement):
         object.__setattr__(self, '_targets', targets)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_del_statement(self, p)
+        return v.visit_del(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1495,7 +1495,7 @@ class SpecialParameter(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class StarExpression(Py, Expression):
+class Star(Py, Expression):
     class Kind(Enum):
         LIST = 0
         DICT = 1
@@ -1506,7 +1506,7 @@ class StarExpression(Py, Expression):
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> StarExpression:
+    def with_id(self, id: UUID) -> Star:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1515,7 +1515,7 @@ class StarExpression(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> StarExpression:
+    def with_prefix(self, prefix: Space) -> Star:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1524,7 +1524,7 @@ class StarExpression(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> StarExpression:
+    def with_markers(self, markers: Markers) -> Star:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _kind: Kind
@@ -1533,7 +1533,7 @@ class StarExpression(Py, Expression):
     def kind(self) -> Kind:
         return self._kind
 
-    def with_kind(self, kind: Kind) -> StarExpression:
+    def with_kind(self, kind: Kind) -> Star:
         return self if kind is self._kind else replace(self, _kind=kind)
 
     _expression: Expression
@@ -1542,7 +1542,7 @@ class StarExpression(Py, Expression):
     def expression(self) -> Expression:
         return self._expression
 
-    def with_expression(self, expression: Expression) -> StarExpression:
+    def with_expression(self, expression: Expression) -> Star:
         return self if expression is self._expression else replace(self, _expression=expression)
 
     _type: Optional[JavaType]
@@ -1551,10 +1551,10 @@ class StarExpression(Py, Expression):
     def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: Optional[JavaType]) -> StarExpression:
+    def with_type(self, type: Optional[JavaType]) -> Star:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: StarExpression.Kind, expression: Expression, type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: Star.Kind, expression: Expression, type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1564,7 +1564,7 @@ class StarExpression(Py, Expression):
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_star_expression(self, p)
+        return v.visit_star(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -1733,14 +1733,14 @@ class TypeHintedExpression(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class ErrorFromExpression(Py, Expression):
+class ErrorFrom(Py, Expression):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> ErrorFromExpression:
+    def with_id(self, id: UUID) -> ErrorFrom:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1749,7 +1749,7 @@ class ErrorFromExpression(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> ErrorFromExpression:
+    def with_prefix(self, prefix: Space) -> ErrorFrom:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1758,7 +1758,7 @@ class ErrorFromExpression(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> ErrorFromExpression:
+    def with_markers(self, markers: Markers) -> ErrorFrom:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _error: Expression
@@ -1767,7 +1767,7 @@ class ErrorFromExpression(Py, Expression):
     def error(self) -> Expression:
         return self._error
 
-    def with_error(self, error: Expression) -> ErrorFromExpression:
+    def with_error(self, error: Expression) -> ErrorFrom:
         return self if error is self._error else replace(self, _error=error)
 
     _from: JLeftPadded[Expression]
@@ -1776,7 +1776,7 @@ class ErrorFromExpression(Py, Expression):
     def from_(self) -> Expression:
         return self._from.element
 
-    def with_from(self, from_: Expression) -> ErrorFromExpression:
+    def with_from(self, from_: Expression) -> ErrorFrom:
         return self.padding.with_from(JLeftPadded.with_element(self._from, from_))
 
     _type: JavaType
@@ -1785,33 +1785,33 @@ class ErrorFromExpression(Py, Expression):
     def type(self) -> JavaType:
         return self._type
 
-    def with_type(self, type: JavaType) -> ErrorFromExpression:
+    def with_type(self, type: JavaType) -> ErrorFrom:
         return self if type is self._type else replace(self, _type=type)
 
     @dataclass
     class PaddingHelper:
-        _t: ErrorFromExpression
+        _t: ErrorFrom
 
         @property
         def from_(self) -> JLeftPadded[Expression]:
             return self._t._from
 
-        def with_from(self, from_: JLeftPadded[Expression]) -> ErrorFromExpression:
+        def with_from(self, from_: JLeftPadded[Expression]) -> ErrorFrom:
             return self._t if self._t._from is from_ else replace(self._t, _from=from_)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: ErrorFromExpression.PaddingHelper
+        p: ErrorFrom.PaddingHelper
         if self._padding is None:
-            p = ErrorFromExpression.PaddingHelper(self)
+            p = ErrorFrom.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = ErrorFromExpression.PaddingHelper(self)
+                p = ErrorFrom.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
@@ -1825,7 +1825,7 @@ class ErrorFromExpression(Py, Expression):
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_error_from_expression(self, p)
+        return v.visit_error_from(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
@@ -2039,14 +2039,14 @@ class MatchCase(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class SliceExpression(Py, Expression, TypedTree):
+class Slice(Py, Expression, TypedTree):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> SliceExpression:
+    def with_id(self, id: UUID) -> Slice:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -2055,7 +2055,7 @@ class SliceExpression(Py, Expression, TypedTree):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> SliceExpression:
+    def with_prefix(self, prefix: Space) -> Slice:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -2064,7 +2064,7 @@ class SliceExpression(Py, Expression, TypedTree):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> SliceExpression:
+    def with_markers(self, markers: Markers) -> Slice:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _start: Optional[JRightPadded[Expression]]
@@ -2073,7 +2073,7 @@ class SliceExpression(Py, Expression, TypedTree):
     def start(self) -> Optional[Expression]:
         return self._start.element
 
-    def with_start(self, start: Optional[Expression]) -> SliceExpression:
+    def with_start(self, start: Optional[Expression]) -> Slice:
         return self.padding.with_start(JRightPadded.with_element(self._start, start))
 
     _stop: Optional[JRightPadded[Expression]]
@@ -2082,7 +2082,7 @@ class SliceExpression(Py, Expression, TypedTree):
     def stop(self) -> Optional[Expression]:
         return self._stop.element
 
-    def with_stop(self, stop: Optional[Expression]) -> SliceExpression:
+    def with_stop(self, stop: Optional[Expression]) -> Slice:
         return self.padding.with_stop(JRightPadded.with_element(self._stop, stop))
 
     _step: Optional[JRightPadded[Expression]]
@@ -2091,47 +2091,47 @@ class SliceExpression(Py, Expression, TypedTree):
     def step(self) -> Optional[Expression]:
         return self._step.element
 
-    def with_step(self, step: Optional[Expression]) -> SliceExpression:
+    def with_step(self, step: Optional[Expression]) -> Slice:
         return self.padding.with_step(JRightPadded.with_element(self._step, step))
 
     @dataclass
     class PaddingHelper:
-        _t: SliceExpression
+        _t: Slice
 
         @property
         def start(self) -> Optional[JRightPadded[Expression]]:
             return self._t._start
 
-        def with_start(self, start: Optional[JRightPadded[Expression]]) -> SliceExpression:
+        def with_start(self, start: Optional[JRightPadded[Expression]]) -> Slice:
             return self._t if self._t._start is start else replace(self._t, _start=start)
 
         @property
         def stop(self) -> Optional[JRightPadded[Expression]]:
             return self._t._stop
 
-        def with_stop(self, stop: Optional[JRightPadded[Expression]]) -> SliceExpression:
+        def with_stop(self, stop: Optional[JRightPadded[Expression]]) -> Slice:
             return self._t if self._t._stop is stop else replace(self._t, _stop=stop)
 
         @property
         def step(self) -> Optional[JRightPadded[Expression]]:
             return self._t._step
 
-        def with_step(self, step: Optional[JRightPadded[Expression]]) -> SliceExpression:
+        def with_step(self, step: Optional[JRightPadded[Expression]]) -> Slice:
             return self._t if self._t._step is step else replace(self._t, _step=step)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: SliceExpression.PaddingHelper
+        p: Slice.PaddingHelper
         if self._padding is None:
-            p = SliceExpression.PaddingHelper(self)
+            p = Slice.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = SliceExpression.PaddingHelper(self)
+                p = Slice.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
@@ -2145,4 +2145,4 @@ class SliceExpression(Py, Expression, TypedTree):
         object.__setattr__(self, '_step', step)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_slice_expression(self, p)
+        return v.visit_slice(self, p)

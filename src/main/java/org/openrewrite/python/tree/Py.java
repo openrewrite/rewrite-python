@@ -966,7 +966,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
-    final class AwaitExpression implements Py, Expression {
+    final class Await implements Py, Expression {
         @With
         @EqualsAndHashCode.Include
         UUID id;
@@ -985,7 +985,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitAwaitExpression(this, p);
+            return v.visitAwait(this, p);
         }
 
         @Override
@@ -999,7 +999,7 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class YieldExpression implements Py, Expression {
+    final class Yield implements Py, Expression {
         @Nullable
         @NonFinal
         transient WeakReference<Padding> padding;
@@ -1029,7 +1029,7 @@ public interface Py extends J {
             return this.from.getElement();
         }
 
-        public YieldExpression withFrom(boolean from) {
+        public Py.Yield withFrom(boolean from) {
             return this.getPadding().withFrom(JLeftPadded.withElement(this.from, from));
         }
 
@@ -1037,14 +1037,14 @@ public interface Py extends J {
             return JRightPadded.getElements(expressions);
         }
 
-        public YieldExpression withExpressions(List<Expression> expressions) {
+        public Py.Yield withExpressions(List<Expression> expressions) {
             return this.getPadding().withExpressions(JRightPadded.withElements(this.expressions, expressions));
         }
 
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitYieldExpression(this, p);
+            return v.visitYield(this, p);
         }
 
         @Override
@@ -1069,14 +1069,14 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final YieldExpression t;
+            private final Py.Yield t;
 
             public JLeftPadded<Boolean> getFrom() {
                 return t.from;
             }
 
-            public YieldExpression withFrom(JLeftPadded<Boolean> from) {
-                return from == t.from ? t : new YieldExpression(t.id, t.prefix, t.markers, from, t.expressions, t.type);
+            public Py.Yield withFrom(JLeftPadded<Boolean> from) {
+                return from == t.from ? t : new Py.Yield(t.id, t.prefix, t.markers, from, t.expressions, t.type);
             }
 
 
@@ -1084,10 +1084,10 @@ public interface Py extends J {
                 return t.expressions;
             }
 
-            public YieldExpression withExpressions(List<JRightPadded<Expression>> expressions) {
+            public Py.Yield withExpressions(List<JRightPadded<Expression>> expressions) {
                 return expressions == t.expressions
                         ? t
-                        : new YieldExpression(t.id, t.prefix, t.markers, t.from, expressions, t.type);
+                        : new Py.Yield(t.id, t.prefix, t.markers, t.from, expressions, t.type);
             }
         }
 
@@ -1097,7 +1097,7 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class VariableScopeStatement implements Py, Statement {
+    final class VariableScope implements Py, Statement {
 
         public enum Kind {
             GLOBAL,
@@ -1131,14 +1131,14 @@ public interface Py extends J {
             return JRightPadded.getElements(names);
         }
 
-        public VariableScopeStatement withNames(List<J.Identifier> names) {
+        public VariableScope withNames(List<J.Identifier> names) {
             return this.getPadding().withNames(JRightPadded.withElements(this.names, names));
         }
 
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitVariableScopeStatement(this, p);
+            return v.visitVariableScope(this, p);
         }
 
         @Override
@@ -1163,16 +1163,16 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final VariableScopeStatement t;
+            private final VariableScope t;
 
             public List<JRightPadded<J.Identifier>> getNames() {
                 return t.names;
             }
 
-            public VariableScopeStatement withNames(List<JRightPadded<J.Identifier>> names) {
+            public VariableScope withNames(List<JRightPadded<J.Identifier>> names) {
                 return names == t.names
                         ? t
-                        : new VariableScopeStatement(t.id, t.prefix, t.markers, t.kind, names);
+                        : new VariableScope(t.id, t.prefix, t.markers, t.kind, names);
             }
         }
     }
@@ -1181,7 +1181,7 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class DelStatement implements Py, Statement {
+    final class Del implements Py, Statement {
         @Nullable
         @NonFinal
         transient WeakReference<Padding> padding;
@@ -1205,13 +1205,13 @@ public interface Py extends J {
             return JRightPadded.getElements(targets);
         }
 
-        public DelStatement withTargets(List<Expression> expressions) {
+        public Del withTargets(List<Expression> expressions) {
             return this.getPadding().withTargets(JRightPadded.withElements(this.targets, expressions));
         }
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitDelStatement(this, p);
+            return v.visitDel(this, p);
         }
 
         @Override
@@ -1236,16 +1236,16 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final DelStatement t;
+            private final Del t;
 
             public List<JRightPadded<Expression>> getTargets() {
                 return t.targets;
             }
 
-            public DelStatement withTargets(List<JRightPadded<Expression>> expressions) {
+            public Del withTargets(List<JRightPadded<Expression>> expressions) {
                 return expressions == t.targets
                         ? t
-                        : new DelStatement(t.id, t.prefix, t.markers, expressions);
+                        : new Del(t.id, t.prefix, t.markers, expressions);
             }
         }
     }
@@ -1292,7 +1292,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
-    final class StarExpression implements Py, Expression {
+    final class Star implements Py, Expression {
 
         public enum Kind {
             LIST,
@@ -1321,7 +1321,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitStarExpression(this, p);
+            return v.visitStar(this, p);
         }
 
         @Override
@@ -1445,7 +1445,7 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class ErrorFromExpression implements Py, Expression {
+    final class ErrorFrom implements Py, Expression {
 
         @Nullable
         @NonFinal
@@ -1478,14 +1478,14 @@ public interface Py extends J {
             return from.getElement();
         }
 
-        public ErrorFromExpression withFrom(Expression from) {
+        public ErrorFrom withFrom(Expression from) {
             return this.getPadding().withFrom(this.from.withElement(from));
         }
 
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitErrorFromExpression(this, p);
+            return v.visitErrorFrom(this, p);
         }
 
         @Override
@@ -1510,16 +1510,16 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final ErrorFromExpression t;
+            private final ErrorFrom t;
 
             public JLeftPadded<Expression> getFrom() {
                 return t.from;
             }
 
-            public ErrorFromExpression withFrom(JLeftPadded<Expression> from) {
+            public ErrorFrom withFrom(JLeftPadded<Expression> from) {
                 return from == t.from
                         ? t
-                        : new ErrorFromExpression(t.id, t.prefix, t.markers, t.error, from, t.type);
+                        : new ErrorFrom(t.id, t.prefix, t.markers, t.error, from, t.type);
             }
         }
 
@@ -1721,7 +1721,7 @@ public interface Py extends J {
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class SliceExpression implements Py, Expression, TypedTree {
+    final class Slice implements Py, Expression, TypedTree {
         @Nullable
         @NonFinal
         transient WeakReference<Padding> padding;
@@ -1746,7 +1746,7 @@ public interface Py extends J {
             return start != null ? start.getElement() : null;
         }
 
-        public SliceExpression withStart(@Nullable Expression start) {
+        public Slice withStart(@Nullable Expression start) {
             return getPadding().withStart(JRightPadded.withElement(this.start, start));
         }
 
@@ -1757,7 +1757,7 @@ public interface Py extends J {
             return stop != null ? stop.getElement() : null;
         }
 
-        public SliceExpression withStop(@Nullable Expression stop) {
+        public Slice withStop(@Nullable Expression stop) {
             return getPadding().withStop(JRightPadded.withElement(this.stop, stop));
         }
 
@@ -1768,7 +1768,7 @@ public interface Py extends J {
             return step != null ? step.getElement() : null;
         }
 
-        public SliceExpression withStep(@Nullable Expression step) {
+        public Slice withStep(@Nullable Expression step) {
             return getPadding().withStep(JRightPadded.withElement(this.step, step));
         }
 
@@ -1785,7 +1785,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitSliceExpression(this, p);
+            return v.visitSlice(this, p);
         }
 
         @Override
@@ -1811,30 +1811,30 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final SliceExpression t;
+            private final Slice t;
 
             public @Nullable JRightPadded<Expression> getStart() {
                 return t.start;
             }
 
-            public SliceExpression withStart(@Nullable JRightPadded<Expression> start) {
-                return t.start == start ? t : new SliceExpression(t.id, t.prefix, t.markers, start, t.stop, t.step);
+            public Slice withStart(@Nullable JRightPadded<Expression> start) {
+                return t.start == start ? t : new Slice(t.id, t.prefix, t.markers, start, t.stop, t.step);
             }
 
             public @Nullable JRightPadded<Expression> getStop() {
                 return t.stop;
             }
 
-            public SliceExpression withStop(@Nullable JRightPadded<Expression> stop) {
-                return t.stop == stop ? t : new SliceExpression(t.id, t.prefix, t.markers, t.start, stop, t.step);
+            public Slice withStop(@Nullable JRightPadded<Expression> stop) {
+                return t.stop == stop ? t : new Slice(t.id, t.prefix, t.markers, t.start, stop, t.step);
             }
 
             public @Nullable JRightPadded<Expression> getStep() {
                 return t.step;
             }
 
-            public SliceExpression withStep(@Nullable JRightPadded<Expression> step) {
-                return t.step == step ? t : new SliceExpression(t.id, t.prefix, t.markers, t.start, step, t.step);
+            public Slice withStep(@Nullable JRightPadded<Expression> step) {
+                return t.step == step ? t : new Slice(t.id, t.prefix, t.markers, t.start, step, t.step);
             }
         }
     }

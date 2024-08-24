@@ -15,7 +15,12 @@
  */
 package org.openrewrite.python.tree;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 public class PyLeftPadded {
+    @Getter
+    @RequiredArgsConstructor
     public enum Location {
         ERROR_FROM(PySpace.Location.ERROR_FROM_SOURCE),
         MATCH_CASE_GUARD(PySpace.Location.MATCH_CASE_GUARD),
@@ -23,13 +28,5 @@ public class PyLeftPadded {
         YIELD_FROM(PySpace.Location.YIELD_FROM_PREFIX);
 
         private final PySpace.Location beforeLocation;
-
-        Location(PySpace.Location beforeLocation) {
-            this.beforeLocation = beforeLocation;
-        }
-
-        public PySpace.Location getBeforeLocation() {
-            return beforeLocation;
-        }
     }
 }

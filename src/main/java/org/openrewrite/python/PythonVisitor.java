@@ -15,17 +15,14 @@
  */
 package org.openrewrite.python;
 
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.SourceFile;
 import org.openrewrite.internal.ListUtils;
-import org.jspecify.annotations.Nullable;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J.CompilationUnit;
 import org.openrewrite.python.tree.*;
 
-/**
- * Visit K types.
- */
 public class PythonVisitor<P> extends JavaVisitor<P> {
 
     @Override
@@ -164,30 +161,30 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return super.visitContainer(container, JContainer.Location.LANGUAGE_EXTENSION, p);
     }
 
-    public J visitAwaitExpression(Py.AwaitExpression ogAwait, P p) {
-        Py.AwaitExpression await = ogAwait;
+    public J visitAwait(Py.Await ogAwait, P p) {
+        Py.Await await = ogAwait;
         await = await.withPrefix(visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p));
         await = await.withMarkers(visitMarkers(await.getMarkers(), p));
         Expression temp = (Expression) visitExpression(await, p);
-        if (!(temp instanceof Py.AwaitExpression)) {
+        if (!(temp instanceof Py.Await)) {
             return temp;
         } else {
-            await = (Py.AwaitExpression) temp;
+            await = (Py.Await) temp;
         }
         await = await.withExpression(visitAndCast(await.getExpression(), p));
         await = await.withType(visitType(await.getType(), p));
         return await;
     }
 
-    public J visitYieldExpression(Py.YieldExpression ogYield, P p) {
-        Py.YieldExpression yield = ogYield;
+    public J visitYield(Py.Yield ogYield, P p) {
+        Py.Yield yield = ogYield;
         yield = yield.withPrefix(visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p));
         yield = yield.withMarkers(visitMarkers(yield.getMarkers(), p));
         Expression temp = (Expression) visitExpression(yield, p);
-        if (!(temp instanceof Py.YieldExpression)) {
+        if (!(temp instanceof Py.Yield)) {
             return temp;
         } else {
-            yield = (Py.YieldExpression) temp;
+            yield = (Py.Yield) temp;
         }
         yield = yield.getPadding().withFrom(
                 visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p)
@@ -199,15 +196,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return yield;
     }
 
-    public J visitDelStatement(Py.DelStatement ogDel, P p) {
-        Py.DelStatement del = ogDel;
+    public J visitDel(Py.Del ogDel, P p) {
+        Py.Del del = ogDel;
         del = del.withPrefix(visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p));
         del = del.withMarkers(visitMarkers(del.getMarkers(), p));
         Statement temp = (Statement) visitStatement(del, p);
-        if (!(temp instanceof Py.DelStatement)) {
+        if (!(temp instanceof Py.Del)) {
             return temp;
         } else {
-            del = (Py.DelStatement) temp;
+            del = (Py.Del) temp;
         }
         del = del.getPadding().withTargets(ListUtils.map(
                 del.getPadding().getTargets(),
@@ -232,15 +229,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return type;
     }
 
-    public J visitVariableScopeStatement(Py.VariableScopeStatement ogStmt, P p) {
-        Py.VariableScopeStatement stmt = ogStmt;
+    public J visitVariableScope(Py.VariableScope ogStmt, P p) {
+        Py.VariableScope stmt = ogStmt;
         stmt = stmt.withPrefix(visitSpace(stmt.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p));
         stmt = stmt.withMarkers(visitMarkers(stmt.getMarkers(), p));
         Statement temp = (Statement) visitStatement(stmt, p);
-        if (!(temp instanceof Py.VariableScopeStatement)) {
+        if (!(temp instanceof Py.VariableScope)) {
             return temp;
         } else {
-            stmt = (Py.VariableScopeStatement) temp;
+            stmt = (Py.VariableScope) temp;
         }
         stmt = stmt.getPadding().withNames(ListUtils.map(
                 stmt.getPadding().getNames(),
@@ -249,15 +246,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return stmt;
     }
 
-    public J visitErrorFromExpression(Py.ErrorFromExpression ogExpr, P p) {
-        Py.ErrorFromExpression expr = ogExpr;
+    public J visitErrorFrom(Py.ErrorFrom ogExpr, P p) {
+        Py.ErrorFrom expr = ogExpr;
         expr = expr.withPrefix(visitSpace(expr.getPrefix(), PySpace.Location.ERROR_FROM_PREFIX, p));
         expr = expr.withMarkers(visitMarkers(expr.getMarkers(), p));
         Expression temp = (Expression) visitExpression(expr, p);
-        if (!(temp instanceof Py.ErrorFromExpression)) {
+        if (!(temp instanceof Py.ErrorFrom)) {
             return temp;
         } else {
-            expr = (Py.ErrorFromExpression) temp;
+            expr = (Py.ErrorFrom) temp;
         }
         expr = expr.withError(visitAndCast(expr.getError(), p));
         expr = expr.getPadding().withFrom(
@@ -348,15 +345,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return wrapper;
     }
 
-    public J visitStarExpression(Py.StarExpression star, P p) {
-        Py.StarExpression arg = star;
-        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.STAR_EXPRESSION_PREFIX, p));
+    public J visitStar(Py.Star star, P p) {
+        Py.Star arg = star;
+        arg = arg.withPrefix(visitSpace(arg.getPrefix(), PySpace.Location.STAR_PREFIX, p));
         arg = arg.withMarkers(visitMarkers(arg.getMarkers(), p));
         Expression temp = (Expression) visitExpression(arg, p);
-        if (!(temp instanceof Py.StarExpression)) {
+        if (!(temp instanceof Py.Star)) {
             return temp;
         } else {
-            arg = (Py.StarExpression) temp;
+            arg = (Py.Star) temp;
         }
         arg = arg.withExpression(visitAndCast(arg.getExpression(), p));
         arg = arg.withType(visitType(arg.getType(), p));
@@ -378,15 +375,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return arg;
     }
 
-    public J visitSliceExpression(Py.SliceExpression slice, P p) {
-        Py.SliceExpression sl = slice;
+    public J visitSlice(Py.Slice slice, P p) {
+        Py.Slice sl = slice;
         sl = sl.withPrefix(visitSpace(sl.getPrefix(), PySpace.Location.SLICE_EXPRESSION_PREFIX, p));
         sl = sl.withMarkers(visitMarkers(sl.getMarkers(), p));
         Expression temp = (Expression) visitExpression(sl, p);
-        if (!(temp instanceof Py.SliceExpression)) {
+        if (!(temp instanceof Py.Slice)) {
             return temp;
         } else {
-            sl = (Py.SliceExpression) temp;
+            sl = (Py.Slice) temp;
         }
         sl = sl.getPadding().withStart(visitRightPadded(sl.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p));
         sl = sl.getPadding().withStop(visitRightPadded(sl.getPadding().getStop(), PyRightPadded.Location.SLICE_EXPRESSION_STOP, p));
