@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "~3.9"
+python = "~3.12"
 rewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
 
 [tool.poetry.group.dev.dependencies]
