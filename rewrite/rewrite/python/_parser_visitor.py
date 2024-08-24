@@ -162,7 +162,18 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AsyncFor!")
 
     def visit_While(self, node):
-        raise NotImplementedError("Implement visit_While!")
+        return j.WhileLoop(
+            random_id(),
+            self.__source_before('while'),
+            Markers.EMPTY,
+            j.ControlParentheses(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.test), self.__source_before(':'))
+            ),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
 
     def visit_If(self, node):
         prefix = self.__source_before('if')
