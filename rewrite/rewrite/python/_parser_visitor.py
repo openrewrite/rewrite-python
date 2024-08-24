@@ -592,23 +592,14 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
-        type_: JavaType.Primitive = self.__map_type(node)
-        prefix = self.__whitespace()
-
-        # TODO temporary solution
-        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens)  # skip ENCODING token
-        value_source = next(tokens).string
-        self._cursor += len(value_source)
-
         return j.Literal(
             random_id(),
-            prefix,
+            self.__whitespace(),
             Markers.EMPTY,
             node.value,
-            value_source,
+            self._next_lexer_token(),
             None,
-            type_,
+            self.__map_type(node),
         )
 
     def visit_Dict(self, node):
@@ -999,6 +990,13 @@ class ParserVisitor(ast.NodeVisitor):
                 ),
                 None
             )
+
+    def _next_lexer_token(self):
+        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        next(tokens)  # skip ENCODING token
+        value_source = next(tokens).string
+        self._cursor += len(value_source)
+        return value_source
 
     def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
