@@ -343,6 +343,35 @@ class ExpressionStatement(Py, Expression, Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class StatementExpression(Py, Expression, Statement):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> StatementExpression:
+        return self if id is self._id else replace(self, _id=id)
+
+    _statement: Statement
+
+    @property
+    def statement(self) -> Statement:
+        return self._statement
+
+    def with_statement(self, statement: Statement) -> StatementExpression:
+        return self if statement is self._statement else replace(self, _statement=statement)
+
+    def __init__(self, id: UUID, statement: Statement) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_statement', statement)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_statement_expression(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class MultiImport(Py, Statement):
     _id: UUID
 
@@ -1153,14 +1182,14 @@ class Await(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Yield(Py, Expression):
+class YieldFrom(Py, Expression):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> Yield:
+    def with_id(self, id: UUID) -> YieldFrom:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1169,7 +1198,7 @@ class Yield(Py, Expression):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> Yield:
+    def with_prefix(self, prefix: Space) -> YieldFrom:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1178,26 +1207,17 @@ class Yield(Py, Expression):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> Yield:
+    def with_markers(self, markers: Markers) -> YieldFrom:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _from: JLeftPadded[bool]
+    _expression: Expression
 
     @property
-    def from_(self) -> bool:
-        return self._from.element
+    def expression(self) -> Expression:
+        return self._expression
 
-    def with_from(self, from_: bool) -> Yield:
-        return self.padding.with_from(JLeftPadded.with_element(self._from, from_))
-
-    _expressions: List[JRightPadded[Expression]]
-
-    @property
-    def expressions(self) -> List[Expression]:
-        return JRightPadded.get_elements(self._expressions)
-
-    def with_expressions(self, expressions: List[Expression]) -> Yield:
-        return self.padding.with_expressions(JRightPadded.with_elements(self._expressions, expressions))
+    def with_expression(self, expression: Expression) -> YieldFrom:
+        return self if expression is self._expression else replace(self, _expression=expression)
 
     _type: JavaType
 
@@ -1205,54 +1225,19 @@ class Yield(Py, Expression):
     def type(self) -> JavaType:
         return self._type
 
-    def with_type(self, type: JavaType) -> Yield:
+    def with_type(self, type: JavaType) -> YieldFrom:
         return self if type is self._type else replace(self, _type=type)
 
-    @dataclass
-    class PaddingHelper:
-        _t: Yield
-
-        @property
-        def from_(self) -> JLeftPadded[bool]:
-            return self._t._from
-
-        def with_from(self, from_: JLeftPadded[bool]) -> Yield:
-            return self._t if self._t._from is from_ else replace(self._t, _from=from_)
-
-        @property
-        def expressions(self) -> List[JRightPadded[Expression]]:
-            return self._t._expressions
-
-        def with_expressions(self, expressions: List[JRightPadded[Expression]]) -> Yield:
-            return self._t if self._t._expressions is expressions else replace(self._t, _expressions=expressions)
-
-    _padding: weakref.ReferenceType[PaddingHelper] = None
-
-    @property
-    def padding(self) -> PaddingHelper:
-        p: Yield.PaddingHelper
-        if self._padding is None:
-            p = Yield.PaddingHelper(self)
-            object.__setattr__(self, '_padding', weakref.ref(p))
-        else:
-            p = self._padding()
-            # noinspection PyProtectedMember
-            if p is None or p._t != self:
-                p = Yield.PaddingHelper(self)
-                object.__setattr__(self, '_padding', weakref.ref(p))
-        return p
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: JLeftPadded[bool], expressions: List[JRightPadded[Expression]], type: JavaType) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, type: JavaType) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
         object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_from', from_)
-        object.__setattr__(self, '_expressions', expressions)
+        object.__setattr__(self, '_expression', expression)
         object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_yield(self, p)
+        return v.visit_yield_from(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

@@ -329,23 +329,33 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Yield(self, node):
-        return py.Yield(
+        return py.StatementExpression(
             random_id(),
-            self.__source_before('yield'),
-            Markers.EMPTY,
-            self.__pad_left(Space.EMPTY, False),
-            [self.__pad_right(self.__convert(node.value), self.__whitespace())],
-            self.__map_type(node)
+            j.Yield(
+                random_id(),
+                self.__source_before('yield'),
+                Markers.EMPTY,
+                False,
+                self.__convert(node.value),
+            )
         )
 
     def visit_YieldFrom(self, node):
-        return py.Yield(
+        return py.StatementExpression(
             random_id(),
-            self.__source_before('yield'),
-            Markers.EMPTY,
-            self.__pad_left(self.__source_before('from'), True),
-            [self.__pad_right(self.__convert(node.value), self.__whitespace())],
-            self.__map_type(node)
+            j.Yield(
+                random_id(),
+                self.__source_before('yield'),
+                Markers.EMPTY,
+                False,
+                py.YieldFrom(
+                    random_id(),
+                    self.__source_before('from'),
+                    Markers.EMPTY,
+                    self.__convert(node.value),
+                    self.__map_type(node)
+                )
+            )
         )
 
     def visit_FormattedValue(self, node):

@@ -31,9 +31,10 @@ __all__ = [
     'Slice',
     'SpecialParameter',
     'Star',
+    'StatementExpression',
     'TrailingElseWrapper',
     'TypeHint',
     'TypeHintedExpression',
     'VariableScope',
-    'Yield',
+    'YieldFrom',
 ]

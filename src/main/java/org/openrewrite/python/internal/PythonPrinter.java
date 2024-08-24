@@ -253,21 +253,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitYield(Py.Yield yield, PrintOutputCapture<P> p) {
-        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p);
-        p.append("yield");
-
-        if (yield.isFrom()) {
-            visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p);
-            p.append("from");
-        }
-
-        visitRightPadded(
-                yield.getPadding().getExpressions(),
-                PyRightPadded.Location.YIELD_ELEMENT,
-                ",",
-                p
-        );
+    public J visitYieldFrom(Py.YieldFrom yield, PrintOutputCapture<P> p) {
+        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_FROM_PREFIX, p);
+        p.append("from");
+        visit(yield.getExpression(), p);
         return yield;
     }
 

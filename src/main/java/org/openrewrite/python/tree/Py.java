@@ -316,13 +316,6 @@ public interface Py extends J {
         @With
         Expression expression;
 
-        // For backwards compatibility with older ASTs before there was an id field
-        @SuppressWarnings("unused")
-        public ExpressionStatement(Expression expression) {
-            this.id = Tree.randomId();
-            this.expression = expression;
-        }
-
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
             return v.visitExpressionStatement(this, p);
@@ -357,6 +350,60 @@ public interface Py extends J {
         public <T extends J> T withType(@Nullable JavaType type) {
             //noinspection unchecked
             return (T) withExpression(expression.withType(type));
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+    }
+
+    @Getter
+    @ToString
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @AllArgsConstructor
+    final class StatementExpression implements Py, Expression, Statement {
+        @With
+        UUID id;
+
+        @With
+        Statement statement;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitStatementExpression(this, p);
+        }
+
+        @Override
+        public <P2 extends J> P2 withPrefix(Space space) {
+            return (P2) withStatement(statement.withPrefix(space));
+        }
+
+        @Override
+        public Space getPrefix() {
+            return statement.getPrefix();
+        }
+
+        @Override
+        public <P2 extends Tree> P2 withMarkers(Markers markers) {
+            return (P2) withStatement(statement.withMarkers(markers));
+        }
+
+        @Override
+        public Markers getMarkers() {
+            return statement.getMarkers();
+        }
+
+        @Override
+        public @Nullable JavaType getType() {
+            return null;
+        }
+
+        @Override
+        public <T extends J> T withType(@Nullable JavaType type) {
+            return (T) this;
         }
 
         @Transient
@@ -444,6 +491,7 @@ public interface Py extends J {
             public MultiImport withFrom(@Nullable JRightPadded<NameTree> from) {
                 return t.from == from ? t : new MultiImport(t.id, t.prefix, t.markers, from, t.parenthesized, t.names);
             }
+
             public JContainer<Import> getNames() {
                 return t.names;
             }
@@ -992,105 +1040,30 @@ public interface Py extends J {
         public CoordinateBuilder.Expression getCoordinates() {
             return new CoordinateBuilder.Expression(this);
         }
-
     }
 
-    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false)
-    @RequiredArgsConstructor
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    final class Yield implements Py, Expression {
-        @Nullable
-        @NonFinal
-        transient WeakReference<Padding> padding;
-
-        @With
+    @Value
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @With
+    class YieldFrom implements Py, Expression {
         @Getter
         @EqualsAndHashCode.Include
         UUID id;
 
-        @With
-        @Getter
         Space prefix;
-
-        @With
-        @Getter
         Markers markers;
-
-        JLeftPadded<Boolean> from;
-
-        List<JRightPadded<Expression>> expressions;
-
-        @With
-        @Getter
+        Expression expression;
         JavaType type;
-
-        public boolean isFrom() {
-            return this.from.getElement();
-        }
-
-        public Py.Yield withFrom(boolean from) {
-            return this.getPadding().withFrom(JLeftPadded.withElement(this.from, from));
-        }
-
-        public List<Expression> getExpressions() {
-            return JRightPadded.getElements(expressions);
-        }
-
-        public Py.Yield withExpressions(List<Expression> expressions) {
-            return this.getPadding().withExpressions(JRightPadded.withElements(this.expressions, expressions));
-        }
-
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitYield(this, p);
+            return v.visitYieldFrom(this, p);
         }
 
         @Override
         public CoordinateBuilder.Expression getCoordinates() {
             return new CoordinateBuilder.Expression(this);
         }
-
-        public Padding getPadding() {
-            Padding p;
-            if (this.padding == null) {
-                p = new Padding(this);
-                this.padding = new WeakReference<>(p);
-            } else {
-                p = this.padding.get();
-                if (p == null || p.t != this) {
-                    p = new Padding(this);
-                    this.padding = new WeakReference<>(p);
-                }
-            }
-            return p;
-        }
-
-        @RequiredArgsConstructor
-        public static class Padding {
-            private final Py.Yield t;
-
-            public JLeftPadded<Boolean> getFrom() {
-                return t.from;
-            }
-
-            public Py.Yield withFrom(JLeftPadded<Boolean> from) {
-                return from == t.from ? t : new Py.Yield(t.id, t.prefix, t.markers, from, t.expressions, t.type);
-            }
-
-
-            public List<JRightPadded<Expression>> getExpressions() {
-                return t.expressions;
-            }
-
-            public Py.Yield withExpressions(List<JRightPadded<Expression>> expressions) {
-                return expressions == t.expressions
-                        ? t
-                        : new Py.Yield(t.id, t.prefix, t.markers, t.from, expressions, t.type);
-            }
-        }
-
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

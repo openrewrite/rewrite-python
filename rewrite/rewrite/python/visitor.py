@@ -35,6 +35,10 @@ class PythonVisitor(JavaVisitor[P]):
         expression_statement = expression_statement.with_expression(self.visit_and_cast(expression_statement.expression, Expression, p))
         return expression_statement
 
+    def visit_statement_expression(self, statement_expression: StatementExpression, p: P) -> J:
+        statement_expression = statement_expression.with_statement(self.visit_and_cast(statement_expression.statement, Statement, p))
+        return statement_expression
+
     def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
         multi_import = multi_import.with_prefix(self.visit_space(multi_import.prefix, PySpace.Location.MULTI_IMPORT_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(multi_import, p))
@@ -133,16 +137,15 @@ class PythonVisitor(JavaVisitor[P]):
         await_ = await_.with_expression(self.visit_and_cast(await_.expression, Expression, p))
         return await_
 
-    def visit_yield(self, yield_: Yield, p: P) -> J:
-        yield_ = yield_.with_prefix(self.visit_space(yield_.prefix, PySpace.Location.YIELD_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(yield_, p))
-        if not isinstance(temp_expression, Yield):
+    def visit_yield_from(self, yield_from: YieldFrom, p: P) -> J:
+        yield_from = yield_from.with_prefix(self.visit_space(yield_from.prefix, PySpace.Location.YIELD_FROM_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(yield_from, p))
+        if not isinstance(temp_expression, YieldFrom):
             return temp_expression
-        yield_ = cast(Yield, temp_expression)
-        yield_ = yield_.with_markers(self.visit_markers(yield_.markers, p))
-        yield_ = yield_.padding.with_from(self.visit_left_padded(yield_.padding.from_, PyLeftPadded.Location.YIELD_FROM, p))
-        yield_ = yield_.padding.with_expressions([self.visit_right_padded(v, PyRightPadded.Location.YIELD_EXPRESSIONS, p) for v in yield_.padding.expressions])
-        return yield_
+        yield_from = cast(YieldFrom, temp_expression)
+        yield_from = yield_from.with_markers(self.visit_markers(yield_from.markers, p))
+        yield_from = yield_from.with_expression(self.visit_and_cast(yield_from.expression, Expression, p))
+        return yield_from
 
     def visit_variable_scope(self, variable_scope: VariableScope, p: P) -> J:
         variable_scope = variable_scope.with_prefix(self.visit_space(variable_scope.prefix, PySpace.Location.VARIABLE_SCOPE_PREFIX, p))

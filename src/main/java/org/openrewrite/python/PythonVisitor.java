@@ -176,23 +176,16 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return await;
     }
 
-    public J visitYield(Py.Yield ogYield, P p) {
-        Py.Yield yield = ogYield;
-        yield = yield.withPrefix(visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p));
+    public J visitYieldFrom(Py.YieldFrom ogYield, P p) {
+        Py.YieldFrom yield = ogYield;
+        yield = yield.withPrefix(visitSpace(yield.getPrefix(), PySpace.Location.YIELD_FROM_PREFIX, p));
         yield = yield.withMarkers(visitMarkers(yield.getMarkers(), p));
         Expression temp = (Expression) visitExpression(yield, p);
-        if (!(temp instanceof Py.Yield)) {
+        if (!(temp instanceof Py.YieldFrom)) {
             return temp;
         } else {
-            yield = (Py.Yield) temp;
+            yield = (Py.YieldFrom) temp;
         }
-        yield = yield.getPadding().withFrom(
-                visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p)
-        );
-        yield = yield.getPadding().withExpressions(ListUtils.map(
-                yield.getPadding().getExpressions(),
-                t -> visitRightPadded(t, PyRightPadded.Location.YIELD_ELEMENT, p)
-        ));
         return yield;
     }
 
@@ -389,5 +382,11 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         sl = sl.getPadding().withStop(visitRightPadded(sl.getPadding().getStop(), PyRightPadded.Location.SLICE_EXPRESSION_STOP, p));
         sl = sl.getPadding().withStep(visitRightPadded(sl.getPadding().getStep(), PyRightPadded.Location.SLICE_EXPRESSION_STEP, p));
         return sl;
+    }
+
+    public J visitStatementExpression(Py.StatementExpression statementExpression, P p) {
+        Py.StatementExpression expr = statementExpression;
+        expr = expr.withStatement(visitAndCast(expr.getStatement(), p));
+        return visitExpression(expr, p);
     }
 }

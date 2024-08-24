@@ -362,9 +362,7 @@ public final class PySpace {
         TYPE_HINT_PREFIX,
         VARIABLE_SCOPE_NAME_SUFFIX,
         VARIABLE_SCOPE_PREFIX,
-        YIELD_ELEMENT_SUFFIX,
         YIELD_FROM_PREFIX,
-        YIELD_PREFIX,
     }
 
     private PySpace() {

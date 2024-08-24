@@ -128,8 +128,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.Yield visitYield(Py.Yield ogYield, P p) {
-        return (Py.Yield) super.visitYield(ogYield, p);
+    public Py.YieldFrom visitYieldFrom(Py.YieldFrom ogYield, P p) {
+        return (Py.YieldFrom) super.visitYieldFrom(ogYield, p);
     }
 
     @Override
