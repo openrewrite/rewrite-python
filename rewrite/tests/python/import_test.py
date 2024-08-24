@@ -34,3 +34,13 @@ def test_from_parenthesized():
 def test_from_parenthesized_trailing_comma():
     # language=python
     rewrite_run(python("from io import (StringIO as sio , )"))
+
+
+def test_relative_import_1():
+    # language=python
+    rewrite_run(python("from .foo import bar"))
+
+
+def test_relative_import_2():
+    # language=python
+    rewrite_run(python("from ..foo import bar"))

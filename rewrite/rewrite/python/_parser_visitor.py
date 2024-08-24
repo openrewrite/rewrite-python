@@ -233,7 +233,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_ImportFrom(self, node):
         prefix = self.__source_before('from')
-        from_ = self.__pad_right(self._map_to_name(node.module), self.__source_before('import'))
+        from_ = self.__pad_right(self._map_to_name('.' * node.level + node.module), self.__source_before('import'))
         names_prefix = self.__whitespace()
         if parenthesized := self._source[self._cursor] == '(':
             self.__skip('(')
