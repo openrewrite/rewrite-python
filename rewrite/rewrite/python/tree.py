@@ -292,7 +292,7 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, source_path: Path, file_attributes: Optional[FileAttributes], charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], imports: List[JRightPadded[J.Import]], statements: List[JRightPadded[Statement]], eof: Space) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, source_path: Path, file_attributes: Optional[FileAttributes], charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], imports: List[JRightPadded[Import]], statements: List[JRightPadded[Statement]], eof: Space) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -432,7 +432,7 @@ class MultiImport(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: Optional[JRightPadded[NameTree]], parenthesized: bool, names: JContainer[J.Import]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: Optional[JRightPadded[NameTree]], parenthesized: bool, names: JContainer[Import]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -841,7 +841,7 @@ class TrailingElseWrapper(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement, else_block: JLeftPadded[J.Block]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement, else_block: JLeftPadded[Block]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1036,8 +1036,7 @@ class ComprehensionExpression(Py, Expression):
         def conditions(self) -> Optional[List[ComprehensionExpression.Condition]]:
             return self._conditions
 
-        def with_conditions(self, conditions: Optional[
-            List[ComprehensionExpression.Condition]]) -> ComprehensionExpression.Clause:
+        def with_conditions(self, conditions: Optional[List[ComprehensionExpression.Condition]]) -> ComprehensionExpression.Clause:
             return self if conditions is self._conditions else replace(self, _conditions=conditions)
 
         @dataclass
@@ -1334,7 +1333,7 @@ class VariableScopeStatement(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScopeStatement.Kind, names: List[JRightPadded[J.Identifier]]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScopeStatement.Kind, names: List[JRightPadded[Identifier]]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)
@@ -1651,7 +1650,7 @@ class NamedArgument(Py, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: J.Identifier, value: JLeftPadded[Expression], type: Optional[JavaType]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: Identifier, value: JLeftPadded[Expression], type: Optional[JavaType]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)

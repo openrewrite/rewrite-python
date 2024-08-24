@@ -509,10 +509,10 @@ class ParserVisitor(ast.NodeVisitor):
                 random_id(),
                 prefix,
                 Markers.EMPTY,
-                None,  # TODO
+                None,
                 None,
                 name,
-                args,  # TODO
+                args,
                 self.__map_type(node)
             )
         elif isinstance(node.func, ast.Attribute):
@@ -543,7 +543,7 @@ class ParserVisitor(ast.NodeVisitor):
                 select,
                 None,
                 name,
-                args,  # TODO
+                args,
                 self.__map_type(node)
             )
         else:
