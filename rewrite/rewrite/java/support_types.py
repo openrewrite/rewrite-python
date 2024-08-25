@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass, replace
 from enum import Enum, auto
+from functools import cached_property
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
     TYPE_CHECKING
 from uuid import UUID
@@ -560,11 +561,13 @@ class JContainer(Generic[T]):
             return JContainer(Space.EMPTY, elements, Markers.EMPTY)
         return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
 
-    EMPTY: ClassVar[JContainer[Any]] = None
+    _EMPTY = None
 
     @classmethod
     def empty(cls) -> JContainer[T]:
-        return cast(JContainer[T], JContainer.EMPTY)
+        if cls._EMPTY is None:
+            cls._EMPTY = JContainer(Space.EMPTY, [], Markers.EMPTY)
+        return cls._EMPTY
 
     class Location(Enum):
         ANNOTATION_ARGUMENTS = (Space.Location.ANNOTATION_ARGUMENTS, JRightPadded.Location.ANNOTATION_ARGUMENT)

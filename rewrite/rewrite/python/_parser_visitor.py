@@ -2,6 +2,7 @@ import ast
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
+from random import random
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
@@ -401,13 +402,59 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_ExceptHandler!")
 
     def visit_Match(self, node):
-        raise NotImplementedError("Implement visit_Match!")
+        return j.Switch(
+            random_id(),
+            self.__source_before('match'),
+            Markers.EMPTY,
+            j.ControlParentheses(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.subject), Space.EMPTY)
+            ),
+            self.__convert_block(node.cases)
+        )
+
+    def visit_match_case(self, node):
+        case = j.Case(
+            random_id(),
+            self.__source_before('case'),
+            Markers.EMPTY,
+            j.Case.Type.Rule,
+            JContainer(
+                self.__whitespace(),
+                [self.__pad_right(self.__convert(node.pattern), Space.EMPTY)],
+                Markers.EMPTY
+            ),
+            JContainer.empty(),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+        return case
 
     def visit_MatchValue(self, node):
-        raise NotImplementedError("Implement visit_MatchValue!")
+        return self.__convert(node.value)
 
     def visit_MatchSequence(self, node):
-        raise NotImplementedError("Implement visit_MatchSequence!")
+        return py.MatchCase(
+            random_id(),
+            self.__source_before('['),
+            Markers.EMPTY,
+            py.MatchCase.Pattern(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                py.MatchCase.Pattern.Kind.SEQUENCE,
+                JContainer(
+                    Space.EMPTY,
+                    [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1) for i, e in
+                     enumerate(node.patterns)] if node.patterns else [],
+                    Markers.EMPTY
+                ),
+                None
+            ),
+            None,
+            None
+        )
 
     def visit_MatchSingleton(self, node):
         raise NotImplementedError("Implement visit_MatchSingleton!")
@@ -422,7 +469,56 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_MatchClass!")
 
     def visit_MatchAs(self, node):
-        raise NotImplementedError("Implement visit_MatchAs!")
+        if node.name is None and node.pattern is None:
+            return py.MatchCase(
+                random_id(),
+                self.__source_before('_'),
+                Markers.EMPTY,
+                py.MatchCase.Pattern(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    py.MatchCase.Pattern.Kind.WILDCARD,
+                    JContainer.empty(),
+                    None
+                ),
+                None,
+                None
+            )
+        else:
+            return py.MatchCase(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                py.MatchCase.Pattern(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    py.MatchCase.Pattern.Kind.AS,
+                    JContainer(
+                        Space.EMPTY,
+                        [
+                            self.__pad_right(self.__convert(node.pattern), self.__source_before('as')),
+                            self.__pad_right(
+                                j.Identifier(
+                                    random_id(),
+                                    self.__source_before(node.name),
+                                    Markers.EMPTY,
+                                    [],
+                                    node.name,
+                                    None,
+                                    None
+                                ),
+                                Space.EMPTY
+                            ),
+                        ],
+                        Markers.EMPTY
+                    ),
+                    None
+                ),
+                None,
+                None
+            )
 
     def visit_MatchOr(self, node):
         raise NotImplementedError("Implement visit_MatchOr!")
@@ -750,7 +846,8 @@ class ParserVisitor(ast.NodeVisitor):
                 False,
                 [self.__pad_right(
                     self.map_arg(a,
-                                 node.args.defaults[i - len(node.args.defaults)] if i >= first_with_default else None),
+                                 node.args.defaults[
+                                     i - len(node.args.defaults)] if i >= first_with_default else None),
                     self.__source_before(',')) for i, a in enumerate(node.args.args)]
             ),
             self.__source_before(':'),
@@ -1011,14 +1108,18 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
 
-    def __convert_block(self, statements: List[ast.stmt], prefix: str = ':') -> j.Block:
+    def __convert_block(self, statements: List[ast], prefix: str = ':') -> j.Block:
+        prefix = self.__source_before(prefix)
+        if statements:
+            statements = [self.__pad_statement(stmt) for stmt in statements]
+        else:
+            statements = [self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)]
         return j.Block(
             random_id(),
-            self.__source_before(prefix),
+            prefix,
             Markers.EMPTY,
             JRightPadded(False, Space.EMPTY, Markers.EMPTY),
-            [self.__pad_statement(stmt) for stmt in statements] if statements else [
-                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
+            statements,
             Space.EMPTY
         )
 

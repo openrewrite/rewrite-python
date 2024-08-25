@@ -372,6 +372,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 );
                 break;
             case GROUP:
+            case SEQUENCE_TUPLE:
                 visitContainer(
                         "(",
                         children,
@@ -438,16 +439,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         PyContainer.Location.MATCH_PATTERN_ELEMENTS,
                         ",",
                         "]",
-                        p
-                );
-                break;
-            case SEQUENCE_TUPLE:
-                visitContainer(
-                        "(",
-                        children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
-                        ",",
-                        ")",
                         p
                 );
                 break;
