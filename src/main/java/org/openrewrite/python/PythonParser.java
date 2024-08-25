@@ -18,14 +18,14 @@ package org.openrewrite.python;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
-import org.openrewrite.*;
-import org.openrewrite.internal.EncodingDetectingInputStream;
+import org.openrewrite.ExecutionContext;
+import org.openrewrite.InMemoryExecutionContext;
+import org.openrewrite.Parser;
+import org.openrewrite.SourceFile;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.tree.Py;
-import org.openrewrite.remote.ReceiverContext;
-import org.openrewrite.remote.java.RemotingClient;
+//import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
-import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
@@ -47,7 +47,7 @@ public class PythonParser implements Parser {
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
-    private @Nullable RemotingClient client;
+//    private @Nullable RemotingClient client;
 
     @Override
     public Stream<SourceFile> parse(String... sources) {
@@ -74,35 +74,39 @@ public class PythonParser implements Parser {
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
-        if (client == null) {
-            client = RemotingClient.create(ctx, PythonParser.class, () -> {
-                try {
-                    return new Socket(InetAddress.getLoopbackAddress(), 54321);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+//        if (client == null) {
+//            client = RemotingClient.create(ctx, PythonParser.class, () -> {
+//                try {
+//                    return new Socket(InetAddress.getLoopbackAddress(), 54321);
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            });
+//        }
 
         return acceptedInputs(inputs).map(input -> {
             Path path = input.getRelativePath(relativeTo);
             parsingListener.startedParsing(input);
-            try (EncodingDetectingInputStream is = input.getSource(ctx)) {
-                SourceFile parsed = client.runUsingSocket((socket, messenger) -> messenger.sendRequest(generator -> {
-                    generator.writeString("parse-python");
-                    generator.writeString(is.readFully());
-                }, parser -> {
-                    Tree tree = new ReceiverContext(client.getContext().newReceiver(parser), client.getContext()).receiveTree(null);
-                    return (SourceFile) tree;
-                }, socket));
 
-                Py.CompilationUnit py = (Py.CompilationUnit) parsed;
-                parsingListener.parsed(input, py);
-                return requirePrintEqualsInput(py, input, relativeTo, ctx);
-            } catch (Throwable t) {
-                ctx.getOnError().accept(t);
-                return ParseError.build(this, input, relativeTo, ctx, t);
-            }
+            // TODO temporarily commented out to avoid compilation errors in the first publish
+            //  after the introduction of RemotingContext API.
+//            try (EncodingDetectingInputStream is = input.getSource(ctx)) {
+//                SourceFile parsed = client.runUsingSocket((socket, messenger) -> messenger.sendRequest(generator -> {
+//                    generator.writeString("parse-python");
+//                    generator.writeString(is.readFully());
+//                }, parser -> {
+//                    Tree tree = new ReceiverContext(client.getContext().newReceiver(parser), client.getContext()).receiveTree(null);
+//                    return (SourceFile) tree;
+//                }, socket));
+//
+//                Py.CompilationUnit py = (Py.CompilationUnit) parsed;
+//                parsingListener.parsed(input, py);
+//                return requirePrintEqualsInput(py, input, relativeTo, ctx);
+//            } catch (Throwable t) {
+//                ctx.getOnError().accept(t);
+//                return ParseError.build(this, input, relativeTo, ctx, t);
+//            }
+            return null;
         });
     }
 
@@ -114,9 +118,9 @@ public class PythonParser implements Parser {
     @Override
     public PythonParser reset() {
         typeCache.clear();
-        if (client != null) {
-            client.getContext().reset();
-        }
+//        if (client != null) {
+//            client.getContext().reset();
+//        }
         return this;
     }
 
