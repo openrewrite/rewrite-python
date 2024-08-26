@@ -845,8 +845,8 @@ class ParserVisitor(ast.NodeVisitor):
                     random_id(),
                     Space.EMPTY,
                     Markers.EMPTY,
-                    self.__convert(value.value),
-                ), Space.EMPTY))
+                    self.__pad_right(self.__convert(value.value), self.__whitespace())
+                ), self.__whitespace()))
                 try:
                     while (tok := next(tokens)).type != token.OP or tok.string != '}':
                         pass

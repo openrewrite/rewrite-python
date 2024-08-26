@@ -145,7 +145,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitFormattedStringValue(Py.FormattedString.Value value, PrintOutputCapture<P> p) {
         beforeSyntax(value, PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p);
         p.append('{');
-        visit(value.getExpression(), p);
+        visitRightPadded(value.getPadding().getExpression(), PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p);
         p.append('}');
         return value;
     }

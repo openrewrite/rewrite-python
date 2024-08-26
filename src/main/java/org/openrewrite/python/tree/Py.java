@@ -844,23 +844,38 @@ public interface Py extends J {
             }
         }
 
-        @Getter
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
         @EqualsAndHashCode(callSuper = false)
         @RequiredArgsConstructor
+        @AllArgsConstructor(access = AccessLevel.PRIVATE)
         public static final class Value implements Py, Expression, TypedTree {
+
+            @Nullable
+            @NonFinal
+            transient WeakReference<Padding> padding;
+
+            @Getter
             @With
             @EqualsAndHashCode.Include
             UUID id;
 
+            @Getter
             @With
             Space prefix;
 
+            @Getter
             @With
             Markers markers;
 
-            @With
-            Expression expression;
+            JRightPadded<Expression> expression;
+
+            public Expression getExpression() {
+                return expression.getElement();
+            }
+
+            public Value withExpression(Expression expression) {
+                return getPadding().withExpression(JRightPadded.withElement(this.expression, expression));
+            }
 
             @Override
             public JavaType getType() {
@@ -882,6 +897,34 @@ public interface Py extends J {
             @Transient
             public CoordinateBuilder.Expression getCoordinates() {
                 return new CoordinateBuilder.Expression(this);
+            }
+
+            public Padding getPadding() {
+                Padding p;
+                if (this.padding == null) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                } else {
+                    p = this.padding.get();
+                    if (p == null || p.t != this) {
+                        p = new Padding(this);
+                        this.padding = new WeakReference<>(p);
+                    }
+                }
+                return p;
+            }
+
+            @RequiredArgsConstructor
+            public static class Padding {
+                private final Value t;
+
+                public JRightPadded<Expression> getExpression() {
+                    return t.expression;
+                }
+
+                public Value withExpression(JRightPadded<Expression> expression) {
+                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression);
+                }
             }
         }
     }

@@ -861,16 +861,43 @@ class FormattedString(Py, Expression, TypedTree):
         def with_markers(self, markers: Markers) -> FormattedString.Value:
             return self if markers is self._markers else replace(self, _markers=markers)
 
-        _expression: Expression
+        _expression: JRightPadded[Expression]
 
         @property
         def expression(self) -> Expression:
-            return self._expression
+            return self._expression.element
 
         def with_expression(self, expression: Expression) -> FormattedString.Value:
-            return self if expression is self._expression else replace(self, _expression=expression)
+            return self.padding.with_expression(JRightPadded.with_element(self._expression, expression))
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression) -> None:
+        @dataclass
+        class PaddingHelper:
+            _t: FormattedString.Value
+
+            @property
+            def expression(self) -> JRightPadded[Expression]:
+                return self._t._expression
+
+            def with_expression(self, expression: JRightPadded[Expression]) -> FormattedString.Value:
+                return self._t if self._t._expression is expression else replace(self._t, _expression=expression)
+
+        _padding: weakref.ReferenceType[PaddingHelper] = None
+
+        @property
+        def padding(self) -> PaddingHelper:
+            p: FormattedString.Value.PaddingHelper
+            if self._padding is None:
+                p = FormattedString.Value.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+            else:
+                p = self._padding()
+                # noinspection PyProtectedMember
+                if p is None or p._t != self:
+                    p = FormattedString.Value.PaddingHelper(self)
+                    object.__setattr__(self, '_padding', weakref.ref(p))
+            return p
+
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
