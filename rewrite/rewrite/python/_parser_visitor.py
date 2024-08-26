@@ -1,4 +1,5 @@
 import ast
+import token
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -830,24 +831,43 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__whitespace()
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
-        value_source = next(tokens).string
-        delimiter = value_source[0:2]
+        tok = next(tokens) # FSTRING_START token
+        delimiter = tok.string
+        self._cursor += len(delimiter)
+
         # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
+        parts = []
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                tok = next(tokens)  # '{' OP token
+                self._cursor += len(tok.string)
+                parts.append(self.__pad_right(py.FormattedString.Value(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    self.__convert(value.value),
+                ), Space.EMPTY))
+                try:
+                    while (tok := next(tokens)).type != token.OP or tok.string != '}':
+                        pass
+                except StopIteration:
+                    pass
+                self._cursor += len(tok.string)
+            else:
+                next(tokens)  # FSTRING_MIDDLE
+                parts.append(self.__pad_right(self.__convert(value), Space.EMPTY))
+
+        self._cursor += len(next(tokens).string) # FSTRING_END token
         return py.FormattedString(
             random_id(),
             prefix,
             Markers.EMPTY,
             delimiter,
-            JContainer(Space.EMPTY, [self.__pad_right(self.__convert(p), Space.EMPTY) for p in node.values], Markers.EMPTY)
+            JContainer(Space.EMPTY, parts, Markers.EMPTY)
         )
 
     def visit_FormattedValue(self, node):
-        return py.FormattedString.Value(
-            random_id(),
-            Space.EMPTY,
-            Markers.EMPTY,
-            self.__convert(node.value),
-        )
+        raise ValueError("This method should not be called directly")
 
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
@@ -1116,9 +1136,9 @@ class ParserVisitor(ast.NodeVisitor):
 
     def _next_lexer_token(self):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens)  # skip ENCODING token
-        token = next(tokens)
-        value_source = token.string
+        tok = next(tokens)  # skip ENCODING token
+        tok = next(tokens)
+        value_source = tok.string
         self._cursor += len(value_source)
         return value_source
 
