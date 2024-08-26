@@ -1,14 +1,15 @@
 import ast
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Union
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
 from rewrite import random_id, Markers
-from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, TextComment, J, Statement, \
-    Semicolon, TrailingComma
+from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
+    NameTree
 from rewrite.java import tree as j
-from . import tree as py
+from . import tree as py, PyComment
 
 J2 = TypeVar('J2', bound=J)
 
@@ -17,6 +18,15 @@ class ParserVisitor(ast.NodeVisitor):
     _source: str
     _cursor: int = 0
     _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], Tuple[int, int]]] = []
+
+    @property
+    def _source_after_cursor(self) -> str:
+        return self._slow_source_after_cursor(self._source, self._cursor)
+
+    @staticmethod
+    @lru_cache
+    def _slow_source_after_cursor(source: str, cursor: int) -> str:
+        return source[cursor:]
 
     def __init__(self, source: str):
         super().__init__()
@@ -79,7 +89,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Assign(self, node):
-        if (len(node.targets) == 1):
+        if len(node.targets) == 1:
             return j.Assignment(
                 random_id(),
                 self.__whitespace(),
@@ -104,13 +114,461 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Await(self, node):
-        return py.AwaitExpression(
+        return py.Await(
             random_id(),
             self.__source_before('await'),
             Markers.EMPTY,
             self.__convert(node.value),
             self.__map_type(node)
         )
+
+    def visit_Interactive(self, node):
+        raise NotImplementedError("Implement visit_Interactive!")
+
+    def visit_AsyncFunctionDef(self, node):
+        raise NotImplementedError("Implement visit_AsyncFunctionDef!")
+
+    def visit_ClassDef(self, node):
+        raise NotImplementedError("Implement visit_ClassDef!")
+
+    def visit_Delete(self, node):
+        return py.Del(
+            random_id(),
+            self.__source_before('del'),
+            Markers.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.targets) - 1) for i, e in
+             enumerate(node.targets)]
+        )
+
+    def visit_AnnAssign(self, node):
+        raise NotImplementedError("Implement visit_AnnAssign!")
+
+    def visit_For(self, node):
+        return j.ForEachLoop(
+            random_id(),
+            self.__source_before('for'),
+            Markers.EMPTY,
+            j.ForEachLoop.Control(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.target), self.__source_before('in')),
+                self.__pad_right(self.__convert(node.iter), Space.EMPTY),
+            ),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+
+    def visit_AsyncFor(self, node):
+        raise NotImplementedError("Implement visit_AsyncFor!")
+
+    def visit_While(self, node):
+        return j.WhileLoop(
+            random_id(),
+            self.__source_before('while'),
+            Markers.EMPTY,
+            j.ControlParentheses(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.test), self.__source_before(':'))
+            ),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+
+    def visit_If(self, node):
+        prefix = self.__source_before('if')
+        condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
+                                         self.__pad_right(self.__convert(node.test), self.__source_before(':')))
+        then = self.__pad_right(
+            self.__convert(node.body[0]) if len(node.body) == 1 else self.__convert_block(node.body, ':'), Space.EMPTY)
+        elze = None
+        if len(node.orelse) > 0:
+            elze = j.If.Else(
+                random_id(),
+                # TODO technically there could be space between else and ':' but likely not common
+                self.__source_before('el') if isinstance(node.orelse[0], ast.If) else self.__source_before('else:'),
+                Markers.EMPTY,
+                self.__pad_right(
+                    # this is always a zero or one element list
+                    self.__convert(node.orelse[0]),
+                    Space.EMPTY
+                )
+            )
+        return j.If(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            condition,
+            then,
+            elze
+        )
+
+    def visit_With(self, node):
+        raise NotImplementedError("Implement visit_With!")
+
+    def visit_AsyncWith(self, node):
+        raise NotImplementedError("Implement visit_AsyncWith!")
+
+    def visit_Raise(self, node):
+        raise NotImplementedError("Implement visit_Raise!")
+
+    def visit_Try(self, node):
+        raise NotImplementedError("Implement visit_Try!")
+
+    def visit_Import(self, node):
+        # TODO only use `MultiImport` when necessary (requires corresponding changes to printer)
+        return py.MultiImport(
+            random_id(),
+            self.__source_before('import'),
+            Markers.EMPTY,
+            None,
+            False,
+            JContainer(
+                Space.EMPTY,
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                 enumerate(node.names)],
+                Markers.EMPTY
+            )
+        )
+
+    def visit_ImportFrom(self, node):
+        prefix = self.__source_before('from')
+        from_ = self.__pad_right(self._map_to_name('.' * node.level + node.module), self.__source_before('import'))
+        names_prefix = self.__whitespace()
+        if parenthesized := self._source[self._cursor] == '(':
+            self.__skip('(')
+        multi_import = py.MultiImport(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            from_,
+            parenthesized,
+            JContainer(
+                names_prefix,
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                 enumerate(node.names)],
+                Markers.EMPTY
+            )
+        )
+        if parenthesized:
+            self.__skip(')')
+        return multi_import
+
+    def visit_alias(self, node):
+        return j.Import(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__pad_left(Space.EMPTY, False),
+            self._map_to_qualified_name(node.name),
+            None if not node.asname else
+            self.__pad_left(
+                self.__source_before('as'),
+                j.Identifier(
+                    random_id(),
+                    self.__source_before(node.asname),
+                    Markers.EMPTY,
+                    [],
+                    node.asname,
+                    None,
+                    None
+                )
+            )
+        )
+
+    def _map_to_qualified_name(self, name: str) -> j.FieldAccess:
+        if not '.' in name:
+            return j.FieldAccess(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+                self.__pad_left(
+                    Space.EMPTY,
+                    self._map_to_name(name)
+                ),
+                None
+            )
+        return cast(j.FieldAccess, self._map_to_name(name))
+
+    def visit_Global(self, node):
+        raise NotImplementedError("Implement visit_Global!")
+
+    def visit_Nonlocal(self, node):
+        raise NotImplementedError("Implement visit_Nonlocal!")
+
+    def visit_Pass(self, node):
+        return py.Pass(
+            random_id(),
+            self.__source_before('pass'),
+            Markers.EMPTY,
+        )
+
+    def visit_Break(self, node):
+        return j.Break(random_id(), self.__source_before('break'), Markers.EMPTY, None)
+
+    def visit_Continue(self, node):
+        return j.Continue(random_id(), self.__source_before('continue'), Markers.EMPTY, None)
+
+    def visit_GeneratorExp(self, node):
+        return py.ComprehensionExpression(
+            random_id(),
+            self.__source_before('('),
+            Markers.EMPTY,
+            py.ComprehensionExpression.Kind.GENERATOR,
+            self.__convert(node.elt),
+            cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
+            self.__source_before(')'),
+            self.__map_type(node)
+        )
+
+    def visit_Expr(self, node):
+        return py.ExpressionStatement(
+            random_id(),
+            self.__convert(node.value)
+        )
+
+    def visit_Yield(self, node):
+        return py.StatementExpression(
+            random_id(),
+            j.Yield(
+                random_id(),
+                self.__source_before('yield'),
+                Markers.EMPTY,
+                False,
+                self.__convert(node.value),
+            )
+        )
+
+    def visit_YieldFrom(self, node):
+        return py.StatementExpression(
+            random_id(),
+            j.Yield(
+                random_id(),
+                self.__source_before('yield'),
+                Markers.EMPTY,
+                False,
+                py.YieldFrom(
+                    random_id(),
+                    self.__source_before('from'),
+                    Markers.EMPTY,
+                    self.__convert(node.value),
+                    self.__map_type(node)
+                )
+            )
+        )
+
+    def visit_FormattedValue(self, node):
+        raise NotImplementedError("Implement visit_FormattedValue!")
+
+    def visit_JoinedStr(self, node):
+        raise NotImplementedError("Implement visit_JoinedStr!")
+
+    def visit_TypeIgnore(self, node):
+        raise NotImplementedError("Implement visit_TypeIgnore!")
+
+    def visit_Attribute(self, node):
+        return j.FieldAccess(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.value),
+            self.__pad_left(
+                self.__source_before('.'),
+                j.Identifier(
+                    random_id(),
+                    self.__source_before(node.attr),
+                    Markers.EMPTY,
+                    [],
+                    node.attr,
+                    None,
+                    None
+                )
+            ),
+            self.__map_type(node),
+        )
+
+    def visit_Del(self, node):
+        raise NotImplementedError("Implement visit_Del!")
+
+    def visit_Load(self, node):
+        raise NotImplementedError("Implement visit_Load!")
+
+    def visit_Store(self, node):
+        raise NotImplementedError("Implement visit_Store!")
+
+    def visit_ExceptHandler(self, node):
+        raise NotImplementedError("Implement visit_ExceptHandler!")
+
+    def visit_Match(self, node):
+        return j.Switch(
+            random_id(),
+            self.__source_before('match'),
+            Markers.EMPTY,
+            j.ControlParentheses(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__pad_right(self.__convert(node.subject), Space.EMPTY)
+            ),
+            self.__convert_block(node.cases)
+        )
+
+    def visit_match_case(self, node):
+        case = j.Case(
+            random_id(),
+            self.__source_before('case'),
+            Markers.EMPTY,
+            j.Case.Type.Rule,
+            JContainer(
+                self.__whitespace(),
+                [self.__pad_right(self.__convert(node.pattern), Space.EMPTY)],
+                Markers.EMPTY
+            ),
+            JContainer.empty(),
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+        return case
+
+    def visit_MatchValue(self, node):
+        return self.__convert(node.value)
+
+    def visit_MatchSequence(self, node):
+        return py.MatchCase(
+            random_id(),
+            self.__source_before('['),
+            Markers.EMPTY,
+            py.MatchCase.Pattern(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                py.MatchCase.Pattern.Kind.SEQUENCE,
+                JContainer(
+                    Space.EMPTY,
+                    [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1) for i, e in
+                     enumerate(node.patterns)] if node.patterns else [],
+                    Markers.EMPTY
+                ),
+                None
+            ),
+            None,
+            None
+        )
+
+    def visit_MatchSingleton(self, node):
+        raise NotImplementedError("Implement visit_MatchSingleton!")
+
+    def visit_MatchStar(self, node):
+        raise NotImplementedError("Implement visit_MatchStar!")
+
+    def visit_MatchMapping(self, node):
+        raise NotImplementedError("Implement visit_MatchMapping!")
+
+    def visit_MatchClass(self, node):
+        raise NotImplementedError("Implement visit_MatchClass!")
+
+    def visit_MatchAs(self, node):
+        if node.name is None and node.pattern is None:
+            return py.MatchCase(
+                random_id(),
+                self.__source_before('_'),
+                Markers.EMPTY,
+                py.MatchCase.Pattern(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    py.MatchCase.Pattern.Kind.WILDCARD,
+                    JContainer.empty(),
+                    None
+                ),
+                None,
+                None
+            )
+        else:
+            return py.MatchCase(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                py.MatchCase.Pattern(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    py.MatchCase.Pattern.Kind.AS,
+                    JContainer(
+                        Space.EMPTY,
+                        [
+                            self.__pad_right(self.__convert(node.pattern), self.__source_before('as')),
+                            self.__pad_right(
+                                j.Identifier(
+                                    random_id(),
+                                    self.__source_before(node.name),
+                                    Markers.EMPTY,
+                                    [],
+                                    node.name,
+                                    None,
+                                    None
+                                ),
+                                Space.EMPTY
+                            ),
+                        ],
+                        Markers.EMPTY
+                    ),
+                    None
+                ),
+                None,
+                None
+            )
+
+    def visit_MatchOr(self, node):
+        raise NotImplementedError("Implement visit_MatchOr!")
+
+    def visit_TryStar(self, node):
+        raise NotImplementedError("Implement visit_TryStar!")
+
+    def visit_TypeVar(self, node):
+        raise NotImplementedError("Implement visit_TypeVar!")
+
+    def visit_ParamSpec(self, node):
+        raise NotImplementedError("Implement visit_ParamSpec!")
+
+    def visit_TypeVarTuple(self, node):
+        raise NotImplementedError("Implement visit_TypeVarTuple!")
+
+    def visit_TypeAlias(self, node):
+        raise NotImplementedError("Implement visit_TypeAlias!")
+
+    def visit_ExtSlice(self, node):
+        raise NotImplementedError("Implement visit_ExtSlice!")
+
+    def visit_Index(self, node):
+        raise NotImplementedError("Implement visit_Index!")
+
+    def visit_Suite(self, node):
+        raise NotImplementedError("Implement visit_Suite!")
+
+    def visit_AugLoad(self, node):
+        raise NotImplementedError("Implement visit_AugLoad!")
+
+    def visit_AugStore(self, node):
+        raise NotImplementedError("Implement visit_AugStore!")
+
+    def visit_Param(self, node):
+        raise NotImplementedError("Implement visit_Param!")
+
+    def visit_Num(self, node):
+        raise NotImplementedError("Implement visit_Num!")
+
+    def visit_Str(self, node):
+        raise NotImplementedError("Implement visit_Str!")
+
+    def visit_Bytes(self, node):
+        raise NotImplementedError("Implement visit_Bytes!")
+
+    def visit_NameConstant(self, node):
+        raise NotImplementedError("Implement visit_NameConstant!")
+
+    def visit_Ellipsis(self, node):
+        raise NotImplementedError("Implement visit_Ellipsis!")
 
     def visit_BinOp(self, node):
         return j.Binary(
@@ -156,10 +614,10 @@ class ParserVisitor(ast.NodeVisitor):
                 random_id(),
                 prefix,
                 Markers.EMPTY,
-                None,  # TODO
+                None,
                 None,
                 name,
-                args,  # TODO
+                args,
                 self.__map_type(node)
             )
         elif isinstance(node.func, ast.Attribute):
@@ -190,7 +648,7 @@ class ParserVisitor(ast.NodeVisitor):
                 select,
                 None,
                 name,
-                args,  # TODO
+                args,
                 self.__map_type(node)
             )
         else:
@@ -239,23 +697,14 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
-        type_: JavaType.Primitive = self.__map_type(node)
-        prefix = self.__whitespace()
-
-        # TODO temporary solution
-        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens)  # skip ENCODING token
-        value_source = next(tokens).string
-        self._cursor += len(value_source)
-
         return j.Literal(
             random_id(),
-            prefix,
+            self.__whitespace(),
             Markers.EMPTY,
             node.value,
-            value_source,
+            self._next_lexer_token(),
             None,
-            type_,
+            self.__map_type(node),
         )
 
     def visit_Dict(self, node):
@@ -267,7 +716,8 @@ class ParserVisitor(ast.NodeVisitor):
                 Space.EMPTY,
                 [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
                                   Space.EMPTY)] if not node.keys else
-                [self._map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in enumerate(zip(node.keys, node.values))],
+                [self._map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in
+                 enumerate(zip(node.keys, node.values))],
                 Markers.EMPTY
             ),
             self.__map_type(node)
@@ -276,7 +726,6 @@ class ParserVisitor(ast.NodeVisitor):
         return dict
 
     def visit_DictComp(self, node):
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
             self.__source_before('{'),
@@ -297,17 +746,18 @@ class ParserVisitor(ast.NodeVisitor):
 
     def _map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
         if key is None:
-            element = py.StarExpression(
+            element = py.Star(
                 random_id(),
                 self.__source_before('**'),
                 Markers.EMPTY,
-                py.StarExpression.Kind.DICT,
+                py.Star.Kind.DICT,
                 self.__convert(value),
                 self.__map_type(value),
             )
         else:
             element = py.KeyValue(random_id(), self.__whitespace(), Markers.EMPTY,
-                                  self.__pad_right(self.__convert(key), self.__source_before(':')), self.__convert(value),
+                                  self.__pad_right(self.__convert(key), self.__source_before(':')),
+                                  self.__convert(value),
                                   self.__map_type(value))
         return self.__pad_list_element(element, last)
 
@@ -347,15 +797,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         params = self.visit_arguments(node.args)
         return_type = self.__convert(node.returns) if node.returns else None
-        body = j.Block(
-            random_id(),
-            self.__source_before(':'),
-            Markers.EMPTY,
-            self.__pad_right(False, Space.EMPTY),
-            [self.__pad_statement(stmt) for stmt in node.body] if node.body else [
-                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
-            Space.EMPTY
-        )
+        body = self.__convert_block(node.body)
 
         return j.MethodDeclaration(
             random_id(),
@@ -424,7 +866,9 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 False,
                 [self.__pad_right(
-                    self.map_arg(a, node.args.defaults[i - len(node.args.defaults)] if i >= first_with_default else None),
+                    self.map_arg(a,
+                                 node.args.defaults[
+                                     i - len(node.args.defaults)] if i >= first_with_default else None),
                     self.__source_before(',')) for i, a in enumerate(node.args.args)]
             ),
             self.__source_before(':'),
@@ -452,15 +896,12 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_ListComp(self, node):
-        prefix = self.__source_before('[')
-        result = self.__convert(node.elt)
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
-            prefix,
+            self.__source_before('['),
             Markers.EMPTY,
             py.ComprehensionExpression.Kind.LIST,
-            result,
+            self.__convert(node.elt),
             cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
             self.__source_before(']'),
             self.__map_type(node)
@@ -523,7 +964,8 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__source_before('{')
         elements = JContainer(
             Space.EMPTY,
-            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in
+             enumerate(node.elts)] if node.elts else
             [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
@@ -538,15 +980,12 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_SetComp(self, node):
-        prefix = self.__source_before('{')
-        result = self.__convert(node.elt)
-        self.__skip('for')
         return py.ComprehensionExpression(
             random_id(),
-            prefix,
+            self.__source_before('{'),
             Markers.EMPTY,
             py.ComprehensionExpression.Kind.SET,
-            result,
+            self.__convert(node.elt),
             cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
             self.__source_before('}'),
             self.__map_type(node)
@@ -558,9 +997,11 @@ class ParserVisitor(ast.NodeVisitor):
             lower = self.__pad_right(self.__convert(node.lower), self.__source_before(':'))
         else:
             lower = self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':'))
-        upper = self.__pad_right(self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':') if node.step else self.__whitespace('\n'))
+        upper = self.__pad_right(
+            self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+            self.__source_before(':') if node.step else self.__whitespace('\n'))
         step = self.__pad_right(self.__convert(node.step), self.__whitespace('\n')) if node.step else None
-        return py.SliceExpression(
+        return py.Slice(
             random_id(),
             prefix,
             Markers.EMPTY,
@@ -570,11 +1011,11 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Starred(self, node):
-        return py.StarExpression(
+        return py.Star(
             random_id(),
             self.__source_before('*'),
             Markers.EMPTY,
-            py.StarExpression.Kind.LIST,
+            py.Star.Kind.LIST,
             self.__convert(node.value),
             self.__map_type(node),
         )
@@ -598,7 +1039,8 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__source_before('(')
         elements = JContainer(
             Space.EMPTY,
-            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)] if node.elts else
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in
+             enumerate(node.elts)] if node.elts else
             [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
@@ -625,7 +1067,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert(self, node) -> Optional[J]:
         if node:
-            if isinstance(node, ast.expr) and not isinstance(node, ast.Tuple):
+            if isinstance(node, ast.expr) and not isinstance(node, (ast.Tuple, ast.GeneratorExp)):
                 save_cursor = self._cursor
                 prefix = self.__whitespace()
                 if self._cursor < len(self._source) and self._source[self._cursor] == '(':
@@ -656,6 +1098,52 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
+    def _map_to_name(self, name: str) -> NameTree:
+        return self._map_to_name0(name.split('.'))
+
+    def _map_to_name0(self, parts: List[str]) -> NameTree:
+        if len(parts) == 1:
+            return j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                                None)
+        else:
+            return j.FieldAccess(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self._map_to_name0(parts[:-1]),
+                self.__pad_left(
+                    self.__source_before('.'),
+                    j.Identifier(random_id(), self.__source_before(parts[-1]), Markers.EMPTY, [], parts[-1], None,
+                                 None),
+                ),
+                None
+            )
+
+    def _next_lexer_token(self):
+        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        next(tokens)  # skip ENCODING token
+        value_source = next(tokens).string
+        self._cursor += len(value_source)
+        return value_source
+
+    def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
+        return [self.__convert(tree) for tree in trees]
+
+    def __convert_block(self, statements: List[ast.AST], prefix: str = ':') -> j.Block:
+        prefix = self.__source_before(prefix)
+        if statements:
+            statements = [self.__pad_statement(cast(stmt, stmt)) for stmt in statements]
+        else:
+            statements = [self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)]
+        return j.Block(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            JRightPadded(False, Space.EMPTY, Markers.EMPTY),
+            statements,
+            Space.EMPTY
+        )
+
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
         # use whitespace until end of line as padding; what follows will be prefix of next element
@@ -670,7 +1158,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __pad_list_element(self, element: J, last: bool = False) -> JRightPadded[J]:
         padding = self.__whitespace()
         markers = Markers.EMPTY
-        if last and self._source[self._cursor] == ',':
+        if last and self._cursor < len(self._source) and self._source[self._cursor] == ',':
             self._cursor += 1
             markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
         elif not last:
@@ -722,11 +1210,12 @@ class ParserVisitor(ast.NodeVisitor):
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
+                self._cursor += 1
                 while self._cursor < source_len and self._source[self._cursor] != '\n':
                     comment.append(self._source[self._cursor])
                     self._cursor += 1
-                comments.append(TextComment(False, ''.join(comment), '\n' if self._cursor < source_len else '',
-                                            Markers.EMPTY))
+                comments.append(PyComment(''.join(comment), '\n' if self._cursor < source_len else '',
+                                          False, Markers.EMPTY))
             else:
                 break
             self._cursor += 1

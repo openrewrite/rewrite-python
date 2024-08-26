@@ -23,8 +23,8 @@ import org.openrewrite.python.tree.Py;
 public class PythonIsoVisitor<P> extends PythonVisitor<P> {
 
     @Override
-    public Py.AwaitExpression visitAwaitExpression(Py.AwaitExpression ogAwait, P p) {
-        return (Py.AwaitExpression) super.visitAwaitExpression(ogAwait, p);
+    public Py.Await visitAwait(Py.Await ogAwait, P p) {
+        return (Py.Await) super.visitAwait(ogAwait, p);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.DelStatement visitDelStatement(Py.DelStatement ogDel, P p) {
-        return (Py.DelStatement) super.visitDelStatement(ogDel, p);
+    public Py.Del visitDel(Py.Del ogDel, P p) {
+        return (Py.Del) super.visitDel(ogDel, p);
     }
 
     @Override
@@ -58,8 +58,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.ErrorFromExpression visitErrorFromExpression(Py.ErrorFromExpression ogExpr, P p) {
-        return (Py.ErrorFromExpression) super.visitErrorFromExpression(ogExpr, p);
+    public Py.ErrorFrom visitErrorFrom(Py.ErrorFrom ogExpr, P p) {
+        return (Py.ErrorFrom) super.visitErrorFrom(ogExpr, p);
     }
 
     @Override
@@ -83,18 +83,23 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.MultiImport visitMultiImport(Py.MultiImport multiImport_, P p) {
+        return (Py.MultiImport) super.visitMultiImport(multiImport_, p);
+    }
+
+    @Override
     public Py.NamedArgument visitNamedArgument(Py.NamedArgument ogArg, P p) {
         return (Py.NamedArgument) super.visitNamedArgument(ogArg, p);
     }
 
     @Override
-    public Py.PassStatement visitPassStatement(Py.PassStatement ogPass, P p) {
-        return (Py.PassStatement) super.visitPassStatement(ogPass, p);
+    public Py.Pass visitPass(Py.Pass ogPass, P p) {
+        return (Py.Pass) super.visitPass(ogPass, p);
     }
 
     @Override
-    public Py.StarExpression visitStarExpression(Py.StarExpression star, P p) {
-        return (Py.StarExpression) super.visitStarExpression(star, p);
+    public Py.Star visitStar(Py.Star star, P p) {
+        return (Py.Star) super.visitStar(star, p);
     }
 
     @Override
@@ -118,13 +123,13 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.VariableScopeStatement visitVariableScopeStatement(Py.VariableScopeStatement ogStmt, P p) {
-        return (Py.VariableScopeStatement) super.visitVariableScopeStatement(ogStmt, p);
+    public Py.VariableScope visitVariableScope(Py.VariableScope ogStmt, P p) {
+        return (Py.VariableScope) super.visitVariableScope(ogStmt, p);
     }
 
     @Override
-    public Py.YieldExpression visitYieldExpression(Py.YieldExpression ogYield, P p) {
-        return (Py.YieldExpression) super.visitYieldExpression(ogYield, p);
+    public Py.YieldFrom visitYieldFrom(Py.YieldFrom ogYield, P p) {
+        return (Py.YieldFrom) super.visitYieldFrom(ogYield, p);
     }
 
     @Override

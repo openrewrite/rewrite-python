@@ -3172,7 +3172,7 @@ class Literal(Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class MemberReference(Expression, TypedTree, MethodCall):
+class MemberReference(TypedTree, MethodCall):
     _id: UUID
 
     @property
@@ -3567,7 +3567,7 @@ class MethodDeclaration(Statement, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class MethodInvocation(Statement, Expression, TypedTree, MethodCall):
+class MethodInvocation(Statement, TypedTree, MethodCall):
     _id: UUID
 
     @property
@@ -4044,7 +4044,7 @@ class ArrayDimension(J):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class NewClass(Statement, Expression, TypedTree, MethodCall):
+class NewClass(Statement, TypedTree, MethodCall):
     _id: UUID
 
     @property

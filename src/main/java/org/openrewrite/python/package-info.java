@@ -18,5 +18,4 @@
 package org.openrewrite.python;
 
 import org.jspecify.annotations.NullMarked;
-import org.openrewrite.internal.lang.NonNullApi;
 import org.openrewrite.internal.lang.NonNullFields;

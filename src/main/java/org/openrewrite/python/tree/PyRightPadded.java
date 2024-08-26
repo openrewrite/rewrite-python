@@ -15,7 +15,12 @@
  */
 package org.openrewrite.python.tree;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 public class PyRightPadded {
+    @Getter
+    @RequiredArgsConstructor
     public enum Location {
         ASSERT_ELEMENT(PySpace.Location.ASSERT_ELEMENT_SUFFIX),
         COLLECTION_LITERAL_ELEMENT(PySpace.Location.COLLECTION_LITERAL_ELEMENT_SUFFIX),
@@ -25,22 +30,14 @@ public class PyRightPadded {
         FORMATTED_STRING_PART(PySpace.Location.FORMATTED_STRING_PART_SUFFIX),
         KEY_VALUE_KEY_SUFFIX(PySpace.Location.KEY_VALUE_SUFFIX),
         MATCH_PATTERN_ELEMENT(PySpace.Location.MATCH_PATTERN_ELEMENT_SUFFIX),
-        SLICE_EXPRESSION_START(PySpace.Location.SLICE_EXPRESSION_START_SUFFIX),
-        SLICE_EXPRESSION_STEP(PySpace.Location.SLICE_EXPRESSION_STEP_SUFFIX),
-        SLICE_EXPRESSION_STOP(PySpace.Location.SLICE_EXPRESSION_STOP_SUFFIX),
+        MULTI_IMPORT_FROM(PySpace.Location.MULTI_IMPORT_FROM_SUFFIX),
+        MULTI_IMPORT_NAME(PySpace.Location.MULTI_IMPORT_NAME_SUFFIX),
+        SLICE_EXPRESSION_START(PySpace.Location.SLICE_START_SUFFIX),
+        SLICE_EXPRESSION_STEP(PySpace.Location.SLICE_STEP_SUFFIX),
+        SLICE_EXPRESSION_STOP(PySpace.Location.SLICE_STOP_SUFFIX),
         TOP_LEVEL_STATEMENT_SUFFIX(PySpace.Location.TOP_LEVEL_STATEMENT),
-        VARIABLE_SCOPE_ELEMENT(PySpace.Location.VARIABLE_SCOPE_NAME_SUFFIX),
-        YIELD_ELEMENT(PySpace.Location.YIELD_ELEMENT_SUFFIX),
-        ;
+        VARIABLE_SCOPE_ELEMENT(PySpace.Location.VARIABLE_SCOPE_NAME_SUFFIX);
 
         private final PySpace.Location afterLocation;
-
-        Location(PySpace.Location afterLocation) {
-            this.afterLocation = afterLocation;
-        }
-
-        public PySpace.Location getAfterLocation() {
-            return afterLocation;
-        }
     }
 }

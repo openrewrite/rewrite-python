@@ -38,7 +38,7 @@ coverage.xml
 .hypothesis/
 
 # pyenv
-.python-version
+# .python-version
 
 # mypy
 .mypy_cache/

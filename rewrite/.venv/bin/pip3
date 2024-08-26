@@ -1,4 +1,4 @@
-#!/Users/jon/Projects/github/openrewrite/rewrite-python/rewrite/.venv/bin/python3.9
+#!/Users/jon/Projects/github/openrewrite/rewrite-python/rewrite/.venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys

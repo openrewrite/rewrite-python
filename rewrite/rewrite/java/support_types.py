@@ -3,6 +3,7 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass, replace
 from enum import Enum, auto
+from functools import cached_property
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
     TYPE_CHECKING
 from uuid import UUID
@@ -28,13 +29,8 @@ class J(Tree, Protocol):
 
 @dataclass(frozen=True)
 class Comment(Protocol):
-    _multiline: bool
-
     @property
     def multiline(self) -> bool:
-        return self._multiline
-
-    def with_multiline(self, multiline: bool) -> Comment:
         ...
 
     _text: str
@@ -44,7 +40,7 @@ class Comment(Protocol):
         return self._text
 
     def with_text(self, text: str) -> Comment:
-        ...
+        return self if text is self._text else replace(self, _text=text)
 
     _suffix: str
 
@@ -53,7 +49,7 @@ class Comment(Protocol):
         return self._suffix
 
     def with_suffix(self, suffix: str) -> Comment:
-        ...
+        return self if suffix is self._suffix else replace(self, _suffix=suffix)
 
     _markers: Markers
 
@@ -62,22 +58,26 @@ class Comment(Protocol):
         return self._markers
 
     def with_markers(self, markers: Markers) -> Comment:
-        ...
+        return self if markers is self._markers else replace(self, _markers=markers)
 
 
 @dataclass(frozen=True)
 class TextComment(Comment):
+    _multiline: bool
+
+    @property
+    def multiline(self) -> bool:
+        return self._multiline
+
     def with_multiline(self, multiline: bool) -> Comment:
         return self if multiline is self._multiline else replace(self, _multiline=multiline)
 
-    def with_text(self, text: str) -> Comment:
-        return self if text is self._text else replace(self, _text=text)
-
-    def with_suffix(self, suffix: str) -> Comment:
-        return self if suffix is self._suffix else replace(self, _suffix=suffix)
-
-    def with_markers(self, markers: Markers) -> Comment:
-        return self if markers is self._markers else replace(self, _markers=markers)
+    # IMPORTANT: This explicit constructor aligns the parameter order with the Java side
+    def __init__(self, multiline: bool, text: str, suffix: str, markers: Markers) -> None:
+        object.__setattr__(self, '_multiline', multiline)
+        object.__setattr__(self, '_text', text)
+        object.__setattr__(self, '_suffix', suffix)
+        object.__setattr__(self, '_markers', markers)
 
 
 @dataclass(frozen=True)
@@ -264,6 +264,7 @@ Space.EMPTY = Space([], '')
 Space.SINGLE_SPACE = Space([], ' ')
 
 
+@runtime_checkable
 class JavaSourceFile(SourceFile, Protocol):
     pass
 
@@ -293,11 +294,13 @@ class TypeTree(NameTree, Protocol):
     pass
 
 
-class Loop(Tree, Protocol):
+@runtime_checkable
+class Loop(Statement, Protocol):
     pass
 
 
-class MethodCall(Tree, Protocol):
+@runtime_checkable
+class MethodCall(Expression, Protocol):
     pass
 
 
@@ -558,11 +561,13 @@ class JContainer(Generic[T]):
             return JContainer(Space.EMPTY, elements, Markers.EMPTY)
         return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
 
-    EMPTY: ClassVar[JContainer[Any]] = None
+    _EMPTY = None
 
     @classmethod
     def empty(cls) -> JContainer[T]:
-        return cast(JContainer[T], JContainer.EMPTY)
+        if cls._EMPTY is None:
+            cls._EMPTY = JContainer(Space.EMPTY, [], Markers.EMPTY)
+        return cls._EMPTY
 
     class Location(Enum):
         ANNOTATION_ARGUMENTS = (Space.Location.ANNOTATION_ARGUMENTS, JRightPadded.Location.ANNOTATION_ARGUMENT)

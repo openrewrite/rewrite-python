@@ -3,7 +3,7 @@ in-project = true
 prefer-active-python = true
 
 # This option doesn't appear to be supported in all installations of virtualenv.
-# Instead we manually created .venv in this repository with (where Python 3.9 was first activated):
+# Instead we manually created .venv in this repository with (where Python 3.12 was first activated):
 #   python -m venv .venv --copies
 #[virtualenvs.options]
 #always-copy = true

@@ -33,7 +33,6 @@ import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.*;
 import org.openrewrite.python.tree.*;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -134,6 +133,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitMultiImport(Py.MultiImport multiImport_, PrintOutputCapture<P> p) {
+        beforeSyntax(multiImport_, PySpace.Location.MULTI_IMPORT_PREFIX, p);
+        if (multiImport_.getFrom() != null) {
+            p.append("from");
+            visitRightPadded(multiImport_.getPadding().getFrom(), PyRightPadded.Location.MULTI_IMPORT_FROM, p);
+        }
+        p.append("import");
+        if (multiImport_.isParenthesized()) {
+            visitContainer("(", multiImport_.getPadding().getNames(), PyContainer.Location.MULTI_IMPORT_NAMES, ",", ")", p);
+        } else {
+            visitContainer("", multiImport_.getPadding().getNames(), PyContainer.Location.MULTI_IMPORT_NAMES, ",", "", p);
+        }
+        afterSyntax(multiImport_, p);
+        return multiImport_;
+    }
+
+    @Override
     public J visitKeyValue(Py.KeyValue keyValue, PrintOutputCapture<P> p) {
         beforeSyntax(keyValue, PySpace.Location.KEY_VALUE_PREFIX, p);
         visitRightPadded(keyValue.getPadding().getKey(), PyRightPadded.Location.KEY_VALUE_KEY_SUFFIX, p);
@@ -162,7 +178,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitPassStatement(Py.PassStatement pass, PrintOutputCapture<P> p) {
+    public J visitPass(Py.Pass pass, PrintOutputCapture<P> p) {
         beforeSyntax(pass, PySpace.Location.PASS_PREFIX, p);
         p.append("pass");
         afterSyntax(pass, p);
@@ -229,7 +245,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitAwaitExpression(Py.AwaitExpression await, PrintOutputCapture<P> p) {
+    public J visitAwait(Py.Await await, PrintOutputCapture<P> p) {
         visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p);
         p.append("await");
         visit(await.getExpression(), p);
@@ -237,26 +253,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitYieldExpression(Py.YieldExpression yield, PrintOutputCapture<P> p) {
-        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_PREFIX, p);
-        p.append("yield");
-
-        if (yield.isFrom()) {
-            visitLeftPadded(yield.getPadding().getFrom(), PyLeftPadded.Location.YIELD_FROM, p);
-            p.append("from");
-        }
-
-        visitRightPadded(
-                yield.getPadding().getExpressions(),
-                PyRightPadded.Location.YIELD_ELEMENT,
-                ",",
-                p
-        );
+    public J visitYieldFrom(Py.YieldFrom yield, PrintOutputCapture<P> p) {
+        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_FROM_PREFIX, p);
+        p.append("from");
+        visit(yield.getExpression(), p);
         return yield;
     }
 
     @Override
-    public J visitVariableScopeStatement(Py.VariableScopeStatement scope, PrintOutputCapture<P> p) {
+    public J visitVariableScope(Py.VariableScope scope, PrintOutputCapture<P> p) {
         visitSpace(scope.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p);
         switch (scope.getKind()) {
             case GLOBAL:
@@ -277,7 +282,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitDelStatement(Py.DelStatement del, PrintOutputCapture<P> p) {
+    public J visitDel(Py.Del del, PrintOutputCapture<P> p) {
         visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p);
         p.append("del");
         visitRightPadded(
@@ -300,7 +305,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitErrorFromExpression(Py.ErrorFromExpression expr, PrintOutputCapture<P> p) {
+    public J visitErrorFrom(Py.ErrorFrom expr, PrintOutputCapture<P> p) {
         beforeSyntax(expr, PySpace.Location.ERROR_FROM_PREFIX, p);
         visit(expr.getError(), p);
         visitSpace(expr.getPadding().getFrom().getBefore(), PySpace.Location.ERROR_FROM_SOURCE, p);
@@ -367,6 +372,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 );
                 break;
             case GROUP:
+            case SEQUENCE_TUPLE:
                 visitContainer(
                         "(",
                         children,
@@ -436,16 +442,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         p
                 );
                 break;
-            case SEQUENCE_TUPLE:
-                visitContainer(
-                        "(",
-                        children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
-                        ",",
-                        ")",
-                        p
-                );
-                break;
             case STAR:
                 visitContainer(
                         "*",
@@ -504,7 +500,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitSliceExpression(Py.SliceExpression slice, PrintOutputCapture<P> p) {
+    public J visitSlice(Py.Slice slice, PrintOutputCapture<P> p) {
         beforeSyntax(slice, PySpace.Location.SLICE_EXPRESSION_PREFIX, p);
         visitRightPadded(slice.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p);
         p.append(':');
@@ -519,8 +515,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitStarExpression(Py.StarExpression star, PrintOutputCapture<P> p) {
-        beforeSyntax(star, PySpace.Location.STAR_EXPRESSION_PREFIX, p);
+    public J visitStar(Py.Star star, PrintOutputCapture<P> p) {
+        beforeSyntax(star, PySpace.Location.STAR_PREFIX, p);
         switch (star.getKind()) {
             case LIST:
                 p.append("*");
@@ -728,10 +724,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     keyword = ">=";
                     break;
                 case Equal:
-                    keyword = "is";
+                    keyword = "==";
                     break;
                 case NotEqual:
-                    keyword = "is not";
+                    keyword = "!=";
                     break;
                 case BitAnd:
                     keyword = "&";
@@ -856,15 +852,25 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<P> p) {
+            beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
+            visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, "", p);
+            afterSyntax(controlParens, p);
+            return controlParens;
+        }
+
+        @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
             beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
                 else_.getBody() instanceof J.If) {
                 p.append("el");
+                visit(else_.getBody(), p);
             } else {
                 p.append("else");
+                p.append(':');
+                visit(else_.getBody(), p);
             }
-            visit(else_.getBody(), p);
             afterSyntax(else_, p);
             return else_;
         }
@@ -890,75 +896,26 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitIf(J.If iff, PrintOutputCapture<P> p) {
+            beforeSyntax(iff, Space.Location.IF_PREFIX, p);
+            p.append("if");
+            visit(iff.getIfCondition(), p);
+            p.append(":");
+            visitStatement(iff.getPadding().getThenPart(), JRightPadded.Location.IF_THEN, p);
+            visit(iff.getElsePart(), p);
+            afterSyntax(iff, p);
+            return iff;
+        }
+
+        @Override
         public J visitImport(Import im, PrintOutputCapture<P> p) {
-            List<Import> statementGroup = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_CURSOR_KEY);
-            if (statementGroup != null) {
-                Integer statementGroupIndex = getCursor().getParentTreeCursor().getMessage(STATEMENT_GROUP_INDEX_CURSOR_KEY);
-                if (statementGroupIndex == null) {
-                    throw new IllegalStateException();
-                }
-                if (statementGroupIndex != statementGroup.size() - 1) {
-                    return im;
-                }
-            }
-
-            if (statementGroup == null) {
-                statementGroup = Collections.singletonList(im);
-            }
-
-            boolean printParens = im.getMarkers().findFirst(ImportParens.class).isPresent();
-//        boolean hasNewline;
-//        {
-//            AtomicBoolean hasNewlineHolder = new AtomicBoolean(false);
-//            ContainsNewlineVisitor hasNewlineVisitor = new ContainsNewlineVisitor();
-//            for (Import inGroup : statementGroup) {
-//                inGroup.acceptJava(hasNewlineVisitor, hasNewlineHolder);
-//                if (hasNewlineHolder.get()) {
-//                    break;
-//                }
-//            }
-//            hasNewline = hasNewlineHolder.get();
-//        }
-
             beforeSyntax(im, Space.Location.IMPORT_PREFIX, p);
-            boolean isFrom = im.getQualid().getSimpleName().isEmpty();
-            if (isFrom) {
-                p.append("import");
+            if (im.getQualid().getTarget() instanceof J.Empty) {
+                visit(im.getQualid().getName(), p);
             } else {
-                p.append("from");
-                visit(im.getQualid().getTarget(), p);
-                visitSpace(im.getQualid().getPadding().getName().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                p.append("import");
+                visit(im.getQualid(), p);
             }
-
-            if (printParens) {
-                visitPythonExtraPadding(im, PythonExtraPadding.Location.IMPORT_PARENS_PREFIX, p);
-                p.append("(");
-            }
-
-            for (int i = 0; i < statementGroup.size(); i++) {
-                Import inGroup = statementGroup.get(i);
-                if (i != 0) {
-                    p.append(",");
-                }
-                if (isFrom) {
-                    visit(inGroup.getQualid().getTarget(), p);
-                } else {
-                    visit(inGroup.getQualid().getName(), p);
-                }
-                if (inGroup.getPadding().getAlias() != null) {
-                    visitSpace(inGroup.getPadding().getAlias().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                    p.append("as");
-                    visit(inGroup.getAlias(), p);
-                }
-            }
-
-            if (printParens) {
-                visitPythonExtraPadding(im, PythonExtraPadding.Location.IMPORT_PARENS_SUFFIX, p);
-                p.append(")");
-            }
-
-
+            visitLeftPadded("as", im.getPadding().getAlias(), JLeftPadded.Location.IMPORT_ALIAS_PREFIX, p);
             afterSyntax(im, p);
             return im;
         }

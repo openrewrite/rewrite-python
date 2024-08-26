@@ -18,8 +18,8 @@ package org.openrewrite.python.marker;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.With;
-import org.openrewrite.Tree;
 import org.jspecify.annotations.Nullable;
+import org.openrewrite.Tree;
 import org.openrewrite.java.tree.Space;
 import org.openrewrite.marker.Marker;
 
