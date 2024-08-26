@@ -4,7 +4,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
@@ -434,16 +434,16 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_MatchSequence(self, node):
         return py.MatchCase(
             random_id(),
-            self.__source_before('['),
+            Space.EMPTY,
             Markers.EMPTY,
             py.MatchCase.Pattern(
                 random_id(),
                 Space.EMPTY,
                 Markers.EMPTY,
-                py.MatchCase.Pattern.Kind.SEQUENCE,
+                py.MatchCase.Pattern.Kind.SEQUENCE_LIST,
                 JContainer(
-                    Space.EMPTY,
-                    [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1) for i, e in
+                    self.__source_before('['),
+                    [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1, end_delim=']') for i, e in
                      enumerate(node.patterns)] if node.patterns else [],
                     Markers.EMPTY
                 ),
@@ -834,7 +834,7 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__whitespace()
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
-        tok = next(tokens) # FSTRING_START token
+        tok = next(tokens)  # FSTRING_START token
         delimiter = tok.string
         self._cursor += len(delimiter)
 
@@ -860,7 +860,7 @@ class ParserVisitor(ast.NodeVisitor):
                 next(tokens)  # FSTRING_MIDDLE
                 parts.append(self.__pad_right(self.__convert(value), Space.EMPTY))
 
-        self._cursor += len(next(tokens).string) # FSTRING_END token
+        self._cursor += len(next(tokens).string)  # FSTRING_END token
         return py.FormattedString(
             random_id(),
             prefix,
@@ -1145,10 +1145,10 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor += len(value_source)
         return value_source
 
-    def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
+    def __convert_all(self, trees: Sequence[ast.AST]) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
 
-    def __convert_block(self, statements: List[ast.AST], prefix: str = ':') -> j.Block:
+    def __convert_block(self, statements: Sequence[ast.AST], prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
         if statements:
             statements = [self.__pad_statement(cast(stmt, stmt)) for stmt in statements]
@@ -1174,12 +1174,15 @@ class ParserVisitor(ast.NodeVisitor):
             markers = Markers.EMPTY
         return JRightPadded(statement, padding, markers)
 
-    def __pad_list_element(self, element: J, last: bool = False) -> JRightPadded[J]:
+    def __pad_list_element(self, element: J, last: bool = False, end_delim: str = None) -> JRightPadded[J]:
         padding = self.__whitespace()
         markers = Markers.EMPTY
-        if last and self._cursor < len(self._source) and self._source[self._cursor] == ',':
-            self._cursor += 1
-            markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
+        if last and self._cursor < len(self._source):
+            if self._source[self._cursor] == ',':
+                self._cursor += 1
+                markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
+            if end_delim is not None and self._source[self._cursor] == end_delim:
+                self._cursor += 1
         elif not last:
             self._cursor += 1
             markers = Markers.EMPTY
