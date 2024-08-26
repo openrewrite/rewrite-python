@@ -26,6 +26,20 @@ def test_as():
             """\
             def test(x):
                 match x:
+                    case 1 as y:
+                        return y
+            """
+        )
+    )
+
+
+def test_sequence_as():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(x):
+                match x:
                     case [int(), str()] as y:
                         return y
             """
