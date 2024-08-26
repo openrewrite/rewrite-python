@@ -29,3 +29,13 @@ def test_expr_with_suffix():
 def test_embedded_expr():
     # language=python
     rewrite_run(python("a = f'-{None}-'"))
+
+
+def test_embedded_set():
+    # language=python
+    rewrite_run(python("a = f'-{ {1, 2} }-'"))
+
+
+def test_escaped_braces():
+    # language=python
+    rewrite_run(python("a = f'{{foo{{bar}}baz}}'"))
