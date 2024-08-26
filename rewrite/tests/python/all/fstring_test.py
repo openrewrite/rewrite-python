@@ -8,7 +8,6 @@ def test_delimiters(style: str):
     rewrite_run(python(f"a = f{style}foo{style}"))
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_multiline():
     rewrite_run(
         python("""

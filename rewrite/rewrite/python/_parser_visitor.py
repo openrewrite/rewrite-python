@@ -923,7 +923,7 @@ class ParserVisitor(ast.NodeVisitor):
                     Space.EMPTY,
                     Markers.EMPTY,
                     expr,
-                ), self.__whitespace()))
+                ), Space.EMPTY))
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor
                 while True:
