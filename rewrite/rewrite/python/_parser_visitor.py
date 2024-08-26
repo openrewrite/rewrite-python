@@ -905,12 +905,7 @@ class ParserVisitor(ast.NodeVisitor):
         for value in node.values:
             if tok.type == token.OP:
                 self._cursor += len(tok.string)
-                parts.append(self.__pad_right(py.FormattedString.Value(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    self.__pad_right(self.__convert(value.value), self.__whitespace())
-                ), self.__whitespace()))
+                expr = self.__pad_right(self.__convert(value.value), self.__whitespace())
                 prev_tok = tok
                 try:
                     while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
@@ -918,6 +913,17 @@ class ParserVisitor(ast.NodeVisitor):
                 except StopIteration:
                     pass
                 self._cursor += len(prev_tok.string)
+                if prev_tok.type == token.OP and prev_tok.string == ':':
+                    format_spec = tok.string
+                    self._cursor += len(tok.string)
+                    tok = next(tokens)
+                    self._cursor += len(tok.string)
+                parts.append(self.__pad_right(py.FormattedString.Value(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    expr,
+                ), self.__whitespace()))
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor
                 while True:
