@@ -136,7 +136,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitFormattedString(Py.FormattedString fString, PrintOutputCapture<P> p) {
         beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
         p.append(fString.getDelimiter());
-        visitContainer("", fString.getPadding().getParts(), PyContainer.Location.FORMATTED_STRING_PARTS, "", "", p);
+        visit(fString.getParts(), p);
         int idx = Math.max(fString.getDelimiter().indexOf('\''), fString.getDelimiter().indexOf('"'));
         p.append(fString.getDelimiter().substring(idx));
         return fString;

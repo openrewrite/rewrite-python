@@ -918,19 +918,19 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor += len(tok.string)
                     tok = next(tokens)
                     self._cursor += len(tok.string)
-                parts.append(self.__pad_right(py.FormattedString.Value(
+                parts.append(py.FormattedString.Value(
                     random_id(),
                     Space.EMPTY,
                     Markers.EMPTY,
                     expr,
-                ), Space.EMPTY))
+                ))
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor
                 while True:
                     self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
                     if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
                         break
-                parts.append(self.__pad_right(j.Literal(
+                parts.append(j.Literal(
                     random_id(),
                     self.__whitespace(),
                     Markers.EMPTY,
@@ -938,7 +938,7 @@ class ParserVisitor(ast.NodeVisitor):
                     self._source[save_cursor:self._cursor],
                     None,
                     self.__map_type(value),
-                ), Space.EMPTY))
+                ))
 
         self._cursor += len(tok.string) # FSTRING_END token
         return py.FormattedString(
@@ -946,7 +946,7 @@ class ParserVisitor(ast.NodeVisitor):
             prefix,
             Markers.EMPTY,
             delimiter,
-            JContainer(Space.EMPTY, parts, Markers.EMPTY)
+            parts
         )
 
 

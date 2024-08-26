@@ -757,42 +757,23 @@ public interface Py extends J {
         }
     }
 
+    @Getter
+    @With
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     final class FormattedString implements Py, Expression, TypedTree {
 
-        @Nullable
-        @NonFinal
-        transient WeakReference<Padding> padding;
-
-        @Getter
-        @With
         @EqualsAndHashCode.Include
         UUID id;
 
-        @Getter
-        @With
         Space prefix;
 
-        @Getter
-        @With
         Markers markers;
 
-        @Getter
-        @With
         String delimiter;
 
-        JContainer<Expression> parts;
-
-        public List<Expression> getParts() {
-            return parts.getElements();
-        }
-
-        public FormattedString withParts(List<Expression> parts) {
-            return getPadding().withParts(JContainer.withElements(this.parts, parts));
-        }
+        List<Expression> parts;
 
         @Override
         public JavaType getType() {
@@ -814,34 +795,6 @@ public interface Py extends J {
         @Transient
         public CoordinateBuilder.Expression getCoordinates() {
             return new CoordinateBuilder.Expression(this);
-        }
-
-        public Padding getPadding() {
-            Padding p;
-            if (this.padding == null) {
-                p = new Padding(this);
-                this.padding = new WeakReference<>(p);
-            } else {
-                p = this.padding.get();
-                if (p == null || p.t != this) {
-                    p = new Padding(this);
-                    this.padding = new WeakReference<>(p);
-                }
-            }
-            return p;
-        }
-
-        @RequiredArgsConstructor
-        public static class Padding {
-            private final FormattedString t;
-
-            public JContainer<Expression> getParts() {
-                return t.parts;
-            }
-
-            public FormattedString withParts(JContainer<Expression> parts) {
-                return t.parts == parts ? t : new FormattedString(t.id, t.prefix, t.markers, t.delimiter, parts);
-            }
         }
 
         @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

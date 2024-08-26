@@ -795,41 +795,14 @@ class FormattedString(Py, Expression, TypedTree):
     def with_delimiter(self, delimiter: str) -> FormattedString:
         return self if delimiter is self._delimiter else replace(self, _delimiter=delimiter)
 
-    _parts: JContainer[Expression]
+    _parts: List[Expression]
 
     @property
     def parts(self) -> List[Expression]:
-        return self._parts.elements
+        return self._parts
 
     def with_parts(self, parts: List[Expression]) -> FormattedString:
-        return self.padding.with_parts(JContainer.with_elements(self._parts, parts))
-
-    @dataclass
-    class PaddingHelper:
-        _t: FormattedString
-
-        @property
-        def parts(self) -> JContainer[Expression]:
-            return self._t._parts
-
-        def with_parts(self, parts: JContainer[Expression]) -> FormattedString:
-            return self._t if self._t._parts is parts else replace(self._t, _parts=parts)
-
-    _padding: weakref.ReferenceType[PaddingHelper] = None
-
-    @property
-    def padding(self) -> PaddingHelper:
-        p: FormattedString.PaddingHelper
-        if self._padding is None:
-            p = FormattedString.PaddingHelper(self)
-            object.__setattr__(self, '_padding', weakref.ref(p))
-        else:
-            p = self._padding()
-            # noinspection PyProtectedMember
-            if p is None or p._t != self:
-                p = FormattedString.PaddingHelper(self)
-                object.__setattr__(self, '_padding', weakref.ref(p))
-        return p
+        return self if parts is self._parts else replace(self, _parts=parts)
 
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
@@ -907,7 +880,7 @@ class FormattedString(Py, Expression, TypedTree):
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_formatted_string_value(self, p)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, delimiter: str, parts: JContainer[Expression]) -> None:
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, delimiter: str, parts: List[Expression]) -> None:
         # generated due to https://youtrack.jetbrains.com/issue/PY-62622
         object.__setattr__(self, '_id', id)
         object.__setattr__(self, '_prefix', prefix)

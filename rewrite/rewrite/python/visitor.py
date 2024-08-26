@@ -88,7 +88,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_expression
         formatted_string = cast(FormattedString, temp_expression)
         formatted_string = formatted_string.with_markers(self.visit_markers(formatted_string.markers, p))
-        formatted_string = formatted_string.padding.with_parts(self.visit_container(formatted_string.padding.parts, PyContainer.Location.FORMATTED_STRING_PARTS, p))
+        formatted_string = formatted_string.with_parts([self.visit_and_cast(v, Expression, p) for v in formatted_string.parts])
         return formatted_string
 
     def visit_formatted_string_value(self, value: FormattedString.Value, p: P) -> J:

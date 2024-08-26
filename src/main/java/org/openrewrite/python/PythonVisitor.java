@@ -266,8 +266,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         } else {
             fs = (Py.FormattedString) temp;
         }
-        fs = fs.getPadding().withParts(
-                visitContainer(fs.getPadding().getParts(), PyContainer.Location.FORMATTED_STRING_PARTS, p));
+        fs = fs.withParts(ListUtils.map(fs.getParts(), part -> visitAndCast(part, p)));
         return fs;
     }
 
