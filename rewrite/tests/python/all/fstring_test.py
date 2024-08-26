@@ -9,6 +9,11 @@ class TestFString:
         rewrite_run(python(f"a = f{style}{style}"))
 
 
+    def test_raw(self, style: str):
+        rewrite_run(python(f"a = rf{style}raw{style}"))
+        rewrite_run(python(f"a = Fr{style}raw{style}"))
+
+
     def test_no_expr(self, style: str):
         # language=python
         rewrite_run(python("a = f'foo'"))
