@@ -358,12 +358,6 @@ class ParserVisitor(ast.NodeVisitor):
             )
         )
 
-    def visit_FormattedValue(self, node):
-        raise NotImplementedError("Implement visit_FormattedValue!")
-
-    def visit_JoinedStr(self, node):
-        raise NotImplementedError("Implement visit_JoinedStr!")
-
     def visit_TypeIgnore(self, node):
         raise NotImplementedError("Implement visit_TypeIgnore!")
 
@@ -838,6 +832,7 @@ class ParserVisitor(ast.NodeVisitor):
         next(tokens)  # skip ENCODING token
         value_source = next(tokens).string
         delimiter = value_source[0:2]
+        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
         return py.FormattedString(
             random_id(),
             prefix,
@@ -847,7 +842,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_FormattedValue(self, node):
-        return py.FormattedValue(
+        return py.FormattedString.Value(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
@@ -1122,7 +1117,8 @@ class ParserVisitor(ast.NodeVisitor):
     def _next_lexer_token(self):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
-        value_source = next(tokens).string
+        token = next(tokens)
+        value_source = token.string
         self._cursor += len(value_source)
         return value_source
 

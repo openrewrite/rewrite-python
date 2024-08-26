@@ -24,7 +24,6 @@ __all__ = [
     'ExceptionType',
     'ExpressionStatement',
     'FormattedString',
-    'FormattedValue',
     'KeyValue',
     'MatchCase',
     'MultiImport',

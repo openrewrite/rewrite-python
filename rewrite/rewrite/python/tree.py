@@ -758,6 +758,141 @@ class CollectionLiteral(Py, Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class FormattedString(Py, Expression, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> FormattedString:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> FormattedString:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> FormattedString:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _delimiter: str
+
+    @property
+    def delimiter(self) -> str:
+        return self._delimiter
+
+    def with_delimiter(self, delimiter: str) -> FormattedString:
+        return self if delimiter is self._delimiter else replace(self, _delimiter=delimiter)
+
+    _parts: JContainer[Expression]
+
+    @property
+    def parts(self) -> List[Expression]:
+        return self._parts.elements
+
+    def with_parts(self, parts: List[Expression]) -> FormattedString:
+        return self.padding.with_parts(JContainer.with_elements(self._parts, parts))
+
+    @dataclass
+    class PaddingHelper:
+        _t: FormattedString
+
+        @property
+        def parts(self) -> JContainer[Expression]:
+            return self._t._parts
+
+        def with_parts(self, parts: JContainer[Expression]) -> FormattedString:
+            return self._t if self._t._parts is parts else replace(self._t, _parts=parts)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: FormattedString.PaddingHelper
+        if self._padding is None:
+            p = FormattedString.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = FormattedString.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+    @dataclass(frozen=True, eq=False)
+    class Value(Py, Expression, TypedTree):
+        _id: UUID
+
+        @property
+        def id(self) -> UUID:
+            return self._id
+
+        def with_id(self, id: UUID) -> FormattedString.Value:
+            return self if id is self._id else replace(self, _id=id)
+
+        _prefix: Space
+
+        @property
+        def prefix(self) -> Space:
+            return self._prefix
+
+        def with_prefix(self, prefix: Space) -> FormattedString.Value:
+            return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+        _markers: Markers
+
+        @property
+        def markers(self) -> Markers:
+            return self._markers
+
+        def with_markers(self, markers: Markers) -> FormattedString.Value:
+            return self if markers is self._markers else replace(self, _markers=markers)
+
+        _expression: Expression
+
+        @property
+        def expression(self) -> Expression:
+            return self._expression
+
+        def with_expression(self, expression: Expression) -> FormattedString.Value:
+            return self if expression is self._expression else replace(self, _expression=expression)
+
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression) -> None:
+            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+            object.__setattr__(self, '_id', id)
+            object.__setattr__(self, '_prefix', prefix)
+            object.__setattr__(self, '_markers', markers)
+            object.__setattr__(self, '_expression', expression)
+
+        def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+            return v.visit_formatted_string_value(self, p)
+
+    def __init__(self, id: UUID, prefix: Space, markers: Markers, delimiter: str, parts: JContainer[Expression]) -> None:
+        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
+        object.__setattr__(self, '_id', id)
+        object.__setattr__(self, '_prefix', prefix)
+        object.__setattr__(self, '_markers', markers)
+        object.__setattr__(self, '_delimiter', delimiter)
+        object.__setattr__(self, '_parts', parts)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_formatted_string(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class Pass(Py, Statement):
     _id: UUID
 

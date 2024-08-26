@@ -843,46 +843,46 @@ public interface Py extends J {
                 return t.parts == parts ? t : new FormattedString(t.id, t.prefix, t.markers, t.delimiter, parts);
             }
         }
-    }
 
-    @Getter
-    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false)
-    @RequiredArgsConstructor
-    final class FormattedValue implements Py, Expression, TypedTree {
-        @With
-        @EqualsAndHashCode.Include
-        UUID id;
+        @Getter
+        @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(callSuper = false)
+        @RequiredArgsConstructor
+        public static final class Value implements Py, Expression, TypedTree {
+            @With
+            @EqualsAndHashCode.Include
+            UUID id;
 
-        @With
-        Space prefix;
+            @With
+            Space prefix;
 
-        @With
-        Markers markers;
+            @With
+            Markers markers;
 
-        @With
-        Expression expression;
+            @With
+            Expression expression;
 
-        @Override
-        public JavaType getType() {
-            return JavaType.Primitive.String;
-        }
+            @Override
+            public JavaType getType() {
+                return JavaType.Primitive.String;
+            }
 
-        @Override
-        public <T extends J> T withType(@Nullable JavaType type) {
-            //noinspection unchecked
-            return (T) this;
-        }
+            @Override
+            public <T extends J> T withType(@Nullable JavaType type) {
+                //noinspection unchecked
+                return (T) this;
+            }
 
-        @Override
-        public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitFormattedValue(this, p);
-        }
+            @Override
+            public <P> J acceptPython(PythonVisitor<P> v, P p) {
+                return v.visitFormattedStringValue(this, p);
+            }
 
-        @Override
-        @Transient
-        public CoordinateBuilder.Expression getCoordinates() {
-            return new CoordinateBuilder.Expression(this);
+            @Override
+            @Transient
+            public CoordinateBuilder.Expression getCoordinates() {
+                return new CoordinateBuilder.Expression(this);
+            }
         }
     }
 

@@ -271,15 +271,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return fs;
     }
 
-    public J visitFormattedValue(Py.FormattedValue formattedValue, P p) {
-        Py.FormattedValue fv = formattedValue;
-        fv = fv.withPrefix(visitSpace(fv.getPrefix(), PySpace.Location.FORMATTED_VALUE_PREFIX, p));
+    public J visitFormattedStringValue(Py.FormattedString.Value value, P p) {
+        Py.FormattedString.Value fv = value;
+        fv = fv.withPrefix(visitSpace(fv.getPrefix(), PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p));
         fv = fv.withMarkers(visitMarkers(fv.getMarkers(), p));
         Expression temp = (Expression) visitExpression(fv, p);
-        if (!(temp instanceof Py.FormattedValue)) {
+        if (!(temp instanceof Py.FormattedString.Value)) {
             return temp;
         } else {
-            fv = (Py.FormattedValue) temp;
+            fv = (Py.FormattedString.Value) temp;
         }
         fv =fv.withExpression(visitAndCast(fv.getExpression(), p));
         return fv;
