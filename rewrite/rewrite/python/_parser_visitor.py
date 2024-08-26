@@ -39,11 +39,14 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
         first_with_default = len(node.args) - len(node.defaults)
         prefix = self.__source_before('(')
-        args = JContainer(prefix, [self.__pad_right(
-            self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
-            self.__source_before(',')) for i, a in enumerate(node.args)], Markers.EMPTY)
-        self.__skip(')')
-        return args
+        args = []
+        for i, a in enumerate(node.args):
+            arg = self.__pad_right(
+                self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
+                self.__source_before(')') if i == len(node.args) - 1 else self.__source_before(',')
+            )
+            args.append(arg)
+        return JContainer(prefix, args, Markers.EMPTY)
 
     def map_arg(self, node, default=None):
         prefix = self.__source_before(node.arg)
