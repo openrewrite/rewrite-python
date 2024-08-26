@@ -133,6 +133,24 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitFormattedString(Py.FormattedString fString, PrintOutputCapture<P> p) {
+        beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
+        p.append(fString.getDelimiter());
+        visitContainer("", fString.getPadding().getParts(), PyContainer.Location.FORMATTED_STRING_PARTS, "", "", p);
+        p.append("'");
+        return fString;
+    }
+
+    @Override
+    public J visitFormattedStringValue(Py.FormattedString.Value value, PrintOutputCapture<P> p) {
+        beforeSyntax(value, PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p);
+        p.append('{');
+        visit(value.getExpression(), p);
+        p.append('}');
+        return value;
+    }
+
+    @Override
     public J visitMultiImport(Py.MultiImport multiImport_, PrintOutputCapture<P> p) {
         beforeSyntax(multiImport_, PySpace.Location.MULTI_IMPORT_PREFIX, p);
         if (multiImport_.getFrom() != null) {

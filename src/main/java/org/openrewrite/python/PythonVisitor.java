@@ -256,6 +256,35 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return expr;
     }
 
+    public J visitFormattedString(Py.FormattedString fString, P p) {
+        Py.FormattedString fs = fString;
+        fs = fs.withPrefix(visitSpace(fs.getPrefix(), PySpace.Location.FORMATTED_STRING_PREFIX, p));
+        fs = fs.withMarkers(visitMarkers(fs.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(fs, p);
+        if (!(temp instanceof Py.FormattedString)) {
+            return temp;
+        } else {
+            fs = (Py.FormattedString) temp;
+        }
+        fs = fs.getPadding().withParts(
+                visitContainer(fs.getPadding().getParts(), PyContainer.Location.FORMATTED_STRING_PARTS, p));
+        return fs;
+    }
+
+    public J visitFormattedStringValue(Py.FormattedString.Value value, P p) {
+        Py.FormattedString.Value fv = value;
+        fv = fv.withPrefix(visitSpace(fv.getPrefix(), PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p));
+        fv = fv.withMarkers(visitMarkers(fv.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(fv, p);
+        if (!(temp instanceof Py.FormattedString.Value)) {
+            return temp;
+        } else {
+            fv = (Py.FormattedString.Value) temp;
+        }
+        fv =fv.withExpression(visitAndCast(fv.getExpression(), p));
+        return fv;
+    }
+
     public J visitMatchCasePattern(Py.MatchCase.Pattern ogPattern, P p) {
         Py.MatchCase.Pattern pattern = ogPattern;
         pattern = pattern.withPrefix(visitSpace(pattern.getPrefix(), PySpace.Location.MATCH_PATTERN_PREFIX, p));

@@ -23,6 +23,7 @@ __all__ = [
     'ErrorFrom',
     'ExceptionType',
     'ExpressionStatement',
+    'FormattedString',
     'KeyValue',
     'MatchCase',
     'MultiImport',

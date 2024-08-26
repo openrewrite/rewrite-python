@@ -1,4 +1,5 @@
 import ast
+import token
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -357,12 +358,6 @@ class ParserVisitor(ast.NodeVisitor):
                 )
             )
         )
-
-    def visit_FormattedValue(self, node):
-        raise NotImplementedError("Implement visit_FormattedValue!")
-
-    def visit_JoinedStr(self, node):
-        raise NotImplementedError("Implement visit_JoinedStr!")
 
     def visit_TypeIgnore(self, node):
         raise NotImplementedError("Implement visit_TypeIgnore!")
@@ -832,6 +827,48 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+    def visit_JoinedStr(self, node):
+        prefix = self.__whitespace()
+        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        next(tokens)  # skip ENCODING token
+        tok = next(tokens) # FSTRING_START token
+        delimiter = tok.string
+        self._cursor += len(delimiter)
+
+        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
+        parts = []
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                tok = next(tokens)  # '{' OP token
+                self._cursor += len(tok.string)
+                parts.append(self.__pad_right(py.FormattedString.Value(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    self.__convert(value.value),
+                ), Space.EMPTY))
+                try:
+                    while (tok := next(tokens)).type != token.OP or tok.string != '}':
+                        pass
+                except StopIteration:
+                    pass
+                self._cursor += len(tok.string)
+            else:
+                next(tokens)  # FSTRING_MIDDLE
+                parts.append(self.__pad_right(self.__convert(value), Space.EMPTY))
+
+        self._cursor += len(next(tokens).string) # FSTRING_END token
+        return py.FormattedString(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            delimiter,
+            JContainer(Space.EMPTY, parts, Markers.EMPTY)
+        )
+
+    def visit_FormattedValue(self, node):
+        raise ValueError("This method should not be called directly")
+
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
         return j.Lambda(
@@ -1048,7 +1085,7 @@ class ParserVisitor(ast.NodeVisitor):
             if isinstance(node, ast.expr) and not isinstance(node, (ast.Tuple, ast.GeneratorExp)):
                 save_cursor = self._cursor
                 prefix = self.__whitespace()
-                if self._source[self._cursor] == '(':
+                if self._cursor < len(self._source) and self._source[self._cursor] == '(':
                     self._cursor += 1
                     self._parentheses_stack.append((lambda e, r: j.Parentheses(
                         random_id(),
@@ -1099,8 +1136,9 @@ class ParserVisitor(ast.NodeVisitor):
 
     def _next_lexer_token(self):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens)  # skip ENCODING token
-        value_source = next(tokens).string
+        tok = next(tokens)  # skip ENCODING token
+        tok = next(tokens)
+        value_source = tok.string
         self._cursor += len(value_source)
         return value_source
 
