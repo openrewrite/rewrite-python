@@ -137,7 +137,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
         p.append(fString.getDelimiter());
         visitContainer("", fString.getPadding().getParts(), PyContainer.Location.FORMATTED_STRING_PARTS, "", "", p);
-        p.append("'");
+        p.append(fString.getDelimiter().substring(1));
         return fString;
     }
 
