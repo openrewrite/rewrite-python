@@ -2,7 +2,6 @@ import ast
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from random import random
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type
 
@@ -1108,10 +1107,10 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_all(self, trees: List[ast.AST]) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
 
-    def __convert_block(self, statements: List[ast], prefix: str = ':') -> j.Block:
+    def __convert_block(self, statements: List[ast.AST], prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
         if statements:
-            statements = [self.__pad_statement(stmt) for stmt in statements]
+            statements = [self.__pad_statement(cast(stmt, stmt)) for stmt in statements]
         else:
             statements = [self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)]
         return j.Block(
