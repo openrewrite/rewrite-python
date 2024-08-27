@@ -441,7 +441,14 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_MatchSingleton!")
 
     def visit_MatchStar(self, node):
-        raise NotImplementedError("Implement visit_MatchStar!")
+        return py.Star(
+            random_id(),
+            self.__source_before('*'),
+            Markers.EMPTY,
+            py.Star.Kind.LIST,
+            self.__convert_name(node.name),
+            None
+        )
 
     def visit_MatchMapping(self, node):
         raise NotImplementedError("Implement visit_MatchMapping!")
