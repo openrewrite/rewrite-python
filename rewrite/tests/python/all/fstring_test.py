@@ -82,6 +82,21 @@ def test_comment_in_expr():
     )
 
 
-def test_format_spec():
+def test_simple_format_spec():
     # language=python
     rewrite_run(python("a = f'{1:n}'"))
+
+
+def test_format_spec_with_precision_and_conversion():
+    # language=python
+    rewrite_run(python("a = f'{1:.2f}'"))
+
+
+def test_nested_fstring_expression():
+    # language=python
+    rewrite_run(python("""a = f'{f"{1}"}'"""))
+
+
+def test_format_value():
+    # language=python
+    rewrite_run(python("a = f'{1:.{2 + 3}f}'"))

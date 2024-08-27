@@ -895,64 +895,7 @@ class ParserVisitor(ast.NodeVisitor):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
         tok = next(tokens)  # FSTRING_START token
-        if tok.type != token.FSTRING_START:
-            # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
-            return self.__convert(node.values[0])
-        delimiter = tok.string
-        self._cursor += len(delimiter)
-        tok = next(tokens)
-
-        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
-        parts = []
-        for value in node.values:
-            if tok.type == token.OP:
-                self._cursor += len(tok.string)
-                expr = self.__pad_right(self.__convert(value.value), self.__whitespace())
-                prev_tok = tok
-                try:
-                    while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
-                        prev_tok = tok
-                except StopIteration:
-                    pass
-                self._cursor += len(prev_tok.string)
-                if prev_tok.type == token.OP and prev_tok.string == ':':
-                    format_spec = self.__convert(cast(ast.FormattedValue, value).format_spec)
-                    # self._cursor += len(tok.string)
-                    tok = next(tokens)
-                    self._cursor += len(tok.string)
-                else:
-                    format_spec = None
-                parts.append(py.FormattedString.Value(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    expr,
-                    format_spec
-                ))
-            else:  # FSTRING_MIDDLE
-                save_cursor = self._cursor
-                while True:
-                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
-                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
-                        break
-                parts.append(j.Literal(
-                    random_id(),
-                    self.__whitespace(),
-                    Markers.EMPTY,
-                    cast(ast.Constant, value).s,
-                    self._source[save_cursor:self._cursor],
-                    None,
-                    self.__map_type(value),
-                ))
-
-        self._cursor += len(tok.string)  # FSTRING_END token
-        return py.FormattedString(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            delimiter,
-            parts
-        )
+        return self.__map_fstring(node, prefix, tok, tokens)[0]
 
     def visit_FormattedValue(self, node):
         raise ValueError("This method should not be called directly")
@@ -1402,3 +1345,80 @@ class ParserVisitor(ast.NodeVisitor):
         except KeyError:
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
+
+    def __map_fstring(self, node, prefix, tok, tokens):
+        consume_end_delim = False
+        if tok.type != token.FSTRING_START:
+            if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
+                # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
+                format = cast(ast.Constant, node.values[0]).value
+                self._cursor += len(format)
+                return (j.Literal(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    format,
+                    format,
+                    None,
+                    self.__map_type(node.values[0]),
+                ), next(tokens))
+            else:
+                delimiter = ''
+        else:
+            delimiter = tok.string
+            self._cursor += len(delimiter)
+            tok = next(tokens)
+            consume_end_delim = True
+
+        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
+        parts = []
+        for value in node.values:
+            if tok.type == token.OP:
+                self._cursor += len(tok.string)
+                expr = self.__pad_right(self.__convert(value.value), self.__whitespace())
+                prev_tok = tok
+                try:
+                    while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
+                        prev_tok = tok
+                except StopIteration:
+                    pass
+                self._cursor += len(prev_tok.string)
+                if prev_tok.type == token.OP and prev_tok.string == ':':
+                    format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, tok, tokens)
+                    # self._cursor += len(tok.string)
+                    # tok = next(tokens)
+                    # self._cursor += len(tok.string)
+                else:
+                    format_spec = None
+                parts.append(py.FormattedString.Value(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    expr,
+                    format_spec
+                ))
+            else:  # FSTRING_MIDDLE
+                save_cursor = self._cursor
+                while True:
+                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
+                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
+                        break
+                parts.append(j.Literal(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    cast(ast.Constant, value).s,
+                    self._source[save_cursor:self._cursor],
+                    None,
+                    self.__map_type(value),
+                ))
+
+        if consume_end_delim:
+            self._cursor += len(tok.string)  # FSTRING_END token
+        return (py.FormattedString(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            delimiter,
+            parts
+        ), tok)

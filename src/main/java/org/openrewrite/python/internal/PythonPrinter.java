@@ -142,8 +142,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
         p.append(fString.getDelimiter());
         visit(fString.getParts(), p);
-        int idx = Math.max(fString.getDelimiter().indexOf('\''), fString.getDelimiter().indexOf('"'));
-        p.append(fString.getDelimiter().substring(idx));
+        if (!fString.getDelimiter().isEmpty()) {
+            int idx = Math.max(fString.getDelimiter().indexOf('\''), fString.getDelimiter().indexOf('"'));
+            p.append(fString.getDelimiter().substring(idx));
+        }
         return fString;
     }
 
