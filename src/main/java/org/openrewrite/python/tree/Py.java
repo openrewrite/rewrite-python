@@ -803,6 +803,10 @@ public interface Py extends J {
         @AllArgsConstructor(access = AccessLevel.PRIVATE)
         public static final class Value implements Py, Expression, TypedTree {
 
+            public enum Conversion {
+                STR, REPR, ASCII
+            }
+
             @Nullable
             @NonFinal
             transient WeakReference<Padding> padding;
@@ -821,6 +825,11 @@ public interface Py extends J {
             Markers markers;
 
             JRightPadded<Expression> expression;
+
+            @Nullable
+            @Getter
+            @With
+            Conversion conversion;
 
             @Nullable
             @Getter
@@ -881,7 +890,7 @@ public interface Py extends J {
                 }
 
                 public Value withExpression(JRightPadded<Expression> expression) {
-                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression, t.format);
+                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression, t.conversion, t.format);
                 }
             }
         }

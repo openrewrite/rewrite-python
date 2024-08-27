@@ -9,6 +9,7 @@ def test_delimiters(style: str):
 
 
 def test_multiline():
+    # language=python
     rewrite_run(
         python("""
             a = f'''foo
@@ -20,11 +21,14 @@ def test_multiline():
 
 
 def test_empty():
+    # language=python
     rewrite_run(python("a = f''"))
 
 
 def test_raw():
+    # language=python
     rewrite_run(python("a = rf'raw'"))
+    # language=python
     rewrite_run(python("a = Fr'raw'"))
 
 
@@ -81,10 +85,15 @@ def test_conversion_and_format():
     rewrite_run(python("""a = f'{"foo"!a:n}'"""))
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_conversion_and_format_expr():
     # language=python
-    rewrite_run(python("""a = f'{"foo"!s:<{10}}'"""))
+    rewrite_run(python("""a = f'{"foo"!s:<{5*2}}'"""))
+
+
+@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
+def test_nested_fstring_conversion_and_format_expr():
+    # language=python
+    rewrite_run(python("""a = f'{f"foo"!s:<{5*2}}'"""))
 
 
 def test_comment_in_expr():

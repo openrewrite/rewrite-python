@@ -1406,6 +1406,7 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor += len(tok.string)
                     prev_tok = next(tokens)
                     tok = next(tokens)
+                    self._cursor += len(tok.string)
                 else:
                     conv = None
 
