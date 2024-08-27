@@ -501,7 +501,7 @@ class ParserVisitor(ast.NodeVisitor):
                 children.append(converted)
         else:
             children.append(
-                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(')')))
+                self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY))
         return py.MatchCase(
             random_id(),
             prefix,
@@ -668,7 +668,10 @@ class ParserVisitor(ast.NodeVisitor):
             args = JContainer(
                 self.__source_before('('),
                 [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-                 enumerate(node.args)],
+                 enumerate(node.args)] if node.args else [
+                    self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                                     Space.EMPTY)
+                ],
                 Markers.EMPTY
             )
             return j.MethodInvocation(
@@ -696,7 +699,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__source_before('('),
                 [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
                  enumerate(node.args)] if node.args else [
-                    self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
+                    self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
                                      Space.EMPTY)],
                 Markers.EMPTY
             )
@@ -774,7 +777,7 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             JContainer(
                 Space.EMPTY,
-                [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
+                [self.__pad_right(j.Empty(random_id(), self.__source_before('}'), Markers.EMPTY),
                                   Space.EMPTY)] if not node.keys else
                 [self.__map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in
                  enumerate(zip(node.keys, node.values))],
@@ -928,7 +931,7 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY,
             [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1, end_delim=']') for i, e in
              enumerate(node.elts)] if node.elts else
-            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            [self.__pad_right(j.Empty(random_id(), self.__source_before(']'), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
         return py.CollectionLiteral(
@@ -1011,7 +1014,7 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY,
             [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1, end_delim='}') for i, e in
              enumerate(node.elts)] if node.elts else
-            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            [self.__pad_right(j.Empty(random_id(), self.__source_before('}'), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
         return py.CollectionLiteral(
@@ -1280,7 +1283,8 @@ class ParserVisitor(ast.NodeVisitor):
                                           False, Markers.EMPTY))
             else:
                 break
-            self._cursor += 1
+            if self._cursor < source_len:
+                self._cursor += 1
 
         if not comments:
             prefix = ''.join(whitespace)
