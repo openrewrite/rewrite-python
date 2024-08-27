@@ -38,3 +38,15 @@ class TrailingComma(Marker):
 
     def with_suffix(self, suffix: Space) -> TrailingComma:
         return self if suffix is self._suffix else replace(self, _suffix=suffix)
+
+
+@dataclass(frozen=True, eq=False)
+class OmitParentheses(Marker):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id_: UUID) -> OmitParentheses:
+        return self if id_ is self._id else replace(self, _id=id_)

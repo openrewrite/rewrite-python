@@ -24,6 +24,7 @@ __all__ = [
     'Statement',
 
     # Markers
+    'OmitParentheses',
     'Semicolon',
     'TrailingComma',
 

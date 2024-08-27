@@ -109,15 +109,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitCollectionLiteral(Py.CollectionLiteral coll, PrintOutputCapture<P> p) {
         beforeSyntax(coll, PySpace.Location.COLLECTION_LITERAL_PREFIX, p);
+        JContainer<Expression> elements = coll.getPadding().getElements();
         switch (coll.getKind()) {
             case LIST:
-                visitContainer("[", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "]", p);
+                visitContainer("[", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "]", p);
                 break;
             case SET:
-                visitContainer("{", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "}", p);
+                visitContainer("{", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "}", p);
                 break;
             case TUPLE:
-                visitContainer("(", coll.getPadding().getElements(), PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", ")", p);
+                if (elements.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
+                    visitContainer("", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "", p);
+                } else {
+                    visitContainer("(", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", ")", p);
+                }
                 break;
         }
         afterSyntax(coll, p);
@@ -390,17 +395,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         p
                 );
                 break;
-            case GROUP:
-            case SEQUENCE_TUPLE:
-                visitContainer(
-                        "(",
-                        children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
-                        ",",
-                        ")",
-                        p
-                );
-                break;
             case KEY_VALUE:
                 visitContainer(
                         "",
@@ -458,6 +452,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         PyContainer.Location.MATCH_PATTERN_ELEMENTS,
                         ",",
                         "]",
+                        p
+                );
+                break;
+            case GROUP:
+            case SEQUENCE_TUPLE:
+                visitContainer(
+                        "(",
+                        children,
+                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        ",",
+                        ")",
                         p
                 );
                 break;
