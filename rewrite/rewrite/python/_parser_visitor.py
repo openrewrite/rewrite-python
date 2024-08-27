@@ -562,7 +562,26 @@ class ParserVisitor(ast.NodeVisitor):
             )
 
     def visit_MatchOr(self, node):
-        raise NotImplementedError("Implement visit_MatchOr!")
+        return py.MatchCase(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            py.MatchCase.Pattern(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                py.MatchCase.Pattern.Kind.OR,
+                JContainer(
+                    Space.EMPTY,
+                    [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1) for i, e in
+                     enumerate(node.patterns)] if node.patterns else [],
+                    Markers.EMPTY
+                ),
+                None
+            ),
+            None,
+            None
+        )
 
     def visit_TryStar(self, node):
         raise NotImplementedError("Implement visit_TryStar!")
