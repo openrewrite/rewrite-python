@@ -1375,7 +1375,17 @@ class ParserVisitor(ast.NodeVisitor):
         for value in node.values:
             if tok.type == token.OP:
                 self._cursor += len(tok.string)
-                expr = self.__pad_right(self.__convert(value.value), self.__whitespace())
+                if isinstance(value.value, ast.JoinedStr):
+                    nested, tok = self.__map_fstring(value.value, Space.EMPTY, next(tokens), tokens)
+                    expr = self.__pad_right(
+                        nested,
+                        self.__whitespace()
+                    )
+                else:
+                    expr = self.__pad_right(
+                        self.__convert(value.value),
+                        self.__whitespace()
+                    )
                 prev_tok = tok
                 try:
                     while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):

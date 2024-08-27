@@ -97,6 +97,20 @@ def test_nested_fstring_expression():
     rewrite_run(python("""a = f'{f"{1}"}'"""))
 
 
+def test_nested_fstring_format():
+    # language=python
+    rewrite_run(python("""a = f'{f"{1}"}'"""))
+
+
 def test_format_value():
     # language=python
     rewrite_run(python("a = f'{1:.{2 + 3}f}'"))
+    # language=python
+    rewrite_run(python('''a = f"{'abc':>{2*3}}"'''))
+    # language=python
+    rewrite_run(python("""a = f'{f"{'foo'}":>{2*3}}'"""))
+
+
+def test_nested_fstring_with_format_value():
+    # language=python
+    rewrite_run(python("""a = f'{f"{'foo'}":>{2*3}}'"""))
