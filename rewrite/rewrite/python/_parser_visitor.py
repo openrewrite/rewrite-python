@@ -126,7 +126,29 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AsyncFunctionDef!")
 
     def visit_ClassDef(self, node):
-        raise NotImplementedError("Implement visit_ClassDef!")
+        prefix = self.__whitespace() if node.decorator_list else self.__source_before('class')
+        return j.ClassDeclaration(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            [], # TODO decorators
+            [], # TODO modifiers
+            j.ClassDeclaration.Kind(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                [],
+                j.ClassDeclaration.Kind.Type.Class
+            ),
+            self.__convert_name(node.name),
+            None,
+            None,
+            None,
+            None, # TODO implements
+            None,
+            self.__convert_block(node.body),
+            self.__map_type(node)
+        )
 
     def visit_Delete(self, node):
         return py.Del(
