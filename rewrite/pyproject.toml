@@ -11,6 +11,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.9"
 rewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
+more-itertools = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"

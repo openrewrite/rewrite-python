@@ -1,5 +1,6 @@
 import ast
 import token
+from more_itertools import peekable
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -897,7 +898,7 @@ class ParserVisitor(ast.NodeVisitor):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
         tok = next(tokens)  # FSTRING_START token
-        return self.__map_fstring(node, prefix, tok, tokens)[0]
+        return self.__map_fstring(node, prefix, tok, peekable(tokens))[0]
 
     def visit_FormattedValue(self, node):
         raise ValueError("This method should not be called directly")
@@ -987,7 +988,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             self.__whitespace()
         )
-        # assert self._cursor == len(self._source)
+        assert self._cursor == len(self._source)
         return cu
 
     def visit_Name(self, node):
@@ -1351,7 +1352,7 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens):
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable):
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
@@ -1387,41 +1388,33 @@ class ParserVisitor(ast.NodeVisitor):
                         nested,
                         Space.EMPTY
                     )
-                    prev_tok = tok
-                    self._cursor += len(prev_tok.string)
-                    tok = next(tokens)
                 else:
                     expr = self.__pad_right(
                         self.__convert(cast(ast.FormattedValue, value).value),
                         self.__whitespace()
                     )
-                    prev_tok = tok
                     try:
-                        while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
-                            prev_tok = tok
-                            if prev_tok.type == token.OP and prev_tok.string == '!':
+                        while (tokens.peek()).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
+                            tok = next(tokens)
+                            if tok.type == token.OP and tok.string == '!':
                                 break
                     except StopIteration:
                         pass
-                    self._cursor += len(prev_tok.string)
 
                 # conversion specifier
-                if prev_tok.type == token.OP and prev_tok.string == '!':
+                if tok.type == token.OP and tok.string == '!':
+                    self._cursor += len(tok.string)
                     tok = next(tokens)
                     conv = py.FormattedString.Value.Conversion.ASCII if tok.string == 'a' else py.FormattedString.Value.Conversion.STR if tok.string == 's' else py.FormattedString.Value.Conversion.REPR
                     self._cursor += len(tok.string)
-                    prev_tok = next(tokens)
                     tok = next(tokens)
-                    self._cursor += len(tok.string)
                 else:
                     conv = None
 
                 # format specifier
-                if prev_tok.type == token.OP and prev_tok.string == ':':
-                    format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, tok, tokens)
-                    # self._cursor += len(tok.string)
-                    # tok = next(tokens)
-                    # self._cursor += len(tok.string)
+                if tok.type == token.OP and tok.string == ':':
+                    self._cursor += len(tok.string)
+                    format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens), tokens)
                 else:
                     format_spec = None
                 parts.append(py.FormattedString.Value(
@@ -1432,6 +1425,8 @@ class ParserVisitor(ast.NodeVisitor):
                     conv,
                     format_spec
                 ))
+                self._cursor += len(tok.string)
+                tok = next(tokens)
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor
                 while True:
@@ -1450,6 +1445,8 @@ class ParserVisitor(ast.NodeVisitor):
 
         if consume_end_delim:
             self._cursor += len(tok.string)  # FSTRING_END token
+            tok = next(tokens)
+        elif tok.type == token.FSTRING_MIDDLE and len(tok.string) == 0:
             tok = next(tokens)
 
         return (py.FormattedString(

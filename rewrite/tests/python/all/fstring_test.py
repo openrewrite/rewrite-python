@@ -76,7 +76,9 @@ def test_debug():
 def test_conversion():
     # language=python
     rewrite_run(python("""a = f'{"foo"!a}'"""))
+    # language=python
     rewrite_run(python("""a = f'{"foo"!s}'"""))
+    # language=python
     rewrite_run(python("""a = f'{"foo"!r}'"""))
 
 
@@ -90,7 +92,6 @@ def test_conversion_and_format_expr():
     rewrite_run(python("""a = f'{"foo"!s:<{5*2}}'"""))
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_nested_fstring_conversion_and_format_expr():
     # language=python
     rewrite_run(python("""a = f'{f"foo"!s:<{5*2}}'"""))
@@ -130,11 +131,9 @@ def test_nested_fstring_format():
 
 def test_format_value():
     # language=python
-    # rewrite_run(python("a = f'{1:.{2 + 3}f}'"))
+    rewrite_run(python("a = f'{1:.{2 + 3}f}'"))
     # language=python
-    # rewrite_run(python('''a = f"{'abc':>{2*3}}"'''))
-    # language=python
-    rewrite_run(python("""a = f'{f"{'foo'}":>{2*3}}'"""))
+    rewrite_run(python('''a = f"{'abc':>{2*3}}"'''))
 
 
 def test_nested_fstring_with_format_value():
