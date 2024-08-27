@@ -1352,7 +1352,7 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable):
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[py.FormattedString, TokenInfo]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
