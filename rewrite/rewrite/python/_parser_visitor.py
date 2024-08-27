@@ -686,26 +686,11 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         prefix = self.__whitespace()
         if isinstance(node.func, ast.Name):
+            select = None
             name = cast(j.Identifier, self.__convert(node.func))
-            args = JContainer(
-                self.__source_before('('),
-                [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-                 enumerate(node.args)] if node.args else [
-                    self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
-                                     Space.EMPTY)
-                ],
-                Markers.EMPTY
-            )
-            return j.MethodInvocation(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                None,
-                None,
-                name,
-                args,
-                self.__map_type(node)
-            )
+        elif isinstance(node.func, ast.Call):
+            select = self.__pad_right(cast(j.Identifier, self.__convert(node.func)), self.__whitespace())
+            name = self.__convert_name('')
         elif isinstance(node.func, ast.Attribute):
             select = self.__pad_right(self.__convert(node.func.value), self.__source_before('.'))
             name = j.Identifier(
@@ -717,27 +702,28 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.func.value),
                 None
             )
-            args = JContainer(
-                self.__source_before('('),
-                [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-                 enumerate(node.args)] if node.args else [
-                    self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
-                                     Space.EMPTY)],
-                Markers.EMPTY
-            )
-
-            return j.MethodInvocation(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                select,
-                None,
-                name,
-                args,
-                self.__map_type(node)
-            )
         else:
             raise NotImplementedError("Calls to functions other than methods are not yet supported")
+
+        args = JContainer(
+            self.__source_before('('),
+            [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
+             enumerate(node.args)] if node.args else [
+                self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                                 Space.EMPTY)],
+            Markers.EMPTY
+        )
+
+        return j.MethodInvocation(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            select,
+            None,
+            name,
+            args,
+            self.__map_type(node)
+        )
 
     def visit_Compare(self, node):
         if len(node.ops) != 1:
