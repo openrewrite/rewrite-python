@@ -895,6 +895,9 @@ class ParserVisitor(ast.NodeVisitor):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
         tok = next(tokens)  # FSTRING_START token
+        if tok.type != token.FSTRING_START:
+            # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
+            return self.__convert(node.values[0])
         delimiter = tok.string
         self._cursor += len(delimiter)
         tok = next(tokens)
@@ -913,15 +916,18 @@ class ParserVisitor(ast.NodeVisitor):
                     pass
                 self._cursor += len(prev_tok.string)
                 if prev_tok.type == token.OP and prev_tok.string == ':':
-                    format_spec = tok.string
-                    self._cursor += len(tok.string)
+                    format_spec = self.__convert(cast(ast.FormattedValue, value).format_spec)
+                    # self._cursor += len(tok.string)
                     tok = next(tokens)
                     self._cursor += len(tok.string)
+                else:
+                    format_spec = None
                 parts.append(py.FormattedString.Value(
                     random_id(),
                     Space.EMPTY,
                     Markers.EMPTY,
                     expr,
+                    format_spec
                 ))
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor

@@ -15,7 +15,7 @@ def test_multiline():
             {None}
             bar'''
             """
-       )
+               )
     )
 
 
@@ -63,6 +63,13 @@ def test_escaped_braces():
     rewrite_run(python("a = f'{{foo{{bar}}baz}}'"))
 
 
+@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
+def test_debug():
+    # language=python
+    rewrite_run(python("a = f'{None=}'"))
+    # rewrite_run(python("a = f'{a=}'"))
+
+
 def test_comment_in_expr():
     # language=python
     rewrite_run(
@@ -75,7 +82,6 @@ def test_comment_in_expr():
     )
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_format_spec():
     # language=python
     rewrite_run(python("a = f'{1:n}'"))

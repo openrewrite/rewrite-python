@@ -843,6 +843,15 @@ class FormattedString(Py, Expression, TypedTree):
         def with_expression(self, expression: Expression) -> FormattedString.Value:
             return self.padding.with_expression(JRightPadded.with_element(self._expression, expression))
 
+        _format: Optional[Expression]
+
+        @property
+        def format(self) -> Optional[Expression]:
+            return self._format
+
+        def with_format(self, format: Optional[Expression]) -> FormattedString.Value:
+            return self if format is self._format else replace(self, _format=format)
+
         @dataclass
         class PaddingHelper:
             _t: FormattedString.Value
@@ -870,12 +879,13 @@ class FormattedString(Py, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression]) -> None:
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], format: Optional[Expression]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
             object.__setattr__(self, '_markers', markers)
             object.__setattr__(self, '_expression', expression)
+            object.__setattr__(self, '_format', format)
 
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_formatted_string_value(self, p)

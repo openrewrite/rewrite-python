@@ -822,6 +822,11 @@ public interface Py extends J {
 
             JRightPadded<Expression> expression;
 
+            @Nullable
+            @Getter
+            @With
+            Expression format;
+
             public Expression getExpression() {
                 return expression.getElement();
             }
@@ -876,7 +881,7 @@ public interface Py extends J {
                 }
 
                 public Value withExpression(JRightPadded<Expression> expression) {
-                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression);
+                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression, t.format);
                 }
             }
         }

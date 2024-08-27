@@ -99,6 +99,7 @@ class PythonVisitor(JavaVisitor[P]):
         value = cast(FormattedString.Value, temp_expression)
         value = value.with_markers(self.visit_markers(value.markers, p))
         value = value.padding.with_expression(self.visit_right_padded(value.padding.expression, PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p))
+        value = value.with_format(self.visit_and_cast(value.format, Expression, p))
         return value
 
     def visit_pass(self, pass_: Pass, p: P) -> J:
