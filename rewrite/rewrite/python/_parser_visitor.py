@@ -143,8 +143,13 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert_name(node.name),
             None,
             None,
-            None,
-            None, # TODO implements
+            None, # no `extends`, all in `implements`
+            None if not node.bases else JContainer(
+                self.__source_before('('),
+                [self.__pad_list_element(self.__convert(n), i == len(node.bases) - 1, end_delim=')') for i, n in
+                 enumerate(node.bases)],
+                Markers.EMPTY,
+            ),
             None,
             self.__convert_block(node.body),
             self.__map_type(node)

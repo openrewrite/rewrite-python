@@ -23,3 +23,29 @@ def test_field():
             """
         )
     )
+
+
+def test_single_base():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            import abc
+            class Foo (abc.ABC) :
+                pass
+            """
+        )
+    )
+
+
+def test_two_bases():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            import abc
+            class Foo(abc.ABC, abc.ABC,):
+                pass
+            """
+        )
+    )
