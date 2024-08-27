@@ -1379,20 +1379,37 @@ class ParserVisitor(ast.NodeVisitor):
                     nested, tok = self.__map_fstring(value.value, Space.EMPTY, next(tokens), tokens)
                     expr = self.__pad_right(
                         nested,
-                        self.__whitespace()
+                        Space.EMPTY
                     )
+                    prev_tok = tok
+                    self._cursor += len(prev_tok.string)
+                    tok = next(tokens)
                 else:
                     expr = self.__pad_right(
                         self.__convert(value.value),
                         self.__whitespace()
                     )
-                prev_tok = tok
-                try:
-                    while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
-                        prev_tok = tok
-                except StopIteration:
-                    pass
-                self._cursor += len(prev_tok.string)
+                    prev_tok = tok
+                    try:
+                        while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
+                            prev_tok = tok
+                            if prev_tok.type == token.OP and prev_tok.string == '!':
+                                break
+                    except StopIteration:
+                        pass
+                    self._cursor += len(prev_tok.string)
+
+                # conversion specifier
+                if prev_tok.type == token.OP and prev_tok.string == '!':
+                    tok = next(tokens)
+                    conv = py.FormattedString.Value.Conversion.ASCII if tok.string == 'a' else py.FormattedString.Value.Conversion.STR if tok.string == 's' else py.FormattedString.Value.Conversion.REPR
+                    self._cursor += len(tok.string)
+                    prev_tok = next(tokens)
+                    tok = next(tokens)
+                else:
+                    conv = None
+
+                # format specifier
                 if prev_tok.type == token.OP and prev_tok.string == ':':
                     format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, tok, tokens)
                     # self._cursor += len(tok.string)
@@ -1405,6 +1422,7 @@ class ParserVisitor(ast.NodeVisitor):
                     Space.EMPTY,
                     Markers.EMPTY,
                     expr,
+                    conv,
                     format_spec
                 ))
             else:  # FSTRING_MIDDLE
@@ -1425,6 +1443,8 @@ class ParserVisitor(ast.NodeVisitor):
 
         if consume_end_delim:
             self._cursor += len(tok.string)  # FSTRING_END token
+            tok = next(tokens)
+
         return (py.FormattedString(
             random_id(),
             prefix,

@@ -807,6 +807,11 @@ class FormattedString(Py, Expression, TypedTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Value(Py, Expression, TypedTree):
+        class Conversion(Enum):
+            STR = 0
+            REPR = 1
+            ASCII = 2
+
         _id: UUID
 
         @property
@@ -842,6 +847,15 @@ class FormattedString(Py, Expression, TypedTree):
 
         def with_expression(self, expression: Expression) -> FormattedString.Value:
             return self.padding.with_expression(JRightPadded.with_element(self._expression, expression))
+
+        _conversion: Optional[Conversion]
+
+        @property
+        def conversion(self) -> Optional[Conversion]:
+            return self._conversion
+
+        def with_conversion(self, conversion: Optional[Conversion]) -> FormattedString.Value:
+            return self if conversion is self._conversion else replace(self, _conversion=conversion)
 
         _format: Optional[Expression]
 
@@ -879,12 +893,13 @@ class FormattedString(Py, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], format: Optional[Expression]) -> None:
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], conversion: Optional[FormattedString.Value.Conversion], format: Optional[Expression]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
             object.__setattr__(self, '_markers', markers)
             object.__setattr__(self, '_expression', expression)
+            object.__setattr__(self, '_conversion', conversion)
             object.__setattr__(self, '_format', format)
 
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:

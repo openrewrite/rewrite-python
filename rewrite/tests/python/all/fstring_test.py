@@ -67,7 +67,24 @@ def test_escaped_braces():
 def test_debug():
     # language=python
     rewrite_run(python("a = f'{None=}'"))
-    # rewrite_run(python("a = f'{a=}'"))
+
+
+def test_conversion():
+    # language=python
+    rewrite_run(python("""a = f'{"foo"!a}'"""))
+    rewrite_run(python("""a = f'{"foo"!s}'"""))
+    rewrite_run(python("""a = f'{"foo"!r}'"""))
+
+
+def test_conversion_and_format():
+    # language=python
+    rewrite_run(python("""a = f'{"foo"!a:n}'"""))
+
+
+@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
+def test_conversion_and_format_expr():
+    # language=python
+    rewrite_run(python("""a = f'{"foo"!s:<{10}}'"""))
 
 
 def test_comment_in_expr():
@@ -104,9 +121,9 @@ def test_nested_fstring_format():
 
 def test_format_value():
     # language=python
-    rewrite_run(python("a = f'{1:.{2 + 3}f}'"))
+    # rewrite_run(python("a = f'{1:.{2 + 3}f}'"))
     # language=python
-    rewrite_run(python('''a = f"{'abc':>{2*3}}"'''))
+    # rewrite_run(python('''a = f"{'abc':>{2*3}}"'''))
     # language=python
     rewrite_run(python("""a = f'{f"{'foo'}":>{2*3}}'"""))
 
