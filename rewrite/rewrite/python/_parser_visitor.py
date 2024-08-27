@@ -403,11 +403,17 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_MatchSequence(self, node):
         prefix = self.__whitespace()
+        end_delim = None
         if self._source[self._cursor] == '[':
             kind = py.MatchCase.Pattern.Kind.SEQUENCE_LIST
-        else:
+            self._cursor += 1
+            end_delim = ']'
+        elif self._source[self._cursor] == '(':
             kind = py.MatchCase.Pattern.Kind.SEQUENCE_TUPLE
-        self._cursor += 1
+            self._cursor += 1
+            end_delim = ')'
+        else:
+            kind = py.MatchCase.Pattern.Kind.SEQUENCE
         return py.MatchCase(
             random_id(),
             Space.EMPTY,
@@ -420,8 +426,7 @@ class ParserVisitor(ast.NodeVisitor):
                 JContainer(
                     prefix,
                     [self.__pad_list_element(self.__convert(e), last=i == len(node.patterns) - 1,
-                                             end_delim= ']' if kind == py.MatchCase.Pattern.Kind.SEQUENCE_LIST else ')') for
-                     i, e in
+                                             end_delim=end_delim) for i, e in
                      enumerate(node.patterns)] if node.patterns else [],
                     Markers.EMPTY
                 ),
@@ -940,7 +945,7 @@ class ParserVisitor(ast.NodeVisitor):
                     self.__map_type(value),
                 ))
 
-        self._cursor += len(tok.string) # FSTRING_END token
+        self._cursor += len(tok.string)  # FSTRING_END token
         return py.FormattedString(
             random_id(),
             prefix,
@@ -1286,7 +1291,7 @@ class ParserVisitor(ast.NodeVisitor):
         padding = self.__whitespace()
         markers = Markers.EMPTY
         if last and self._cursor < len(self._source):
-            if self._source[self._cursor] == ',':
+            if self._source[self._cursor] == ',' and end_delim != ',':
                 self._cursor += 1
                 markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
             if end_delim is not None and self._source[self._cursor] == end_delim:
