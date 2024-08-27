@@ -30,9 +30,6 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.marker.ImplicitNone;
-import org.openrewrite.python.marker.MagicMethodDesugar;
-import org.openrewrite.python.marker.PythonExtraPadding;
 import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
@@ -208,24 +205,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         visit(keyValue.getValue(), p);
         afterSyntax(keyValue, p);
         return keyValue;
-    }
-
-    private void visitPythonExtraPadding(Tree tree, PrintOutputCapture<P> p) {
-        String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
-        if (indent == null) {
-            indent = "";
-        }
-        Space space = PythonExtraPadding.getOrDefault(tree, PythonExtraPadding.Location.AFTER_DECORATOR);
-        space = reindent(space, indent, PySpace.IndentStartMode.AFTER_STATEMENT, PySpace.IndentEndMode.REST_OF_LINE);
-        visitSpace(space, Location.LANGUAGE_EXTENSION, p);
-    }
-
-    private void visitPythonExtraPadding(Tree tree, PythonExtraPadding.Location loc, PrintOutputCapture<P> p) {
-        Space space = PythonExtraPadding.getOrDefault(tree, loc);
-        if (space == null) {
-            return;
-        }
-        visitSpace(space, Location.LANGUAGE_EXTENSION, p);
     }
 
     @Override
@@ -642,10 +621,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             p.append("@");
             visit(annotation.getAnnotationType(), p);
             visitContainer("(", annotation.getPadding().getArguments(), JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p);
-            visitPythonExtraPadding(
-                    annotation,
-                    p
-            );
             afterSyntax(annotation, p);
             return annotation;
         }
@@ -809,14 +784,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(binary.getLeft(), p);
             visitSpace(binary.getPadding().getOperator().getBefore(), Space.Location.BINARY_OPERATOR, p);
 
-            int spaceIndex = keyword.indexOf(' ');
-            if (spaceIndex >= 0) {
-                p.append(keyword.substring(0, spaceIndex));
-                visitPythonExtraPadding(binary, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
-                p.append(keyword.substring(spaceIndex + 1));
-            } else {
-                p.append(keyword);
-            }
+            p.append(keyword);
 
             visit(binary.getRight(), p);
             afterSyntax(binary, p);
@@ -988,11 +956,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitLiteral(J.Literal literal, PrintOutputCapture<P> p) {
             if (literal.getValue() == null) {
-                if (literal.getMarkers().findFirst(ImplicitNone.class).isPresent()) {
-                    literal = literal.withValueSource("");
-                } else {
-                    literal = literal.withValueSource("None");
-                }
+                literal = literal.withValueSource("None");
             }
 
             beforeSyntax(literal, Space.Location.LITERAL_PREFIX, p);
@@ -1203,27 +1167,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
-            if (unary.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
-                if (unary.getOperator() != J.Unary.Type.Not) {
-                    throw new IllegalStateException(String.format(
-                            "found a unary operator (%s) marked as a magic method de-sugar, but only negation is supported",
-                            unary.getOperator()
-                    ));
-                }
-                Expression expression = unary.getExpression();
-                while (expression instanceof J.Parentheses) {
-                    expression = expression.unwrap();
-                }
-                if (!(expression instanceof J.MethodInvocation)) {
-                    throw new IllegalStateException(String.format(
-                            "found a unary operator (%s) marked as a magic method de-sugar, but its expression is not a magic method invocation",
-                            unary.getOperator()
-                    ));
-                }
-                visitMagicMethodDesugar((J.MethodInvocation) expression, true, p);
-                return unary;
-            }
-
             beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
                 case Not:
@@ -1283,70 +1226,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         protected void printStatementTerminator(Statement s, PrintOutputCapture<P> p) {
             // optional semicolons are handled in `visitMarker()`
-        }
-
-        private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
-            String magicMethodName = method.getSimpleName();
-
-            if ("__call__".equals(magicMethodName)) {
-                beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
-                visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, p);
-                visitContainer("(", method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", ")", p);
-                afterSyntax(method, p);
-
-                return;
-            }
-
-            if (method.getArguments().size() != 1) {
-                throw new IllegalStateException(String.format(
-                        "expected de-sugared magic method call `%s` to have exactly one argument; found %d",
-                        magicMethodName,
-                        method.getArguments().size()
-                ));
-            }
-
-            String operator = PythonOperatorLookup.operatorForMagicMethod(magicMethodName);
-            if (operator == null) {
-                throw new IllegalStateException(String.format(
-                        "expected method call `%s` to be a de-sugared operator, but it does not match known operators",
-                        magicMethodName
-                ));
-            }
-
-            if (negate) {
-                if (!"in".equals(operator)) {
-                    throw new IllegalStateException(String.format(
-                            "found method call `%s` as a de-sugared operator, but it is marked as negated (which it does not support)",
-                            magicMethodName
-                    ));
-                }
-            }
-
-            boolean reverseOperandOrder = PythonOperatorLookup.doesMagicMethodReverseOperands(magicMethodName);
-
-            Expression lhs = requireNonNull(method.getSelect());
-            Expression rhs = method.getArguments().get(0);
-
-            J.MethodInvocation.Padding padding = method.getPadding();
-            Space beforeOperator = requireNonNull(padding.getSelect()).getAfter();
-            Space afterOperator = rhs.getPrefix();
-
-            if (reverseOperandOrder) {
-                Expression tmp = lhs;
-                lhs = rhs;
-                rhs = tmp;
-            }
-
-            beforeSyntax(method, Space.Location.BINARY_PREFIX, p);
-            visit((Expression) lhs.withPrefix(Space.EMPTY), p);
-            visitSpace(beforeOperator, Space.Location.BINARY_OPERATOR, p);
-            if (negate) {
-                p.append("not");
-                visitPythonExtraPadding(method, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
-            }
-            p.append(operator);
-            visit((Expression) rhs.withPrefix(afterOperator), p);
-            afterSyntax(method, p);
         }
     }
 
