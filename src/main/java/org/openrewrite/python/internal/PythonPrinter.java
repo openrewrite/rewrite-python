@@ -15,7 +15,6 @@
  */
 package org.openrewrite.python.internal;
 
-import lombok.val;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
@@ -31,7 +30,10 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.marker.*;
+import org.openrewrite.python.marker.ImplicitNone;
+import org.openrewrite.python.marker.MagicMethodDesugar;
+import org.openrewrite.python.marker.PythonExtraPadding;
+import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
 import java.util.Iterator;
@@ -1058,24 +1060,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitMethodInvocation(J.MethodInvocation method, PrintOutputCapture<P> p) {
-            if (method.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
-                visitMagicMethodDesugar(method, false, p);
-            } else if (method.getMarkers().findFirst(BuiltinDesugar.class).isPresent()) {
-                visitBuiltinDesugar(method, p);
-            } else {
-                beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
-                visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, ".", p);
-                visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
-                visit(method.getName(), p);
-                String before = "(";
-                String after = ")";
-                if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
-                    before = "";
-                    after = "";
-                }
-                visitContainer(before, method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p);
-                afterSyntax(method, p);
+            beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
+            visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, method.getSimpleName().isEmpty() ? "" : ".", p);
+            visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
+            visit(method.getName(), p);
+            String before = "(";
+            String after = ")";
+            if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
+                before = "";
+                after = "";
             }
+            visitContainer(before, method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p);
+            afterSyntax(method, p);
             return method;
         }
 
@@ -1351,76 +1347,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             p.append(operator);
             visit((Expression) rhs.withPrefix(afterOperator), p);
             afterSyntax(method, p);
-        }
-
-        private void visitBuiltinDesugar(J.MethodInvocation method, PrintOutputCapture<P> p) {
-            Expression select = method.getSelect();
-            if (!(select instanceof J.Identifier)) {
-                throw new IllegalStateException("expected builtin desugar to select from an Identifier");
-            } else if (!"__builtins__".equals(((J.Identifier) select).getSimpleName())) {
-                throw new IllegalStateException("expected builtin desugar to select from __builtins__");
-            }
-
-            visitSpace(method.getPrefix(), Location.LANGUAGE_EXTENSION, p);
-
-            String builtinName = requireNonNull(method.getName()).getSimpleName();
-            switch (builtinName) {
-                case "slice":
-                    visitContainer(
-                            "",
-                            method.getPadding().getArguments(),
-                            JContainer.Location.LANGUAGE_EXTENSION,
-                            ":",
-                            "",
-                            p
-                    );
-                    return;
-                case "set":
-                case "tuple": {
-                    if (method.getArguments().size() != 1) {
-                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument", builtinName));
-                    }
-                    Expression arg = method.getArguments().get(0);
-                    if (!(arg instanceof J.NewArray)) {
-                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument, a J.NewArray", builtinName));
-                    }
-
-                    J.NewArray argList = (J.NewArray) arg;
-                    int argCount = 0;
-                    for (Expression argExpr : requireNonNull(argList.getInitializer())) {
-                        if (!(argExpr instanceof J.Empty)) {
-                            argCount++;
-                        }
-                    }
-
-                    String before;
-                    String after;
-                    if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
-                        before = "";
-                        after = "";
-                    } else if ("set".equals(builtinName)) {
-                        before = "{";
-                        after = "}";
-                    } else {
-                        before = "(";
-                        after = argCount == 1 ? ",)" : ")";
-                    }
-
-                    visitContainer(
-                            before,
-                            argList.getPadding().getInitializer(),
-                            JContainer.Location.LANGUAGE_EXTENSION,
-                            ",",
-                            after,
-                            p
-                    );
-                    return;
-                }
-                default:
-                    throw new IllegalStateException(
-                            String.format("builtin desugar doesn't support `%s`", builtinName)
-                    );
-            }
         }
     }
 

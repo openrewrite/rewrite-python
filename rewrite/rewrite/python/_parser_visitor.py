@@ -690,6 +690,7 @@ class ParserVisitor(ast.NodeVisitor):
             name = cast(j.Identifier, self.__convert(node.func))
         elif isinstance(node.func, ast.Call):
             select = self.__pad_right(cast(j.Identifier, self.__convert(node.func)), self.__whitespace())
+            # printer handles empty name by not printing `.` before it
             name = self.__convert_name('')
         elif isinstance(node.func, ast.Attribute):
             select = self.__pad_right(self.__convert(node.func.value), self.__source_before('.'))
