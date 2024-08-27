@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python.internal;
 
+import lombok.val;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
@@ -154,6 +155,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(value, PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p);
         p.append('{');
         visitRightPadded(value.getPadding().getExpression(), PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p);
+        if (value.getPadding().getDebug() != null) {
+            p.append('=');
+            visitSpace(value.getPadding().getDebug().getAfter(), PySpace.Location.FORMATTED_STRING_VALUE_DEBUG_SUFFIX, p);
+        }
         if (value.getConversion() != null) {
             p.append('!');
             switch (value.getConversion()) {

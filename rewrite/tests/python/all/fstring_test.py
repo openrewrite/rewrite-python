@@ -67,10 +67,21 @@ def test_escaped_braces():
     rewrite_run(python("a = f'{{foo{{bar}}baz}}'"))
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_debug():
     # language=python
     rewrite_run(python("a = f'{None=}'"))
+    # language=python
+    rewrite_run(python("a = f'{1=}'"))
+
+
+def test_debug_with_trailing_whitespace():
+    # language=python
+    rewrite_run(python("a = f'{1= !a}'"))
+
+
+def test_all_specifiers():
+    # language=python
+    rewrite_run(python("a = f'{1=!a:0>6}'"))
 
 
 def test_conversion():

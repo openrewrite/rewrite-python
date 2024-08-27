@@ -1380,6 +1380,9 @@ class ParserVisitor(ast.NodeVisitor):
         parts = []
         for value in node.values:
             if tok.type == token.OP and tok.string == '{':
+                if not isinstance(value, ast.FormattedValue):
+                    # this is the case when using the `=` "debug specifier"
+                    continue
                 self._cursor += len(tok.string)
                 tok = next(tokens)
                 if isinstance(cast(ast.FormattedValue, value).value, ast.JoinedStr):
@@ -1398,8 +1401,18 @@ class ParserVisitor(ast.NodeVisitor):
                             tok = next(tokens)
                             if tok.type == token.OP and tok.string == '!':
                                 break
+                            if tok.type == token.OP and tok.string == '=' and tokens.peek().string in ('!', ':', '}'):
+                                break
                     except StopIteration:
                         pass
+
+                # debug specifier
+                if tok.type == token.OP and tok.string == '=':
+                    self._cursor += len(tok.string)
+                    tok = next(tokens)
+                    debug = self.__pad_right(True, self.__whitespace('\n'))
+                else:
+                    debug = None
 
                 # conversion specifier
                 if tok.type == token.OP and tok.string == '!':
@@ -1422,6 +1435,7 @@ class ParserVisitor(ast.NodeVisitor):
                     Space.EMPTY,
                     Markers.EMPTY,
                     expr,
+                    debug,
                     conv,
                     format_spec
                 ))

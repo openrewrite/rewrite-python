@@ -848,6 +848,15 @@ class FormattedString(Py, Expression, TypedTree):
         def with_expression(self, expression: Expression) -> FormattedString.Value:
             return self.padding.with_expression(JRightPadded.with_element(self._expression, expression))
 
+        _debug: Optional[JRightPadded[bool]]
+
+        @property
+        def debug(self) -> Optional[bool]:
+            return self._debug.element
+
+        def with_debug(self, debug: Optional[bool]) -> FormattedString.Value:
+            return self.padding.with_debug(JRightPadded.with_element(self._debug, debug))
+
         _conversion: Optional[Conversion]
 
         @property
@@ -877,6 +886,13 @@ class FormattedString(Py, Expression, TypedTree):
             def with_expression(self, expression: JRightPadded[Expression]) -> FormattedString.Value:
                 return self._t if self._t._expression is expression else replace(self._t, _expression=expression)
 
+            @property
+            def debug(self) -> Optional[JRightPadded[bool]]:
+                return self._t._debug
+
+            def with_debug(self, debug: Optional[JRightPadded[bool]]) -> FormattedString.Value:
+                return self._t if self._t._debug is debug else replace(self._t, _debug=debug)
+
         _padding: weakref.ReferenceType[PaddingHelper] = None
 
         @property
@@ -893,12 +909,13 @@ class FormattedString(Py, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], conversion: Optional[FormattedString.Value.Conversion], format: Optional[Expression]) -> None:
+        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression], debug: Optional[JRightPadded[bool]], conversion: Optional[FormattedString.Value.Conversion], format: Optional[Expression]) -> None:
             # generated due to https://youtrack.jetbrains.com/issue/PY-62622
             object.__setattr__(self, '_id', id)
             object.__setattr__(self, '_prefix', prefix)
             object.__setattr__(self, '_markers', markers)
             object.__setattr__(self, '_expression', expression)
+            object.__setattr__(self, '_debug', debug)
             object.__setattr__(self, '_conversion', conversion)
             object.__setattr__(self, '_format', format)
 

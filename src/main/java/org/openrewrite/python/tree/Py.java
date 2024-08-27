@@ -826,6 +826,25 @@ public interface Py extends J {
 
             JRightPadded<Expression> expression;
 
+            public Expression getExpression() {
+                return expression.getElement();
+            }
+
+            public Value withExpression(Expression expression) {
+                return getPadding().withExpression(JRightPadded.withElement(this.expression, expression));
+            }
+
+            @Nullable
+            JRightPadded<Boolean> debug;
+
+            public boolean isDebug() {
+                return debug != null && debug.getElement();
+            }
+
+            public Value withDebug(boolean debug) {
+                return getPadding().withDebug(debug ? JRightPadded.withElement(this.debug, true) : null);
+            }
+
             @Nullable
             @Getter
             @With
@@ -835,14 +854,6 @@ public interface Py extends J {
             @Getter
             @With
             Expression format;
-
-            public Expression getExpression() {
-                return expression.getElement();
-            }
-
-            public Value withExpression(Expression expression) {
-                return getPadding().withExpression(JRightPadded.withElement(this.expression, expression));
-            }
 
             @Override
             public JavaType getType() {
@@ -890,7 +901,15 @@ public interface Py extends J {
                 }
 
                 public Value withExpression(JRightPadded<Expression> expression) {
-                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression, t.conversion, t.format);
+                    return t.expression == expression ? t : new Value(t.id, t.prefix, t.markers, expression, t.debug, t.conversion, t.format);
+                }
+
+                public @Nullable JRightPadded<Boolean> getDebug() {
+                    return t.debug;
+                }
+
+                public Value withDebug(@Nullable JRightPadded<Boolean> debug) {
+                    return t.debug == debug ? t : new Value(t.id, t.prefix, t.markers, t.expression, debug, t.conversion, t.format);
                 }
             }
         }
