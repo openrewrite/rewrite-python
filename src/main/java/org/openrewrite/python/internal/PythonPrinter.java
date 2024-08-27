@@ -19,7 +19,6 @@ import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
-import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.marker.Semicolon;
@@ -38,14 +37,9 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
-import static org.openrewrite.python.tree.PySpace.reindent;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
-
-    private static final String BLOCK_INDENT_KEY = "BLOCK_INDENT";
-    private static final String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
-    private static final String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
 
     @Override
     public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
@@ -56,34 +50,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             //noinspection DataFlowIssue
             return super.visit(tree, p);
         }
-    }
-
-    private <T extends J> T reindentPrefix(@Nullable T element) {
-        if (element == null) {
-            //noinspection DataFlowIssue
-            return null;
-        }
-        return element.withPrefix(reindentPrefix(element.getPrefix()));
-    }
-
-    private <T extends J> @Nullable JLeftPadded<T> reindentBefore(@Nullable JLeftPadded<T> padded) {
-        if (padded == null) {
-            return null;
-        }
-        return padded.withBefore(reindentPrefix(padded.getBefore()));
-    }
-
-    private Space reindentPrefix(Space space) {
-        String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
-        if (indent == null) {
-            indent = "";
-        }
-        return reindent(
-                space,
-                indent,
-                PySpace.IndentStartMode.LINE_START,
-                PySpace.IndentEndMode.STATEMENT_START
-        );
     }
 
     @Override
@@ -562,9 +528,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitTrailingElseWrapper(Py.TrailingElseWrapper wrapper, PrintOutputCapture<P> p) {
-        visit(reindentPrefix(wrapper.getStatement()), p);
+        visit(wrapper.getStatement(), p);
         visitSpace(
-                reindentPrefix(wrapper.getPadding().getElseBlock().getBefore()),
+                wrapper.getPadding().getElseBlock().getBefore(),
                 Location.ELSE_PREFIX,
                 p
         );
@@ -617,7 +583,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitAnnotation(J.Annotation annotation, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(annotation), Space.Location.ANNOTATION_PREFIX, p);
+            beforeSyntax(annotation, Space.Location.ANNOTATION_PREFIX, p);
             p.append("@");
             visit(annotation.getAnnotationType(), p);
             visitContainer("(", annotation.getPadding().getArguments(), JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p);
@@ -823,7 +789,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitCatch(J.Try.Catch ca, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(ca), Space.Location.CATCH_PREFIX, p);
+            beforeSyntax(ca, Space.Location.CATCH_PREFIX, p);
             p.append("except");
 
             J.VariableDeclarations multiVariable = ca.getParameter().getTree();
@@ -854,7 +820,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(classDecl.getLeadingAnnotations(), p);
             visit(classDecl.getPadding().getKind().getAnnotations(), p);
             visitSpace(
-                    reindentPrefix(classDecl.getPadding().getKind().getPrefix()),
+                    classDecl.getPadding().getKind().getPrefix(),
                     Space.Location.CLASS_KIND,
                     p
             );
@@ -880,7 +846,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
+            beforeSyntax(else_, Space.Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
                 else_.getBody() instanceof J.If) {
                 p.append("el");
@@ -1007,11 +973,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
             visit(method.getLeadingAnnotations(), p);
-            List<J.Modifier> modifiers = ListUtils.mapFirst(
-                    method.getModifiers(),
-                    PythonPrinter.this::reindentPrefix
-            );
-            for (J.Modifier m : modifiers) {
+            for (J.Modifier m : method.getModifiers()) {
                 visitModifier(m, p);
             }
             visit(method.getName(), p);
@@ -1155,12 +1117,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (elseBody != null) {
                 // padding is reversed for the `else` part because it's wrapped as though it were a normal statement,
                 // so its extra padding (which acts as JLeftPadding) is stored in a JRightPadding
-                visitSpace(reindentPrefix(elseBody.getAfter()), Location.LANGUAGE_EXTENSION, p);
+                visitSpace(elseBody.getAfter(), Location.LANGUAGE_EXTENSION, p);
                 p.append("else");
                 visit(elseBody.getElement(), p);
             }
 
-            visitLeftPadded("finally", reindentBefore(tryable.getPadding().getFinally()), JLeftPadded.Location.TRY_FINALLY, p);
+            visitLeftPadded("finally", tryable.getPadding().getFinally(), JLeftPadded.Location.TRY_FINALLY, p);
             afterSyntax(tryable, p);
             return tryable;
         }
