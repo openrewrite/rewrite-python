@@ -1,5 +1,3 @@
-import pytest
-
 from rewrite.test import rewrite_run, python
 
 

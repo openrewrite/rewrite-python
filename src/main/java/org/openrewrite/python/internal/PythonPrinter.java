@@ -1163,7 +1163,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visit(variable.getInitializer(), p);
             } else {
                 visit(variable.getName(), p);
-                visit(type, p);
+                if (type != null) {
+                    p.append(':');
+                    visit(type, p);
+                }
                 visitLeftPadded("=", variable.getPadding().getInitializer(), JLeftPadded.Location.VARIABLE_INITIALIZER, p);
             }
             afterSyntax(variable, p);
