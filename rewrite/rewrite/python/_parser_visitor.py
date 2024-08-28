@@ -236,7 +236,12 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AsyncWith!")
 
     def visit_Raise(self, node):
-        raise NotImplementedError("Implement visit_Raise!")
+        return py.Throw(
+            random_id(),
+            self.__source_before('raise'),
+            Markers.EMPTY,
+            self.__convert(node.exc),
+        )
 
     def visit_Try(self, node):
         return j.Try(
