@@ -1077,6 +1077,16 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+    def visit_NamedExpr(self, node):
+        return j.Assignment(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.target),
+            self.__pad_left(self.__source_before(':='), self.__convert(node.value)),
+            self.__map_type(node.value)
+        )
+
     def visit_Return(self, node):
         return j.Return(
             random_id(),
