@@ -105,6 +105,11 @@ public class PythonParser implements Parser {
                     return (SourceFile) tree;
                 }, socket)));
 
+                if (parsed instanceof ParseError) {
+                    ctx.getOnError().accept(new AssertionError(parsed));
+                    return parsed;
+                }
+
                 Py.CompilationUnit py = (Py.CompilationUnit) parsed;
                 parsingListener.parsed(input, py);
                 return requirePrintEqualsInput(py, input, relativeTo, ctx);

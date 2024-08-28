@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from pathlib import Path
 from time import time_ns
-from typing import Iterable, Optional, Callable
+from typing import Iterable, Optional, Callable, TypeVar, Any, cast
 from uuid import UUID
 
 from .utils import random_id
@@ -41,6 +41,8 @@ class ParserInput:
         return self._source
 
 
+P = TypeVar('P')
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParseError(SourceFile):
@@ -52,6 +54,7 @@ class ParseError(SourceFile):
                    input.path.relative_to(relative_to) if relative_to else input.path,
                    input.file_attributes, parser.get_charset(ctx), False,
                    None,
+                   input.source().read(),
                    erroneous)
 
     _id: UUID
@@ -118,6 +121,15 @@ class ParseError(SourceFile):
     def with_checksum(self, checksum: Optional[Checksum]) -> 'ParseError':
         return self if checksum is self._checksum else replace(self, _checksum=checksum)
 
+    _text: str
+
+    @property
+    def text(self) -> str:
+        return self._text
+
+    def with_text(self, text: str) -> 'ParseError':
+        return self if text is self._text else replace(self, _text=text)
+
     _erroneous: Optional[SourceFile]
 
     @property
@@ -129,6 +141,17 @@ class ParseError(SourceFile):
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture]:
         return PrinterFactory.current().create_printer(cursor)
+
+    def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
+        return cast(ParseErrorVisitor, v).visit_parse_error(self, p)
+
+class ParseErrorVisitor(TreeVisitor[Tree, P]):
+    def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
+        return isinstance(source_file, ParseError)
+
+    def visit_parse_error(self, e: ParseError, p: P) -> ParseError:
+        return e.with_markers(self.visit_markers(e.markers, p))
+
 
 class Parser(ABC):
     @abstractmethod
