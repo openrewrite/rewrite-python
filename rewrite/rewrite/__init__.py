@@ -32,6 +32,7 @@ __all__ = [
     'Parser',
     'ParserInput',
     'ParseError',
+    'ParseErrorVisitor',
     'ParserBuilder',
     'ParseExceptionResult',
     'Result',
