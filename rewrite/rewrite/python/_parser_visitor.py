@@ -9,7 +9,7 @@ from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
-from rewrite import random_id, Markers, Tree
+from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses
 from rewrite.java import tree as j
@@ -1145,19 +1145,34 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Subscript(self, node):
-        return j.ArrayAccess(
-            random_id(),
-            self.__whitespace(),
-            Markers.EMPTY,
-            self.__convert(node.value),
-            j.ArrayDimension(
+        if(isinstance(node.slice, ast.Constant)):
+            return j.ArrayAccess(
                 random_id(),
-                self.__source_before('['),
+                self.__whitespace(),
                 Markers.EMPTY,
-                self.__pad_right(self.__convert(node.slice), self.__source_before(']'))
-            ),
-            self.__map_type(node)
-        )
+                self.__convert(node.value),
+                j.ArrayDimension(
+                    random_id(),
+                    self.__source_before('['),
+                    Markers.EMPTY,
+                    self.__pad_right(self.__convert(node.slice), self.__source_before(']'))
+                ),
+                self.__map_type(node)
+            )
+        else:
+            return j.ParameterizedType(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert(node.value),
+                JContainer(
+                    self.__source_before('['),
+                    [self.__pad_list_element(self.__convert(node.slice), last=True, end_delim=']')],
+                    Markers.EMPTY
+                ),
+                None,
+                None
+            )
 
     def visit_Tuple(self, node):
         prefix = self.__whitespace()

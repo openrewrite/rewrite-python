@@ -1028,6 +1028,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
 
         @Override
+        public J visitParameterizedType(J.ParameterizedType type, PrintOutputCapture<P> p) {
+            beforeSyntax(type, Space.Location.PARAMETERIZED_TYPE_PREFIX, p);
+            visit(type.getClazz(), p);
+            visitContainer("[", type.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", "]", p);
+            afterSyntax(type, p);
+            return type;
+        }
+
+        @Override
         public J visitSwitch(J.Switch sw, PrintOutputCapture<P> p) {
             beforeSyntax(sw, Space.Location.SWITCH_PREFIX, p);
             p.append("match");

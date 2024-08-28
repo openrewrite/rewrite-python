@@ -38,3 +38,17 @@ def test_generic_type_hint():
             """
         )
     )
+
+def test_generic_type_hint_multiple_params():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            from typing import Callable
+
+            def test(n: Callable[[int], str]):
+                return n(1)
+            """
+        )
+    )
+
