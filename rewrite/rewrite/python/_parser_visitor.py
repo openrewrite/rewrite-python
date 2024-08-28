@@ -1307,7 +1307,7 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(tree, space, Markers.EMPTY)
 
     def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
-        if(not isinstance(tree, Tree)):
+        if(isinstance(tree, ast.AST)):
             raise ArgumentError(tree, "must be a Tree but is a {}".format(type(tree)))
         return JLeftPadded(space, tree, Markers.EMPTY)
 
