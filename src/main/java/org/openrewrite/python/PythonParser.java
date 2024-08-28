@@ -86,6 +86,7 @@ public class PythonParser implements Parser {
             try {
                 initializeRemoting(ctx);
             } catch (IOException e) {
+                // FIXME check if we should return plain text sources from this point on
                 throw new UncheckedIOException(e);
             }
         }
@@ -111,6 +112,7 @@ public class PythonParser implements Parser {
                 }
 
                 Py.CompilationUnit py = (Py.CompilationUnit) parsed;
+                // FIXME set path
                 parsingListener.parsed(input, py);
                 return requirePrintEqualsInput(py, input, relativeTo, ctx);
             } catch (Throwable t) {
@@ -131,6 +133,7 @@ public class PythonParser implements Parser {
         int port = 54322;
         if (!isServerRunning(port)) {
             ProcessBuilder processBuilder = new ProcessBuilder("python3", "-m", "rewrite.remote.server", Integer.toString(port));
+            // FIXME output
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
             pythonProcess = processBuilder.start();
