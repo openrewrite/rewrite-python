@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rewrite"
+name = "openrewrite"
 version = "0.0.0"  # This will be replaced by the GitHub Actions workflow
 description = "OpenRewrite is a mass automated refactoring engine."
 authors = ["Moderne Inc. <support@moderne.io>"]
@@ -10,7 +10,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.9"
-rewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
+#rewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
 more-itertools = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]

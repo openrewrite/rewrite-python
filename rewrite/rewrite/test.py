@@ -6,9 +6,6 @@ from pathlib import Path
 from typing import Optional, Callable
 from uuid import UUID
 
-from rewrite.remote import RemotingContext, RemotePrinterFactory
-from rewrite.remote.server import register_remoting_factories
-
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
     ExecutionContext
 from rewrite.python.parser import PythonParserBuilder
@@ -48,6 +45,8 @@ class SourceSpec:
 
 
 def rewrite_run(*sources: list[SourceSpec]):
+    from rewrite.remote import RemotingContext, RemotePrinterFactory
+    from rewrite.remote.server import register_remoting_factories
     remoting_context = RemotingContext()
     register_remoting_factories()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
