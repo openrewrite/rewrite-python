@@ -1,13 +1,13 @@
 import ast
 import token
+from argparse import ArgumentError
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from random import random
 from tokenize import tokenize
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
-from rewrite import random_id, Markers
+from rewrite import random_id, Markers, Tree
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses
 from rewrite.java import tree as j
@@ -210,7 +210,15 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Raise!")
 
     def visit_Try(self, node):
-        raise NotImplementedError("Implement visit_Try!")
+        return j.Try(
+            random_id(),
+            self.__source_before('try'),
+            Markers.EMPTY,
+            JContainer.empty(),
+            self.__convert_block(node.body),
+            [self.__convert(handler) for handler in node.handlers],
+            self.__pad_left(self.__source_before('finally'), self.__convert_block(node.finalbody)) if node.finalbody else None
+        )
 
     def visit_Import(self, node):
         # TODO only use `MultiImport` when necessary (requires corresponding changes to printer)
@@ -367,7 +375,45 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_Store!")
 
     def visit_ExceptHandler(self, node):
-        raise NotImplementedError("Implement visit_ExceptHandler!")
+        prefix = self.__source_before('except')
+        except_type = self.__convert(node.type) if node.type else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY)
+        if node.name:
+            before_as = self.__source_before('as')
+            except_type_name = self.__convert_name(node.name)
+        else:
+            before_as = Space.EMPTY
+            except_type_name = j.Identifier(random_id(), Space.EMPTY, Markers.EMPTY, [], '', None, None)
+        except_type_name = self.__pad_right(
+            j.VariableDeclarations.NamedVariable(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                except_type_name,
+                [], None, None
+            ),
+            before_as
+        )
+
+        return j.Try.Catch(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            j.ControlParentheses(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                self.__pad_right(j.VariableDeclarations(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    [], [],
+                    except_type,
+                    None, [],
+                    [except_type_name]
+                ), Space.EMPTY)
+            ),
+            self.__convert_block(node.body)
+        )
 
     def visit_Match(self, node):
         return j.Switch(
@@ -384,14 +430,22 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_match_case(self, node):
+        prefix = self.__source_before('case')
+        pattern_prefix = self.__whitespace()
+
+        pattern = self.__convert(node.pattern)
+        # if isinstance(pattern, py.MatchCase):
+        #     guard = self.__pad_left(self.__source_before('if'), self.__convert(node.guard))
+        #     pattern = pattern.padding.with_guard(guard)
+
         case = j.Case(
             random_id(),
-            self.__source_before('case'),
+            prefix,
             Markers.EMPTY,
             j.Case.Type.Rule,
             JContainer(
-                self.__whitespace(),
-                [self.__pad_right(self.__convert(node.pattern), Space.EMPTY)],
+                pattern_prefix,
+                [self.__pad_right(pattern, Space.EMPTY)],
                 Markers.EMPTY
             ),
             JContainer.empty(),
@@ -1283,6 +1337,8 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(tree, space, Markers.EMPTY)
 
     def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
+        if(not isinstance(tree, Tree)):
+            raise ArgumentError(tree, "must be a Tree but is a {}".format(type(tree)))
         return JLeftPadded(space, tree, Markers.EMPTY)
 
     def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:

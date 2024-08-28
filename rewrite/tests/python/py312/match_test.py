@@ -128,7 +128,7 @@ def test_guard():
             """\
             def test(x):
                 match x:
-                    case [1, *rest] if 42 in rest:
+                    case [1, *rest] if 42 > rest:
                         return rest
             """
         )
