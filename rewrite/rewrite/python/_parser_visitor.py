@@ -1,10 +1,12 @@
 import ast
 import token
 from argparse import ArgumentError
+
+from more_itertools import peekable
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from tokenize import tokenize
+from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
 from rewrite import random_id, Markers, Tree
@@ -126,7 +128,34 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AsyncFunctionDef!")
 
     def visit_ClassDef(self, node):
-        raise NotImplementedError("Implement visit_ClassDef!")
+        prefix = self.__whitespace() if node.decorator_list else self.__source_before('class')
+        return j.ClassDeclaration(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            [], # TODO decorators
+            [], # TODO modifiers
+            j.ClassDeclaration.Kind(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                [],
+                j.ClassDeclaration.Kind.Type.Class
+            ),
+            self.__convert_name(node.name),
+            None,
+            None,
+            None, # no `extends`, all in `implements`
+            None if not node.bases else JContainer(
+                self.__source_before('('),
+                [self.__pad_list_element(self.__convert(n), i == len(node.bases) - 1, end_delim=')') for i, n in
+                 enumerate(node.bases)],
+                Markers.EMPTY,
+            ),
+            None,
+            self.__convert_block(node.body),
+            self.__map_type(node)
+        )
 
     def visit_Delete(self, node):
         return py.Del(
@@ -555,7 +584,7 @@ class ParserVisitor(ast.NodeVisitor):
                 children.append(converted)
         else:
             children.append(
-                self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(')')))
+                self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY))
         return py.MatchCase(
             random_id(),
             prefix,
@@ -718,23 +747,12 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         prefix = self.__whitespace()
         if isinstance(node.func, ast.Name):
+            select = None
             name = cast(j.Identifier, self.__convert(node.func))
-            args = JContainer(
-                self.__source_before('('),
-                [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-                 enumerate(node.args)],
-                Markers.EMPTY
-            )
-            return j.MethodInvocation(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                None,
-                None,
-                name,
-                args,
-                self.__map_type(node)
-            )
+        elif isinstance(node.func, ast.Call):
+            select = self.__pad_right(cast(j.Identifier, self.__convert(node.func)), self.__whitespace())
+            # printer handles empty name by not printing `.` before it
+            name = self.__convert_name('')
         elif isinstance(node.func, ast.Attribute):
             select = self.__pad_right(self.__convert(node.func.value), self.__source_before('.'))
             name = j.Identifier(
@@ -746,27 +764,28 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.func.value),
                 None
             )
-            args = JContainer(
-                self.__source_before('('),
-                [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-                 enumerate(node.args)] if node.args else [
-                    self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
-                                     Space.EMPTY)],
-                Markers.EMPTY
-            )
-
-            return j.MethodInvocation(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                select,
-                None,
-                name,
-                args,
-                self.__map_type(node)
-            )
         else:
             raise NotImplementedError("Calls to functions other than methods are not yet supported")
+
+        args = JContainer(
+            self.__source_before('('),
+            [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
+             enumerate(node.args)] if node.args else [
+                self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                                 Space.EMPTY)],
+            Markers.EMPTY
+        )
+
+        return j.MethodInvocation(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            select,
+            None,
+            name,
+            args,
+            self.__map_type(node)
+        )
 
     def visit_Compare(self, node):
         if len(node.ops) != 1:
@@ -828,7 +847,7 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             JContainer(
                 Space.EMPTY,
-                [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY),
+                [self.__pad_right(j.Empty(random_id(), self.__source_before('}'), Markers.EMPTY),
                                   Space.EMPTY)] if not node.keys else
                 [self.__map_dict_entry(k, v, i == len(node.keys) - 1) for i, (k, v) in
                  enumerate(zip(node.keys, node.values))],
@@ -949,58 +968,7 @@ class ParserVisitor(ast.NodeVisitor):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
         tok = next(tokens)  # FSTRING_START token
-        delimiter = tok.string
-        self._cursor += len(delimiter)
-        tok = next(tokens)
-
-        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
-        parts = []
-        for value in node.values:
-            if tok.type == token.OP:
-                self._cursor += len(tok.string)
-                expr = self.__pad_right(self.__convert(value.value), self.__whitespace())
-                prev_tok = tok
-                try:
-                    while (tok := next(tokens)).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
-                        prev_tok = tok
-                except StopIteration:
-                    pass
-                self._cursor += len(prev_tok.string)
-                if prev_tok.type == token.OP and prev_tok.string == ':':
-                    format_spec = tok.string
-                    self._cursor += len(tok.string)
-                    tok = next(tokens)
-                    self._cursor += len(tok.string)
-                parts.append(py.FormattedString.Value(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    expr,
-                ))
-            else:  # FSTRING_MIDDLE
-                save_cursor = self._cursor
-                while True:
-                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
-                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
-                        break
-                parts.append(j.Literal(
-                    random_id(),
-                    self.__whitespace(),
-                    Markers.EMPTY,
-                    cast(ast.Constant, value).s,
-                    self._source[save_cursor:self._cursor],
-                    None,
-                    self.__map_type(value),
-                ))
-
-        self._cursor += len(tok.string)  # FSTRING_END token
-        return py.FormattedString(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            delimiter,
-            parts
-        )
+        return self.__map_fstring(node, prefix, tok, peekable(tokens))[0]
 
     def visit_FormattedValue(self, node):
         raise ValueError("This method should not be called directly")
@@ -1033,7 +1001,7 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY,
             [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1, end_delim=']') for i, e in
              enumerate(node.elts)] if node.elts else
-            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            [self.__pad_right(j.Empty(random_id(), self.__source_before(']'), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
         return py.CollectionLiteral(
@@ -1076,7 +1044,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
-        return py.CompilationUnit(
+        cu = py.CompilationUnit(
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
@@ -1090,6 +1058,8 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             self.__whitespace()
         )
+        assert self._cursor == len(self._source)
+        return cu
 
     def visit_Name(self, node):
         return j.Identifier(
@@ -1116,7 +1086,7 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY,
             [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1, end_delim='}') for i, e in
              enumerate(node.elts)] if node.elts else
-            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            [self.__pad_right(j.Empty(random_id(), self.__source_before('}'), Markers.EMPTY), Space.EMPTY)],
             Markers.EMPTY
         )
         return py.CollectionLiteral(
@@ -1387,7 +1357,8 @@ class ParserVisitor(ast.NodeVisitor):
                                           False, Markers.EMPTY))
             else:
                 break
-            self._cursor += 1
+            if self._cursor < source_len:
+                self._cursor += 1
 
         if not comments:
             prefix = ''.join(whitespace)
@@ -1452,3 +1423,122 @@ class ParserVisitor(ast.NodeVisitor):
         except KeyError:
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
+
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[py.FormattedString, TokenInfo]:
+        if tok.type != token.FSTRING_START:
+            if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
+                # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
+                format = cast(ast.Constant, node.values[0]).value
+                self._cursor += len(format)
+                return (j.Literal(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    format,
+                    format,
+                    None,
+                    self.__map_type(node.values[0]),
+                ), next(tokens))
+            else:
+                delimiter = ''
+            consume_end_delim = False
+        else:
+            delimiter = tok.string
+            self._cursor += len(delimiter)
+            tok = next(tokens)
+            consume_end_delim = True
+
+        # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
+        parts = []
+        for value in node.values:
+            if tok.type == token.OP and tok.string == '{':
+                if not isinstance(value, ast.FormattedValue):
+                    # this is the case when using the `=` "debug specifier"
+                    continue
+                self._cursor += len(tok.string)
+                tok = next(tokens)
+                if isinstance(cast(ast.FormattedValue, value).value, ast.JoinedStr):
+                    nested, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value), Space.EMPTY, tok, tokens)
+                    expr = self.__pad_right(
+                        nested,
+                        Space.EMPTY
+                    )
+                else:
+                    expr = self.__pad_right(
+                        self.__convert(cast(ast.FormattedValue, value).value),
+                        self.__whitespace()
+                    )
+                    try:
+                        while (tokens.peek()).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
+                            tok = next(tokens)
+                            if tok.type == token.OP and tok.string == '!':
+                                break
+                            if tok.type == token.OP and tok.string == '=' and tokens.peek().string in ('!', ':', '}'):
+                                break
+                    except StopIteration:
+                        pass
+
+                # debug specifier
+                if tok.type == token.OP and tok.string == '=':
+                    self._cursor += len(tok.string)
+                    tok = next(tokens)
+                    debug = self.__pad_right(True, self.__whitespace('\n'))
+                else:
+                    debug = None
+
+                # conversion specifier
+                if tok.type == token.OP and tok.string == '!':
+                    self._cursor += len(tok.string)
+                    tok = next(tokens)
+                    conv = py.FormattedString.Value.Conversion.ASCII if tok.string == 'a' else py.FormattedString.Value.Conversion.STR if tok.string == 's' else py.FormattedString.Value.Conversion.REPR
+                    self._cursor += len(tok.string)
+                    tok = next(tokens)
+                else:
+                    conv = None
+
+                # format specifier
+                if tok.type == token.OP and tok.string == ':':
+                    self._cursor += len(tok.string)
+                    format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens), tokens)
+                else:
+                    format_spec = None
+                parts.append(py.FormattedString.Value(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    expr,
+                    debug,
+                    conv,
+                    format_spec
+                ))
+                self._cursor += len(tok.string)
+                tok = next(tokens)
+            else:  # FSTRING_MIDDLE
+                save_cursor = self._cursor
+                while True:
+                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
+                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
+                        break
+                parts.append(j.Literal(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    cast(ast.Constant, value).s,
+                    self._source[save_cursor:self._cursor],
+                    None,
+                    self.__map_type(value),
+                ))
+
+        if consume_end_delim:
+            self._cursor += len(tok.string)  # FSTRING_END token
+            tok = next(tokens)
+        elif tok.type == token.FSTRING_MIDDLE and len(tok.string) == 0:
+            tok = next(tokens)
+
+        return (py.FormattedString(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            delimiter,
+            parts
+        ), tok)

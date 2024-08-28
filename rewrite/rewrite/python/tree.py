@@ -71,15 +71,6 @@ class ExceptionType(Py, TypeTree):
     def with_expression(self, expression: Expression) -> ExceptionType:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, type: JavaType, exception_group: bool, expression: Expression) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_type', type)
-        object.__setattr__(self, '_exception_group', exception_group)
-        object.__setattr__(self, '_expression', expression)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_exception_type(self, p)
 
@@ -143,15 +134,6 @@ class TypeHint(Py, TypeTree):
 
     def with_type(self, type: JavaType) -> TypeHint:
         return self if type is self._type else replace(self, _type=type)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: TypeHint.Kind, expression: Expression, type: JavaType) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_expression', expression)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hint(self, p)
@@ -292,20 +274,6 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, source_path: Path, file_attributes: Optional[FileAttributes], charset_name: Optional[str], charset_bom_marked: bool, checksum: Optional[Checksum], imports: List[JRightPadded[Import]], statements: List[JRightPadded[Statement]], eof: Space) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_source_path', source_path)
-        object.__setattr__(self, '_file_attributes', file_attributes)
-        object.__setattr__(self, '_charset_name', charset_name)
-        object.__setattr__(self, '_charset_bom_marked', charset_bom_marked)
-        object.__setattr__(self, '_checksum', checksum)
-        object.__setattr__(self, '_imports', imports)
-        object.__setattr__(self, '_statements', statements)
-        object.__setattr__(self, '_eof', eof)
-
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
         return PrinterFactory.current().create_printer(cursor)
 
@@ -333,11 +301,6 @@ class ExpressionStatement(Py, Expression, Statement):
     def with_expression(self, expression: Expression) -> ExpressionStatement:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    def __init__(self, id: UUID, expression: Expression) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_expression', expression)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_expression_statement(self, p)
 
@@ -361,11 +324,6 @@ class StatementExpression(Py, Expression, Statement):
 
     def with_statement(self, statement: Statement) -> StatementExpression:
         return self if statement is self._statement else replace(self, _statement=statement)
-
-    def __init__(self, id: UUID, statement: Statement) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_statement', statement)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_statement_expression(self, p)
@@ -461,15 +419,6 @@ class MultiImport(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, from_: Optional[JRightPadded[NameTree]], parenthesized: bool, names: JContainer[Import]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_from', from_)
-        object.__setattr__(self, '_parenthesized', parenthesized)
-        object.__setattr__(self, '_names', names)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_multi_import(self, p)
 
@@ -557,15 +506,6 @@ class KeyValue(Py, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, key: JRightPadded[Expression], value: Expression, type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_key', key)
-        object.__setattr__(self, '_value', value)
-        object.__setattr__(self, '_type', type)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_key_value(self, p)
 
@@ -643,14 +583,6 @@ class DictLiteral(Py, Expression, TypedTree):
                 p = DictLiteral.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, elements: JContainer[Expression], type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_elements', elements)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_dict_literal(self, p)
@@ -744,15 +676,6 @@ class CollectionLiteral(Py, Expression, TypedTree):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: CollectionLiteral.Kind, elements: JContainer[Expression], type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_elements', elements)
-        object.__setattr__(self, '_type', type)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_collection_literal(self, p)
 
@@ -807,6 +730,11 @@ class FormattedString(Py, Expression, TypedTree):
     # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
     @dataclass(frozen=True, eq=False)
     class Value(Py, Expression, TypedTree):
+        class Conversion(Enum):
+            STR = 0
+            REPR = 1
+            ASCII = 2
+
         _id: UUID
 
         @property
@@ -843,6 +771,33 @@ class FormattedString(Py, Expression, TypedTree):
         def with_expression(self, expression: Expression) -> FormattedString.Value:
             return self.padding.with_expression(JRightPadded.with_element(self._expression, expression))
 
+        _debug: Optional[JRightPadded[bool]]
+
+        @property
+        def debug(self) -> Optional[bool]:
+            return self._debug.element
+
+        def with_debug(self, debug: Optional[bool]) -> FormattedString.Value:
+            return self.padding.with_debug(JRightPadded.with_element(self._debug, debug))
+
+        _conversion: Optional[Conversion]
+
+        @property
+        def conversion(self) -> Optional[Conversion]:
+            return self._conversion
+
+        def with_conversion(self, conversion: Optional[Conversion]) -> FormattedString.Value:
+            return self if conversion is self._conversion else replace(self, _conversion=conversion)
+
+        _format: Optional[Expression]
+
+        @property
+        def format(self) -> Optional[Expression]:
+            return self._format
+
+        def with_format(self, format: Optional[Expression]) -> FormattedString.Value:
+            return self if format is self._format else replace(self, _format=format)
+
         @dataclass
         class PaddingHelper:
             _t: FormattedString.Value
@@ -853,6 +808,13 @@ class FormattedString(Py, Expression, TypedTree):
 
             def with_expression(self, expression: JRightPadded[Expression]) -> FormattedString.Value:
                 return self._t if self._t._expression is expression else replace(self._t, _expression=expression)
+
+            @property
+            def debug(self) -> Optional[JRightPadded[bool]]:
+                return self._t._debug
+
+            def with_debug(self, debug: Optional[JRightPadded[bool]]) -> FormattedString.Value:
+                return self._t if self._t._debug is debug else replace(self._t, _debug=debug)
 
         _padding: weakref.ReferenceType[PaddingHelper] = None
 
@@ -870,23 +832,8 @@ class FormattedString(Py, Expression, TypedTree):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: JRightPadded[Expression]) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefix', prefix)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_expression', expression)
-
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_formatted_string_value(self, p)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, delimiter: str, parts: List[Expression]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_delimiter', delimiter)
-        object.__setattr__(self, '_parts', parts)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_formatted_string(self, p)
@@ -920,12 +867,6 @@ class Pass(Py, Statement):
 
     def with_markers(self, markers: Markers) -> Pass:
         return self if markers is self._markers else replace(self, _markers=markers)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_pass(self, p)
@@ -1004,14 +945,6 @@ class TrailingElseWrapper(Py, Statement):
                 p = TrailingElseWrapper.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, statement: Statement, else_block: JLeftPadded[Block]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_statement', statement)
-        object.__setattr__(self, '_else_block', else_block)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_trailing_else_wrapper(self, p)
@@ -1136,13 +1069,6 @@ class ComprehensionExpression(Py, Expression):
         def with_expression(self, expression: Expression) -> ComprehensionExpression.Condition:
             return self if expression is self._expression else replace(self, _expression=expression)
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefix', prefix)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_expression', expression)
-
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_comprehension_condition(self, p)
 
@@ -1230,28 +1156,8 @@ class ComprehensionExpression(Py, Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, iterator_variable: Expression, iterated_list: JLeftPadded[Expression], conditions: Optional[List[ComprehensionExpression.Condition]]) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefix', prefix)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_iterator_variable', iterator_variable)
-            object.__setattr__(self, '_iterated_list', iterated_list)
-            object.__setattr__(self, '_conditions', conditions)
-
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_comprehension_clause(self, p)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: ComprehensionExpression.Kind, result: Expression, clauses: List[ComprehensionExpression.Clause], suffix: Space, type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_result', result)
-        object.__setattr__(self, '_clauses', clauses)
-        object.__setattr__(self, '_suffix', suffix)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_comprehension_expression(self, p)
@@ -1304,14 +1210,6 @@ class Await(Py, Expression):
     def with_type(self, type: JavaType) -> Await:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, type: JavaType) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_expression', expression)
-        object.__setattr__(self, '_type', type)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_await(self, p)
 
@@ -1362,14 +1260,6 @@ class YieldFrom(Py, Expression):
 
     def with_type(self, type: JavaType) -> YieldFrom:
         return self if type is self._type else replace(self, _type=type)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, expression: Expression, type: JavaType) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_expression', expression)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_yield_from(self, p)
@@ -1453,14 +1343,6 @@ class VariableScope(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: VariableScope.Kind, names: List[JRightPadded[Identifier]]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_names', names)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_variable_scope(self, p)
 
@@ -1530,13 +1412,6 @@ class Del(Py, Statement):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, targets: List[JRightPadded[Expression]]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_targets', targets)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_del(self, p)
 
@@ -1601,15 +1476,6 @@ class SpecialParameter(Py, TypeTree):
     def with_type(self, type: Optional[JavaType]) -> SpecialParameter:
         return self if type is self._type else replace(self, _type=type)
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: SpecialParameter.Kind, type_hint: Optional[TypeHint], type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_type_hint', type_hint)
-        object.__setattr__(self, '_type', type)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_special_parameter(self, p)
 
@@ -1673,15 +1539,6 @@ class Star(Py, Expression):
 
     def with_type(self, type: Optional[JavaType]) -> Star:
         return self if type is self._type else replace(self, _type=type)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: Star.Kind, expression: Expression, type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_kind', kind)
-        object.__setattr__(self, '_expression', expression)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_star(self, p)
@@ -1770,15 +1627,6 @@ class NamedArgument(Py, Expression):
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, name: Identifier, value: JLeftPadded[Expression], type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_name', name)
-        object.__setattr__(self, '_value', value)
-        object.__setattr__(self, '_type', type)
-
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_named_argument(self, p)
 
@@ -1838,15 +1686,6 @@ class TypeHintedExpression(Py, Expression):
 
     def with_type(self, type: Optional[JavaType]) -> TypeHintedExpression:
         return self if type is self._type else replace(self, _type=type)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, type_hint: TypeHint, expression: Expression, type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_type_hint', type_hint)
-        object.__setattr__(self, '_expression', expression)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_type_hinted_expression(self, p)
@@ -1934,15 +1773,6 @@ class ErrorFrom(Py, Expression):
                 p = ErrorFrom.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, error: Expression, from_: JLeftPadded[Expression], type: JavaType) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_error', error)
-        object.__setattr__(self, '_from', from_)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_error_from(self, p)
@@ -2133,26 +1963,8 @@ class MatchCase(Py, Expression):
                     object.__setattr__(self, '_padding', weakref.ref(p))
             return p
 
-        def __init__(self, id: UUID, prefix: Space, markers: Markers, kind: MatchCase.Pattern.Kind, children: JContainer[Expression], type: Optional[JavaType]) -> None:
-            # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-            object.__setattr__(self, '_id', id)
-            object.__setattr__(self, '_prefix', prefix)
-            object.__setattr__(self, '_markers', markers)
-            object.__setattr__(self, '_kind', kind)
-            object.__setattr__(self, '_children', children)
-            object.__setattr__(self, '_type', type)
-
         def accept_python(self, v: PythonVisitor[P], p: P) -> J:
             return v.visit_match_case_pattern(self, p)
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, pattern: MatchCase.Pattern, guard: Optional[JLeftPadded[Expression]], type: Optional[JavaType]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_pattern', pattern)
-        object.__setattr__(self, '_guard', guard)
-        object.__setattr__(self, '_type', type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_match_case(self, p)
@@ -2254,15 +2066,6 @@ class Slice(Py, Expression, TypedTree):
                 p = Slice.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
-
-    def __init__(self, id: UUID, prefix: Space, markers: Markers, start: Optional[JRightPadded[Expression]], stop: Optional[JRightPadded[Expression]], step: Optional[JRightPadded[Expression]]) -> None:
-        # generated due to https://youtrack.jetbrains.com/issue/PY-62622
-        object.__setattr__(self, '_id', id)
-        object.__setattr__(self, '_prefix', prefix)
-        object.__setattr__(self, '_markers', markers)
-        object.__setattr__(self, '_start', start)
-        object.__setattr__(self, '_stop', stop)
-        object.__setattr__(self, '_step', step)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_slice(self, p)

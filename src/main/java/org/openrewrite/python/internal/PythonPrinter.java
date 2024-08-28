@@ -19,7 +19,6 @@ import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.PrintOutputCapture;
 import org.openrewrite.Tree;
-import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.marker.OmitParentheses;
 import org.openrewrite.java.marker.Semicolon;
@@ -30,7 +29,7 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.marker.*;
+import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
 import java.util.Iterator;
@@ -38,14 +37,9 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
-import static org.openrewrite.python.tree.PySpace.reindent;
 
 public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     private final PythonJavaPrinter delegate = new PythonJavaPrinter();
-
-    private static final String BLOCK_INDENT_KEY = "BLOCK_INDENT";
-    private static final String STATEMENT_GROUP_CURSOR_KEY = "STATEMENT_GROUP";
-    private static final String STATEMENT_GROUP_INDEX_CURSOR_KEY = "STATEMENT_GROUP_INDEX";
 
     @Override
     public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
@@ -56,34 +50,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             //noinspection DataFlowIssue
             return super.visit(tree, p);
         }
-    }
-
-    private <T extends J> T reindentPrefix(@Nullable T element) {
-        if (element == null) {
-            //noinspection DataFlowIssue
-            return null;
-        }
-        return element.withPrefix(reindentPrefix(element.getPrefix()));
-    }
-
-    private <T extends J> @Nullable JLeftPadded<T> reindentBefore(@Nullable JLeftPadded<T> padded) {
-        if (padded == null) {
-            return null;
-        }
-        return padded.withBefore(reindentPrefix(padded.getBefore()));
-    }
-
-    private Space reindentPrefix(Space space) {
-        String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
-        if (indent == null) {
-            indent = "";
-        }
-        return reindent(
-                space,
-                indent,
-                PySpace.IndentStartMode.LINE_START,
-                PySpace.IndentEndMode.STATEMENT_START
-        );
     }
 
     @Override
@@ -142,8 +108,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
         p.append(fString.getDelimiter());
         visit(fString.getParts(), p);
-        int idx = Math.max(fString.getDelimiter().indexOf('\''), fString.getDelimiter().indexOf('"'));
-        p.append(fString.getDelimiter().substring(idx));
+        if (!fString.getDelimiter().isEmpty()) {
+            int idx = Math.max(fString.getDelimiter().indexOf('\''), fString.getDelimiter().indexOf('"'));
+            p.append(fString.getDelimiter().substring(idx));
+        }
         return fString;
     }
 
@@ -152,6 +120,28 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         beforeSyntax(value, PySpace.Location.FORMATTED_STRING_VALUE_PREFIX, p);
         p.append('{');
         visitRightPadded(value.getPadding().getExpression(), PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p);
+        if (value.getPadding().getDebug() != null) {
+            p.append('=');
+            visitSpace(value.getPadding().getDebug().getAfter(), PySpace.Location.FORMATTED_STRING_VALUE_DEBUG_SUFFIX, p);
+        }
+        if (value.getConversion() != null) {
+            p.append('!');
+            switch (value.getConversion()) {
+                case STR:
+                    p.append('s');
+                    break;
+                case REPR:
+                    p.append('r');
+                    break;
+                case ASCII:
+                    p.append('a');
+                    break;
+            }
+        }
+        if (value.getFormat() != null) {
+            p.append(':');
+            visit(value.getFormat(), p);
+        }
         p.append('}');
         return value;
     }
@@ -181,24 +171,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         visit(keyValue.getValue(), p);
         afterSyntax(keyValue, p);
         return keyValue;
-    }
-
-    private void visitPythonExtraPadding(Tree tree, PrintOutputCapture<P> p) {
-        String indent = getCursor().getNearestMessage(BLOCK_INDENT_KEY);
-        if (indent == null) {
-            indent = "";
-        }
-        Space space = PythonExtraPadding.getOrDefault(tree, PythonExtraPadding.Location.AFTER_DECORATOR);
-        space = reindent(space, indent, PySpace.IndentStartMode.AFTER_STATEMENT, PySpace.IndentEndMode.REST_OF_LINE);
-        visitSpace(space, Location.LANGUAGE_EXTENSION, p);
-    }
-
-    private void visitPythonExtraPadding(Tree tree, PythonExtraPadding.Location loc, PrintOutputCapture<P> p) {
-        Space space = PythonExtraPadding.getOrDefault(tree, loc);
-        if (space == null) {
-            return;
-        }
-        visitSpace(space, Location.LANGUAGE_EXTENSION, p);
     }
 
     @Override
@@ -556,9 +528,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitTrailingElseWrapper(Py.TrailingElseWrapper wrapper, PrintOutputCapture<P> p) {
-        visit(reindentPrefix(wrapper.getStatement()), p);
+        visit(wrapper.getStatement(), p);
         visitSpace(
-                reindentPrefix(wrapper.getPadding().getElseBlock().getBefore()),
+                wrapper.getPadding().getElseBlock().getBefore(),
                 Location.ELSE_PREFIX,
                 p
         );
@@ -611,14 +583,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitAnnotation(J.Annotation annotation, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(annotation), Space.Location.ANNOTATION_PREFIX, p);
+            beforeSyntax(annotation, Space.Location.ANNOTATION_PREFIX, p);
             p.append("@");
             visit(annotation.getAnnotationType(), p);
             visitContainer("(", annotation.getPadding().getArguments(), JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p);
-            visitPythonExtraPadding(
-                    annotation,
-                    p
-            );
             afterSyntax(annotation, p);
             return annotation;
         }
@@ -782,14 +750,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(binary.getLeft(), p);
             visitSpace(binary.getPadding().getOperator().getBefore(), Space.Location.BINARY_OPERATOR, p);
 
-            int spaceIndex = keyword.indexOf(' ');
-            if (spaceIndex >= 0) {
-                p.append(keyword.substring(0, spaceIndex));
-                visitPythonExtraPadding(binary, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
-                p.append(keyword.substring(spaceIndex + 1));
-            } else {
-                p.append(keyword);
-            }
+            p.append(keyword);
 
             visit(binary.getRight(), p);
             afterSyntax(binary, p);
@@ -828,7 +789,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitCatch(J.Try.Catch ca, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(ca), Space.Location.CATCH_PREFIX, p);
+            beforeSyntax(ca, Space.Location.CATCH_PREFIX, p);
             p.append("except");
 
             J.VariableDeclarations multiVariable = ca.getParameter().getTree();
@@ -859,7 +820,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(classDecl.getLeadingAnnotations(), p);
             visit(classDecl.getPadding().getKind().getAnnotations(), p);
             visitSpace(
-                    reindentPrefix(classDecl.getPadding().getKind().getPrefix()),
+                    classDecl.getPadding().getKind().getPrefix(),
                     Space.Location.CLASS_KIND,
                     p
             );
@@ -885,7 +846,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
-            beforeSyntax(reindentPrefix(else_), Space.Location.ELSE_PREFIX, p);
+            beforeSyntax(else_, Space.Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
                 else_.getBody() instanceof J.If) {
                 p.append("el");
@@ -961,11 +922,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitLiteral(J.Literal literal, PrintOutputCapture<P> p) {
             if (literal.getValue() == null) {
-                if (literal.getMarkers().findFirst(ImplicitNone.class).isPresent()) {
-                    literal = literal.withValueSource("");
-                } else {
-                    literal = literal.withValueSource("None");
-                }
+                literal = literal.withValueSource("None");
             }
 
             beforeSyntax(literal, Space.Location.LITERAL_PREFIX, p);
@@ -1016,11 +973,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
             visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
             visit(method.getLeadingAnnotations(), p);
-            List<J.Modifier> modifiers = ListUtils.mapFirst(
-                    method.getModifiers(),
-                    PythonPrinter.this::reindentPrefix
-            );
-            for (J.Modifier m : modifiers) {
+            for (J.Modifier m : method.getModifiers()) {
                 visitModifier(m, p);
             }
             visit(method.getName(), p);
@@ -1033,24 +986,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitMethodInvocation(J.MethodInvocation method, PrintOutputCapture<P> p) {
-            if (method.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
-                visitMagicMethodDesugar(method, false, p);
-            } else if (method.getMarkers().findFirst(BuiltinDesugar.class).isPresent()) {
-                visitBuiltinDesugar(method, p);
-            } else {
-                beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
-                visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, ".", p);
-                visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
-                visit(method.getName(), p);
-                String before = "(";
-                String after = ")";
-                if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
-                    before = "";
-                    after = "";
-                }
-                visitContainer(before, method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p);
-                afterSyntax(method, p);
+            beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
+            visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, method.getSimpleName().isEmpty() ? "" : ".", p);
+            visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
+            visit(method.getName(), p);
+            String before = "(";
+            String after = ")";
+            if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
+                before = "";
+                after = "";
             }
+            visitContainer(before, method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p);
+            afterSyntax(method, p);
             return method;
         }
 
@@ -1170,39 +1117,18 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (elseBody != null) {
                 // padding is reversed for the `else` part because it's wrapped as though it were a normal statement,
                 // so its extra padding (which acts as JLeftPadding) is stored in a JRightPadding
-                visitSpace(reindentPrefix(elseBody.getAfter()), Location.LANGUAGE_EXTENSION, p);
+                visitSpace(elseBody.getAfter(), Location.LANGUAGE_EXTENSION, p);
                 p.append("else");
                 visit(elseBody.getElement(), p);
             }
 
-            visitLeftPadded("finally", reindentBefore(tryable.getPadding().getFinally()), JLeftPadded.Location.TRY_FINALLY, p);
+            visitLeftPadded("finally", tryable.getPadding().getFinally(), JLeftPadded.Location.TRY_FINALLY, p);
             afterSyntax(tryable, p);
             return tryable;
         }
 
         @Override
         public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
-            if (unary.getMarkers().findFirst(MagicMethodDesugar.class).isPresent()) {
-                if (unary.getOperator() != J.Unary.Type.Not) {
-                    throw new IllegalStateException(String.format(
-                            "found a unary operator (%s) marked as a magic method de-sugar, but only negation is supported",
-                            unary.getOperator()
-                    ));
-                }
-                Expression expression = unary.getExpression();
-                while (expression instanceof J.Parentheses) {
-                    expression = expression.unwrap();
-                }
-                if (!(expression instanceof J.MethodInvocation)) {
-                    throw new IllegalStateException(String.format(
-                            "found a unary operator (%s) marked as a magic method de-sugar, but its expression is not a magic method invocation",
-                            unary.getOperator()
-                    ));
-                }
-                visitMagicMethodDesugar((J.MethodInvocation) expression, true, p);
-                return unary;
-            }
-
             beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
                 case Not:
@@ -1262,140 +1188,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         protected void printStatementTerminator(Statement s, PrintOutputCapture<P> p) {
             // optional semicolons are handled in `visitMarker()`
-        }
-
-        private void visitMagicMethodDesugar(J.MethodInvocation method, boolean negate, PrintOutputCapture<P> p) {
-            String magicMethodName = method.getSimpleName();
-
-            if ("__call__".equals(magicMethodName)) {
-                beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
-                visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, p);
-                visitContainer("(", method.getPadding().getArguments(), JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", ")", p);
-                afterSyntax(method, p);
-
-                return;
-            }
-
-            if (method.getArguments().size() != 1) {
-                throw new IllegalStateException(String.format(
-                        "expected de-sugared magic method call `%s` to have exactly one argument; found %d",
-                        magicMethodName,
-                        method.getArguments().size()
-                ));
-            }
-
-            String operator = PythonOperatorLookup.operatorForMagicMethod(magicMethodName);
-            if (operator == null) {
-                throw new IllegalStateException(String.format(
-                        "expected method call `%s` to be a de-sugared operator, but it does not match known operators",
-                        magicMethodName
-                ));
-            }
-
-            if (negate) {
-                if (!"in".equals(operator)) {
-                    throw new IllegalStateException(String.format(
-                            "found method call `%s` as a de-sugared operator, but it is marked as negated (which it does not support)",
-                            magicMethodName
-                    ));
-                }
-            }
-
-            boolean reverseOperandOrder = PythonOperatorLookup.doesMagicMethodReverseOperands(magicMethodName);
-
-            Expression lhs = requireNonNull(method.getSelect());
-            Expression rhs = method.getArguments().get(0);
-
-            J.MethodInvocation.Padding padding = method.getPadding();
-            Space beforeOperator = requireNonNull(padding.getSelect()).getAfter();
-            Space afterOperator = rhs.getPrefix();
-
-            if (reverseOperandOrder) {
-                Expression tmp = lhs;
-                lhs = rhs;
-                rhs = tmp;
-            }
-
-            beforeSyntax(method, Space.Location.BINARY_PREFIX, p);
-            visit((Expression) lhs.withPrefix(Space.EMPTY), p);
-            visitSpace(beforeOperator, Space.Location.BINARY_OPERATOR, p);
-            if (negate) {
-                p.append("not");
-                visitPythonExtraPadding(method, PythonExtraPadding.Location.WITHIN_OPERATOR_NAME, p);
-            }
-            p.append(operator);
-            visit((Expression) rhs.withPrefix(afterOperator), p);
-            afterSyntax(method, p);
-        }
-
-        private void visitBuiltinDesugar(J.MethodInvocation method, PrintOutputCapture<P> p) {
-            Expression select = method.getSelect();
-            if (!(select instanceof J.Identifier)) {
-                throw new IllegalStateException("expected builtin desugar to select from an Identifier");
-            } else if (!"__builtins__".equals(((J.Identifier) select).getSimpleName())) {
-                throw new IllegalStateException("expected builtin desugar to select from __builtins__");
-            }
-
-            visitSpace(method.getPrefix(), Location.LANGUAGE_EXTENSION, p);
-
-            String builtinName = requireNonNull(method.getName()).getSimpleName();
-            switch (builtinName) {
-                case "slice":
-                    visitContainer(
-                            "",
-                            method.getPadding().getArguments(),
-                            JContainer.Location.LANGUAGE_EXTENSION,
-                            ":",
-                            "",
-                            p
-                    );
-                    return;
-                case "set":
-                case "tuple": {
-                    if (method.getArguments().size() != 1) {
-                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument", builtinName));
-                    }
-                    Expression arg = method.getArguments().get(0);
-                    if (!(arg instanceof J.NewArray)) {
-                        throw new IllegalStateException(String.format("builtin `%s` should have exactly one argument, a J.NewArray", builtinName));
-                    }
-
-                    J.NewArray argList = (J.NewArray) arg;
-                    int argCount = 0;
-                    for (Expression argExpr : requireNonNull(argList.getInitializer())) {
-                        if (!(argExpr instanceof J.Empty)) {
-                            argCount++;
-                        }
-                    }
-
-                    String before;
-                    String after;
-                    if (method.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
-                        before = "";
-                        after = "";
-                    } else if ("set".equals(builtinName)) {
-                        before = "{";
-                        after = "}";
-                    } else {
-                        before = "(";
-                        after = argCount == 1 ? ",)" : ")";
-                    }
-
-                    visitContainer(
-                            before,
-                            argList.getPadding().getInitializer(),
-                            JContainer.Location.LANGUAGE_EXTENSION,
-                            ",",
-                            after,
-                            p
-                    );
-                    return;
-                }
-                default:
-                    throw new IllegalStateException(
-                            String.format("builtin desugar doesn't support `%s`", builtinName)
-                    );
-            }
         }
     }
 

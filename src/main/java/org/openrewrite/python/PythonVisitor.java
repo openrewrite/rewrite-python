@@ -280,7 +280,9 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         } else {
             fv = (Py.FormattedString.Value) temp;
         }
-        fv =fv.getPadding().withExpression(visitRightPadded(fv.getPadding().getExpression(), PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p));
+        fv = fv.getPadding().withExpression(visitRightPadded(fv.getPadding().getExpression(), PyRightPadded.Location.FORMATTED_STRING_VALUE_EXPRESSION, p));
+        fv = fv.getPadding().withDebug(visitRightPadded(fv.getPadding().getDebug(), PyRightPadded.Location.FORMATTED_STRING_VALUE_DEBUG, p));
+        fv = fv.withFormat(visitAndCast(fv.getFormat(), p));
         return fv;
     }
 
