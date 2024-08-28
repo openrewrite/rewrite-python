@@ -19,7 +19,7 @@ tasks.withType<Test> {
 
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
-    compileOnly("org.openrewrite:rewrite-remote-java:latest.integration") {
+    implementation("org.openrewrite:rewrite-remote-java:latest.integration") {
         exclude(group = "org.openrewrite", module = "rewrite-python")
     }
 
@@ -29,8 +29,4 @@ dependencies {
 
     testImplementation("org.openrewrite:rewrite-test")
     testImplementation("org.junit-pioneer:junit-pioneer:latest.release")
-
-    testRuntimeOnly("org.openrewrite:rewrite-remote-java:latest.integration") {
-        exclude(group = "org.openrewrite", module = "rewrite-python")
-    }
 }

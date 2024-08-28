@@ -23,6 +23,8 @@ import org.openrewrite.internal.EncodingDetectingInputStream;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.remote.ReceiverContext;
+import org.openrewrite.remote.RemotingContext;
+import org.openrewrite.remote.RemotingExecutionContextView;
 import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.tree.ParseError;
@@ -31,6 +33,7 @@ import org.openrewrite.tree.ParsingExecutionContextView;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +52,9 @@ public class PythonParser implements Parser {
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
+
+    private @Nullable Process pythonProcess;
+    private @Nullable RemotingContext remotingContext;
     private @Nullable RemotingClient client;
 
     @Override
@@ -77,13 +83,11 @@ public class PythonParser implements Parser {
         ParsingEventListener parsingListener = pctx.getParsingListener();
 
         if (client == null) {
-            client = RemotingClient.create(ctx, PythonParser.class, () -> {
-                try {
-                    return new Socket(InetAddress.getLoopbackAddress(), 54321);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            try {
+                initializeRemoting(ctx);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
         return acceptedInputs(inputs).map(input -> {
@@ -97,7 +101,7 @@ public class PythonParser implements Parser {
                     generator.writeString("parse-python");
                     generator.writeString(is.readFully());
                 }, parser -> {
-                    Tree tree = new ReceiverContext(client.getContext().newReceiver(parser), client.getContext()).receiveTree(null);
+                    Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
                     return (SourceFile) tree;
                 }, socket)));
 
@@ -111,6 +115,49 @@ public class PythonParser implements Parser {
         });
     }
 
+    private void initializeRemoting(ExecutionContext ctx) throws IOException {
+        RemotingExecutionContextView view = RemotingExecutionContextView.view(ctx);
+        remotingContext = view.getRemotingContext();
+        if (remotingContext == null) {
+            remotingContext = new RemotingContext(PythonParser.class.getClassLoader(), false);
+            view.setRemotingContext(remotingContext);
+        }
+
+        int port = 54322;
+        if (!isServerRunning(port)) {
+            ProcessBuilder processBuilder = new ProcessBuilder("python3", "-m", "rewrite.remote.server", Integer.toString(port));
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            pythonProcess = processBuilder.start();
+            for (int i = 0; i < 10; i++) {
+                if (isServerRunning(port)) {
+                    break;
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        client = RemotingClient.create(ctx, PythonParser.class, () -> {
+            try {
+                return new Socket(InetAddress.getLoopbackAddress(), port);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static boolean isServerRunning(int port) {
+        try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     @Override
     public boolean accept(Path path) {
         return path.toString().endsWith(".py");
@@ -119,9 +166,15 @@ public class PythonParser implements Parser {
     @Override
     public PythonParser reset() {
         typeCache.clear();
-        if (client != null) {
-            client.getContext().reset();
+        if (remotingContext != null) {
+            remotingContext.reset();
+            remotingContext = null;
         }
+        if (pythonProcess != null) {
+            pythonProcess.destroy();
+            pythonProcess = null;
+        }
+        client = null;
         return this;
     }
 
