@@ -49,3 +49,15 @@ def test_two_bases():
             """
         )
     )
+
+
+def test_empty_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            class Foo (  ):
+                pass
+            """
+        )
+    )

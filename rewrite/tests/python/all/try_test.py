@@ -37,3 +37,21 @@ def test_try_except_finally():
             """
         )
     )
+
+
+@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
+def test_try_else():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test():
+                try:
+                    result = 1 / 1
+                except ZeroDivisionError:
+                    print("Caught a division by zero error!")
+                else:
+                    print("No error occurred, result is:", result)
+            """
+        )
+    )
