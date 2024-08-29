@@ -55,8 +55,7 @@ jobs:
           rm -rf .venv
           poetry install --no-interaction --no-ansi
           poetry build
-          poetry config repositories.test-pypi https://test.pypi.org/legacy/
-          poetry publish --repository test-pypi --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
 
       - name: set-up-jdk
         uses: actions/setup-java@v4
