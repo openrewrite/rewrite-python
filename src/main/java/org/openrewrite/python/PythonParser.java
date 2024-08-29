@@ -27,11 +27,13 @@ import org.openrewrite.remote.RemotingContext;
 import org.openrewrite.remote.RemotingExecutionContextView;
 import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
+import org.openrewrite.text.PlainTextParser;
 import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
@@ -79,23 +81,17 @@ public class PythonParser implements Parser {
 
     @Override
     public Stream<SourceFile> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
+        if (!ensureServerRunning(ctx)) {
+            return PlainTextParser.builder().build().parseInputs(inputs, relativeTo, ctx);
+        }
+
         ParsingExecutionContextView pctx = ParsingExecutionContextView.view(ctx);
         ParsingEventListener parsingListener = pctx.getParsingListener();
-
-        if (client == null) {
-            try {
-                initializeRemoting(ctx);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
 
         return acceptedInputs(inputs).map(input -> {
             Path path = input.getRelativePath(relativeTo);
             parsingListener.startedParsing(input);
 
-            // TODO temporarily commented out to avoid compilation errors in the first publish
-            //  after the introduction of RemotingContext API.
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
                 SourceFile parsed = client.runUsingSocket((socket, messenger) -> requireNonNull(messenger.sendRequest(generator -> {
                     generator.writeString("parse-python");
@@ -110,7 +106,7 @@ public class PythonParser implements Parser {
                     return parsed;
                 }
 
-                Py.CompilationUnit py = (Py.CompilationUnit) parsed;
+                Py.CompilationUnit py = ((Py.CompilationUnit) parsed).withSourcePath(path);
                 parsingListener.parsed(input, py);
                 return requirePrintEqualsInput(py, input, relativeTo, ctx);
             } catch (Throwable t) {
@@ -120,37 +116,72 @@ public class PythonParser implements Parser {
         });
     }
 
+    private boolean ensureServerRunning(ExecutionContext ctx) {
+        if (client == null || !isAlive()) {
+            try {
+                initializeRemoting(ctx);
+            } catch (IOException e) {
+                return false;
+            }
+        } else {
+            requireNonNull(remotingContext).reset();
+        }
+        return client != null && isAlive();
+    }
+
+    private boolean isAlive() {
+        try {
+            return requireNonNull(client).runUsingSocket((socket, messenger) -> {
+                messenger.sendReset(socket);
+                return true;
+            });
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private void initializeRemoting(ExecutionContext ctx) throws IOException {
         RemotingExecutionContextView view = RemotingExecutionContextView.view(ctx);
         remotingContext = view.getRemotingContext();
         if (remotingContext == null) {
             remotingContext = new RemotingContext(PythonParser.class.getClassLoader(), false);
             view.setRemotingContext(remotingContext);
+        } else {
+            remotingContext.reset();
         }
 
         int port = 54322;
         if (!isServerRunning(port)) {
             ProcessBuilder processBuilder = new ProcessBuilder("python3", "-m", "rewrite.remote.server", Integer.toString(port));
-            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            if (System.getProperty("os.name").startsWith("Windows")) {
+                processBuilder.redirectOutput(new File("NUL"));
+                processBuilder.redirectError(new File("NUL"));
+            } else {
+                processBuilder.redirectOutput(new File("/dev/null"));
+                processBuilder.redirectError(new File("/dev/null"));
+            }
             pythonProcess = processBuilder.start();
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 5 && pythonProcess.isAlive(); i++) {
                 if (isServerRunning(port)) {
                     break;
                 }
                 try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.sleep(50);
+                } catch (InterruptedException ignore) {
                 }
             }
+        }
+
+        if (pythonProcess == null || !pythonProcess.isAlive()) {
+            remotingContext = null;
+            return;
         }
 
         client = RemotingClient.create(ctx, PythonParser.class, () -> {
             try {
                 return new Socket(InetAddress.getLoopbackAddress(), port);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UncheckedIOException(e);
             }
         });
     }
