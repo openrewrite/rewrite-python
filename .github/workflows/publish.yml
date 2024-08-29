@@ -35,13 +35,13 @@ jobs:
           python-version: '3.12'
 
       - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+        uses: snok/install-poetry@v1
 
       - name: publish-python
         if: (!contains(github.ref, '-rc.'))
         run: |
           cd "rewrite"
+          rm -rf .venv
           poetry install --no-interaction --no-ansi
           poetry build
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
