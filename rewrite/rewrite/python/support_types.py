@@ -155,8 +155,8 @@ class PyComment(Comment):
         return False
 
     # IMPORTANT: This explicit constructor aligns the parameter order with the Java side
-    def __init__(self, text: str, suffix: str, aligned_to_indent: bool, markers: Markers) -> None:
-        object.__setattr__(self, '_text', text)
-        object.__setattr__(self, '_suffix', suffix)
-        object.__setattr__(self, '_aligned_to_indent', aligned_to_indent)
-        object.__setattr__(self, '_markers', markers)
+    def __init__(self, _text: str, _suffix: str, _aligned_to_indent: bool, _markers: Markers) -> None:
+        object.__setattr__(self, '_text', _text)
+        object.__setattr__(self, '_suffix', _suffix)
+        object.__setattr__(self, '_aligned_to_indent', _aligned_to_indent)
+        object.__setattr__(self, '_markers', _markers)

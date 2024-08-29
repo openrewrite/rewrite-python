@@ -1,18 +1,19 @@
 import ast
+import sys
 import token
 from argparse import ArgumentError
-
-from more_itertools import peekable
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
+from more_itertools import peekable
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses
 from rewrite.java import tree as j
+
 from . import tree as py, PyComment
 
 J2 = TypeVar('J2', bound=J)
@@ -40,15 +41,22 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
-        first_with_default = len(node.args) - len(node.defaults)
-        prefix = self.__source_before('(')
-        args = []
-        for i, a in enumerate(node.args):
-            arg = self.__pad_right(
-                self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
-                self.__source_before(')') if i == len(node.args) - 1 else self.__source_before(',')
+        if not node.args:
+            return JContainer(
+                self.__source_before('('),
+                [self.__pad_right(
+                    j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                    Space.EMPTY)
+                ],
+                Markers.EMPTY
             )
-            args.append(arg)
+
+        first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
+        prefix = self.__source_before('(')
+        args = [self.__pad_list_element(
+            self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
+            i == len(node.args) - 1,
+            end_delim=')') for i, a in enumerate(node.args)]
         return JContainer(prefix, args, Markers.EMPTY)
 
     def map_arg(self, node, default=None):
@@ -129,6 +137,28 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_ClassDef(self, node):
         prefix = self.__whitespace() if node.decorator_list else self.__source_before('class')
+        name = self.__convert_name(node.name)
+        save_cursor = self._cursor
+        interfaces_prefix = self.__whitespace()
+        if self._source[self._cursor] == '(' and node.bases:
+            self.__skip('(')
+            interfaces = JContainer(
+                interfaces_prefix,
+                [
+                    self.__pad_list_element(self.__convert(n), i == len(node.bases) - 1, end_delim=')') for i, n in
+                    enumerate(node.bases)],
+                Markers.EMPTY
+            )
+        elif self._source[self._cursor] == '(':
+            self.__skip('(')
+            interfaces = JContainer(
+                interfaces_prefix,
+                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY)],
+                Markers.EMPTY
+            )
+        else:
+            interfaces = None
+            self._cursor = save_cursor
         return j.ClassDeclaration(
             random_id(),
             prefix,
@@ -142,16 +172,11 @@ class ParserVisitor(ast.NodeVisitor):
                 [],
                 j.ClassDeclaration.Kind.Type.Class
             ),
-            self.__convert_name(node.name),
+            name,
             None,
             None,
             None, # no `extends`, all in `implements`
-            None if not node.bases else JContainer(
-                self.__source_before('('),
-                [self.__pad_list_element(self.__convert(n), i == len(node.bases) - 1, end_delim=')') for i, n in
-                 enumerate(node.bases)],
-                Markers.EMPTY,
-            ),
+            interfaces,
             None,
             self.__convert_block(node.body),
             self.__map_type(node)
@@ -230,7 +255,39 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_With(self, node):
-        raise NotImplementedError("Implement visit_With!")
+        return j.Try(
+            random_id(),
+            self.__source_before('with'),
+            Markers.EMPTY,
+            JContainer(
+                self.__whitespace(),
+                [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in enumerate(node.items)],
+                Markers.EMPTY
+            ),
+            self.__convert_block(node.body),
+            [],
+            None
+        )
+
+    def visit_withitem(self, node):
+        prefix = self.__whitespace()
+        expr = self.__convert(node.context_expr)
+        value = self.__pad_left(self.__source_before('as'), expr)
+        name = self.__convert(node.optional_vars)
+        return j.Try.Resource(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            j.Assignment(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                name,
+                value,
+                self.__map_type(node.context_expr)
+            ),
+            False
+        )
 
     def visit_AsyncWith(self, node):
         raise NotImplementedError("Implement visit_AsyncWith!")
@@ -1077,6 +1134,16 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+    def visit_NamedExpr(self, node):
+        return j.Assignment(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.target),
+            self.__pad_left(self.__source_before(':='), self.__convert(node.value)),
+            self.__map_type(node.value)
+        )
+
     def visit_Return(self, node):
         return j.Return(
             random_id(),
@@ -1286,7 +1353,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_block(self, statements: Sequence, prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
         if statements:
-            statements = [self.__pad_statement(cast(stmt, stmt)) for stmt in statements]
+            statements = [self.__pad_statement(cast(ast.stmt, s)) for s in statements]
         else:
             statements = [self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)]
         return j.Block(

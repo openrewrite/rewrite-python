@@ -6,6 +6,11 @@ def test_assign():
     rewrite_run(python("a = 1"))
 
 
+def test_assign():
+    # language=python
+    rewrite_run(python("(a := 1)"))
+
+
 def test_assign_op():
     # language=python
     rewrite_run(python("a += 1"))

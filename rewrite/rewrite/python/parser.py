@@ -1,9 +1,11 @@
 import ast
+import traceback
 from pathlib import Path
 from typing import Iterable, Optional
 
 from rewrite import Parser, ParserInput, ExecutionContext, SourceFile, ParseError
 from rewrite.parser import require_print_equals_input, ParserBuilder
+
 from ._parser_visitor import ParserVisitor
 from .tree import Py, CompilationUnit
 
@@ -19,6 +21,7 @@ class PythonParser(Parser):
                 cu = ParserVisitor(source_str).visit(tree)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
             except Exception as e:
+                traceback.print_exc()
                 cu = ParseError.build(self, source, relative_to, ctx, e)
             yield cu
 

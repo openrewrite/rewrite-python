@@ -148,6 +148,23 @@ files = [
 ]
 
 [[package]]
+name = "openrewrite-remote"
+version = "0.0.0"
+description = "Remoting functionality for the OpenRewrite library."
+optional = false
+python-versions = ">=3.9"
+files = []
+develop = true
+
+[package.dependencies]
+cbor2 = "^5.6.4"
+openrewrite = "*"
+
+[package.source]
+type = "directory"
+url = "../../../moderneinc/rewrite-remote/python/rewrite-remote"
+
+[[package]]
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
@@ -231,23 +248,6 @@ tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
-name = "rewrite-remote"
-version = "0.0.0"
-description = "Remoting functionality for the OpenRewrite library"
-optional = false
-python-versions = ">=3.9"
-files = []
-develop = true
-
-[package.dependencies]
-cbor2 = "^5.6.4"
-rewrite = {path = "../../../../openrewrite/rewrite-python/rewrite", develop = true}
-
-[package.source]
-type = "directory"
-url = "../../../moderneinc/rewrite-remote/python/rewrite-remote"
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -308,4 +308,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "217d6694b11006686979cd3d22376cf69647af549e9f654b08063bc8c39772a4"
+content-hash = "39e75964b1558a35f80f8ac06722b1899163b480f4f554cf6d31de9ffe653d96"

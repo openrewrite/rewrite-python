@@ -73,11 +73,11 @@ class TextComment(Comment):
         return self if multiline is self._multiline else replace(self, _multiline=multiline)
 
     # IMPORTANT: This explicit constructor aligns the parameter order with the Java side
-    def __init__(self, multiline: bool, text: str, suffix: str, markers: Markers) -> None:
-        object.__setattr__(self, '_multiline', multiline)
-        object.__setattr__(self, '_text', text)
-        object.__setattr__(self, '_suffix', suffix)
-        object.__setattr__(self, '_markers', markers)
+    def __init__(self, _multiline: bool, _text: str, _suffix: str, _markers: Markers) -> None:
+        object.__setattr__(self, '_multiline', _multiline)
+        object.__setattr__(self, '_text', _text)
+        object.__setattr__(self, '_suffix', _suffix)
+        object.__setattr__(self, '_markers', _markers)
 
 
 @dataclass(frozen=True)
