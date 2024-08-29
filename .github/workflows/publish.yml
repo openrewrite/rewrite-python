@@ -40,7 +40,6 @@ jobs:
           echo "Extracted ref: $ref"
           version=${ref#v}
           echo "Extracted version: $version"
-          echo "::set-output name=VERSION::$version"
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -58,7 +57,6 @@ jobs:
           poetry build
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
           poetry publish --repository test-pypi --username __token__ --password ${{ secrets.PYPI_TOKEN }}
-          cd - > /dev/null
 
       - name: set-up-jdk
         uses: actions/setup-java@v4
