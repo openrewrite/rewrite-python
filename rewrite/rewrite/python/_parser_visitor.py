@@ -203,7 +203,31 @@ class ParserVisitor(ast.NodeVisitor):
                 random_id(),
                 self.__whitespace(),
                 Markers.EMPTY,
-                self.__pad_right(self.__convert(node.target), self.__source_before('in')),
+                self.__pad_right(
+                    j.VariableDeclarations(
+                        random_id(),
+                        Space.EMPTY,
+                        Markers.EMPTY,
+                        [],
+                        [],
+                        None,
+                        None,
+                        [],
+                        [self.__pad_right(
+                            j.VariableDeclarations.NamedVariable(
+                                random_id(),
+                                Space.EMPTY,
+                                Markers.EMPTY,
+                                self.__convert(node.target),
+                                [],
+                                None,
+                                self.__map_type(node.target)
+                            ),
+                            Space.EMPTY
+                        )]
+                    ),
+                    self.__source_before('in')
+                ),
                 self.__pad_right(self.__convert(node.iter), Space.EMPTY),
             ),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
