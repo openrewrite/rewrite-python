@@ -100,7 +100,7 @@ public class PythonParser implements Parser {
                         generator.writeString(is.readFully());
                     } else {
                         generator.writeString("parse-python-file");
-                        generator.writeString(path.toAbsolutePath().toString());
+                        generator.writeString(input.getPath().toString());
                     }
                 }, parser -> {
                     Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
