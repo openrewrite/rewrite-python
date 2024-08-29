@@ -1,18 +1,19 @@
 import ast
+import sys
 import token
 from argparse import ArgumentError
-
-from more_itertools import peekable
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
 
+from more_itertools import peekable
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses
 from rewrite.java import tree as j
+
 from . import tree as py, PyComment
 
 J2 = TypeVar('J2', bound=J)
@@ -40,15 +41,22 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
-        first_with_default = len(node.args) - len(node.defaults)
-        prefix = self.__source_before('(')
-        args = []
-        for i, a in enumerate(node.args):
-            arg = self.__pad_right(
-                self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
-                self.__source_before(')') if i == len(node.args) - 1 else self.__source_before(',')
+        if not node.args:
+            return JContainer(
+                self.__source_before('('),
+                [self.__pad_right(
+                    j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                    Space.EMPTY)
+                ],
+                Markers.EMPTY
             )
-            args.append(arg)
+
+        first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
+        prefix = self.__source_before('(')
+        args = [self.__pad_list_element(
+            self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
+            i == len(node.args) - 1,
+            end_delim=')') for i, n in enumerate(node.args)]
         return JContainer(prefix, args, Markers.EMPTY)
 
     def map_arg(self, node, default=None):
