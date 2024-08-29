@@ -15,7 +15,7 @@ more-itertools = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]
 tox = "^4.18.0"
-openrewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
+#openrewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
