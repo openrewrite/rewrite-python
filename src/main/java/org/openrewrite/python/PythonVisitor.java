@@ -45,6 +45,24 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return c;
     }
 
+
+    public J visitBinary(Py.Binary binary, P p) {
+        Py.Binary b = binary;
+        b = b.withPrefix(visitSpace(b.getPrefix(), PySpace.Location.BINARY_PREFIX, p));
+        b = b.withMarkers(visitMarkers(b.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(b, p);
+        if (!(temp instanceof Py.Binary)) {
+            return temp;
+        } else {
+            b = (Py.Binary) temp;
+        }
+        b = b.withLeft(visitAndCast(b.getLeft(), p));
+        b = b.getPadding().withOperator(visitLeftPadded(b.getPadding().getOperator(), PyLeftPadded.Location.BINARY_OPERATOR, p));
+        b = b.withRight(visitAndCast(b.getRight(), p));
+        b = b.withType(visitType(b.getType(), p));
+        return b;
+    }
+
     public J visitKeyValue(Py.KeyValue keyValue, P p) {
         Py.KeyValue e = keyValue;
         e = e.withPrefix(visitSpace(e.getPrefix(), PySpace.Location.DICT_ENTRY, p));

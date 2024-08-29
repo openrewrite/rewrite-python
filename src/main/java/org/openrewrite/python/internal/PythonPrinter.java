@@ -73,6 +73,28 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitBinary(Py.Binary binary, PrintOutputCapture<P> p) {
+        String keyword = "";
+        switch (binary.getOperator()) {
+            case In:
+                keyword = "in";
+                break;
+            case Is:
+                keyword = "is";
+                break;
+        }
+        beforeSyntax(binary, PySpace.Location.BINARY_PREFIX, p);
+        visit(binary.getLeft(), p);
+        visitSpace(binary.getPadding().getOperator().getBefore(), PySpace.Location.BINARY_OPERATOR, p);
+
+        p.append(keyword);
+
+        visit(binary.getRight(), p);
+        afterSyntax(binary, p);
+        return binary;
+    }
+
+    @Override
     public J visitCollectionLiteral(Py.CollectionLiteral coll, PrintOutputCapture<P> p) {
         beforeSyntax(coll, PySpace.Location.COLLECTION_LITERAL_PREFIX, p);
         JContainer<Expression> elements = coll.getPadding().getElements();
@@ -1285,7 +1307,6 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         delegate.visitSpace(left.getBefore(), Location.LANGUAGE_EXTENSION, p);
         p.append(s);
         delegate.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
-        visit(left.getElement(), p);
     }
 
     protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PyRightPadded.Location location, String suffixBetween, PrintOutputCapture<P> p) {

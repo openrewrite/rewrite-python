@@ -20,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.*;
+import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.internal.TypesInUse;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.marker.Markers;
@@ -64,6 +65,96 @@ public interface Py extends J {
     @Override
     default List<Comment> getComments() {
         return getPrefix().getComments();
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Data
+    final class Binary implements Py, Expression, TypedTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        @With
+        Expression left;
+
+        JLeftPadded<Type> operator;
+
+        public Type getOperator() {
+            return operator.getElement();
+        }
+
+        public Py.Binary withOperator(Type operator) {
+            return getPadding().withOperator(this.operator.withElement(operator));
+        }
+
+        @With
+        Expression right;
+
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitBinary(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public enum Type {
+            In,
+            Is,
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @Override
+        public String toString() {
+            return withPrefix(Space.EMPTY).printTrimmed(new JavaPrinter<>());
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final Py.Binary t;
+
+            public JLeftPadded<Type> getOperator() {
+                return t.operator;
+            }
+
+            public Py.Binary withOperator(JLeftPadded<Type> operator) {
+                return t.operator == operator ? t : new Py.Binary(t.id, t.prefix, t.markers, t.left, operator, t.right, t.type);
+            }
+        }
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

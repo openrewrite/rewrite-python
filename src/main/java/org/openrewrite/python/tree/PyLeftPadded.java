@@ -22,9 +22,11 @@ public class PyLeftPadded {
     @Getter
     @RequiredArgsConstructor
     public enum Location {
+        BINARY_OPERATOR(PySpace.Location.BINARY_OPERATOR),
         ERROR_FROM(PySpace.Location.ERROR_FROM_SOURCE),
         MATCH_CASE_GUARD(PySpace.Location.MATCH_CASE_GUARD),
-        NAMED_ARGUMENT(PySpace.Location.NAMED_ARGUMENT);
+        NAMED_ARGUMENT(PySpace.Location.NAMED_ARGUMENT),
+        ;
 
         private final PySpace.Location beforeLocation;
     }

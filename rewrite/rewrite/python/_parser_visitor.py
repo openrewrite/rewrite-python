@@ -136,7 +136,9 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_AsyncFunctionDef!")
 
     def visit_ClassDef(self, node):
-        prefix = self.__whitespace() if node.decorator_list else self.__source_before('class')
+        prefix = self.__whitespace() if node.decorator_list else Space.EMPTY
+        decorators = [self.__map_decorator(d) for d in node.decorator_list]
+        kind_prefix = self.__source_before('class')
         name = self.__convert_name(node.name)
         save_cursor = self._cursor
         interfaces_prefix = self.__whitespace()
@@ -163,11 +165,11 @@ class ParserVisitor(ast.NodeVisitor):
             random_id(),
             prefix,
             Markers.EMPTY,
-            [], # TODO decorators
+            decorators,
             [], # TODO modifiers
             j.ClassDeclaration.Kind(
                 random_id(),
-                Space.EMPTY,
+                kind_prefix,
                 Markers.EMPTY,
                 [],
                 j.ClassDeclaration.Kind.Type.Class
@@ -383,6 +385,16 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert_qualified_name(node.name),
             None if not node.asname else
             self.__pad_left(self.__source_before('as'), self.__convert_name(node.asname))
+        )
+
+    def visit_keyword(self, node):
+        return py.NamedArgument(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert_name(node.arg),
+            self.__pad_left(self.__source_before('='), self.__convert(node.value)),
+            self.__map_type(node)
         )
 
     def __convert_qualified_name(self, name: str) -> j.FieldAccess:
@@ -996,6 +1008,8 @@ class ParserVisitor(ast.NodeVisitor):
         return self.__pad_list_element(element, last, end_delim='}')
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
+        decorators = [self.__map_decorator(d) for d in node.decorator_list]
+
         save_cursor = self._cursor
         async_prefix = self.__source_before('async')
         modifiers = []
@@ -1037,7 +1051,7 @@ class ParserVisitor(ast.NodeVisitor):
             random_id(),
             Space.EMPTY,
             Markers.EMPTY,
-            [],
+            decorators,
             modifiers,
             None,
             return_type,
@@ -1047,6 +1061,30 @@ class ParserVisitor(ast.NodeVisitor):
             body,
             None,
             self.__map_type(node),
+        )
+
+    def __map_decorator(self, decorator) -> j.Annotation:
+        prefix = self.__source_before('@')
+        if isinstance(decorator, (ast.Attribute, ast.Name)):
+            name = self.__convert(decorator)
+            args = None
+        elif isinstance(decorator, ast.Call):
+            name = self.__convert(decorator.func)
+            args = JContainer(
+                self.__source_before('('),
+                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY)] if not decorator.args and not decorator.keywords else
+                [self.__pad_list_element(self.__convert(a), i == len(decorator.args) - 1, end_delim=')') for i, a in enumerate(decorator.args + decorator.keywords)],
+                Markers.EMPTY
+            )
+        else:
+            raise NotImplementedError("Unsupported decorator type: " + str(type(decorator)))
+
+        return j.Annotation(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            name,
+            args
         )
 
     def visit_IfExp(self, node):
