@@ -20,11 +20,10 @@ class PythonParser(Parser):
                 tree = ast.parse(source_str, source.path)
                 cu = ParserVisitor(source_str).visit(tree)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
-                yield cu
             except Exception as e:
                 traceback.print_exc()
                 cu = ParseError.build(self, source, relative_to, ctx, e)
-            yield None
+            yield cu
 
     def accept(self, path: Path) -> bool:
         return path.suffix == '.py'
