@@ -16,6 +16,106 @@ from rewrite.java import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class Binary(Py, Expression, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> Binary:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> Binary:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> Binary:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _left: Expression
+
+    @property
+    def left(self) -> Expression:
+        return self._left
+
+    def with_left(self, left: Expression) -> Binary:
+        return self if left is self._left else replace(self, _left=left)
+
+    _operator: JLeftPadded[Type]
+
+    @property
+    def operator(self) -> Type:
+        return self._operator.element
+
+    def with_operator(self, operator: Type) -> Binary:
+        return self.padding.with_operator(JLeftPadded.with_element(self._operator, operator))
+
+    _right: Expression
+
+    @property
+    def right(self) -> Expression:
+        return self._right
+
+    def with_right(self, right: Expression) -> Binary:
+        return self if right is self._right else replace(self, _right=right)
+
+    _type: Optional[JavaType]
+
+    @property
+    def type(self) -> Optional[JavaType]:
+        return self._type
+
+    def with_type(self, type: Optional[JavaType]) -> Binary:
+        return self if type is self._type else replace(self, _type=type)
+
+    class Type(Enum):
+        In = 0
+        Is = 1
+
+    @dataclass
+    class PaddingHelper:
+        _t: Binary
+
+        @property
+        def operator(self) -> JLeftPadded[Binary.Type]:
+            return self._t._operator
+
+        def with_operator(self, operator: JLeftPadded[Binary.Type]) -> Binary:
+            return self._t if self._t._operator is operator else replace(self._t, _operator=operator)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: Binary.PaddingHelper
+        if self._padding is None:
+            p = Binary.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = Binary.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_python_binary(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class ExceptionType(Py, TypeTree):
     _id: UUID
 

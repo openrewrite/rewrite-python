@@ -30,7 +30,11 @@ def test_eq_ops():
     rewrite_run(python("assert 1 != 2"))
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
+def test_in():
+    # language=python
+    rewrite_run(python("assert 1 in [1]"))
+
+
 def test_is():
     # language=python
     rewrite_run(python("assert 1 is 1"))

@@ -11,6 +11,18 @@ class PythonVisitor(JavaVisitor[P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Py)
 
+    def visit_python_binary(self, binary: Binary, p: P) -> J:
+        binary = binary.with_prefix(self.visit_space(binary.prefix, PySpace.Location.BINARY_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(binary, p))
+        if not isinstance(temp_expression, Binary):
+            return temp_expression
+        binary = cast(Binary, temp_expression)
+        binary = binary.with_markers(self.visit_markers(binary.markers, p))
+        binary = binary.with_left(self.visit_and_cast(binary.left, Expression, p))
+        binary = binary.padding.with_operator(self.visit_left_padded(binary.padding.operator, PyLeftPadded.Location.BINARY_OPERATOR, p))
+        binary = binary.with_right(self.visit_and_cast(binary.right, Expression, p))
+        return binary
+
     def visit_exception_type(self, exception_type: ExceptionType, p: P) -> J:
         exception_type = exception_type.with_prefix(self.visit_space(exception_type.prefix, PySpace.Location.EXCEPTION_TYPE_PREFIX, p))
         exception_type = exception_type.with_markers(self.visit_markers(exception_type.markers, p))

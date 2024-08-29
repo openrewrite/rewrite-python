@@ -29,6 +29,8 @@ class PySpace:
         ASSERT_STATEMENT_EXPRESSION_SUFFIX = auto()
         ASSERT_STATEMENT_PREFIX = auto()
         AWAIT_PREFIX = auto()
+        BINARY_OPERATOR = auto()
+        BINARY_PREFIX = auto()
         COLLECTION_LITERAL_ELEMENT_SUFFIX = auto()
         COLLECTION_LITERAL_PREFIX = auto()
         COMPILATION_UNIT_STATEMENT_PREFIX = auto()
@@ -115,6 +117,7 @@ class PyRightPadded:
 
 class PyLeftPadded:
     class Location(Enum):
+        BINARY_OPERATOR = PySpace.Location.BINARY_OPERATOR
         COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST = PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST
         ERROR_FROM_FROM = PySpace.Location.ERROR_FROM_EXPRESSION_FROM_PREFIX
         MATCH_CASE_GUARD = PySpace.Location.MATCH_CASE_GUARD

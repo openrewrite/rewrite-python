@@ -6,14 +6,14 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union
 
 from more_itertools import peekable
+
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses
 from rewrite.java import tree as j
-
 from . import tree as py, PyComment
 
 J2 = TypeVar('J2', bound=J)
@@ -877,17 +877,32 @@ class ParserVisitor(ast.NodeVisitor):
         if len(node.ops) != 1:
             raise NotImplementedError("Multiple comparisons are not yet supported")
 
-        return j.Binary(
-            random_id(),
-            self.__whitespace(),
-            Markers.EMPTY,
-            self.__convert(node.left),
-            self.__convert_binary_operator(node.ops[0]),
-            self.__convert(node.comparators[0]),
-            self.__map_type(node)
-        )
+        prefix = self.__whitespace()
+        left = self.__convert(node.left)
+        op = self.__convert_binary_operator(node.ops[0])
 
-    def __convert_binary_operator(self, op) -> JLeftPadded[j.Binary.Type]:
+        if isinstance(op.element, j.Binary.Type):
+            return j.Binary(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                left,
+                op,
+                self.__convert(node.comparators[0]),
+                self.__map_type(node)
+            )
+        else:
+            return py.Binary(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                left,
+                op,
+                self.__convert(node.comparators[0]),
+                self.__map_type(node)
+            )
+
+    def __convert_binary_operator(self, op) -> Union[JLeftPadded[j.Binary.Type], JLeftPadded[py.Binary.Type]]:
         operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
             ast.Add: (j.Binary.Type.Addition, '+'),
             ast.And: (j.Binary.Type.And, 'and'),
@@ -898,6 +913,8 @@ class ParserVisitor(ast.NodeVisitor):
             ast.Eq: (j.Binary.Type.Equal, '=='),
             ast.Gt: (j.Binary.Type.GreaterThan, '>'),
             ast.GtE: (j.Binary.Type.GreaterThanOrEqual, '>='),
+            ast.In: (py.Binary.Type.In, 'in'),
+            ast.Is: (py.Binary.Type.Is, 'is'),
             ast.LShift: (j.Binary.Type.LeftShift, '<<'),
             ast.Lt: (j.Binary.Type.LessThan, '<'),
             ast.LtE: (j.Binary.Type.LessThanOrEqual, '<='),
