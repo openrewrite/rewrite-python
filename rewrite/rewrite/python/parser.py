@@ -15,15 +15,16 @@ class PythonParser(Parser):
                      ctx: ExecutionContext) -> Iterable[SourceFile]:
         accepted = (source for source in sources if self.accept(source.path))
         for source in accepted:
-            source_str = source.source().read()
             try:
+                source_str = source.source().read()
                 tree = ast.parse(source_str, source.path)
                 cu = ParserVisitor(source_str).visit(tree)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
+                yield cu
             except Exception as e:
                 traceback.print_exc()
                 cu = ParseError.build(self, source, relative_to, ctx, e)
-            yield cu
+            yield None
 
     def accept(self, path: Path) -> bool:
         return path.suffix == '.py'
