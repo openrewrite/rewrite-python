@@ -39,6 +39,7 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -94,12 +95,19 @@ public class PythonParser implements Parser {
 
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
                 SourceFile parsed = client.runUsingSocket((socket, messenger) -> requireNonNull(messenger.sendRequest(generator -> {
-                    generator.writeString("parse-python");
-                    generator.writeString(is.readFully());
+                    if (input.isSynthetic() || !Files.isRegularFile(input.getPath())) {
+                        generator.writeString("parse-python-source");
+                        generator.writeString(is.readFully());
+                    } else {
+                        generator.writeString("parse-python-file");
+                        generator.writeString(path.toAbsolutePath().toString());
+                    }
                 }, parser -> {
                     Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
                     return (SourceFile) tree;
-                }, socket))).withSourcePath(path);
+                }, socket)))
+                        .withSourcePath(path)
+                        .withFileAttributes(FileAttributes.fromPath(input.getPath()));
 
                 if (parsed instanceof ParseError) {
                     ctx.getOnError().accept(new AssertionError(parsed));
