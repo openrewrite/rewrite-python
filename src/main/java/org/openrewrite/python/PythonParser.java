@@ -99,14 +99,14 @@ public class PythonParser implements Parser {
                 }, parser -> {
                     Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
                     return (SourceFile) tree;
-                }, socket)));
+                }, socket))).withSourcePath(path);
 
                 if (parsed instanceof ParseError) {
                     ctx.getOnError().accept(new AssertionError(parsed));
                     return parsed;
                 }
 
-                Py.CompilationUnit py = ((Py.CompilationUnit) parsed).withSourcePath(path);
+                Py.CompilationUnit py = (Py.CompilationUnit) parsed;
                 parsingListener.parsed(input, py);
                 return requirePrintEqualsInput(py, input, relativeTo, ctx);
             } catch (Throwable t) {
