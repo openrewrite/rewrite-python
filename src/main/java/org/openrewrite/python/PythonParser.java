@@ -170,11 +170,11 @@ public class PythonParser implements Parser {
                 } catch (InterruptedException ignore) {
                 }
             }
-        }
 
-        if (pythonProcess == null || !pythonProcess.isAlive()) {
-            remotingContext = null;
-            return;
+            if (pythonProcess == null || !pythonProcess.isAlive()) {
+                remotingContext = null;
+                return;
+            }
         }
 
         client = RemotingClient.create(ctx, PythonParser.class, () -> {
