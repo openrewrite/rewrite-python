@@ -46,14 +46,12 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
 
-      - name: Change to the rewrite directory
-        working-directory: rewrite
-        run: pwd  # Optional: Print the current directory to confirm the change
-
       - name: Set project version with Poetry
+        working-directory: rewrite
         run: poetry version ${{ steps.extract_version.outputs.VERSION }}
 
       - name: publish-python
+        working-directory: rewrite
         if: (!contains(github.ref, '-rc.'))
         run: |
           rm -rf .venv
@@ -70,10 +68,6 @@ jobs:
           java-version: 17
       - name: set-up-gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Change to the root directory
-        working-directory: ..
-        run: pwd  # Optional: Print the current directory to confirm the change
 
       - name: publish-candidate
         if: contains(github.ref, '-rc.')
