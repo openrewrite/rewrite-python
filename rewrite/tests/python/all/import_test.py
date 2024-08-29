@@ -44,6 +44,12 @@ def test_from_parenthesized_trailing_comma():
 
 
 # noinspection PyUnresolvedReferences
+def test_relative_import_0():
+    # language=python
+    rewrite_run(python("from . import bar"))
+
+
+# noinspection PyUnresolvedReferences
 def test_relative_import_1():
     # language=python
     rewrite_run(python("from .foo import bar"))
