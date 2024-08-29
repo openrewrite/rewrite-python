@@ -19,7 +19,6 @@ env:
   ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ossrh_token }}
   ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ossrh_signing_key }}
   ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ossrh_signing_password }}
-  PYPI_API_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
 jobs:
   release:
@@ -58,7 +57,7 @@ jobs:
           poetry install --no-interaction --no-ansi
           poetry build
           poetry config repositories.test-pypi https://test.pypi.org/legacy/
-          poetry publish --repository test-pypi --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+          poetry publish --repository test-pypi --username __token__ --password ${{ secrets.PYPI_TOKEN }}
           cd - > /dev/null
 
       - name: set-up-jdk
