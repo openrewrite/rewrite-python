@@ -1304,7 +1304,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_block(self, statements: Sequence, prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
         if statements:
-            statements = [self.__pad_statement(cast(stmt, stmt)) for stmt in statements]
+            statements = [self.__pad_statement(cast(ast.stmt, s)) for s in statements]
         else:
             statements = [self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)]
         return j.Block(
