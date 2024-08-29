@@ -175,6 +175,11 @@ public class PythonParser implements Parser {
                 remotingContext = null;
                 return;
             }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (pythonProcess != null && pythonProcess.isAlive()) {
+                    pythonProcess.destroy();
+                }
+            }));
         }
 
         client = RemotingClient.create(ctx, PythonParser.class, () -> {
