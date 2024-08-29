@@ -34,13 +34,28 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Extract version from ref
+        id: extract_version
+        run: |
+          ref=${GITHUB_REF##*/}
+          echo "Extracted ref: $ref"
+          version=${ref#v}
+          echo "Extracted version: $version"
+          echo "::set-output name=VERSION::$version"
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
+
+      - name: Change to the rewrite directory
+        working-directory: rewrite
+        run: pwd  # Optional: Print the current directory to confirm the change
+
+      - name: Set project version with Poetry
+        run: poetry version ${{ steps.extract_version.outputs.VERSION }}
 
       - name: publish-python
         if: (!contains(github.ref, '-rc.'))
         run: |
-          cd "rewrite"
           rm -rf .venv
           poetry install --no-interaction --no-ansi
           poetry build
@@ -56,14 +71,9 @@ jobs:
       - name: set-up-gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Extract version from ref
-        id: extract_version
-        run: |
-          ref=${GITHUB_REF##*/}
-          echo "Extracted ref: $ref"
-          version=${ref#v}
-          echo "Extracted version: $version"
-          echo "::set-output name=VERSION::$version"
+      - name: Change to the root directory
+        working-directory: ..
+        run: pwd  # Optional: Print the current directory to confirm the change
 
       - name: publish-candidate
         if: contains(github.ref, '-rc.')
