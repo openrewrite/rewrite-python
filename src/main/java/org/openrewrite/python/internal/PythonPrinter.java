@@ -29,6 +29,7 @@ import org.openrewrite.java.tree.Space.Location;
 import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
+import org.openrewrite.python.marker.KeywordArguments;
 import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
@@ -1244,6 +1245,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 if (vd.getVarargs() != null) {
                     visitSpace(vd.getVarargs(), Location.VARARGS, p);
                     p.append('*');
+                }
+                if (vd.getMarkers().findFirst(KeywordArguments.class).isPresent()) {
+                    p.append("**");
                 }
                 visit(variable.getName(), p);
                 if (type != null) {

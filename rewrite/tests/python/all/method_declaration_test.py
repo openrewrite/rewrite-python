@@ -1,5 +1,3 @@
-import pytest
-
 from rewrite.test import rewrite_run, python
 
 
@@ -21,6 +19,18 @@ def test_varargs():
         python(
             """\
             def foo(*args) :
+                pass
+            """
+        )
+    )
+
+
+def test_kwargs():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(x, **kwargs) :
                 pass
             """
         )

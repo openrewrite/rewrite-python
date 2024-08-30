@@ -15,6 +15,7 @@ from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType,
     NameTree, OmitParentheses
 from rewrite.java import tree as j
 from . import tree as py, PyComment
+from .markers import KeywordArguments
 
 J2 = TypeVar('J2', bound=J)
 
@@ -57,17 +58,23 @@ class ParserVisitor(ast.NodeVisitor):
         args = [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
-            end_delim=')') for i, a in enumerate(node.args)]
+            end_delim=',' if node.vararg or node.kwarg else ')') for i, a in enumerate(node.args)]
         if node.vararg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.vararg, None, vararg=True),
                 all_args[-1] == node.vararg,
                 end_delim=')'
             ))
+        if node.kwarg:
+            args.append(self.__pad_list_element(
+                self.map_arg(node.kwarg, None, kwarg=True),
+                all_args[-1] == node.vararg,
+                end_delim=')'
+            ))
         return JContainer(prefix, args, Markers.EMPTY)
 
-    def map_arg(self, node, default=None, vararg=False):
-        prefix = self.__whitespace()
+    def map_arg(self, node, default=None, vararg=False, kwarg=False):
+        prefix = self.__source_before('**') if kwarg else self.__whitespace()
         vararg_prefix = self.__source_before('*') if vararg else None
         name = self.__convert_name(node.arg, self.__map_type(node))
         after_name = self.__source_before(':') if node.annotation else Space.EMPTY
@@ -77,7 +84,7 @@ class ParserVisitor(ast.NodeVisitor):
         return j.VariableDeclarations(
             random_id(),
             prefix,
-            Markers.EMPTY,
+            Markers(random_id(), [KeywordArguments(random_id())]) if kwarg else Markers.EMPTY,
             [],
             [],
             type_expression,
@@ -1649,7 +1656,7 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[py.FormattedString, TokenInfo]:
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[J, TokenInfo]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
