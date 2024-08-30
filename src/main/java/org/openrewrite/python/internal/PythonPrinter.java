@@ -896,6 +896,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 else_.getBody() instanceof J.If) {
                 p.append("el");
                 visit(else_.getBody(), p);
+            } else if (else_.getBody() instanceof J.Block) {
+                p.append("else");
+                visit(else_.getBody(), p);
             } else {
                 p.append("else");
                 p.append(':');
@@ -930,8 +933,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             beforeSyntax(iff, Space.Location.IF_PREFIX, p);
             p.append("if");
             visit(iff.getIfCondition(), p);
-            p.append(":");
-            visitStatement(iff.getPadding().getThenPart(), JRightPadded.Location.IF_THEN, p);
+
+            JRightPadded<Statement> thenPart = iff.getPadding().getThenPart();
+            if (!(thenPart.getElement() instanceof J.Block)) {
+                p.append(":");
+            }
+            visitStatement(thenPart, JRightPadded.Location.IF_THEN, p);
             visit(iff.getElsePart(), p);
             afterSyntax(iff, p);
             return iff;

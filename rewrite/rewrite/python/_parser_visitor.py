@@ -54,7 +54,7 @@ class ParserVisitor(ast.NodeVisitor):
         first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
         prefix = self.__source_before('(')
         args = [self.__pad_list_element(
-            self.map_arg(a, node.defaults[i - len(node.defaults)] if i >= first_with_default else None),
+            self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
             end_delim=')') for i, a in enumerate(node.args)]
         return JContainer(prefix, args, Markers.EMPTY)
@@ -62,17 +62,9 @@ class ParserVisitor(ast.NodeVisitor):
     def map_arg(self, node, default=None):
         prefix = self.__whitespace()
         name = self.__convert_name(node.arg, self.__map_type(node))
-        var = self.__pad_right(j.VariableDeclarations.NamedVariable(
-            random_id(),
-            Space.EMPTY,
-            Markers.EMPTY,
-            cast(j.Identifier, name),
-            [],
-            self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None,
-            self.__map_type(node)
-        ), self.__source_before(':') if node.annotation else Space.EMPTY)
-
+        after_name = self.__source_before(':') if node.annotation else Space.EMPTY
         type_expression = self.__convert(node.annotation) if node.annotation else None
+        initializer = self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None
 
         return j.VariableDeclarations(
             random_id(),
@@ -83,7 +75,15 @@ class ParserVisitor(ast.NodeVisitor):
             type_expression,
             None,
             [],
-            [var],
+            [self.__pad_right(j.VariableDeclarations.NamedVariable(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                cast(j.Identifier, name),
+                [],
+                initializer,
+                self.__map_type(node)
+            ), after_name)],
         )
 
     def visit_Assert(self, node):
@@ -283,10 +283,11 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_If(self, node):
         prefix = self.__source_before('if')
+        single_statement_body = len(node.body) == 1
         condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
-                                         self.__pad_right(self.__convert(node.test), self.__source_before(':')))
+                                         self.__pad_right(self.__convert(node.test), self.__source_before(':') if single_statement_body else Space.EMPTY))
         then = self.__pad_right(
-            self.__convert(node.body[0]) if len(node.body) == 1 else self.__convert_block(node.body, ':'), Space.EMPTY)
+            self.__convert(node.body[0]) if single_statement_body else self.__convert_block(node.body), Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
             elze = j.If.Else(
@@ -1501,7 +1502,7 @@ class ParserVisitor(ast.NodeVisitor):
         if last and self._cursor < len(self._source):
             if self._source[self._cursor] == ',' and end_delim != ',':
                 self._cursor += 1
-                markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace('\n'))])
+                markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace())])
             if end_delim is not None and self._source[self._cursor] == end_delim:
                 self._cursor += 1
         elif not last:
