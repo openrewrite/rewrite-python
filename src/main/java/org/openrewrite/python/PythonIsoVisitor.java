@@ -98,6 +98,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.Slice visitSlice(Py.Slice slice, P p) {
+        return (Py.Slice) super.visitSlice(slice, p);
+    }
+
+    @Override
     public Py.Star visitStar(Py.Star star, P p) {
         return (Py.Star) super.visitStar(star, p);
     }
@@ -193,6 +198,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.Binary visitBinary(Py.Binary binary, P p) {
+        return (Py.Binary) super.visitBinary(binary, p);
+    }
+
+    @Override
     public J.Block visitBlock(J.Block block, P p) {
         return (J.Block) super.visitBlock(block, p);
     }
@@ -259,8 +269,23 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.ExpressionStatement visitExpressionStatement(Py.ExpressionStatement expressionStatement, P p) {
+        return (Py.ExpressionStatement) super.visitExpressionStatement(expressionStatement, p);
+    }
+
+    @Override
     public J.FieldAccess visitFieldAccess(J.FieldAccess fieldAccess, P p) {
         return (J.FieldAccess) super.visitFieldAccess(fieldAccess, p);
+    }
+
+    @Override
+    public Py.FormattedString visitFormattedString(Py.FormattedString fString, P p) {
+        return (Py.FormattedString) super.visitFormattedString(fString, p);
+    }
+
+    @Override
+    public Py.FormattedString.Value visitFormattedStringValue(Py.FormattedString.Value value, P p) {
+        return (Py.FormattedString.Value) super.visitFormattedStringValue(value, p);
     }
 
     @Override
@@ -377,6 +402,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     @Override
     public J.Return visitReturn(J.Return _return, P p) {
         return (J.Return) super.visitReturn(_return, p);
+    }
+
+    @Override
+    public Py.StatementExpression visitStatementExpression(Py.StatementExpression statementExpression, P p) {
+        return (Py.StatementExpression) super.visitStatementExpression(statementExpression, p);
     }
 
     @Override
