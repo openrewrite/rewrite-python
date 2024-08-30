@@ -894,10 +894,11 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             raise NotImplementedError("Calls to functions other than methods are not yet supported")
 
+        all_args = node.args + node.keywords
         args = JContainer(
             self.__source_before('('),
-            [self.__pad_list_element(self.__convert(a), last=i == len(node.args) - 1, end_delim=')') for i, a in
-             enumerate(node.args)] if node.args else [
+            [self.__pad_list_element(self.__convert(a), last=i == len(all_args) - 1, end_delim=')') for i, a in
+             enumerate(all_args)] if all_args else [
                 self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
                                  Space.EMPTY)],
             Markers.EMPTY
@@ -1108,10 +1109,11 @@ class ParserVisitor(ast.NodeVisitor):
             args = None
         elif isinstance(decorator, ast.Call):
             name = self.__convert(decorator.func)
+            all_args = decorator.args + decorator.keywords
             args = JContainer(
                 self.__source_before('('),
-                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY)] if not decorator.args and not decorator.keywords else
-                [self.__pad_list_element(self.__convert(a), i == len(decorator.args) - 1, end_delim=')') for i, a in enumerate(decorator.args + decorator.keywords)],
+                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY)] if not all_args else
+                [self.__pad_list_element(self.__convert(a), i == len(all_args) - 1, end_delim=')') for i, a in enumerate(all_args)],
                 Markers.EMPTY
             )
         else:
