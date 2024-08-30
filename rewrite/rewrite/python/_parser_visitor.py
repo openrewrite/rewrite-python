@@ -998,7 +998,7 @@ class ParserVisitor(ast.NodeVisitor):
             random_id(),
             self.__whitespace(),
             Markers.EMPTY,
-            node.value,
+            None if node.value is Ellipsis else node.value,
             self.__next_lexer_token(),
             None,
             self.__map_type(node),

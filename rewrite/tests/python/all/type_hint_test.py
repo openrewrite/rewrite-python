@@ -70,3 +70,8 @@ def test_generic_type_hint_multiple_params():
 def test_variable_with_type_hint():
     # language=python
     rewrite_run(python("""foo: int = 1"""))
+
+
+def test_variable_with_type_hint():
+    # language=python
+    rewrite_run(python("""foo: Union[None, ...] = None"""))

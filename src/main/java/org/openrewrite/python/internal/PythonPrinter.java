@@ -989,7 +989,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitLiteral(J.Literal literal, PrintOutputCapture<P> p) {
-            if (literal.getValue() == null) {
+            if (literal.getValue() == null && literal.getValueSource() == null) {
+                // currently, also `...` is mapped to a `None` value
                 literal = literal.withValueSource("None");
             }
 
