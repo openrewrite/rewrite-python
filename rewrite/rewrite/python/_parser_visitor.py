@@ -276,7 +276,7 @@ class ParserVisitor(ast.NodeVisitor):
                 random_id(),
                 self.__whitespace(),
                 Markers.EMPTY,
-                self.__pad_right(self.__convert(node.test), self.__source_before(':'))
+                self.__pad_right(self.__convert(node.test), Space.EMPTY)
             ),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )

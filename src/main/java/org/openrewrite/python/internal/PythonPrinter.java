@@ -635,7 +635,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitAssignment(J.Assignment assignment, PrintOutputCapture<P> p) {
             final String symbol;
-            if (getCursor().getParentTreeCursor().getValue() instanceof J.Block || getCursor().getParentTreeCursor().getValue() instanceof Py.CompilationUnit) {
+            J parentTree = getCursor().getParentTreeCursor().getValue();
+            if (parentTree instanceof J.Block ||
+                parentTree instanceof Py.CompilationUnit ||
+                (parentTree instanceof J.If) && ((J.If) parentTree).getThenPart() == assignment ||
+                (parentTree instanceof J.If.Else) && ((J.If.Else) parentTree).getBody() == assignment ||
+                (parentTree instanceof Loop) && ((Loop) parentTree).getBody() == assignment) {
                 symbol = "=";
             } else {
                 symbol = ":=";
