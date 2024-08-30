@@ -20,4 +20,4 @@ def test_invoke_function_receiver():
 
 def test_keyword_argument():
     # language=python
-    rewrite_run(python("l = sorted([1, 2, 3], key=None, reverse=True)"))
+    rewrite_run(python("l = sorted([1, 2, 3], key=lambda x: x, reverse=True)"))

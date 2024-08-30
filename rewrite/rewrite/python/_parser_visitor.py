@@ -1165,11 +1165,11 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__whitespace(),
                 Markers.EMPTY,
                 False,
-                [self.__pad_right(
+                [self.__pad_list_element(
                     self.map_arg(a,
                                  node.args.defaults[
                                      i - len(node.args.defaults)] if i >= first_with_default else None),
-                    self.__source_before(',')) for i, a in enumerate(node.args.args)]
+                    i == len(node.args.args) - 1) for i, a in enumerate(node.args.args)]
             ),
             self.__source_before(':'),
             self.__convert(node.body),
