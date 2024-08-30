@@ -107,7 +107,8 @@ public class PythonParser implements Parser {
                     return (SourceFile) tree;
                 }, socket)))
                         .withSourcePath(path)
-                        .withFileAttributes(FileAttributes.fromPath(input.getPath()));
+                        .withFileAttributes(FileAttributes.fromPath(input.getPath()))
+                        .withCharset(getCharset(ctx));
 
                 if (parsed instanceof ParseError) {
                     ctx.getOnError().accept(new AssertionError(parsed));

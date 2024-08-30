@@ -62,6 +62,15 @@ class Binary(Py, Expression, TypedTree):
     def with_operator(self, operator: Type) -> Binary:
         return self.padding.with_operator(JLeftPadded.with_element(self._operator, operator))
 
+    _negation: Optional[Space]
+
+    @property
+    def negation(self) -> Optional[Space]:
+        return self._negation
+
+    def with_negation(self, negation: Optional[Space]) -> Binary:
+        return self if negation is self._negation else replace(self, _negation=negation)
+
     _right: Expression
 
     @property
@@ -83,6 +92,8 @@ class Binary(Py, Expression, TypedTree):
     class Type(Enum):
         In = 0
         Is = 1
+        IsNot = 2
+        NotIn = 3
 
     @dataclass
     class PaddingHelper:

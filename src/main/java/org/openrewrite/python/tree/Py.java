@@ -100,6 +100,10 @@ public interface Py extends J {
             return getPadding().withOperator(this.operator.withElement(operator));
         }
 
+        @Nullable
+        @With
+        Space negation;
+
         @With
         Expression right;
 
@@ -121,6 +125,8 @@ public interface Py extends J {
         public enum Type {
             In,
             Is,
+            IsNot,
+            NotIn,
         }
 
         public Padding getPadding() {
@@ -152,7 +158,7 @@ public interface Py extends J {
             }
 
             public Py.Binary withOperator(JLeftPadded<Type> operator) {
-                return t.operator == operator ? t : new Py.Binary(t.id, t.prefix, t.markers, t.left, operator, t.right, t.type);
+                return t.operator == operator ? t : new Py.Binary(t.id, t.prefix, t.markers, t.left, operator, t.negation, t.right, t.type);
             }
         }
     }

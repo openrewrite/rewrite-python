@@ -319,6 +319,7 @@ public final class PySpace {
         ASSERT_ELEMENT_SUFFIX,
         ASSERT_PREFIX,
         AWAIT_PREFIX,
+        BINARY_NEGATION,
         BINARY_OPERATOR,
         BINARY_PREFIX,
         COLLECTION_LITERAL_ELEMENT_SUFFIX,

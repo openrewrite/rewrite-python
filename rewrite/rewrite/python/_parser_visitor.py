@@ -943,12 +943,20 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
         else:
+            if op.element == py.Binary.Type.IsNot:
+                negation = self.__source_before('not')
+            elif op.element == py.Binary.Type.NotIn:
+                negation = self.__source_before('in')
+            else:
+                negation = None
+
             return py.Binary(
                 random_id(),
                 prefix,
                 Markers.EMPTY,
                 left,
                 op,
+                negation,
                 self.__convert(node.comparators[0]),
                 self.__map_type(node)
             )
@@ -966,12 +974,14 @@ class ParserVisitor(ast.NodeVisitor):
             ast.GtE: (j.Binary.Type.GreaterThanOrEqual, '>='),
             ast.In: (py.Binary.Type.In, 'in'),
             ast.Is: (py.Binary.Type.Is, 'is'),
+            ast.IsNot: (py.Binary.Type.IsNot, 'is'),
             ast.LShift: (j.Binary.Type.LeftShift, '<<'),
             ast.Lt: (j.Binary.Type.LessThan, '<'),
             ast.LtE: (j.Binary.Type.LessThanOrEqual, '<='),
             ast.Mod: (j.Binary.Type.Modulo, '%'),
             ast.Mult: (j.Binary.Type.Multiplication, '*'),
             ast.NotEq: (j.Binary.Type.NotEqual, '!='),
+            ast.NotIn: (py.Binary.Type.NotIn, 'not'),
             ast.Or: (j.Binary.Type.Or, 'or'),
             ast.RShift: (j.Binary.Type.RightShift, '>>'),
             ast.Sub: (j.Binary.Type.Subtraction, '-'),

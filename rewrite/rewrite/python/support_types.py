@@ -29,6 +29,7 @@ class PySpace:
         ASSERT_STATEMENT_EXPRESSION_SUFFIX = auto()
         ASSERT_STATEMENT_PREFIX = auto()
         AWAIT_PREFIX = auto()
+        BINARY_NEGATION = auto()
         BINARY_OPERATOR = auto()
         BINARY_PREFIX = auto()
         COLLECTION_LITERAL_ELEMENT_SUFFIX = auto()

@@ -84,20 +84,36 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitBinary(Py.Binary binary, PrintOutputCapture<P> p) {
-        String keyword = "";
-        switch (binary.getOperator()) {
-            case In:
-                keyword = "in";
-                break;
-            case Is:
-                keyword = "is";
-                break;
-        }
         beforeSyntax(binary, PySpace.Location.BINARY_PREFIX, p);
         visit(binary.getLeft(), p);
         visitSpace(binary.getPadding().getOperator().getBefore(), PySpace.Location.BINARY_OPERATOR, p);
 
-        p.append(keyword);
+        switch (binary.getOperator()) {
+            case NotIn:
+                p.append("not");
+                if (binary.getNegation() != null) {
+                    visitSpace(binary.getNegation(), PySpace.Location.BINARY_NEGATION, p);
+                } else {
+                    p.append(' ');
+                }
+                p.append("in");
+                break;
+            case In:
+                p.append("in");
+                break;
+            case Is:
+                p.append("is");
+                break;
+            case IsNot:
+                p.append("is");
+                if (binary.getNegation() != null) {
+                    visitSpace(binary.getNegation(), PySpace.Location.BINARY_NEGATION, p);
+                } else {
+                    p.append(' ');
+                }
+                p.append("not");
+                break;
+        }
 
         visit(binary.getRight(), p);
         afterSyntax(binary, p);

@@ -20,6 +20,7 @@ class PythonVisitor(JavaVisitor[P]):
         binary = binary.with_markers(self.visit_markers(binary.markers, p))
         binary = binary.with_left(self.visit_and_cast(binary.left, Expression, p))
         binary = binary.padding.with_operator(self.visit_left_padded(binary.padding.operator, PyLeftPadded.Location.BINARY_OPERATOR, p))
+        binary = binary.with_negation(self.visit_space(binary.negation, PySpace.Location.BINARY_NEGATION, p))
         binary = binary.with_right(self.visit_and_cast(binary.right, Expression, p))
         return binary
 
