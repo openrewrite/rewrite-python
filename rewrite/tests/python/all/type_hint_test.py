@@ -6,11 +6,24 @@ def test_primitive_type_hint():
     rewrite_run(
         python(
             """\
-            def test(n: int):
+            def test(n : int):
                 return n + 1
             """
         )
     )
+
+
+def test_return_type_type_hint():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(n: int)  ->  int :
+                return n + 1
+            """
+        )
+    )
+
 
 def test_class_type_hint():
     # language=python
@@ -39,6 +52,7 @@ def test_generic_type_hint():
         )
     )
 
+
 def test_generic_type_hint_multiple_params():
     # language=python
     rewrite_run(
@@ -52,3 +66,7 @@ def test_generic_type_hint_multiple_params():
         )
     )
 
+
+def test_variable_with_type_hint():
+    # language=python
+    rewrite_run(python("""foo: int = 1"""))

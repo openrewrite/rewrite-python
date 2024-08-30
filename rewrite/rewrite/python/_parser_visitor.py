@@ -194,7 +194,36 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_AnnAssign(self, node):
-        raise NotImplementedError("Implement visit_AnnAssign!")
+        prefix = self.__whitespace()
+        name = self.__convert(node.target)
+        after_name = self.__source_before(':') if node.annotation else Space.EMPTY
+        var_type = self.__convert(node.annotation)
+        initializer = self.__pad_left(
+            self.__source_before('='),
+            self.__convert(node.value)
+        ) if node.value else None
+
+        return j.VariableDeclarations(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            [],
+            [],
+            var_type,
+            None,
+            [],
+            [self.__pad_right(
+                j.VariableDeclarations.NamedVariable(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    name,
+                    [],
+                    initializer,
+                    self.__map_type(node.target)),
+                after_name
+            )]
+        )
 
     def visit_For(self, node):
         return j.ForEachLoop(
@@ -1044,7 +1073,16 @@ class ParserVisitor(ast.NodeVisitor):
         ), [])
 
         params = self.visit_arguments(node.args)
-        return_type = self.__convert(node.returns) if node.returns else None
+        if node.returns is None:
+            return_type = None
+        else:
+            return_type = py.TypeHint(
+                random_id(),
+                self.__source_before('->'),
+                Markers.EMPTY,
+                self.__convert(node.returns),
+                self.__map_type(node.returns)
+            )
         body = self.__convert_block(node.body)
 
         return j.MethodDeclaration(

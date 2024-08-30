@@ -32,7 +32,7 @@ class PythonVisitor(JavaVisitor[P]):
     def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
         type_hint = type_hint.with_prefix(self.visit_space(type_hint.prefix, PySpace.Location.TYPE_HINT_PREFIX, p))
         type_hint = type_hint.with_markers(self.visit_markers(type_hint.markers, p))
-        type_hint = type_hint.with_expression(self.visit_and_cast(type_hint.expression, Expression, p))
+        type_hint = type_hint.with_type_tree(self.visit_and_cast(type_hint.type_tree, TypeTree, p))
         return type_hint
 
     def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:

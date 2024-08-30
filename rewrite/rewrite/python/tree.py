@@ -177,10 +177,6 @@ class ExceptionType(Py, TypeTree):
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class TypeHint(Py, TypeTree):
-    class Kind(Enum):
-        RETURN_TYPE = 0
-        VARIABLE_TYPE = 1
-
     _id: UUID
 
     @property
@@ -208,23 +204,14 @@ class TypeHint(Py, TypeTree):
     def with_markers(self, markers: Markers) -> TypeHint:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _kind: Kind
+    _type_tree: TypeTree
 
     @property
-    def kind(self) -> Kind:
-        return self._kind
+    def type_tree(self) -> TypeTree:
+        return self._type_tree
 
-    def with_kind(self, kind: Kind) -> TypeHint:
-        return self if kind is self._kind else replace(self, _kind=kind)
-
-    _expression: Expression
-
-    @property
-    def expression(self) -> Expression:
-        return self._expression
-
-    def with_expression(self, expression: Expression) -> TypeHint:
-        return self if expression is self._expression else replace(self, _expression=expression)
+    def with_type_tree(self, type_tree: TypeTree) -> TypeHint:
+        return self if type_tree is self._type_tree else replace(self, _type_tree=type_tree)
 
     _type: JavaType
 

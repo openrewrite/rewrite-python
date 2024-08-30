@@ -564,15 +564,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitTypeHint(Py.TypeHint type, PrintOutputCapture<P> p) {
         beforeSyntax(type, PySpace.Location.TYPE_HINT_PREFIX, p);
-        switch (type.getKind()) {
-            case VARIABLE_TYPE:
-                p.append(":");
-                break;
-            case RETURN_TYPE:
-                p.append("->");
-                break;
+        J parent = getCursor().getParentTreeCursor().getValue();
+        if (parent instanceof J.MethodDeclaration) {
+            p.append("->");
+        } else {
+            p.append(':');
         }
-        visit(type.getExpression(), p);
+        visit(type.getTypeTree(), p);
         afterSyntax(type, p);
         return type;
     }
@@ -1184,6 +1182,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public J visitVariable(J.VariableDeclarations.NamedVariable variable, PrintOutputCapture<P> p) {
             beforeSyntax(variable, Space.Location.VARIABLE_PREFIX, p);
             J.VariableDeclarations vd = getCursor().getParentTreeCursor().getValue();
+            JRightPadded<J.VariableDeclarations.NamedVariable> padding = getCursor().getParent().getValue();
             TypeTree type = vd.getTypeExpression();
             if (type instanceof Py.SpecialParameter) {
                 Py.SpecialParameter special = (Py.SpecialParameter) type;
@@ -1195,6 +1194,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             } else {
                 visit(variable.getName(), p);
                 if (type != null) {
+                    visitSpace(padding.getAfter(), JRightPadded.Location.NAMED_VARIABLE.getAfterLocation(), p);
                     p.append(':');
                     visit(type, p);
                 }
@@ -1213,7 +1213,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitModifier(m, p);
             }
 
-            visitRightPadded(multiVariable.getPadding().getVariables(), JRightPadded.Location.NAMED_VARIABLE, ",", p);
+            List<? extends JRightPadded<? extends J>> nodes = multiVariable.getPadding().getVariables();
+            for (int i = 0; i < nodes.size(); i++) {
+                JRightPadded<? extends J> node = nodes.get(i);
+                setCursor(new Cursor(getCursor(), node));
+                visit(node.getElement(), p);
+                visitMarkers(node.getMarkers(), p);
+                if (i < nodes.size() - 1) {
+                    p.append(",");
+                }
+                setCursor(getCursor().getParent());
+            }
 
             afterSyntax(multiVariable, p);
             return multiVariable;

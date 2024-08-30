@@ -193,18 +193,12 @@ public interface Py extends J {
     @RequiredArgsConstructor
     final class TypeHint implements Py, TypeTree {
 
-        public enum Kind {
-            RETURN_TYPE,
-            VARIABLE_TYPE,
-        }
-
         @EqualsAndHashCode.Include
         UUID id;
 
         Space prefix;
         Markers markers;
-        Kind kind;
-        Expression expression;
+        TypeTree typeTree;
         JavaType type;
 
         @Override

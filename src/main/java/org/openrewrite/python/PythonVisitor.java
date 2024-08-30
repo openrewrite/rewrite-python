@@ -236,7 +236,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         Py.TypeHint type = ogType;
         type = type.withPrefix(visitSpace(type.getPrefix(), PySpace.Location.EXCEPTION_TYPE_PREFIX, p));
         type = type.withMarkers(visitMarkers(type.getMarkers(), p));
-        type = type.withExpression(visitAndCast(type.getExpression(), p));
+        type = type.withTypeTree(visitAndCast(type.getTypeTree(), p));
         return type;
     }
 
