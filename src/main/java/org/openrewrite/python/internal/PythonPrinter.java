@@ -1224,6 +1224,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (variable.getName().getSimpleName().isEmpty()) {
                 visit(variable.getInitializer(), p);
             } else {
+                if (vd.getVarargs() != null) {
+                    visitSpace(vd.getVarargs(), Location.VARARGS, p);
+                    p.append('*');
+                }
                 visit(variable.getName(), p);
                 if (type != null) {
                     visitSpace(padding.getAfter(), JRightPadded.Location.NAMED_VARIABLE.getAfterLocation(), p);

@@ -15,6 +15,18 @@ def test_whitespace_before_colon():
     )
 
 
+def test_varargs():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(*args) :
+                pass
+            """
+        )
+    )
+
+
 def test_one_line():
     # language=python
     rewrite_run(python("def f(x): x = x + 1; return x"))

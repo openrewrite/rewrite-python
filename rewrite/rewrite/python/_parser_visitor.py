@@ -41,7 +41,8 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
-        if not node.args:
+        all_args = node.posonlyargs + node.args + ([node.vararg] if node.vararg else []) + node.kwonlyargs + ([node.kwarg] if node.kwarg else [])
+        if not all_args:
             return JContainer(
                 self.__source_before('('),
                 [self.__pad_right(
@@ -57,10 +58,17 @@ class ParserVisitor(ast.NodeVisitor):
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
             end_delim=')') for i, a in enumerate(node.args)]
+        if node.vararg:
+            args.append(self.__pad_list_element(
+                self.map_arg(node.vararg, None, vararg=True),
+                all_args[-1] == node.vararg,
+                end_delim=')'
+            ))
         return JContainer(prefix, args, Markers.EMPTY)
 
-    def map_arg(self, node, default=None):
+    def map_arg(self, node, default=None, vararg=False):
         prefix = self.__whitespace()
+        vararg_prefix = self.__source_before('*') if vararg else None
         name = self.__convert_name(node.arg, self.__map_type(node))
         after_name = self.__source_before(':') if node.annotation else Space.EMPTY
         type_expression = self.__convert(node.annotation) if node.annotation else None
@@ -73,7 +81,7 @@ class ParserVisitor(ast.NodeVisitor):
             [],
             [],
             type_expression,
-            None,
+            vararg_prefix if vararg else None,
             [],
             [self.__pad_right(j.VariableDeclarations.NamedVariable(
                 random_id(),
