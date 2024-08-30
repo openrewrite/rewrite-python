@@ -198,7 +198,8 @@ public interface Py extends J {
 
         Space prefix;
         Markers markers;
-        TypeTree typeTree;
+        // Using `Expression` to also cater for `None`
+        Expression typeTree;
         JavaType type;
 
         @Override

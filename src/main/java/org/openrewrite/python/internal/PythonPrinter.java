@@ -45,11 +45,21 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
         if (!(tree instanceof Py)) {
             // re-route printing to the Java printer
-            return delegate.visitNonNull(requireNonNull(tree), p, getCursor());
+            return delegate.visitNonNull(requireNonNull(tree), p);
         } else {
             //noinspection DataFlowIssue
             return super.visit(tree, p);
         }
+    }
+
+    @Override
+    public void setCursor(@Nullable Cursor cursor) {
+        super.setCursor(cursor);
+        delegate.internalSetCursor(cursor);
+    }
+
+    private void internalSetCursor(@Nullable Cursor cursor) {
+        super.setCursor(cursor);
     }
 
     @Override
@@ -594,11 +604,21 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public J visit(@Nullable Tree tree, PrintOutputCapture<P> p) {
             if (tree instanceof Py) {
                 // re-route printing back up to Python printer
-                return PythonPrinter.this.visitNonNull(tree, p, getCursor());
+                return PythonPrinter.this.visitNonNull(tree, p);
             } else {
                 //noinspection DataFlowIssue
                 return super.visit(tree, p);
             }
+        }
+
+        @Override
+        public void setCursor(@Nullable Cursor cursor) {
+            super.setCursor(cursor);
+            PythonPrinter.this.internalSetCursor(cursor);
+        }
+
+        public void internalSetCursor(@Nullable Cursor cursor) {
+            super.setCursor(cursor);
         }
 
         @Override

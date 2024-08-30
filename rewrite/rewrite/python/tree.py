@@ -204,13 +204,13 @@ class TypeHint(Py, TypeTree):
     def with_markers(self, markers: Markers) -> TypeHint:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _type_tree: TypeTree
+    _type_tree: Expression
 
     @property
-    def type_tree(self) -> TypeTree:
+    def type_tree(self) -> Expression:
         return self._type_tree
 
-    def with_type_tree(self, type_tree: TypeTree) -> TypeHint:
+    def with_type_tree(self, type_tree: Expression) -> TypeHint:
         return self if type_tree is self._type_tree else replace(self, _type_tree=type_tree)
 
     _type: JavaType
