@@ -15,7 +15,7 @@ from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType,
     NameTree, OmitParentheses
 from rewrite.java import tree as j
 from . import tree as py, PyComment
-from .markers import KeywordArguments
+from .markers import KeywordArguments, KeywordOnlyArguments
 
 J2 = TypeVar('J2', bound=J)
 
@@ -42,36 +42,48 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
-        all_args = node.posonlyargs + node.args + ([node.vararg] if node.vararg else []) + node.kwonlyargs + ([node.kwarg] if node.kwarg else [])
-        if not all_args:
-            return JContainer(
-                self.__source_before('('),
-                [self.__pad_right(
-                    j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
-                    Space.EMPTY)
-                ],
-                Markers.EMPTY
-            )
-
         first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
         prefix = self.__source_before('(')
         args = [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
-            end_delim=',' if node.vararg or node.kwarg else ')') for i, a in enumerate(node.args)]
+            end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')') for i, a in enumerate(node.args)]
         if node.vararg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.vararg, None, vararg=True),
-                all_args[-1] == node.vararg,
+                not node.kwarg and not node.kwonlyargs,
                 end_delim=')'
             ))
         if node.kwarg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.kwarg, None, kwarg=True),
-                all_args[-1] == node.vararg,
+                not node.kwonlyargs,
                 end_delim=')'
             ))
+        if node.kwonlyargs:
+            empty_name = j.VariableDeclarations.NamedVariable(random_id(), Space.EMPTY, Markers.EMPTY,
+                                                              cast(j.Identifier, self.__convert_name('', None)), [],
+                                                              None, None, None)
+            kwonly_prefix = self.__source_before('*')
+            kwonlyargs = [self.__pad_right(empty_name, self.__source_before(','))]
+            for i, kwonlyarg in enumerate(node.kwonlyargs):
+                kwonlyargs.append(self.__pad_list_element(j.VariableDeclarations.NamedVariable(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    cast(j.Identifier, self.__convert_name(kwonlyarg.arg)),
+                    [], None, None, None
+                ), last=i == len(node.kwonlyargs) - 1))
+            args.append(self.__pad_right(j.VariableDeclarations(
+                random_id(),
+                kwonly_prefix,
+                Markers(random_id(), [KeywordOnlyArguments(random_id())]),
+                [], [], None, None, [],
+                kwonlyargs,
+                None
+            ), self.__source_before(')')))
         return JContainer(prefix, args, Markers.EMPTY)
+
 
     def map_arg(self, node, default=None, vararg=False, kwarg=False):
         prefix = self.__source_before('**') if kwarg else self.__whitespace()
@@ -101,6 +113,7 @@ class ParserVisitor(ast.NodeVisitor):
             ), after_name)],
         )
 
+
     def visit_Assert(self, node):
         return j.Assert(
             random_id(),
@@ -109,6 +122,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.test),
             self.__pad_left(self.__source_before(','), self.__convert(node.msg)) if node.msg else None,
         )
+
 
     def visit_Assign(self, node):
         if len(node.targets) == 1:
@@ -124,6 +138,7 @@ class ParserVisitor(ast.NodeVisitor):
             # FIXME implement me
             raise NotImplementedError("Multiple assignments are not yet supported")
 
+
     def visit_AugAssign(self, node):
         return j.AssignmentOperation(
             random_id(),
@@ -135,6 +150,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_Await(self, node):
         return py.Await(
             random_id(),
@@ -144,11 +160,14 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_Interactive(self, node):
         raise NotImplementedError("Implement visit_Interactive!")
 
+
     def visit_AsyncFunctionDef(self, node):
         raise NotImplementedError("Implement visit_AsyncFunctionDef!")
+
 
     def visit_ClassDef(self, node):
         prefix = self.__whitespace() if node.decorator_list else Space.EMPTY
@@ -181,7 +200,7 @@ class ParserVisitor(ast.NodeVisitor):
             prefix,
             Markers.EMPTY,
             decorators,
-            [], # TODO modifiers
+            [],  # TODO modifiers
             j.ClassDeclaration.Kind(
                 random_id(),
                 kind_prefix,
@@ -192,12 +211,13 @@ class ParserVisitor(ast.NodeVisitor):
             name,
             None,
             None,
-            None, # no `extends`, all in `implements`
+            None,  # no `extends`, all in `implements`
             interfaces,
             None,
             self.__convert_block(node.body),
             self.__map_type(node)
         )
+
 
     def visit_Delete(self, node):
         return py.Del(
@@ -207,6 +227,7 @@ class ParserVisitor(ast.NodeVisitor):
             [self.__pad_list_element(self.__convert(e), last=i == len(node.targets) - 1) for i, e in
              enumerate(node.targets)]
         )
+
 
     def visit_AnnAssign(self, node):
         prefix = self.__whitespace()
@@ -239,6 +260,7 @@ class ParserVisitor(ast.NodeVisitor):
                 after_name
             )]
         )
+
 
     def visit_For(self, node):
         return j.ForEachLoop(
@@ -279,8 +301,10 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )
 
+
     def visit_AsyncFor(self, node):
         raise NotImplementedError("Implement visit_AsyncFor!")
+
 
     def visit_While(self, node):
         return j.WhileLoop(
@@ -296,11 +320,13 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )
 
+
     def visit_If(self, node):
         prefix = self.__source_before('if')
         single_statement_body = len(node.body) == 1
         condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
-                                         self.__pad_right(self.__convert(node.test), self.__source_before(':') if single_statement_body else Space.EMPTY))
+                                         self.__pad_right(self.__convert(node.test), self.__source_before(
+                                             ':') if single_statement_body else Space.EMPTY))
         then = self.__pad_right(
             self.__convert(node.body[0]) if single_statement_body else self.__convert_block(node.body), Space.EMPTY)
         elze = None
@@ -325,6 +351,7 @@ class ParserVisitor(ast.NodeVisitor):
             elze
         )
 
+
     def visit_With(self, node):
         return j.Try(
             random_id(),
@@ -332,13 +359,15 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             JContainer(
                 self.__whitespace(),
-                [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in enumerate(node.items)],
+                [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in
+                 enumerate(node.items)],
                 Markers.EMPTY
             ),
             self.__convert_block(node.body),
             [],
             None
         )
+
 
     def visit_withitem(self, node):
         prefix = self.__whitespace()
@@ -360,8 +389,10 @@ class ParserVisitor(ast.NodeVisitor):
             False
         )
 
+
     def visit_AsyncWith(self, node):
         raise NotImplementedError("Implement visit_AsyncWith!")
+
 
     def visit_Raise(self, node):
         return py.Throw(
@@ -371,6 +402,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.exc),
         )
 
+
     def visit_Try(self, node):
         return j.Try(
             random_id(),
@@ -379,8 +411,10 @@ class ParserVisitor(ast.NodeVisitor):
             JContainer.empty(),
             self.__convert_block(node.body),
             [self.__convert(handler) for handler in node.handlers],
-            self.__pad_left(self.__source_before('finally'), self.__convert_block(node.finalbody)) if node.finalbody else None
+            self.__pad_left(self.__source_before('finally'),
+                            self.__convert_block(node.finalbody)) if node.finalbody else None
         )
+
 
     def visit_Import(self, node):
         # TODO only use `MultiImport` when necessary (requires corresponding changes to printer)
@@ -398,9 +432,11 @@ class ParserVisitor(ast.NodeVisitor):
             )
         )
 
+
     def visit_ImportFrom(self, node):
         prefix = self.__source_before('from')
-        from_ = self.__pad_right(self.__convert_name(('.' * node.level) + (node.module if node.module else '')), self.__source_before('import'))
+        from_ = self.__pad_right(self.__convert_name(('.' * node.level) + (node.module if node.module else '')),
+                                 self.__source_before('import'))
         names_prefix = self.__whitespace()
         if parenthesized := self._source[self._cursor] == '(':
             self.__skip('(')
@@ -421,6 +457,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__skip(')')
         return multi_import
 
+
     def visit_alias(self, node):
         return j.Import(
             random_id(),
@@ -432,6 +469,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_left(self.__source_before('as'), self.__convert_name(node.asname))
         )
 
+
     def visit_keyword(self, node):
         return py.NamedArgument(
             random_id(),
@@ -441,6 +479,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_left(self.__source_before('='), self.__convert(node.value)),
             self.__map_type(node)
         )
+
 
     def __convert_qualified_name(self, name: str) -> j.FieldAccess:
         if '.' not in name:
@@ -457,11 +496,14 @@ class ParserVisitor(ast.NodeVisitor):
             )
         return cast(j.FieldAccess, self.__convert_name(name))
 
+
     def visit_Global(self, node):
         raise NotImplementedError("Implement visit_Global!")
 
+
     def visit_Nonlocal(self, node):
         raise NotImplementedError("Implement visit_Nonlocal!")
+
 
     def visit_Pass(self, node):
         return py.Pass(
@@ -470,11 +512,14 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
         )
 
+
     def visit_Break(self, node):
         return j.Break(random_id(), self.__source_before('break'), Markers.EMPTY, None)
 
+
     def visit_Continue(self, node):
         return j.Continue(random_id(), self.__source_before('continue'), Markers.EMPTY, None)
+
 
     def visit_GeneratorExp(self, node):
         return py.ComprehensionExpression(
@@ -488,11 +533,13 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_Expr(self, node):
         return py.ExpressionStatement(
             random_id(),
             self.__convert(node.value)
         )
+
 
     def visit_Yield(self, node):
         return py.StatementExpression(
@@ -505,6 +552,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert(node.value),
             )
         )
+
 
     def visit_YieldFrom(self, node):
         return py.StatementExpression(
@@ -524,8 +572,10 @@ class ParserVisitor(ast.NodeVisitor):
             )
         )
 
+
     def visit_TypeIgnore(self, node):
         raise NotImplementedError("Implement visit_TypeIgnore!")
+
 
     def visit_Attribute(self, node):
         return j.FieldAccess(
@@ -537,14 +587,18 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
+
     def visit_Del(self, node):
         raise NotImplementedError("Implement visit_Del!")
+
 
     def visit_Load(self, node):
         raise NotImplementedError("Implement visit_Load!")
 
+
     def visit_Store(self, node):
         raise NotImplementedError("Implement visit_Store!")
+
 
     def visit_ExceptHandler(self, node):
         prefix = self.__source_before('except')
@@ -587,6 +641,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert_block(node.body)
         )
 
+
     def visit_Match(self, node):
         return j.Switch(
             random_id(),
@@ -600,6 +655,7 @@ class ParserVisitor(ast.NodeVisitor):
             ),
             self.__convert_block(node.cases)
         )
+
 
     def visit_match_case(self, node):
         prefix = self.__source_before('case')
@@ -625,8 +681,10 @@ class ParserVisitor(ast.NodeVisitor):
         )
         return case
 
+
     def visit_MatchValue(self, node):
         return self.__convert(node.value)
+
 
     def visit_MatchSequence(self, node):
         prefix = self.__whitespace()
@@ -663,8 +721,10 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+
     def visit_MatchSingleton(self, node):
         raise NotImplementedError("Implement visit_MatchSingleton!")
+
 
     def visit_MatchStar(self, node):
         return py.Star(
@@ -676,8 +736,10 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+
     def visit_MatchMapping(self, node):
         raise NotImplementedError("Implement visit_MatchMapping!")
+
 
     def visit_MatchClass(self, node):
         prefix = self.__whitespace()
@@ -744,6 +806,7 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+
     def visit_MatchAs(self, node):
         if node.name is None and node.pattern is None:
             return py.MatchCase(
@@ -761,7 +824,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
-        elif node.name is not None and node.pattern is None:
+        elif node.name is not None and not node.pattern is None:
             return self.__convert_name(node.name)
         else:
             return py.MatchCase(
@@ -787,6 +850,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None
             )
 
+
     def visit_MatchOr(self, node):
         return py.MatchCase(
             random_id(),
@@ -809,53 +873,70 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+
     def visit_TryStar(self, node):
         raise NotImplementedError("Implement visit_TryStar!")
+
 
     def visit_TypeVar(self, node):
         raise NotImplementedError("Implement visit_TypeVar!")
 
+
     def visit_ParamSpec(self, node):
         raise NotImplementedError("Implement visit_ParamSpec!")
+
 
     def visit_TypeVarTuple(self, node):
         raise NotImplementedError("Implement visit_TypeVarTuple!")
 
+
     def visit_TypeAlias(self, node):
         raise NotImplementedError("Implement visit_TypeAlias!")
+
 
     def visit_ExtSlice(self, node):
         raise NotImplementedError("Implement visit_ExtSlice!")
 
+
     def visit_Index(self, node):
         raise NotImplementedError("Implement visit_Index!")
+
 
     def visit_Suite(self, node):
         raise NotImplementedError("Implement visit_Suite!")
 
+
     def visit_AugLoad(self, node):
         raise NotImplementedError("Implement visit_AugLoad!")
+
 
     def visit_AugStore(self, node):
         raise NotImplementedError("Implement visit_AugStore!")
 
+
     def visit_Param(self, node):
         raise NotImplementedError("Implement visit_Param!")
+
 
     def visit_Num(self, node):
         raise NotImplementedError("Implement visit_Num!")
 
+
     def visit_Str(self, node):
         raise NotImplementedError("Implement visit_Str!")
+
 
     def visit_Bytes(self, node):
         raise NotImplementedError("Implement visit_Bytes!")
 
+
     def visit_NameConstant(self, node):
         raise NotImplementedError("Implement visit_NameConstant!")
 
+
     def visit_Ellipsis(self, node):
         raise NotImplementedError("Implement visit_Ellipsis!")
+
 
     def visit_BinOp(self, node):
         return j.Binary(
@@ -867,6 +948,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.right),
             self.__map_type(node)
         )
+
 
     def visit_BoolOp(self, node):
         binaries = []
@@ -886,6 +968,7 @@ class ParserVisitor(ast.NodeVisitor):
             prefix = Space.EMPTY
 
         return binaries[-1]
+
 
     def visit_Call(self, node):
         prefix = self.__whitespace()
@@ -931,6 +1014,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_Compare(self, node):
         if len(node.ops) != 1:
             raise NotImplementedError("Multiple comparisons are not yet supported")
@@ -968,6 +1052,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
 
+
     def __convert_binary_operator(self, op) -> Union[JLeftPadded[j.Binary.Type], JLeftPadded[py.Binary.Type]]:
         operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
             ast.Add: (j.Binary.Type.Addition, '+'),
@@ -999,6 +1084,7 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
+
     def visit_Constant(self, node):
         # noinspection PyTypeChecker
         return j.Literal(
@@ -1010,6 +1096,7 @@ class ParserVisitor(ast.NodeVisitor):
             None,
             self.__map_type(node),
         )
+
 
     def visit_Dict(self, node):
         return py.DictLiteral(
@@ -1026,6 +1113,7 @@ class ParserVisitor(ast.NodeVisitor):
             ),
             self.__map_type(node)
         )
+
 
     def visit_DictComp(self, node):
         return py.ComprehensionExpression(
@@ -1046,6 +1134,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def __map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
         if key is None:
             element = py.Star(
@@ -1062,6 +1151,7 @@ class ParserVisitor(ast.NodeVisitor):
                                   self.__convert(value),
                                   self.__map_type(value))
         return self.__pad_list_element(element, last, end_delim='}')
+
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
@@ -1128,6 +1218,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
+
     def __map_decorator(self, decorator) -> j.Annotation:
         prefix = self.__source_before('@')
         if isinstance(decorator, (ast.Attribute, ast.Name)):
@@ -1138,8 +1229,10 @@ class ParserVisitor(ast.NodeVisitor):
             all_args = decorator.args + decorator.keywords
             args = JContainer(
                 self.__source_before('('),
-                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY)] if not all_args else
-                [self.__pad_list_element(self.__convert(a), i == len(all_args) - 1, end_delim=')') for i, a in enumerate(all_args)],
+                [self.__pad_right(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY),
+                                  Space.EMPTY)] if not all_args else
+                [self.__pad_list_element(self.__convert(a), i == len(all_args) - 1, end_delim=')') for i, a in
+                 enumerate(all_args)],
                 Markers.EMPTY
             )
         else:
@@ -1152,6 +1245,7 @@ class ParserVisitor(ast.NodeVisitor):
             name,
             args
         )
+
 
     def visit_IfExp(self, node):
         # TODO check if we actually want to use `J.Ternary` as it requires "reversing" some of the padding
@@ -1170,6 +1264,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_JoinedStr(self, node):
         prefix = self.__whitespace()
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
@@ -1177,8 +1272,10 @@ class ParserVisitor(ast.NodeVisitor):
         tok = next(tokens)  # FSTRING_START token
         return self.__map_fstring(node, prefix, tok, peekable(tokens))[0]
 
+
     def visit_FormattedValue(self, node):
         raise ValueError("This method should not be called directly")
+
 
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
@@ -1202,6 +1299,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_List(self, node):
         prefix = self.__source_before('[')
         elements = JContainer(
@@ -1220,6 +1318,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_ListComp(self, node):
         return py.ComprehensionExpression(
             random_id(),
@@ -1232,6 +1331,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_comprehension(self, node):
         return py.ComprehensionExpression.Clause(
             random_id(),
@@ -1242,6 +1342,7 @@ class ParserVisitor(ast.NodeVisitor):
             [self._map_comprehension_condition(i) for i in node.ifs] if node.ifs else []
         )
 
+
     def _map_comprehension_condition(self, i):
         return py.ComprehensionExpression.Condition(
             random_id(),
@@ -1249,6 +1350,7 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.__convert(i)
         )
+
 
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
         cu = py.CompilationUnit(
@@ -1268,6 +1370,7 @@ class ParserVisitor(ast.NodeVisitor):
         assert self._cursor == len(self._source)
         return cu
 
+
     def visit_Name(self, node):
         return j.Identifier(
             random_id(),
@@ -1279,6 +1382,7 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
+
     def visit_NamedExpr(self, node):
         return j.Assignment(
             random_id(),
@@ -1289,6 +1393,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node.value)
         )
 
+
     def visit_Return(self, node):
         return j.Return(
             random_id(),
@@ -1296,6 +1401,7 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.__convert(node.value) if node.value else None
         )
+
 
     def visit_Set(self, node):
         prefix = self.__source_before('{')
@@ -1315,6 +1421,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_SetComp(self, node):
         return py.ComprehensionExpression(
             random_id(),
@@ -1326,6 +1433,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__source_before('}'),
             self.__map_type(node)
         )
+
 
     def visit_Slice(self, node):
         prefix = self.__whitespace()
@@ -1346,6 +1454,7 @@ class ParserVisitor(ast.NodeVisitor):
             step
         )
 
+
     def visit_Starred(self, node):
         return py.Star(
             random_id(),
@@ -1355,6 +1464,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value),
             self.__map_type(node),
         )
+
 
     def visit_Subscript(self, node):
         if isinstance(node.slice, (ast.Constant, ast.Slice)):
@@ -1386,6 +1496,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None
             )
 
+
     def visit_Tuple(self, node):
         prefix = self.__whitespace()
 
@@ -1412,6 +1523,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
+
     def visit_UnaryOp(self, node):
         mapped = self._map_unary_operator(node.op)
         return j.Unary(
@@ -1422,6 +1534,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.operand),
             self.__map_type(node)
         )
+
 
     def __convert(self, node) -> Optional[J]:
         if node:
@@ -1462,6 +1575,7 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
+
     def __convert_name(self, name: str, name_type: Optional[JavaType] = None) -> NameTree:
         def ident_or_field(parts: List[str]) -> NameTree:
             if len(parts) == 1:
@@ -1484,6 +1598,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         return ident_or_field(name.split('.'))
 
+
     def __next_lexer_token(self):
         tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
         next(tokens)  # skip ENCODING token
@@ -1492,8 +1607,10 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor += len(value_source)
         return value_source
 
+
     def __convert_all(self, trees: Sequence) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
+
 
     def __convert_block(self, statements: Sequence, prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
@@ -1510,6 +1627,7 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY
         )
 
+
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
         # use whitespace until end of line as padding; what follows will be the prefix of next element
@@ -1520,6 +1638,7 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             markers = Markers.EMPTY
         return JRightPadded(statement, padding, markers)
+
 
     def __pad_list_element(self, element: J, last: bool = False, end_delim: str = None) -> JRightPadded[J]:
         padding = self.__whitespace()
@@ -1535,13 +1654,16 @@ class ParserVisitor(ast.NodeVisitor):
             markers = Markers.EMPTY
         return JRightPadded(element, padding, markers)
 
+
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
         return JRightPadded(tree, space, Markers.EMPTY)
+
 
     def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
         if isinstance(tree, ast.AST):
             raise ArgumentError(tree, "must be a Tree but is a {}".format(type(tree)))
         return JLeftPadded(space, tree, Markers.EMPTY)
+
 
     def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:
         delim_index = self.__position_of_next(until_delim, stop)
@@ -1556,12 +1678,14 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor = delim_index + len(until_delim)
         return space
 
+
     def __skip(self, tok: Optional[str]) -> Optional[str]:
         if tok is None:
             return None
         if self._source.startswith(tok, self._cursor):
             self._cursor += len(tok)
         return tok
+
 
     def __whitespace(self, stop: str = None) -> Space:
         prefix = None
@@ -1598,6 +1722,7 @@ class ParserVisitor(ast.NodeVisitor):
             comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
         return Space(comments, prefix)
 
+
     def __position_of_next(self, until_delim: str, stop: str = None) -> int:
         in_single_line_comment = False
 
@@ -1621,9 +1746,11 @@ class ParserVisitor(ast.NodeVisitor):
 
         return -1 if delim_index > len(self._source) - len(until_delim) else delim_index
 
+
     # noinspection PyUnusedLocal
     def __map_type(self, node) -> Optional[JavaType]:
         return None
+
 
     def _map_unary_operator(self, op) -> Tuple[j.Unary.Type, str]:
         operation_map: Dict[Type[ast], Tuple[j.Unary.Type, str]] = {
@@ -1633,6 +1760,7 @@ class ParserVisitor(ast.NodeVisitor):
             ast.USub: (j.Unary.Type.Negative, '-'),
         }
         return operation_map[type(op)]
+
 
     def _map_assignment_operator(self, op):
         operation_map: Dict[Type[ast], Tuple[j.AssignmentOperation.Type, str]] = {
@@ -1656,7 +1784,9 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[J, TokenInfo]:
+
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[
+        J, TokenInfo]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
@@ -1690,7 +1820,8 @@ class ParserVisitor(ast.NodeVisitor):
                 self._cursor += len(tok.string)
                 tok = next(tokens)
                 if isinstance(cast(ast.FormattedValue, value).value, ast.JoinedStr):
-                    nested, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value), Space.EMPTY, tok, tokens)
+                    nested, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value),
+                                                     Space.EMPTY, tok, tokens)
                     expr = self.__pad_right(
                         nested,
                         Space.EMPTY
@@ -1731,7 +1862,9 @@ class ParserVisitor(ast.NodeVisitor):
                 # format specifier
                 if tok.type == token.OP and tok.string == ':':
                     self._cursor += len(tok.string)
-                    format_spec, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens), tokens)
+                    format_spec, tok = self.__map_fstring(
+                        cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens),
+                        tokens)
                 else:
                     format_spec = None
                 parts.append(py.FormattedString.Value(

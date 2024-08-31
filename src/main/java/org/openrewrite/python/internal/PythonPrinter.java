@@ -30,6 +30,7 @@ import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.KeywordArguments;
+import org.openrewrite.python.marker.KeywordOnlyArguments;
 import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
@@ -1268,6 +1269,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(multiVariable.getLeadingAnnotations(), p);
             for (J.Modifier m : multiVariable.getModifiers()) {
                 visitModifier(m, p);
+            }
+
+            if (multiVariable.getMarkers().findFirst(KeywordOnlyArguments.class).isPresent()) {
+                p.append("*");
             }
 
             List<? extends JRightPadded<? extends J>> nodes = multiVariable.getPadding().getVariables();

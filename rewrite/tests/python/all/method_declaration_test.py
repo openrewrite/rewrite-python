@@ -37,6 +37,19 @@ def test_kwargs():
     )
 
 
+# https://peps.python.org/pep-3102/
+def test_keyword_only_args():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def func(x, *, kwarg1, kwarg2):
+                pass
+            """
+        )
+    )
+
+
 def test_one_line():
     # language=python
     rewrite_run(python("def f(x): x = x + 1; return x"))
