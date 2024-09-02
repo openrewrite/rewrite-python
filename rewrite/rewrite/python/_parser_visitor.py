@@ -171,7 +171,7 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_AsyncFunctionDef(self, node):
-        raise NotImplementedError("Implement visit_AsyncFunctionDef!")
+        return self.visit_FunctionDef(node)
 
 
     def visit_ClassDef(self, node):
