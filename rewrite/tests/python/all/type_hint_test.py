@@ -67,6 +67,18 @@ def test_generic_type_hint_multiple_params():
     )
 
 
+def test_generic_type_hint_multiple_params():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            from typing_extensions import Literal
+            mode: Literal['before', 'after'] = 'before'
+            """
+        )
+    )
+
+
 def test_variable_with_type_hint():
     # language=python
     rewrite_run(python("""foo: int = 1"""))

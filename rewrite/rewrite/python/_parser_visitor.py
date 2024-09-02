@@ -1501,6 +1501,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
         else:
+            slices = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
             return j.ParameterizedType(
                 random_id(),
                 self.__whitespace(),
@@ -1508,7 +1509,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert(node.value),
                 JContainer(
                     self.__source_before('['),
-                    [self.__pad_list_element(self.__convert(node.slice), last=True, end_delim=']')],
+                    [self.__pad_list_element(self.__convert(s), last=i == len(slices) - 1, end_delim=']') for i, s in enumerate(slices)],
                     Markers.EMPTY
                 ),
                 None,
