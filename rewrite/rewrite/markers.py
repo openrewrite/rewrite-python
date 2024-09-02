@@ -73,7 +73,7 @@ class ParseExceptionResult(Marker):
     @classmethod
     def build(cls, parser: 'Parser', exception: Exception) -> ParseExceptionResult:
         return cls(random_id(), type(parser).__name__, type(exception).__name__,
-                   traceback.format_exc(), None)
+                   ''.join(traceback.format_exception(exception)), None)
 
     _id: UUID
 
