@@ -44,6 +44,11 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
         first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
         prefix = self.__source_before('(')
+        if not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
+            return JContainer(prefix, [
+                JRightPadded(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY,
+                             Markers.EMPTY)], Markers.EMPTY)
+
         args = [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
@@ -824,7 +829,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
-        elif node.name is not None and not node.pattern is None:
+        elif node.name is not None and node.pattern is not None:
             return self.__convert_name(node.name)
         else:
             return py.MatchCase(

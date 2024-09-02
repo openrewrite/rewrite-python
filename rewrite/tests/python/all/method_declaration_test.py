@@ -50,6 +50,30 @@ def test_keyword_only_args():
     )
 
 
+def test_kwonlyargs():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(foo, *, bar) :
+                pass
+            """
+        )
+    )
+
+
+def test_kwargs():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(**kwargs) :
+                pass
+            """
+        )
+    )
+
+
 def test_one_line():
     # language=python
     rewrite_run(python("def f(x): x = x + 1; return x"))
