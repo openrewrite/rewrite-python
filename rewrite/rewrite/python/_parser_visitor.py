@@ -268,6 +268,7 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_For(self, node):
+        targets = node.target.elts if isinstance(node.target, ast.Tuple) else [node.target]
         return j.ForEachLoop(
             random_id(),
             self.__source_before('for'),
@@ -286,18 +287,19 @@ class ParserVisitor(ast.NodeVisitor):
                         None,
                         None,
                         [],
-                        [self.__pad_right(
+                        [self.__pad_list_element(
                             j.VariableDeclarations.NamedVariable(
                                 random_id(),
                                 Space.EMPTY,
                                 Markers.EMPTY,
-                                self.__convert(node.target),
+                                self.__convert(t),
                                 [],
                                 None,
-                                self.__map_type(node.target)
+                                self.__map_type(t)
                             ),
-                            Space.EMPTY
-                        )]
+                            i == len(targets) - 1,
+                            False
+                        ) for i, t in enumerate(targets)]
                     ),
                     self.__source_before('in')
                 ),
@@ -1657,8 +1659,8 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(statement, padding, markers)
 
 
-    def __pad_list_element(self, element: J, last: bool = False, end_delim: str = None) -> JRightPadded[J]:
-        padding = self.__whitespace()
+    def __pad_list_element(self, element: J, last: bool = False, pad_last: bool = True, end_delim: str = None) -> JRightPadded[J]:
+        padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
         if last and self._cursor < len(self._source):
             if self._source[self._cursor] == ',' and end_delim != ',':
