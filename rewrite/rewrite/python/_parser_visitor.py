@@ -476,15 +476,27 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_keyword(self, node):
-        return py.NamedArgument(
-            random_id(),
-            self.__whitespace(),
-            Markers.EMPTY,
-            self.__convert_name(node.arg),
-            self.__pad_left(self.__source_before('='), self.__convert(node.value)),
-            self.__map_type(node)
-        )
+        if node.arg:
+            return py.NamedArgument(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert_name(node.arg),
+                self.__pad_left(self.__source_before('='), self.__convert(node.value)),
+                self.__map_type(node)
 
+            )
+        prefix = self.__whitespace()
+        if self._source.startswith('**', self._cursor):
+            self.__skip('**')
+            return py.Star(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                py.Star.Kind.DICT,
+                self.__convert(node.value),
+                self.__map_type(node.value),
+            )
 
     def __convert_qualified_name(self, name: str) -> j.FieldAccess:
         if '.' not in name:
