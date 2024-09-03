@@ -254,7 +254,7 @@ public class PythonParser implements Parser {
         }
 
         try (InputStream inputStream = requireNonNull(PythonParser.class.getClassLoader().getResourceAsStream("META-INF/python-requirements.txt"))) {
-            List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+            List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().filter(l -> !l.isEmpty()).collect(Collectors.toList());
 
             List<String> command = new ArrayList<>(Arrays.asList("python3", "-m", "pip", "install", "--target", dir.toString()));
             command.addAll(packages);
