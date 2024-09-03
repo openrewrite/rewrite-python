@@ -32,21 +32,18 @@ import org.openrewrite.tree.ParseError;
 import org.openrewrite.tree.ParsingEventListener;
 import org.openrewrite.tree.ParsingExecutionContextView;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unused")
@@ -55,6 +52,7 @@ public class PythonParser implements Parser {
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
+    private final List<Path> pythonPath;
 
     private @Nullable Process pythonProcess;
     private @Nullable RemotingContext remotingContext;
@@ -95,17 +93,17 @@ public class PythonParser implements Parser {
 
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
                 SourceFile parsed = client.runUsingSocket((socket, messenger) -> requireNonNull(messenger.sendRequest(generator -> {
-                    if (input.isSynthetic() || !Files.isRegularFile(input.getPath())) {
-                        generator.writeString("parse-python-source");
-                        generator.writeString(is.readFully());
-                    } else {
-                        generator.writeString("parse-python-file");
-                        generator.writeString(input.getPath().toString());
-                    }
-                }, parser -> {
-                    Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
-                    return (SourceFile) tree;
-                }, socket)))
+                            if (input.isSynthetic() || !Files.isRegularFile(input.getPath())) {
+                                generator.writeString("parse-python-source");
+                                generator.writeString(is.readFully());
+                            } else {
+                                generator.writeString("parse-python-file");
+                                generator.writeString(input.getPath().toString());
+                            }
+                        }, parser -> {
+                            Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
+                            return (SourceFile) tree;
+                        }, socket)))
                         .withSourcePath(path)
                         .withFileAttributes(FileAttributes.fromPath(input.getPath()))
                         .withCharset(getCharset(ctx));
@@ -162,6 +160,11 @@ public class PythonParser implements Parser {
         int port = 54322;
         if (!isServerRunning(port)) {
             ProcessBuilder processBuilder = new ProcessBuilder("python3", "-m", "rewrite.remote.server", Integer.toString(port));
+            if (!pythonPath.isEmpty()) {
+                Map<String, String> environment = processBuilder.environment();
+                environment.compute("PYTHONPATH", (k, current) ->
+                        (current != null ? current + File.pathSeparator : "") + pythonPath.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
+            }
             if (System.getProperty("os.name").startsWith("Windows")) {
                 processBuilder.redirectOutput(new File("NUL"));
                 processBuilder.redirectError(new File("NUL"));
@@ -237,13 +240,41 @@ public class PythonParser implements Parser {
         return new Builder();
     }
 
+    public static Builder usingRemotingInstallation(Path dir) {
+        try {
+            return verifyRemotingInstallation(dir);
+        } catch (IOException | InterruptedException ignore) {
+        }
+        return builder();
+    }
+
+    private static Builder verifyRemotingInstallation(Path dir) throws IOException, InterruptedException {
+        if (!Files.isDirectory(dir)) {
+            Files.createDirectories(dir);
+        }
+
+        try (InputStream inputStream = requireNonNull(PythonParser.class.getClassLoader().getResourceAsStream("META-INF/python-requirements.txt"))) {
+            List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.toList());
+
+            List<String> command = new ArrayList<>(Arrays.asList("python3", "-m", "pip", "install", "--target", dir.toString()));
+            command.addAll(packages);
+
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process = processBuilder.start();
+
+            int exitCode = process.waitFor();
+            return new Builder().pythonPath(singletonList(dir));
+        }
+    }
+
     @SuppressWarnings("unused")
     public static class Builder extends Parser.Builder {
         private JavaTypeCache typeCache = new JavaTypeCache();
         private boolean logCompilationWarningsAndErrors;
         private final Collection<NamedStyles> styles = new ArrayList<>();
+        private List<Path> pythonPath = new ArrayList<>();
 
-        public Builder() {
+        private Builder() {
             super(Py.CompilationUnit.class);
         }
 
@@ -264,9 +295,14 @@ public class PythonParser implements Parser {
             return this;
         }
 
+        public Builder pythonPath(List<Path> path) {
+            this.pythonPath = new ArrayList<>(path);
+            return this;
+        }
+
         @Override
         public PythonParser build() {
-            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache);
+            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, pythonPath);
         }
 
         @Override
