@@ -11,6 +11,10 @@ val latest = if (project.hasProperty("releasing")) {
     "latest.integration"
 }
 
+tasks.compileJava {
+    options.release = 8
+}
+
 // disable all tests temporarily
 tasks.withType<Test> {
     // This disables all test tasks
