@@ -41,8 +41,17 @@ jobs:
       - name: check-java
         run: java --version
 
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
       - name: build-java
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
+
       - name: build-python
         run: |
           for directory in rewrite/rewrite-*/; do
