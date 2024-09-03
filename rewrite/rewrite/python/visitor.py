@@ -284,6 +284,13 @@ class PythonVisitor(JavaVisitor[P]):
         slice = slice.padding.with_step(self.visit_right_padded(slice.padding.step, PyRightPadded.Location.SLICE_STEP, p))
         return slice
 
+    def visit_union_type(self, union_type: UnionType, p: P) -> J:
+        union_type = union_type.with_prefix(self.visit_space(union_type.prefix, PySpace.Location.UNION_TYPE_PREFIX, p))
+        union_type = union_type.with_markers(self.visit_markers(union_type.markers, p))
+        union_type = union_type.padding.with_left(self.visit_right_padded(union_type.padding.left, PyRightPadded.Location.UNION_TYPE_LEFT, p))
+        union_type = union_type.with_right(self.visit_and_cast(union_type.right, TypeTree, p))
+        return union_type
+
     def visit_container(self, container: Optional[JContainer[J2]], loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if isinstance(loc, JContainer.Location):
             return super().visit_container(container, loc, p)

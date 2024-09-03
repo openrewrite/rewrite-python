@@ -2167,3 +2167,90 @@ class Slice(Py, Expression, TypedTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_slice(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class UnionType(Py, TypeTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> UnionType:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> UnionType:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> UnionType:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _left: JRightPadded[TypeTree]
+
+    @property
+    def left(self) -> TypeTree:
+        return self._left.element
+
+    def with_left(self, left: TypeTree) -> UnionType:
+        return self.padding.with_left(JRightPadded.with_element(self._left, left))
+
+    _right: TypeTree
+
+    @property
+    def right(self) -> TypeTree:
+        return self._right
+
+    def with_right(self, right: TypeTree) -> UnionType:
+        return self if right is self._right else replace(self, _right=right)
+
+    _type: JavaType
+
+    @property
+    def type(self) -> JavaType:
+        return self._type
+
+    def with_type(self, type: JavaType) -> UnionType:
+        return self if type is self._type else replace(self, _type=type)
+
+    @dataclass
+    class PaddingHelper:
+        _t: UnionType
+
+        @property
+        def left(self) -> JRightPadded[TypeTree]:
+            return self._t._left
+
+        def with_left(self, left: JRightPadded[TypeTree]) -> UnionType:
+            return self._t if self._t._left is left else replace(self._t, _left=left)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: UnionType.PaddingHelper
+        if self._padding is None:
+            p = UnionType.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = UnionType.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_union_type(self, p)

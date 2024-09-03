@@ -2062,4 +2062,78 @@ public interface Py extends J {
         }
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class UnionType implements Py, TypeTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        JRightPadded<TypeTree> left;
+
+        public TypeTree getLeft() {
+            return left.getElement();
+        }
+
+        public UnionType withLeft(TypeTree start) {
+            return getPadding().withLeft(JRightPadded.withElement(this.left, start));
+        }
+
+        @Getter
+        @With
+        TypeTree right;
+
+        @Getter
+        @With
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitUnionType(this, p);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final UnionType t;
+
+            public JRightPadded<TypeTree> getLeft() {
+                return t.left;
+            }
+
+            public UnionType withLeft(JRightPadded<TypeTree> left) {
+                return t.left == left ? t : new UnionType(t.id, t.prefix, t.markers, left, t.right, t.type);
+            }
+        }
+    }
+
 }
