@@ -45,6 +45,8 @@ tasks.register<Exec>("exportPoetryRequirements") {
     dependsOn("prepareOutputDir")
     workingDir = poetryProjectDir
     commandLine("sh", "-c", "poetry export --without-hashes -o ${requirementsFile.get().asFile.absolutePath}")
+    standardOutput = System.out
+    errorOutput = System.err
 }
 
 tasks.register("appendOpenRewriteRequirements") {
