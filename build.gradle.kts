@@ -51,7 +51,7 @@ tasks.register("appendOpenRewriteRequirements") {
     dependsOn("exportPoetryRequirements")
     doLast {
         val file = requirementsFile.get().asFile
-        file.appendText("\nopenrewrite\nopenrewrite-remote\n")
+        file.appendText("\ncbor2\nopenrewrite\nopenrewrite-remote\n")
     }
 }
 
