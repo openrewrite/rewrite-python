@@ -330,22 +330,22 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_If(self, node):
         prefix = self.__source_before('if')
-        single_statement_body = len(node.body) == 1
+        single_statement_then_body = len(node.body) == 1
         condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
                                          self.__pad_right(self.__convert(node.test), self.__source_before(
-                                             ':') if single_statement_body else Space.EMPTY))
+                                             ':') if single_statement_then_body else Space.EMPTY))
         then = self.__pad_right(
-            self.__convert(node.body[0]) if single_statement_body else self.__convert_block(node.body), Space.EMPTY)
+            self.__convert(node.body[0]) if single_statement_then_body else self.__convert_block(node.body), Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
+            single_statement_else_body = len(node.orelse) == 1
             elze = j.If.Else(
                 random_id(),
                 # TODO technically there could be space between else and ':' but likely not common
-                self.__source_before('el') if isinstance(node.orelse[0], ast.If) else self.__source_before('else:'),
+                self.__source_before('el') if single_statement_else_body and isinstance(node.orelse[0], ast.If) else self.__source_before('else:') if single_statement_else_body else self.__source_before('else'),
                 Markers.EMPTY,
                 self.__pad_right(
-                    # this is always a zero or one element list
-                    self.__convert(node.orelse[0]),
+                    self.__convert(node.orelse[0]) if single_statement_else_body else self.__convert_block(node.orelse),
                     Space.EMPTY
                 )
             )

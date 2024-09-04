@@ -15,7 +15,7 @@ def test_if():
     )
 
 
-def test_else():
+def test_else_single():
     # language=python
     rewrite_run(
         python(
@@ -24,6 +24,22 @@ def test_else():
                 if b:
                     pass
                 else:
+                    pass
+            """
+        )
+    )
+
+
+def test_else_multiple():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(b):
+                if b:
+                    pass
+                else:
+                    x = 0
                     pass
             """
         )
