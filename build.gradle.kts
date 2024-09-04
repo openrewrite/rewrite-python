@@ -57,10 +57,41 @@ tasks.register("appendOpenRewriteRequirements") {
     dependsOn("exportPoetryRequirements")
     doLast {
         val file = requirementsFile.get().asFile
-        file.appendText("cbor2\nopenrewrite\nopenrewrite-remote\n")
+        file.appendText("cbor2\n")
+        file.appendText("openrewrite${generatePipVersionConstraint(project.version.toString())}\n")
+        file.appendText("openrewrite-remote${generatePipVersionConstraint(getDirectDependencyVersion("org.openrewrite:rewrite-remote-java"))}\n")
     }
 }
 
 tasks.named("processResources") {
     dependsOn("appendOpenRewriteRequirements")
+}
+
+fun generatePipVersionConstraint(version: String): String {
+    if (version.endsWith("-SNAPSHOT")) {
+        return "<${version.replace("-SNAPSHOT", "")}"
+    }
+    val versionParts = version.split(".")
+    if (versionParts.size != 3) {
+        throw IllegalArgumentException("Invalid version format: $version")
+    }
+
+    val major = versionParts[0]
+    val minor = versionParts[1].toInt()
+    val patch = versionParts[2]
+
+    val nextMinor = minor + 1
+
+    return ">=${major}.${minor}.${patch},<${major}.${nextMinor}.0"
+}
+
+fun Task.getDirectDependencyVersion(dependencyName: String): String {
+    val compileClasspathConfig = project.configurations.getByName("compileClasspath")
+    var version = ""
+    compileClasspathConfig.resolvedConfiguration.firstLevelModuleDependencies.forEach { dependency ->
+        if ((dependency.module.id.group + ':' + dependency.module.id.name) == dependencyName) {
+            version = dependency.module.id.version
+        }
+    }
+    return version
 }
