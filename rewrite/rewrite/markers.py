@@ -73,7 +73,7 @@ class ParseExceptionResult(Marker):
     @classmethod
     def build(cls, parser: 'Parser', exception: Exception) -> ParseExceptionResult:
         return cls(random_id(), type(parser).__name__, type(exception).__name__,
-                   ''.join(traceback.format_exception(exception)), None)
+                   ''.join(traceback.format_exception(exception)))
 
     _id: UUID
 
@@ -101,15 +101,6 @@ class ParseExceptionResult(Marker):
 
     def with_exception_type(self, exception_type: str) -> ParseExceptionResult:
         return self if exception_type is self._exception_type else replace(self, _exception_type=exception_type)
-
-    _exception_message: str
-
-    @property
-    def exception_message(self) -> str:
-        return self._exception_message
-
-    def with_exception_message(self, exception_message: str) -> ParseExceptionResult:
-        return self if exception_message is self._exception_message else replace(self, _exception_message=exception_message)
 
     _message: str
 
