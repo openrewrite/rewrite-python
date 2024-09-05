@@ -971,7 +971,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_BoolOp(self, node):
         binaries = []
-        prefix = self.__whitespace()
+        prefix = Space.EMPTY
         left = self.__convert(node.values[0])
         for right_expr in node.values[1:]:
             left = j.Binary(
@@ -1567,11 +1567,12 @@ class ParserVisitor(ast.NodeVisitor):
 
                 if self._cursor < len(self._source) and self._source[self._cursor] == '(':
                     self._cursor += 1
+                    expr_prefix = self.__whitespace()
                     self._parentheses_stack.append((lambda e, r: j.Parentheses(
                         random_id(),
                         prefix,
                         Markers.EMPTY,
-                        self.__pad_right(e, r)
+                        self.__pad_right(e.with_prefix(expr_prefix), r)
                     ), self._cursor))
                     # handle nested parens
                     result = self.__convert(node)
@@ -1584,7 +1585,7 @@ class ParserVisitor(ast.NodeVisitor):
                 if (len(self._parentheses_stack) > 0 and
                         self._cursor < len(self._source) and
                         self._source[self._cursor] == ')' and
-                        self._parentheses_stack[-1][1] == save_cursor):
+                        (self._parentheses_stack[-1][1] == save_cursor or self._source[self._parentheses_stack[-1][1]:save_cursor].isspace())):
                     self._cursor += 1
                     result = self._parentheses_stack.pop()[0](result, suffix)
                 else:
@@ -1708,12 +1709,17 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def __whitespace(self, stop: str = None) -> Space:
+        space, self._cursor = self.__format(self._source, self._cursor, stop)
+        return space
+
+
+    def __format(self, source: str, offset: int, stop: str = None) -> Tuple[Space, int]:
         prefix = None
         whitespace = []
         comments = []
-        source_len = len(self._source)
-        while self._cursor < source_len:
-            char = self._source[self._cursor]
+        source_len = len(source)
+        while offset < source_len:
+            char = source[offset]
             if stop is not None and char == stop:
                 break
             if char.isspace() or char == '\\':
@@ -1725,22 +1731,22 @@ class ParserVisitor(ast.NodeVisitor):
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
-                self._cursor += 1
-                while self._cursor < source_len and self._source[self._cursor] != '\n':
-                    comment.append(self._source[self._cursor])
-                    self._cursor += 1
-                comments.append(PyComment(''.join(comment), '\n' if self._cursor < source_len else '',
+                offset += 1
+                while offset < source_len and source[offset] != '\n':
+                    comment.append(source[offset])
+                    offset += 1
+                comments.append(PyComment(''.join(comment), '\n' if offset < source_len else '',
                                           False, Markers.EMPTY))
             else:
                 break
-            if self._cursor < source_len:
-                self._cursor += 1
+            if offset < source_len:
+                offset += 1
 
         if not comments:
             prefix = ''.join(whitespace)
         elif whitespace:
             comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
-        return Space(comments, prefix)
+        return Space(comments, prefix), offset
 
 
     def __position_of_next(self, until_delim: str, stop: str = None) -> int:

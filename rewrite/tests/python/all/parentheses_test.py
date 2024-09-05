@@ -1,11 +1,14 @@
-import pytest
-
 from rewrite.test import rewrite_run, python
 
 
 def test_single():
     # language=python
     rewrite_run(python("assert (True)"))
+
+
+def test_left():
+    # language=python
+    rewrite_run(python("assert (True) or False"))
 
 
 def test_double():
@@ -28,13 +31,14 @@ def test_nested_spaces():
     rewrite_run(python("assert (  True or ( False ) )"))
 
 
-def test_assign_parens():
+def test_multiline():
     # language=python
     rewrite_run(
         python(
             """
-            total_months = ( (2 - 1) * 12 + (3 + 4) 
-            + 1)
+            b = (
+                True
+            ) or False
             """
         )
     )

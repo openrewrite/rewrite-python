@@ -19,6 +19,13 @@ P = TypeVar('P')
 
 @runtime_checkable
 class J(Tree, Protocol):
+    @property
+    def prefix(self) -> Space:
+        ...
+
+    def with_prefix(self, prefix: Space) -> 'J':
+        ...
+
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         from .visitor import JavaVisitor
         return self.accept_java(v.adapt(J, JavaVisitor), p)
