@@ -98,7 +98,7 @@ class ParserVisitor(ast.NodeVisitor):
         vararg_prefix = self.__source_before('*') if vararg else None
         name = self.__convert_name(node.arg, self.__map_type(node))
         after_name = self.__source_before(':') if node.annotation else Space.EMPTY
-        type_expression = self.__convert(node.annotation) if node.annotation else None
+        type_expression = self.__convert_type_hint(node.annotation) if node.annotation else None
         initializer = self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None
 
         return j.VariableDeclarations(

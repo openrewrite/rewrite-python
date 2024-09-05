@@ -92,3 +92,15 @@ def test_variable_with_parameterized_type_hint():
 def test_variable_with_quoted_type_hint():
     # language=python
     rewrite_run(python("""foo: 'Foo' = None"""))
+
+
+def test_function_parameter_with_quoted_type_hint():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(s: "str"):
+                pass
+            """
+        ))
+
