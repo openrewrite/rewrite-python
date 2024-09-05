@@ -541,14 +541,34 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_GeneratorExp(self, node):
+        # this weird logic is here to deal with the case of generator expressions appearing as the argument to a call
+        prefix = self.__whitespace()
+        if self._source[self._cursor] == '(':
+            save_cursor = self._cursor
+            self._cursor += 1
+            try:
+                result = self.__convert(node.elt)
+                save_cursor_2 = self._cursor
+                self.__whitespace()
+                assert self._source[self._cursor] != ')'
+                self._cursor = save_cursor_2
+                parenthesized = True
+            except:
+                self._cursor = save_cursor
+                result = self.__convert(node.elt)
+                parenthesized = False
+        else:
+            result = self.__convert(node.elt)
+            parenthesized = False
+
         return py.ComprehensionExpression(
             random_id(),
-            self.__source_before('('),
-            Markers.EMPTY,
+            prefix,
+            Markers.EMPTY if parenthesized else Markers.EMPTY.with_markers([OmitParentheses(random_id())]),
             py.ComprehensionExpression.Kind.GENERATOR,
-            self.__convert(node.elt),
+            result,
             cast(List[py.ComprehensionExpression.Clause], [self.__convert(g) for g in node.generators]),
-            self.__source_before(')'),
+            self.__source_before(')') if parenthesized else Space.EMPTY,
             self.__map_type(node)
         )
 

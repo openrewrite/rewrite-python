@@ -51,6 +51,26 @@ def test_basic_generator():
     rewrite_run(python("a = (n * 2 for n in range(10))"))
 
 
+def test_generator_without_parens_in_call_1():
+    # language=python
+    rewrite_run(python("a = list(n * 2 for n in range(10))"))
+
+
+def test_generator_without_parens_in_call_2():
+    # language=python
+    rewrite_run(python("a = list((n * 2) for n in range(10))"))
+
+
+def test_generator_without_parens_in_call_3():
+    # language=python
+    rewrite_run(python("a = list((n,) for n in range(10))"))
+
+
+def test_generator_without_parens_in_call_4():
+    # language=python
+    rewrite_run(python("a = list(((n,m) for m in range(10)) for n in range(10))"))
+
+
 def test_generator_with_if():
     # language=python
     rewrite_run(python("a = {e:e for e in range(10) if e > 1}"))
