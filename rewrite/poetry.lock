@@ -149,13 +149,13 @@ files = [
 
 [[package]]
 name = "openrewrite-remote"
-version = "0.2.4"
+version = "0.2.5"
 description = "Remoting functionality for the OpenRewrite library."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "openrewrite_remote-0.2.4-py3-none-any.whl", hash = "sha256:c174a7400e51b6f0bc7e9f158e6c692377cacbae95d6a6527b9fe34c40e10ce1"},
-    {file = "openrewrite_remote-0.2.4.tar.gz", hash = "sha256:388222db9775367de0cf557f6b05a585cbe39dfb182ed3cb99f683ce602628d2"},
+    {file = "openrewrite_remote-0.2.5-py3-none-any.whl", hash = "sha256:5efd3df3f5174c15ffea129c27eea905f126c348a89b5e8590e76537fdeb5362"},
+    {file = "openrewrite_remote-0.2.5.tar.gz", hash = "sha256:81954d7759c47d4260a241baea71f787cdc91408b157fce3f109bcfd9803ed90"},
 ]
 
 [package.dependencies]

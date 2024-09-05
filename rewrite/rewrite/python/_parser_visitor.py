@@ -23,7 +23,7 @@ J2 = TypeVar('J2', bound=J)
 class ParserVisitor(ast.NodeVisitor):
     _source: str
     _cursor: int = 0
-    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], Tuple[int, int]]] = []
+    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int]] = []
 
     @property
     def _source_after_cursor(self) -> str:
@@ -1572,23 +1572,23 @@ class ParserVisitor(ast.NodeVisitor):
                         prefix,
                         Markers.EMPTY,
                         self.__pad_right(e, r)
-                    ), (node.lineno, node.col_offset)))
+                    ), self._cursor))
                     # handle nested parens
                     result = self.__convert(node)
                 else:
                     self._cursor = save_cursor
                     result = self.visit(cast(ast.AST, node))
 
-                save_cursor = self._cursor
+                save_cursor_2 = self._cursor
                 suffix = self.__whitespace()
                 if (len(self._parentheses_stack) > 0 and
                         self._cursor < len(self._source) and
                         self._source[self._cursor] == ')' and
-                        self._parentheses_stack[-1][1] == (node.lineno, node.col_offset)):
+                        self._parentheses_stack[-1][1] == save_cursor):
                     self._cursor += 1
                     result = self._parentheses_stack.pop()[0](result, suffix)
                 else:
-                    self._cursor = save_cursor
+                    self._cursor = save_cursor_2
                 return result
             else:
                 return self.visit(cast(ast.AST, node))

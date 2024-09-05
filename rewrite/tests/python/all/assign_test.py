@@ -6,7 +6,7 @@ def test_assign():
     rewrite_run(python("a = 1"))
 
 
-def test_assign():
+def test_assign_expression():
     # language=python
     rewrite_run(python("(a := 1)"))
 
