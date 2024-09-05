@@ -341,11 +341,17 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.body[0]) if single_statement_then_body else self.__convert_block(node.body), Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
-            single_statement_else_body = len(node.orelse) == 1
+            else_prefix = self.__whitespace()
+            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and self._source.startswith('elif', self._cursor):
+                single_statement_else_body = True
+                self._cursor += 2
+            else:
+                single_statement_else_body = False
+                self._cursor += 4
+
             elze = j.If.Else(
                 random_id(),
-                # TODO technically there could be space between else and ':' but likely not common
-                self.__source_before('el') if single_statement_else_body and isinstance(node.orelse[0], ast.If) else self.__source_before('else:') if single_statement_else_body else self.__source_before('else'),
+                else_prefix,
                 Markers.EMPTY,
                 self.__pad_right(
                     self.__convert(node.orelse[0]) if single_statement_else_body else self.__convert_block(node.orelse),

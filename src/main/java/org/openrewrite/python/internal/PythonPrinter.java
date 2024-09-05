@@ -247,8 +247,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 close = "]";
                 break;
             case GENERATOR:
-                open = "(";
-                close = ")";
+                if (comp.getMarkers().findFirst(OmitParentheses.class).isPresent()) {
+                    open = "";
+                    close = "";
+                } else {
+                    open = "(";
+                    close = ")";
+                }
                 break;
             default:
                 throw new IllegalStateException();
@@ -910,8 +915,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
             beforeSyntax(else_, Space.Location.ELSE_PREFIX, p);
-            if (getCursor().getParentTreeCursor().getValue() instanceof J.If &&
-                else_.getBody() instanceof J.If) {
+            if (getCursor().getParentTreeCursor().getValue() instanceof J.If && else_.getBody() instanceof J.If) {
                 p.append("el");
                 visit(else_.getBody(), p);
             } else if (else_.getBody() instanceof J.Block) {
