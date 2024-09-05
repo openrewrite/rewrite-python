@@ -23,4 +23,4 @@ parser = PythonParser()
 res = parser.parse_inputs([ParserInput(pathlib.Path(path), None, False, lambda: open(path, 'r', encoding='utf-8'))], relative_to=None, ctx=InMemoryExecutionContext())
 for r in res:
     if isinstance(r, ParseError):
-        print(r.markers.find_first(ParseExceptionResult).exception_message)
+        print(r.markers.find_first(ParseExceptionResult).message)
