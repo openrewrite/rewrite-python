@@ -1,3 +1,5 @@
+import pytest
+
 from rewrite.test import rewrite_run, python
 
 
@@ -39,3 +41,15 @@ def test_array_slice_no_lower_no_upper():
 def test_array_slice_full():
     # language=python
     rewrite_run(python("a = [1, 2][0:1:1]"))
+
+
+@pytest.mark.xfail(reason="Need to differentiate from parameterized types", strict=True)
+def test_array_slice_tuple_index_1():
+    # language=python
+    rewrite_run(python("a = [1, 2][0,1]"))
+
+
+@pytest.mark.xfail(reason="Need to differentiate from parameterized types", strict=True)
+def test_array_slice_tuple_index_2():
+    # language=python
+    rewrite_run(python("a = [1, 2][(0,1)]"))

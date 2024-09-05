@@ -5,9 +5,8 @@ from typing import Iterable, Optional
 
 from rewrite import Parser, ParserInput, ExecutionContext, SourceFile, ParseError
 from rewrite.parser import require_print_equals_input, ParserBuilder
-
 from ._parser_visitor import ParserVisitor
-from .tree import Py, CompilationUnit
+from .tree import CompilationUnit
 
 
 class PythonParser(Parser):

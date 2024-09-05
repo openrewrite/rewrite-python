@@ -71,6 +71,11 @@ def test_generator_without_parens_in_call_4():
     rewrite_run(python("a = list(((n,m) for m in range(10)) for n in range(10))"))
 
 
+def test_generator_without_parens_in_call_5():
+    # language=python
+    rewrite_run(python("a = any(is_documentation_link(word) for line in body.splitlines() for word in line.split())"))
+
+
 def test_generator_with_if():
     # language=python
     rewrite_run(python("a = {e:e for e in range(10) if e > 1}"))

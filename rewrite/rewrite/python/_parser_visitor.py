@@ -12,7 +12,7 @@ from more_itertools import peekable
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
-    NameTree, OmitParentheses
+    NameTree, OmitParentheses, Expression
 from rewrite.java import tree as j
 from . import tree as py, PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments
@@ -21,9 +21,10 @@ J2 = TypeVar('J2', bound=J)
 
 
 class ParserVisitor(ast.NodeVisitor):
+
     _source: str
-    _cursor: int = 0
-    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int]] = []
+    _cursor: int
+    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int]]
 
     @property
     def _source_after_cursor(self) -> str:
@@ -37,6 +38,8 @@ class ParserVisitor(ast.NodeVisitor):
     def __init__(self, source: str):
         super().__init__()
         self._source = source
+        self._cursor = 0
+        self._parentheses_stack = []
 
     def generic_visit(self, node):
         return super().generic_visit(node)
@@ -1015,7 +1018,7 @@ class ParserVisitor(ast.NodeVisitor):
             select = None
             name = cast(j.Identifier, self.__convert(node.func))
         elif isinstance(node.func, ast.Call):
-            select = self.__pad_right(cast(j.Identifier, self.__convert(node.func)), self.__whitespace())
+            select = self.__pad_right(cast(Expression, self.__convert(node.func)), self.__whitespace())
             # printer handles empty name by not printing `.` before it
             name = self.__convert_name('')
         elif isinstance(node.func, ast.Attribute):
