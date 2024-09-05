@@ -1,3 +1,5 @@
+import pytest
+
 from rewrite.test import rewrite_run, python
 
 
@@ -51,6 +53,12 @@ def test_string_with_escaped_quote():
 def test_string_with_flags():
     # language=python
     rewrite_run(python("assert u'\u0394 (delta)'"))
+
+
+@pytest.mark.xfail(reason="Still needs to be built using lexer", strict=True)
+def test_string_literal_concatenation():
+    # language=python
+    rewrite_run(python("assert 'a' 'b'"))
 
 
 def test_bytes():
