@@ -53,6 +53,11 @@ def test_string_with_flags():
     rewrite_run(python("assert u'\u0394 (delta)'"))
 
 
+def test_bytes():
+    # language=python
+    rewrite_run(python("assert b'\x68\x65\x6c\x6c\x6f'"))
+
+
 def test_multiline_string_with_flags():
     # language=python
     rewrite_run(
