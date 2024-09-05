@@ -1923,7 +1923,10 @@ class ParserVisitor(ast.NodeVisitor):
                             tok = next(tokens)
                             if tok.type == token.OP and tok.string == '!':
                                 break
-                            if tok.type == token.OP and tok.string == '=' and tokens.peek().string in ('!', ':', '}'):
+                            la_tok = tokens.peek()
+                            if tok.type == token.OP and tok.string == '}' and (la_tok.type in (token.FSTRING_END, token.FSTRING_MIDDLE) or (la_tok.type == token.OP and la_tok.string == '{')):
+                                break
+                            if tok.type == token.OP and tok.string == '=' and la_tok.string in ('!', ':', '}'):
                                 break
                     except StopIteration:
                         pass
@@ -1954,6 +1957,7 @@ class ParserVisitor(ast.NodeVisitor):
                         tokens)
                 else:
                     format_spec = None
+
                 parts.append(py.FormattedString.Value(
                     random_id(),
                     Space.EMPTY,

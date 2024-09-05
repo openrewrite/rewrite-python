@@ -150,3 +150,8 @@ def test_format_value():
 def test_nested_fstring_with_format_value():
     # language=python
     rewrite_run(python("""a = f'{f"{'foo'}":>{2*3}}'"""))
+
+
+def test_adjoining_expressions():
+    # language=python
+    rewrite_run(python("""a = f'{1}{0}'"""))
