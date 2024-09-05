@@ -35,6 +35,11 @@ def test_fraction_leading_dot():
     rewrite_run(python("assert .0"))
 
 
+def test_large_int():
+    # language=python
+    rewrite_run(python("assert 0xC03A0019"))
+
+
 def test_single_quoted_string():
     # language=python
     rewrite_run(python("assert 'foo'"))

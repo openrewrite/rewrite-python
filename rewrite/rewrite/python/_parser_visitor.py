@@ -1591,6 +1591,8 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_type_hint(self, node) -> Optional[TypeTree]:
         if isinstance(node, ast.Constant):
             literal = cast(j.Literal, self.__convert(node))
+            if node.value is None or node.value is Ellipsis:
+                return literal
             return j.Identifier(
                 random_id(),
                 literal.prefix,
