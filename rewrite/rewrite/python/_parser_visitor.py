@@ -1224,7 +1224,7 @@ class ParserVisitor(ast.NodeVisitor):
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
 
         save_cursor = self._cursor
-        async_prefix = self.__source_before('async')
+        async_prefix = self.__source_before('async', 'def') if isinstance(node, ast.AsyncFunctionDef) else None
         modifiers = []
         if save_cursor != self._cursor:
             modifiers.append(j.Modifier(
@@ -1823,7 +1823,7 @@ class ParserVisitor(ast.NodeVisitor):
                     in_single_line_comment = True
 
             if not in_single_line_comment:
-                if stop is not None and self._source[delim_index] == stop:
+                if stop is not None and self._source.startswith(stop, delim_index):
                     return -1  # reached stop word before finding the delimiter
 
                 if self._source.startswith(until_delim, delim_index):

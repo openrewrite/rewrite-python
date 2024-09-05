@@ -25,6 +25,18 @@ def test_varargs():
     )
 
 
+def test_function_containing_async_identifier():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def async_foo():
+                pass
+            """
+        )
+    )
+
+
 def test_kwargs():
     # language=python
     rewrite_run(
