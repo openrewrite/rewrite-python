@@ -18,6 +18,7 @@ __all__ = [
     # Markers
     'KeywordArguments',
     'KeywordOnlyArguments',
+    'Quoted',
 
     # AST types
     'Await',

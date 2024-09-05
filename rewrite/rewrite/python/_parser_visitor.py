@@ -12,10 +12,10 @@ from more_itertools import peekable
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
-    NameTree, OmitParentheses, Expression
+    NameTree, OmitParentheses, Expression, TypeTree
 from rewrite.java import tree as j
 from . import tree as py, PyComment
-from .markers import KeywordArguments, KeywordOnlyArguments
+from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
 
 J2 = TypeVar('J2', bound=J)
 
@@ -241,7 +241,7 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__whitespace()
         name = self.__convert(node.target)
         after_name = self.__source_before(':') if node.annotation else Space.EMPTY
-        var_type = self.__convert(node.annotation)
+        var_type = self.__convert_type_hint(node.annotation)
         initializer = self.__pad_left(
             self.__source_before('='),
             self.__convert(node.value)
@@ -1602,6 +1602,21 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.operand),
             self.__map_type(node)
         )
+
+
+    def __convert_type_hint(self, node) -> Optional[TypeTree]:
+        if isinstance(node, ast.Constant):
+            literal = cast(j.Literal, self.__convert(node))
+            return j.Identifier(
+                random_id(),
+                literal.prefix,
+                Markers.EMPTY.with_markers([Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
+                [],
+                str(literal.value),
+                self.__map_type(node),
+                None
+            )
+        return self.__convert(node)
 
 
     def __convert(self, node) -> Optional[J]:

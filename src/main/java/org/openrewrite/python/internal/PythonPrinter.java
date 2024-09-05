@@ -31,11 +31,13 @@ import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.marker.KeywordArguments;
 import org.openrewrite.python.marker.KeywordOnlyArguments;
+import org.openrewrite.python.marker.Quoted;
 import org.openrewrite.python.marker.SuppressNewline;
 import org.openrewrite.python.tree.*;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
@@ -957,6 +959,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             visit(forEachLoop.getBody(), p);
             afterSyntax(forEachLoop, p);
             return forEachLoop;
+        }
+
+        @Override
+        public J visitIdentifier(J.Identifier ident, PrintOutputCapture<P> p) {
+            this.beforeSyntax(ident, Location.IDENTIFIER_PREFIX, p);
+            Optional<Quoted> quoted = ident.getMarkers().findFirst(Quoted.class);
+            quoted.ifPresent(value -> p.append(value.getStyle().getQuote()));
+            p.append(ident.getSimpleName());
+            quoted.ifPresent(value -> p.append(value.getStyle().getQuote()));
+            this.afterSyntax(ident, p);
+            return ident;
         }
 
         @Override
