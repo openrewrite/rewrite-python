@@ -129,6 +129,7 @@ public interface Py extends J {
             NotIn,
 
             FloorDivision,
+            MatrixMultiplication,
             Power
         }
 

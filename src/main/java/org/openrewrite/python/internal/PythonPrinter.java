@@ -118,6 +118,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             case FloorDivision:
                 p.append("//");
                 break;
+            case MatrixMultiplication:
+                p.append("@");
+                break;
             case Power:
                 p.append("**");
                 break;

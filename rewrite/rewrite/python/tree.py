@@ -95,7 +95,8 @@ class Binary(Py, Expression, TypedTree):
         IsNot = 2
         NotIn = 3
         FloorDivision = 4
-        Power = 5
+        MatrixMultiplication = 5
+        Power = 6
 
     @dataclass
     class PaddingHelper:

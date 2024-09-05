@@ -1135,6 +1135,7 @@ class ParserVisitor(ast.NodeVisitor):
             ast.LShift: (j.Binary.Type.LeftShift, '<<'),
             ast.Lt: (j.Binary.Type.LessThan, '<'),
             ast.LtE: (j.Binary.Type.LessThanOrEqual, '<='),
+            ast.MatMult: (py.Binary.Type.MatrixMultiplication, '@'),
             ast.Mod: (j.Binary.Type.Modulo, '%'),
             ast.Mult: (j.Binary.Type.Multiplication, '*'),
             ast.NotEq: (j.Binary.Type.NotEqual, '!='),

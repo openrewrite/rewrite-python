@@ -25,6 +25,8 @@ def test_arithmetic_ops():
     rewrite_run(python("assert 1 // 2"))
     # language=python
     rewrite_run(python("assert 1 ** 2"))
+    # language=python
+    rewrite_run(python("assert [[1]] @ [[2]]"))
 
 
 def test_eq_ops():
