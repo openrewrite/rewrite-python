@@ -1534,35 +1534,19 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Subscript(self, node):
-        if isinstance(node.slice, (ast.Constant, ast.Slice)):
-            return j.ArrayAccess(
+        return j.ArrayAccess(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            self.__convert(node.value),
+            j.ArrayDimension(
                 random_id(),
-                self.__whitespace(),
+                self.__source_before('['),
                 Markers.EMPTY,
-                self.__convert(node.value),
-                j.ArrayDimension(
-                    random_id(),
-                    self.__source_before('['),
-                    Markers.EMPTY,
-                    self.__pad_right(self.__convert(node.slice), self.__source_before(']'))
-                ),
-                self.__map_type(node)
-            )
-        else:
-            slices = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
-            return j.ParameterizedType(
-                random_id(),
-                self.__whitespace(),
-                Markers.EMPTY,
-                self.__convert(node.value),
-                JContainer(
-                    self.__source_before('['),
-                    [self.__pad_list_element(self.__convert(s), last=i == len(slices) - 1, end_delim=']') for i, s in enumerate(slices)],
-                    Markers.EMPTY
-                ),
-                None,
-                None
-            )
+                self.__pad_right(self.__convert(node.slice), self.__source_before(']'))
+            ),
+            self.__map_type(node)
+        )
 
 
     def visit_Tuple(self, node):
@@ -1616,10 +1600,30 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node),
                 None
             )
-        return self.__convert(node)
+        elif isinstance(node, ast.Subscript):
+            slices = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+            return j.ParameterizedType(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert(node.value),
+                JContainer(
+                    self.__source_before('['),
+                    [self.__pad_list_element(self.__convert_type_hint(s), last=i == len(slices) - 1, end_delim=']') for i, s in
+                     enumerate(slices)],
+                    Markers.EMPTY
+                ),
+                None,
+                None
+            )
+        return self.__convert_internal(node, self.__convert_type_hint)
 
 
     def __convert(self, node) -> Optional[J]:
+        return self.__convert_internal(node, self.__convert)
+
+
+    def __convert_internal(self, node, recursion) -> Optional[J]:
         if node:
             if isinstance(node, ast.expr) and not isinstance(node, (ast.Tuple, ast.GeneratorExp)):
                 save_cursor = self._cursor
@@ -1638,7 +1642,7 @@ class ParserVisitor(ast.NodeVisitor):
                         self.__pad_right(e.with_prefix(expr_prefix), r)
                     ), self._cursor))
                     # handle nested parens
-                    result = self.__convert(node)
+                    result = recursion(node)
                 else:
                     self._cursor = save_cursor
                     result = self.visit(cast(ast.AST, node))

@@ -89,6 +89,11 @@ def test_variable_with_parameterized_type_hint():
     rewrite_run(python("""foo: Union[None, ...] = None"""))
 
 
+def test_variable_with_parameterized_type_hint_in_quotes():
+    # language=python
+    rewrite_run(python("""foo: Dict["Foo", str] = None"""))
+
+
 def test_variable_with_quoted_type_hint():
     # language=python
     rewrite_run(python("""foo: 'Foo' = None"""))
