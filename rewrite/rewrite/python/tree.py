@@ -94,6 +94,8 @@ class Binary(Py, Expression, TypedTree):
         Is = 1
         IsNot = 2
         NotIn = 3
+        FloorDivision = 4
+        Power = 5
 
     @dataclass
     class PaddingHelper:

@@ -987,15 +987,31 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_BinOp(self, node):
-        return j.Binary(
-            random_id(),
-            self.__whitespace(),
-            Markers.EMPTY,
-            self.__convert(node.left),
-            self.__convert_binary_operator(node.op),
-            self.__convert(node.right),
-            self.__map_type(node)
-        )
+        prefix = self.__whitespace()
+        left = self.__convert(node.left)
+        op = self.__convert_binary_operator(node.op)
+
+        if isinstance(op.element, py.Binary.Type):
+            return py.Binary(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                left,
+                op,
+                None,
+                self.__convert(node.right),
+                self.__map_type(node)
+            )
+        else:
+            return j.Binary(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                left,
+                op,
+                self.__convert(node.right),
+                self.__map_type(node)
+            )
 
 
     def visit_BoolOp(self, node):
@@ -1110,6 +1126,7 @@ class ParserVisitor(ast.NodeVisitor):
             ast.BitXor: (j.Binary.Type.BitXor, '^'),
             ast.Div: (j.Binary.Type.Division, '/'),
             ast.Eq: (j.Binary.Type.Equal, '=='),
+            ast.FloorDiv: (py.Binary.Type.FloorDivision, '//'),
             ast.Gt: (j.Binary.Type.GreaterThan, '>'),
             ast.GtE: (j.Binary.Type.GreaterThanOrEqual, '>='),
             ast.In: (py.Binary.Type.In, 'in'),
@@ -1123,6 +1140,7 @@ class ParserVisitor(ast.NodeVisitor):
             ast.NotEq: (j.Binary.Type.NotEqual, '!='),
             ast.NotIn: (py.Binary.Type.NotIn, 'not'),
             ast.Or: (j.Binary.Type.Or, 'or'),
+            ast.Pow: (py.Binary.Type.Power, '**'),
             ast.RShift: (j.Binary.Type.RightShift, '>>'),
             ast.Sub: (j.Binary.Type.Subtraction, '-'),
         }
@@ -1716,12 +1734,24 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:
+        if self._source.startswith(until_delim, self._cursor):
+            self._cursor += len(until_delim)
+            return Space.EMPTY
+
+        save_cursor = self._cursor
+        space = self.__whitespace()
+        if self._source.startswith(until_delim, self._cursor):
+            self._cursor += len(until_delim)
+            return space
+        else:
+            self._cursor = save_cursor
+
         delim_index = self.__position_of_next(until_delim, stop)
         if delim_index == -1:
             return Space.EMPTY
 
         if delim_index == self._cursor:
-            self._cursor = self._cursor + len(until_delim)
+            self._cursor += len(until_delim)
             return Space.EMPTY
 
         space = self.__whitespace()
@@ -1782,7 +1812,8 @@ class ParserVisitor(ast.NodeVisitor):
         in_single_line_comment = False
 
         delim_index = self._cursor
-        while delim_index < len(self._source) - len(until_delim) + 1:
+        end_index = len(self._source) - len(until_delim) + 1
+        while delim_index < end_index:
             if in_single_line_comment:
                 if self._source[delim_index] == '\n':
                     in_single_line_comment = False

@@ -127,6 +127,9 @@ public interface Py extends J {
             Is,
             IsNot,
             NotIn,
+
+            FloorDivision,
+            Power
         }
 
         public Padding getPadding() {
