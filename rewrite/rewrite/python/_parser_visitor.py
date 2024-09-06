@@ -6,7 +6,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
-from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union
+from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union, Iterator
 
 from more_itertools import peekable
 
@@ -1158,13 +1158,28 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Constant(self, node):
-        # noinspection PyTypeChecker
+        prefix = self.__whitespace()
+
+        start = self._cursor
+        tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
+        tok = next(tokens)  # skip ENCODING token
+        tok = self.__next_lexer_token(tokens)
+
+        while tok.type == token.STRING:
+            while (tok := next(tokens)).type in (token.NEWLINE, token.INDENT, token.DEDENT):
+                pass
+            if tok.type == token.STRING:
+                self._cursor = self._source.index(tok.string, self._cursor)
+                self._cursor += len(tok.string)
+            else:
+                break
+
         return j.Literal(
             random_id(),
-            self.__whitespace(),
+            prefix,
             Markers.EMPTY,
             None if node.value is Ellipsis else node.value,
-            self.__next_lexer_token(),
+            self._source[start:self._cursor],
             None,
             self.__map_type(node),
         )
@@ -1439,7 +1454,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), Space.EMPTY)],
             self.__whitespace()
         )
-        assert self._cursor == len(self._source)
+        # assert self._cursor == len(self._source)
         return cu
 
 
@@ -1694,13 +1709,11 @@ class ParserVisitor(ast.NodeVisitor):
         return ident_or_field(name.split('.'))
 
 
-    def __next_lexer_token(self):
-        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
-        next(tokens)  # skip ENCODING token
+    def __next_lexer_token(self, tokens: Iterator[TokenInfo]) -> TokenInfo:
         tok = next(tokens)
         value_source = tok.string
         self._cursor += len(value_source)
-        return value_source
+        return tok
 
 
     def __convert_all(self, trees: Sequence) -> List[J2]:

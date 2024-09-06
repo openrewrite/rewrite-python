@@ -60,10 +60,23 @@ def test_string_with_flags():
     rewrite_run(python("assert u'\u0394 (delta)'"))
 
 
-@pytest.mark.xfail(reason="Still needs to be built using lexer", strict=True)
-def test_string_literal_concatenation():
+def test_string_literal_concatenation_1():
     # language=python
     rewrite_run(python("assert 'a' 'b'"))
+
+
+def test_string_literal_concatenation_2():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            assert ('a'
+                'b'
+                'c'
+            )
+            """
+        )
+    )
 
 
 def test_bytes():

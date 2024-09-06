@@ -126,6 +126,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             case Power:
                 p.append("**");
                 break;
+            case StringConcatenation:
+                // empty
+                break;
         }
 
         visit(binary.getRight(), p);

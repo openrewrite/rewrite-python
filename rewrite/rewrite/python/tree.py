@@ -97,6 +97,7 @@ class Binary(Py, Expression, TypedTree):
         FloorDivision = 4
         MatrixMultiplication = 5
         Power = 6
+        StringConcatenation = 7
 
     @dataclass
     class PaddingHelper:

@@ -130,7 +130,9 @@ public interface Py extends J {
 
             FloorDivision,
             MatrixMultiplication,
-            Power
+            Power,
+
+            StringConcatenation,
         }
 
         public Padding getPadding() {
