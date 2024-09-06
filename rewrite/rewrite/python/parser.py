@@ -1,5 +1,5 @@
 import ast
-import traceback
+import logging
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -7,6 +7,8 @@ from rewrite import Parser, ParserInput, ExecutionContext, SourceFile, ParseErro
 from rewrite.parser import require_print_equals_input, ParserBuilder
 from ._parser_visitor import ParserVisitor
 from .tree import CompilationUnit
+
+logging.basicConfig(level=logging.ERROR)
 
 
 class PythonParser(Parser):
@@ -20,7 +22,7 @@ class PythonParser(Parser):
                 cu = ParserVisitor(source_str).visit(tree)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
             except Exception as e:
-                traceback.print_exc()
+                logging.error(f"An error was encountered while parsing {source.path}: {str(e)}", exc_info=True)
                 cu = ParseError.build(self, source, relative_to, ctx, e)
             yield cu
 
