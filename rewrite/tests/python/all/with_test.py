@@ -14,3 +14,16 @@ def test_with():
             """
         )
     )
+
+
+def test_with_no_target():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(i):
+                with len([]):
+                    pass
+            """
+        )
+    )

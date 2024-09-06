@@ -388,20 +388,25 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_withitem(self, node):
         prefix = self.__whitespace()
         expr = self.__convert(node.context_expr)
-        value = self.__pad_left(self.__source_before('as'), expr)
-        name = self.__convert(node.optional_vars)
-        return j.Try.Resource(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            j.Assignment(
+        if node.optional_vars:
+            value = self.__pad_left(self.__source_before('as'), expr)
+            name = self.__convert(node.optional_vars)
+            var = j.Assignment(
                 random_id(),
                 Space.EMPTY,
                 Markers.EMPTY,
                 name,
                 value,
                 self.__map_type(node.context_expr)
-            ),
+            )
+        else:
+            var = expr
+
+        return j.Try.Resource(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            var,
             False
         )
 

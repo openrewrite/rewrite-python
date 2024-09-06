@@ -1189,21 +1189,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     visitMarkers(resource.getElement().getMarkers(), p);
 
                     TypedTree decl = resource.getElement().getVariableDeclarations();
-                    if (!(decl instanceof J.Assignment)) {
-                        throw new IllegalArgumentException(
-                                String.format(
-                                        "with-statement resource should be an Assignment; found: %s",
-                                        decl.getClass().getSimpleName()
-                                )
-                        );
-                    }
-
-                    J.Assignment assignment = (J.Assignment) decl;
-                    visit(assignment.getAssignment(), p);
-                    if (!(assignment.getVariable() instanceof J.Empty)) {
-                        visitSpace(assignment.getPadding().getAssignment().getBefore(), Location.LANGUAGE_EXTENSION, p);
-                        p.append("as");
-                        visit(assignment.getVariable(), p);
+                    if (decl instanceof J.Assignment) {
+                        J.Assignment assignment = (J.Assignment) decl;
+                        visit(assignment.getAssignment(), p);
+                        if (!(assignment.getVariable() instanceof J.Empty)) {
+                            visitSpace(assignment.getPadding().getAssignment().getBefore(), Location.LANGUAGE_EXTENSION, p);
+                            p.append("as");
+                            visit(assignment.getVariable(), p);
+                        }
+                    } else {
+                        visit(decl, p);
                     }
 
                     visitSpace(resource.getAfter(), Space.Location.TRY_RESOURCE_SUFFIX, p);
