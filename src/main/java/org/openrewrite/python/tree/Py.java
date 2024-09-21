@@ -1111,8 +1111,8 @@ public interface Py extends J {
             }
 
             public TrailingElseWrapper withElseBlock(JLeftPadded<Block> elseBlock) {
-                return t.elseBlock == elseBlock
-                        ? t :
+                return t.elseBlock == elseBlock ?
+                        t :
                         new TrailingElseWrapper(t.padding, t.id, t.prefix, t.markers, t.statement, elseBlock);
             }
         }
@@ -1399,9 +1399,9 @@ public interface Py extends J {
             }
 
             public VariableScope withNames(List<JRightPadded<J.Identifier>> names) {
-                return names == t.names
-                        ? t
-                        : new VariableScope(t.id, t.prefix, t.markers, t.kind, names);
+                return names == t.names ?
+                        t :
+                        new VariableScope(t.id, t.prefix, t.markers, t.kind, names);
             }
         }
     }
@@ -1472,9 +1472,9 @@ public interface Py extends J {
             }
 
             public Del withTargets(List<JRightPadded<Expression>> expressions) {
-                return expressions == t.targets
-                        ? t
-                        : new Del(t.id, t.prefix, t.markers, expressions);
+                return expressions == t.targets ?
+                        t :
+                        new Del(t.id, t.prefix, t.markers, expressions);
             }
         }
     }
@@ -1626,9 +1626,9 @@ public interface Py extends J {
             }
 
             public NamedArgument withValue(JLeftPadded<Expression> value) {
-                return value == t.value
-                        ? t
-                        : new NamedArgument(t.id, t.prefix, t.markers, t.name, value, t.type);
+                return value == t.value ?
+                        t :
+                        new NamedArgument(t.id, t.prefix, t.markers, t.name, value, t.type);
             }
         }
     }
@@ -1746,9 +1746,9 @@ public interface Py extends J {
             }
 
             public ErrorFrom withFrom(JLeftPadded<Expression> from) {
-                return from == t.from
-                        ? t
-                        : new ErrorFrom(t.id, t.prefix, t.markers, t.error, from, t.type);
+                return from == t.from ?
+                        t :
+                        new ErrorFrom(t.id, t.prefix, t.markers, t.error, from, t.type);
             }
         }
 
@@ -1834,9 +1834,9 @@ public interface Py extends J {
             }
 
             public MatchCase withGuard(JLeftPadded<Expression> guard) {
-                return guard == t.guard
-                        ? t
-                        : new MatchCase(t.id, t.prefix, t.markers, t.pattern, guard, null);
+                return guard == t.guard ?
+                        t :
+                        new MatchCase(t.id, t.prefix, t.markers, t.pattern, guard, null);
             }
         }
 
@@ -1937,9 +1937,9 @@ public interface Py extends J {
                 }
 
                 public Pattern withChildren(JContainer<Expression> children) {
-                    return children == t.children
-                            ? t
-                            : new Pattern(t.id, t.prefix, t.markers, t.kind, children, t.type);
+                    return children == t.children ?
+                            t :
+                            new Pattern(t.id, t.prefix, t.markers, t.kind, children, t.type);
                 }
             }
 
