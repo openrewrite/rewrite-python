@@ -1739,24 +1739,34 @@ class ParserVisitor(ast.NodeVisitor):
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
         # use whitespace until end of line as padding; what follows will be the prefix of next element
+        save_cursor = self._cursor
         padding = self.__whitespace('\n')
         if self._cursor < len(self._source) and self._source[self._cursor] == ';':
             self._cursor += 1
             markers = Markers.EMPTY.with_markers([Semicolon(random_id())])
         else:
+            padding = Space.EMPTY
             markers = Markers.EMPTY
+            self._cursor = save_cursor
         return JRightPadded(statement, padding, markers)
 
 
     def __pad_list_element(self, element: J, last: bool = False, pad_last: bool = True, end_delim: str = None) -> JRightPadded[J]:
+        save_cursor = self._cursor
         padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
         if last and self._cursor < len(self._source):
             if self._source[self._cursor] == ',' and end_delim != ',':
                 self._cursor += 1
                 markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace())])
-            if end_delim is not None and self._source[self._cursor] == end_delim:
-                self._cursor += 1
+            elif self._source[self._cursor] != end_delim:
+                padding = Space.EMPTY
+                self._cursor = save_cursor
+            if end_delim and self._source[self._cursor] == end_delim:
+                self._cursor += len(end_delim)
+        elif last:
+            padding = Space.EMPTY
+            self._cursor = save_cursor
         elif not last:
             self._cursor += 1
             markers = Markers.EMPTY

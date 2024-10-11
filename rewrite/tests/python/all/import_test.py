@@ -59,3 +59,14 @@ def test_relative_import_1():
 def test_relative_import_2():
     # language=python
     rewrite_run(python("from ..foo import bar"))
+
+
+# noinspection PyUnresolvedReferences
+def test_crlf():
+    # language=python
+    rewrite_run(python(
+        """\
+        import foo
+        import bar
+        """.replace('\n', '\r\n')
+    ))
