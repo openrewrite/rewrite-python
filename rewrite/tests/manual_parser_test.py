@@ -6,7 +6,7 @@ import sys
 from rewrite import InMemoryExecutionContext, ParserInput, ParseError, ParseExceptionResult
 from rewrite.python import PythonParser
 
-path = sys.argv[1] if len(sys.argv) > 1 else '../../../../pydantic/pydantic/pydantic/_internal/_known_annotated_metadata.py'
+path = sys.argv[1] if len(sys.argv) > 1 else '/Users/knut/git/moderneinc/moderne-cli/working-set/face-alignment/examples/detect_landmarks_in_image.py'
 
 from rewrite.remote import RemotingContext, RemotePrinterFactory
 from rewrite.remote.server import register_remoting_factories
@@ -20,7 +20,7 @@ RemotePrinterFactory(remoting_context.client).set_current()
 remoting_context.client.reset()
 
 parser = PythonParser()
-res = parser.parse_inputs([ParserInput(pathlib.Path(path), None, False, lambda: open(path, 'r', encoding='utf-8'))], relative_to=None, ctx=InMemoryExecutionContext())
+res = parser.parse_inputs([ParserInput(pathlib.Path(path), None, False, lambda: open(path, 'r', newline='', encoding='utf-8'))], relative_to=None, ctx=InMemoryExecutionContext())
 for r in res:
     if isinstance(r, ParseError):
         print(r.markers.find_first(ParseExceptionResult).message)
