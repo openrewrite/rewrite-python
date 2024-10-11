@@ -1572,20 +1572,35 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Tuple(self, node):
         prefix = self.__whitespace()
 
-        omit_parens = True
-        if self._source[self._cursor] == '(':
-            self._cursor += 1
-            omit_parens = False
+        if self._source[self._cursor] == '(' and node.elts:
+            save_cursor = self._cursor
+            elements = JContainer(
+                Space.EMPTY,
+                [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
+                Markers.EMPTY
+            )
+            if self._cursor < len(self._source) and  self._source[self._cursor] == ')':
+                # we need to backtrack as the parentheses belonged to a nested element
+                elements = None
+                self._cursor = save_cursor
+            else:
+                elements = elements.with_markers(Markers(random_id(), [OmitParentheses(random_id())]))
+        else:
+            elements = None
 
-        elements = JContainer(
-            Space.EMPTY,
-            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1,
-                                     end_delim=None if omit_parens else ')') for i, e in
-             enumerate(node.elts)] if node.elts else
-            [self.__pad_right(j.Empty(random_id(), self.__whitespace() if omit_parens else self.__source_before(')'),
-                                      Markers.EMPTY), Space.EMPTY)],
-            Markers(random_id(), [OmitParentheses(random_id())]) if omit_parens else Markers.EMPTY
-        )
+        if elements is None:
+            omit_parens = self._source[self._cursor] != '('
+            if not omit_parens:
+                self._cursor += 1
+            elements = JContainer(
+                Space.EMPTY,
+                [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1,
+                                         end_delim=None if omit_parens else ')') for i, e in
+                 enumerate(node.elts)] if node.elts else
+                [self.__pad_right(j.Empty(random_id(), self.__whitespace() if omit_parens else self.__source_before(')'),
+                                          Markers.EMPTY), Space.EMPTY)],
+                Markers(random_id(), [OmitParentheses(random_id())]) if omit_parens else Markers.EMPTY
+            )
         return py.CollectionLiteral(
             random_id(),
             prefix,

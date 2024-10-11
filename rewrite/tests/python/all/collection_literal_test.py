@@ -16,6 +16,11 @@ def test_single_element_tuple_with_trailing_comma():
     rewrite_run(python("t = (1 , )"))
 
 
+def test_tuple_with_first_element_in_parens():
+    # language=python
+    rewrite_run(python("x = (1) // 2, 0"))
+
+
 # note: `{}` is always a dict
 def test_empty_set():
     # language=python
