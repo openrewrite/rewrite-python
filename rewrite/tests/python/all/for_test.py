@@ -27,6 +27,19 @@ def test_for_with_destruct():
     )
 
 
+@pytest.mark.xfail(reason="Still need to decide how to map this", strict=True)
+def test_for_with_destruct_and_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            for (x, y) in [(1,2),(3,4)]:
+                pass
+            """
+        )
+    )
+
+
 @pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_for_with_else():
     # language=python

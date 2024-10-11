@@ -31,6 +31,11 @@ def test_nested_spaces():
     rewrite_run(python("assert (  True or ( False ) )"))
 
 
+def test_nested_in_field_access_select():
+    # language=python
+    rewrite_run(python("area_a = ((0 + 0) + 1).real"))
+
+
 def test_multiline():
     # language=python
     rewrite_run(

@@ -1689,7 +1689,9 @@ class ParserVisitor(ast.NodeVisitor):
                 if (len(self._parentheses_stack) > 0 and
                         self._cursor < len(self._source) and
                         self._source[self._cursor] == ')' and
-                        (self._parentheses_stack[-1][1] == save_cursor or self._source[self._parentheses_stack[-1][1]:save_cursor].isspace())):
+                        (self._parentheses_stack[-1][1] == save_cursor or
+                         self._source[self._parentheses_stack[-1][1]:save_cursor].isspace() or
+                         self._source[self._parentheses_stack[-1][1]:save_cursor] == '(')):
                     self._cursor += 1
                     result = self._parentheses_stack.pop()[0](result, suffix)
                 else:
