@@ -13,6 +13,18 @@ def test_yield():
     )
 
 
+def test_empty_yield():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test():
+                yield
+            """
+        )
+    )
+
+
 def test_yield_from():
     # language=python
     rewrite_run(

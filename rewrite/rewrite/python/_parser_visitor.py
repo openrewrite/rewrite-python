@@ -606,7 +606,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__source_before('yield'),
                 Markers.EMPTY,
                 False,
-                self.__convert(node.value),
+                self.__convert(node.value) if node.value else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
             )
         )
 
