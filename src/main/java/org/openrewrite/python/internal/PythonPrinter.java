@@ -1101,7 +1101,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             return method;
         }
 
-        protected void visitModifier(J.Modifier mod, PrintOutputCapture<P> p) {
+        @Override
+        public J visitModifier(J.Modifier mod, PrintOutputCapture<P> p) {
             String keyword = null;
             switch (mod.getType()) {
                 case Default:
@@ -1117,6 +1118,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 p.append(keyword);
                 afterSyntax(mod, p);
             }
+            return mod;
         }
 
         @Override
