@@ -68,19 +68,19 @@ class ParserVisitor(ast.NodeVisitor):
                                                                   cast(j.Identifier, self.__convert_name('', None)), [],
                                                                   None, None, None)
                 kwonly_prefix = self.__source_before('*')
-                kwonlyargs = [self.__pad_right(empty_name, self.__source_before(','))]
-                args.append(self.__pad_list_element(
-                    j.VariableDeclarations(
-                        random_id(),
-                        kwonly_prefix,
-                        Markers(random_id(), [KeywordOnlyArguments(random_id())]),
-                        [], [], None, None, [],
-                        kwonlyargs,
-                        None
-                    ),
-                    False,
-                    end_delim=')'
-                ))
+                args.append(
+                    JRightPadded(
+                        j.VariableDeclarations(
+                            random_id(),
+                            kwonly_prefix,
+                            Markers(random_id(), [KeywordOnlyArguments(random_id())]),
+                            [], [], None, None, [],
+                            [self.__pad_right(empty_name, self.__source_before(','))],
+                            None
+                        ),
+                        Space.EMPTY,
+                        Markers.EMPTY
+                    ))
 
             for i, kwonlyarg in enumerate(node.kwonlyargs):
                 args.append(self.__pad_list_element(
