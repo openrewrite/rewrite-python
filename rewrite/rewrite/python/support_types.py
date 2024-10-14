@@ -80,6 +80,8 @@ class PySpace:
         TRAILING_ELSE_WRAPPER_PREFIX = auto()
         TYPE_HINTED_EXPRESSION_PREFIX = auto()
         TYPE_HINT_PREFIX = auto()
+        UNION_PREFIX = auto()
+        UNION_TYPES_SUFFIX = auto()
         VARIABLE_SCOPE_NAME_SUFFIX = auto()
         VARIABLE_SCOPE_PREFIX = auto()
         YIELD_EXPRESSION_SUFFIX = auto()
@@ -109,6 +111,7 @@ class PyRightPadded:
         SLICE_STEP = PySpace.Location.SLICE_STEP_SUFFIX
         SLICE_STOP = PySpace.Location.SLICE_STOP_SUFFIX
         TOP_LEVEL_STATEMENT_SUFFIX = PySpace.Location.TOP_LEVEL_STATEMENT
+        UNION_TYPES = PySpace.Location.UNION_TYPES_SUFFIX
         VARIABLE_SCOPE_NAMES = PySpace.Location.VARIABLE_SCOPE_NAME_SUFFIX
         YIELD_EXPRESSIONS = PySpace.Location.YIELD_EXPRESSION_SUFFIX
 

@@ -1,9 +1,10 @@
-from typing import cast, TypeVar, Union
 
 from rewrite import SourceFile, TreeVisitor
 from .extensions import *
 from .support_types import *
 from .tree import *
+from typing import cast, TypeVar
+import typing
 from rewrite.java import JavaVisitor
 
 # noinspection DuplicatedCode
@@ -182,6 +183,16 @@ class PythonVisitor(JavaVisitor[P]):
         yield_from = yield_from.with_expression(self.visit_and_cast(yield_from.expression, Expression, p))
         return yield_from
 
+    def visit_union(self, union: Union, p: P) -> J:
+        union = union.with_prefix(self.visit_space(union.prefix, PySpace.Location.UNION_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(union, p))
+        if not isinstance(temp_expression, Union):
+            return temp_expression
+        union = cast(Union, temp_expression)
+        union = union.with_markers(self.visit_markers(union.markers, p))
+        union = union.padding.with_types([self.visit_right_padded(v, PyRightPadded.Location.UNION_TYPES, p) for v in union.padding.types])
+        return union
+
     def visit_variable_scope(self, variable_scope: VariableScope, p: P) -> J:
         variable_scope = variable_scope.with_prefix(self.visit_space(variable_scope.prefix, PySpace.Location.VARIABLE_SCOPE_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(variable_scope, p))
@@ -284,12 +295,12 @@ class PythonVisitor(JavaVisitor[P]):
         slice = slice.padding.with_step(self.visit_right_padded(slice.padding.step, PyRightPadded.Location.SLICE_STEP, p))
         return slice
 
-    def visit_container(self, container: Optional[JContainer[J2]], loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
+    def visit_container(self, container: Optional[JContainer[J2]], loc: typing.Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if isinstance(loc, JContainer.Location):
             return super().visit_container(container, loc, p)
         return extensions.visit_container(self, container, loc, p)
 
-    def visit_right_padded(self, right: Optional[JRightPadded[T]], loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[JRightPadded[T]]:
+    def visit_right_padded(self, right: Optional[JRightPadded[T]], loc: typing.Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[JRightPadded[T]]:
         if isinstance(loc, JRightPadded.Location):
             return super().visit_right_padded(right, loc, p)
         return extensions.visit_right_padded(self, right, loc, p)
@@ -299,7 +310,7 @@ class PythonVisitor(JavaVisitor[P]):
             return super().visit_left_padded(left, loc, p)
         return extensions.visit_left_padded(self, left, loc, p)
 
-    def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]], p: P) -> Space:
+    def visit_space(self, space: Optional[Space], loc: Optional[typing.Union[PySpace.Location, Space.Location]], p: P) -> Space:
         if isinstance(loc, Space.Location) or loc is None:
             return super().visit_space(space, loc, p)
         return extensions.visit_space(self, space, loc, p)

@@ -1323,6 +1323,81 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Data
+    final class Union implements Py, Expression, TypeTree {
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        List<JRightPadded<Expression>> types;
+
+        public List<Expression> getTypes() {
+            return JRightPadded.getElements(types);
+        }
+
+        public Union withTypes(List<Expression> types) {
+            return getPadding().withTypes(JRightPadded.withElements(this.types, types));
+        }
+
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitUnion(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final Union t;
+
+            public List<JRightPadded<Expression>> getTypes() {
+                return t.types;
+            }
+
+            public Union withTypes(List<JRightPadded<Expression>> types) {
+                return t.types == types ? t : new Union(t.id, t.prefix, t.markers, types, t.type);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)

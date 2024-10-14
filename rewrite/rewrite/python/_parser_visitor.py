@@ -1657,6 +1657,20 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
+        elif isinstance(node, ast.BinOp):
+            # NOTE: Type unions using `|` was added in Python 3.10
+            prefix = self.__whitespace()
+            # FIXME consider flattening nested unions
+            left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type_hint), self.__source_before('|'))
+            right = self.__pad_right(self.__convert_internal(node.right, self.__convert_type_hint), Space.EMPTY)
+            return py.Union(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                [left, right],
+                self.__map_type(node)
+            )
+
         return self.__convert_internal(node, self.__convert_type_hint)
 
 

@@ -631,6 +631,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         return expr;
     }
 
+    @Override
+    public J visitUnion(Py.Union union, PrintOutputCapture<P> p) {
+        beforeSyntax(union, PySpace.Location.UNION_PREFIX, p);
+        visitRightPadded(union.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE, "|", p);
+        afterSyntax(union, p);
+        return union;
+    }
+
     @SuppressWarnings("SameParameterValue")
     private static boolean lastCharIs(PrintOutputCapture<?> p, char c) {
         return p.out.length() != 0 && p.out.charAt(p.out.length() - 1) == c;

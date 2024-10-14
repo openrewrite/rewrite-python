@@ -28,6 +28,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.CompilationUnit visitCompilationUnit(Py.CompilationUnit cu, P p) {
+        return (Py.CompilationUnit) super.visitCompilationUnit(cu, p);
+    }
+
+    @Override
     public Py.ComprehensionExpression visitComprehensionExpression(Py.ComprehensionExpression ogComp, P p) {
         return (Py.ComprehensionExpression) super.visitComprehensionExpression(ogComp, p);
     }
@@ -68,6 +73,21 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.ExpressionStatement visitExpressionStatement(Py.ExpressionStatement expressionStatement, P p) {
+        return (Py.ExpressionStatement) super.visitExpressionStatement(expressionStatement, p);
+    }
+
+    @Override
+    public Py.FormattedString visitFormattedString(Py.FormattedString fString, P p) {
+        return (Py.FormattedString) super.visitFormattedString(fString, p);
+    }
+
+    @Override
+    public Py.FormattedString.Value visitFormattedStringValue(Py.FormattedString.Value value, P p) {
+        return (Py.FormattedString.Value) super.visitFormattedStringValue(value, p);
+    }
+
+    @Override
     public Py.KeyValue visitKeyValue(Py.KeyValue keyValue, P p) {
         return (Py.KeyValue) super.visitKeyValue(keyValue, p);
     }
@@ -103,13 +123,18 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.SpecialParameter visitSpecialParameter(Py.SpecialParameter ogParam, P p) {
+        return (Py.SpecialParameter) super.visitSpecialParameter(ogParam, p);
+    }
+
+    @Override
     public Py.Star visitStar(Py.Star star, P p) {
         return (Py.Star) super.visitStar(star, p);
     }
 
     @Override
-    public Py.SpecialParameter visitSpecialParameter(Py.SpecialParameter ogParam, P p) {
-        return (Py.SpecialParameter) super.visitSpecialParameter(ogParam, p);
+    public Py.StatementExpression visitStatementExpression(Py.StatementExpression statementExpression, P p) {
+        return (Py.StatementExpression) super.visitStatementExpression(statementExpression, p);
     }
 
     @Override
@@ -128,6 +153,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.Union visitUnion(Py.Union union, P p) {
+        return (Py.Union) super.visitUnion(union, p);
+    }
+
+    @Override
     public Py.VariableScope visitVariableScope(Py.VariableScope ogStmt, P p) {
         return (Py.VariableScope) super.visitVariableScope(ogStmt, p);
     }
@@ -140,11 +170,6 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     @Override
     public Expression visitExpression(Expression expression, P p) {
         return (Expression) super.visitExpression(expression, p);
-    }
-
-    @Override
-    public Py.CompilationUnit visitCompilationUnit(Py.CompilationUnit cu, P p) {
-        return (Py.CompilationUnit) super.visitCompilationUnit(cu, p);
     }
 
     @Override
@@ -269,23 +294,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.ExpressionStatement visitExpressionStatement(Py.ExpressionStatement expressionStatement, P p) {
-        return (Py.ExpressionStatement) super.visitExpressionStatement(expressionStatement, p);
-    }
-
-    @Override
     public J.FieldAccess visitFieldAccess(J.FieldAccess fieldAccess, P p) {
         return (J.FieldAccess) super.visitFieldAccess(fieldAccess, p);
-    }
-
-    @Override
-    public Py.FormattedString visitFormattedString(Py.FormattedString fString, P p) {
-        return (Py.FormattedString) super.visitFormattedString(fString, p);
-    }
-
-    @Override
-    public Py.FormattedString.Value visitFormattedStringValue(Py.FormattedString.Value value, P p) {
-        return (Py.FormattedString.Value) super.visitFormattedStringValue(value, p);
     }
 
     @Override
@@ -405,11 +415,6 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.StatementExpression visitStatementExpression(Py.StatementExpression statementExpression, P p) {
-        return (Py.StatementExpression) super.visitStatementExpression(statementExpression, p);
-    }
-
-    @Override
     public J.Switch visitSwitch(J.Switch _switch, P p) {
         return (J.Switch) super.visitSwitch(_switch, p);
     }
@@ -457,6 +462,16 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     @Override
     public J.Unary visitUnary(J.Unary unary, P p) {
         return (J.Unary) super.visitUnary(unary, p);
+    }
+
+    @Override
+    public J.Unknown visitUnknown(J.Unknown unknown, P p) {
+        return (J.Unknown) super.visitUnknown(unknown, p);
+    }
+
+    @Override
+    public J.Unknown.Source visitUnknownSource(J.Unknown.Source source, P p) {
+        return (J.Unknown.Source) super.visitUnknownSource(source, p);
     }
 
     @Override

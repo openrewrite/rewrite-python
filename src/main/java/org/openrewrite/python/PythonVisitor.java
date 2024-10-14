@@ -437,4 +437,18 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         expr = expr.withStatement(visitAndCast(expr.getStatement(), p));
         return visitExpression(expr, p);
     }
+
+    public J visitUnion(Py.Union union, P p) {
+        Py.Union u = union;
+        u = u.withPrefix(visitSpace(u.getPrefix(), PySpace.Location.UNION_PREFIX, p));
+        u = u.withMarkers(visitMarkers(u.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(u, p);
+        if (!(temp instanceof Py.Union)) {
+            return temp;
+        } else {
+            u = (Py.Union) temp;
+        }
+        u = u.getPadding().withTypes(ListUtils.map(u.getPadding().getTypes(), e -> visitRightPadded(e, PyRightPadded.Location.UNION_TYPE, p)));
+        return u;
+    }
 }
