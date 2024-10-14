@@ -92,7 +92,7 @@ public class PythonParser implements Parser {
             parsingListener.startedParsing(input);
 
             try (EncodingDetectingInputStream is = input.getSource(ctx)) {
-                SourceFile parsed = client.runUsingSocket((socket, messenger) -> requireNonNull(messenger.sendRequest(generator -> {
+                SourceFile parsed = client.withNewSocket((socket, messenger) -> requireNonNull(messenger.sendRequest(generator -> {
                             if (input.isSynthetic() || !Files.isRegularFile(input.getPath())) {
                                 generator.writeString("parse-python-source");
                                 generator.writeString(is.readFully());
