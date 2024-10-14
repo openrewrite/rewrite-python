@@ -32,8 +32,8 @@ jobs:
       - name: set-up-jdk
         uses: actions/setup-java@v4
         with:
-          distribution: zulu
-          java-version: 17
+          distribution: temurin
+          java-version: 21
       - name: set-up-gradle
         uses: gradle/actions/setup-gradle@v4
 
