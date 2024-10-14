@@ -62,34 +62,39 @@ class ParserVisitor(ast.NodeVisitor):
                 not node.kwarg and not node.kwonlyargs,
                 end_delim=')'
             ))
+        if node.kwonlyargs:
+            if not node.vararg:
+                empty_name = j.VariableDeclarations.NamedVariable(random_id(), Space.EMPTY, Markers.EMPTY,
+                                                                  cast(j.Identifier, self.__convert_name('', None)), [],
+                                                                  None, None, None)
+                kwonly_prefix = self.__source_before('*')
+                kwonlyargs = [self.__pad_right(empty_name, self.__source_before(','))]
+                args.append(self.__pad_list_element(
+                    j.VariableDeclarations(
+                        random_id(),
+                        kwonly_prefix,
+                        Markers(random_id(), [KeywordOnlyArguments(random_id())]),
+                        [], [], None, None, [],
+                        kwonlyargs,
+                        None
+                    ),
+                    False,
+                    end_delim=')'
+                ))
+
+            for i, kwonlyarg in enumerate(node.kwonlyargs):
+                args.append(self.__pad_list_element(
+                    self.map_arg(kwonlyarg, node.kw_defaults[i], kwarg=False),
+                    not node.kwonlyargs and i == len(node.kwonlyargs) - 1,
+                    end_delim=')'
+                ))
+
         if node.kwarg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.kwarg, None, kwarg=True),
-                not node.kwonlyargs,
+                True,
                 end_delim=')'
             ))
-        if node.kwonlyargs:
-            empty_name = j.VariableDeclarations.NamedVariable(random_id(), Space.EMPTY, Markers.EMPTY,
-                                                              cast(j.Identifier, self.__convert_name('', None)), [],
-                                                              None, None, None)
-            kwonly_prefix = self.__source_before('*')
-            kwonlyargs = [self.__pad_right(empty_name, self.__source_before(','))]
-            for i, kwonlyarg in enumerate(node.kwonlyargs):
-                kwonlyargs.append(self.__pad_list_element(j.VariableDeclarations.NamedVariable(
-                    random_id(),
-                    self.__whitespace(),
-                    Markers.EMPTY,
-                    cast(j.Identifier, self.__convert_name(kwonlyarg.arg)),
-                    [], None, None, None
-                ), last=i == len(node.kwonlyargs) - 1))
-            args.append(self.__pad_right(j.VariableDeclarations(
-                random_id(),
-                kwonly_prefix,
-                Markers(random_id(), [KeywordOnlyArguments(random_id())]),
-                [], [], None, None, [],
-                kwonlyargs,
-                None
-            ), self.__source_before(')')))
         return JContainer(prefix, args, Markers.EMPTY)
 
 

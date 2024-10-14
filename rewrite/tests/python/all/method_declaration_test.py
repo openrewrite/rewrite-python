@@ -74,6 +74,18 @@ def test_kwonlyargs():
     )
 
 
+def test_varargs_and_kwonlyargs():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(foo, *bar, baz, qux=True) :
+                pass
+            """
+        )
+    )
+
+
 def test_kwargs():
     # language=python
     rewrite_run(
