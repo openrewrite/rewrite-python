@@ -1402,9 +1402,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                                                   JLeftPadded<T> left,
                                                   @SuppressWarnings({"SameParameterValue", "unused"}) PyLeftPadded.Location loc,
                                                   PrintOutputCapture<P> p) {
-        delegate.visitSpace(left.getBefore(), Location.LANGUAGE_EXTENSION, p);
+        delegate.visitSpace(left.getBefore(), Space.Location.LANGUAGE_EXTENSION, p);
         p.append(s);
-        delegate.visitLeftPadded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p);
+        setCursor(new Cursor(this.getCursor(), left));
+        T t = left.getElement();
+        if (t instanceof J) {
+            this.visitAndCast(left.getElement(), p);
+        }
+
+        setCursor(this.getCursor().getParent());
+        visitMarkers(left.getMarkers(), p);
     }
 
     protected void visitRightPadded(List<? extends JRightPadded<? extends J>> nodes, PyRightPadded.Location location, String suffixBetween, PrintOutputCapture<P> p) {

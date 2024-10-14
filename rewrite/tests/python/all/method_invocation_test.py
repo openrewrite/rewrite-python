@@ -35,6 +35,18 @@ def test_sequence_unpack():
     )
 
 
+def test_named_arguments():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            import datetime
+            td = datetime.datetime(year=2024, month= 1, day =1)
+            """
+        )
+    )
+
+
 def test_dict_unpack():
     # language=python
     rewrite_run(

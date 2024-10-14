@@ -500,7 +500,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert_name(node.arg),
                 self.__pad_left(self.__source_before('='), self.__convert(node.value)),
                 self.__map_type(node)
-
             )
         prefix = self.__whitespace()
         if self._source.startswith('**', self._cursor):
