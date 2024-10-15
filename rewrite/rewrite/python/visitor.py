@@ -12,6 +12,16 @@ class PythonVisitor(JavaVisitor[P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Py)
 
+    def visit_await(self, await_: Await, p: P) -> J:
+        await_ = await_.with_prefix(self.visit_space(await_.prefix, PySpace.Location.AWAIT_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(await_, p))
+        if not isinstance(temp_expression, Await):
+            return temp_expression
+        await_ = cast(Await, temp_expression)
+        await_ = await_.with_markers(self.visit_markers(await_.markers, p))
+        await_ = await_.with_expression(self.visit_and_cast(await_.expression, Expression, p))
+        return await_
+
     def visit_python_binary(self, binary: Binary, p: P) -> J:
         binary = binary.with_prefix(self.visit_space(binary.prefix, PySpace.Location.BINARY_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(binary, p))
@@ -169,16 +179,6 @@ class PythonVisitor(JavaVisitor[P]):
         clause = clause.with_conditions([self.visit_and_cast(v, ComprehensionExpression.Condition, p) for v in clause.conditions])
         return clause
 
-    def visit_await(self, await_: Await, p: P) -> J:
-        await_ = await_.with_prefix(self.visit_space(await_.prefix, PySpace.Location.AWAIT_PREFIX, p))
-        temp_expression = cast(Expression, self.visit_expression(await_, p))
-        if not isinstance(temp_expression, Await):
-            return temp_expression
-        await_ = cast(Await, temp_expression)
-        await_ = await_.with_markers(self.visit_markers(await_.markers, p))
-        await_ = await_.with_expression(self.visit_and_cast(await_.expression, Expression, p))
-        return await_
-
     def visit_yield_from(self, yield_from: YieldFrom, p: P) -> J:
         yield_from = yield_from.with_prefix(self.visit_space(yield_from.prefix, PySpace.Location.YIELD_FROM_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(yield_from, p))
@@ -253,8 +253,8 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_expression
         type_hinted_expression = cast(TypeHintedExpression, temp_expression)
         type_hinted_expression = type_hinted_expression.with_markers(self.visit_markers(type_hinted_expression.markers, p))
-        type_hinted_expression = type_hinted_expression.with_type_hint(self.visit_and_cast(type_hinted_expression.type_hint, TypeHint, p))
         type_hinted_expression = type_hinted_expression.with_expression(self.visit_and_cast(type_hinted_expression.expression, Expression, p))
+        type_hinted_expression = type_hinted_expression.with_type_hint(self.visit_and_cast(type_hinted_expression.type_hint, TypeHint, p))
         return type_hinted_expression
 
     def visit_error_from(self, error_from: ErrorFrom, p: P) -> J:

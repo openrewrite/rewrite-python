@@ -16,6 +16,57 @@ from rewrite.java import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class Await(Py, Expression):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> Await:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> Await:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> Await:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _expression: Expression
+
+    @property
+    def expression(self) -> Expression:
+        return self._expression
+
+    def with_expression(self, expression: Expression) -> Await:
+        return self if expression is self._expression else replace(self, _expression=expression)
+
+    _type: JavaType
+
+    @property
+    def type(self) -> JavaType:
+        return self._type
+
+    def with_type(self, type: JavaType) -> Await:
+        return self if type is self._type else replace(self, _type=type)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_await(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class Binary(Py, Expression, TypedTree):
     _id: UUID
 
@@ -1317,57 +1368,6 @@ class ComprehensionExpression(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Await(Py, Expression):
-    _id: UUID
-
-    @property
-    def id(self) -> UUID:
-        return self._id
-
-    def with_id(self, id: UUID) -> Await:
-        return self if id is self._id else replace(self, _id=id)
-
-    _prefix: Space
-
-    @property
-    def prefix(self) -> Space:
-        return self._prefix
-
-    def with_prefix(self, prefix: Space) -> Await:
-        return self if prefix is self._prefix else replace(self, _prefix=prefix)
-
-    _markers: Markers
-
-    @property
-    def markers(self) -> Markers:
-        return self._markers
-
-    def with_markers(self, markers: Markers) -> Await:
-        return self if markers is self._markers else replace(self, _markers=markers)
-
-    _expression: Expression
-
-    @property
-    def expression(self) -> Expression:
-        return self._expression
-
-    def with_expression(self, expression: Expression) -> Await:
-        return self if expression is self._expression else replace(self, _expression=expression)
-
-    _type: JavaType
-
-    @property
-    def type(self) -> JavaType:
-        return self._type
-
-    def with_type(self, type: JavaType) -> Await:
-        return self if type is self._type else replace(self, _type=type)
-
-    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_await(self, p)
-
-# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
-@dataclass(frozen=True, eq=False)
 class YieldFrom(Py, Expression):
     _id: UUID
 
@@ -1891,15 +1891,6 @@ class TypeHintedExpression(Py, Expression):
     def with_markers(self, markers: Markers) -> TypeHintedExpression:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _type_hint: TypeHint
-
-    @property
-    def type_hint(self) -> TypeHint:
-        return self._type_hint
-
-    def with_type_hint(self, type_hint: TypeHint) -> TypeHintedExpression:
-        return self if type_hint is self._type_hint else replace(self, _type_hint=type_hint)
-
     _expression: Expression
 
     @property
@@ -1908,6 +1899,15 @@ class TypeHintedExpression(Py, Expression):
 
     def with_expression(self, expression: Expression) -> TypeHintedExpression:
         return self if expression is self._expression else replace(self, _expression=expression)
+
+    _type_hint: TypeHint
+
+    @property
+    def type_hint(self) -> TypeHint:
+        return self._type_hint
+
+    def with_type_hint(self, type_hint: TypeHint) -> TypeHintedExpression:
+        return self if type_hint is self._type_hint else replace(self, _type_hint=type_hint)
 
     _type: Optional[JavaType]
 

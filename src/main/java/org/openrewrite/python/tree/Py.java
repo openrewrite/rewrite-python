@@ -67,6 +67,38 @@ public interface Py extends J {
         return getPrefix().getComments();
     }
 
+    @Getter
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @RequiredArgsConstructor
+    final class Await implements Py, Expression {
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        @With
+        Expression expression;
+
+        @With
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitAwait(this, p);
+        }
+
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+    }
+
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor
@@ -1293,38 +1325,6 @@ public interface Py extends J {
         }
     }
 
-    @Getter
-    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-    @EqualsAndHashCode(callSuper = false)
-    @RequiredArgsConstructor
-    final class Await implements Py, Expression {
-        @With
-        @EqualsAndHashCode.Include
-        UUID id;
-
-        @With
-        Space prefix;
-
-        @With
-        Markers markers;
-
-        @With
-        Expression expression;
-
-        @With
-        JavaType type;
-
-        @Override
-        public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitAwait(this, p);
-        }
-
-        @Override
-        public CoordinateBuilder.Expression getCoordinates() {
-            return new CoordinateBuilder.Expression(this);
-        }
-    }
-
     @Value
     @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
     @With
@@ -1752,10 +1752,10 @@ public interface Py extends J {
         Markers markers;
 
         @With
-        TypeHint typeHint;
+        Expression expression;
 
         @With
-        Expression expression;
+        TypeHint typeHint;
 
         @With
         @Nullable

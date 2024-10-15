@@ -244,35 +244,60 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_AnnAssign(self, node):
         prefix = self.__whitespace()
-        name = self.__convert(node.target)
-        after_name = self.__source_before(':') if node.annotation else Space.EMPTY
-        var_type = self.__convert_type_hint(node.annotation)
-        initializer = self.__pad_left(
-            self.__source_before('='),
-            self.__convert(node.value)
-        ) if node.value else None
 
-        return j.VariableDeclarations(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            [],
-            [],
-            var_type,
-            None,
-            [],
-            [self.__pad_right(
-                j.VariableDeclarations.NamedVariable(
+        if node.annotation:
+            return j.Assignment(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                py.TypeHintedExpression(
                     random_id(),
-                    Space.EMPTY,
+                    self.__whitespace(),
                     Markers.EMPTY,
-                    name,
-                    [],
-                    initializer,
-                    self.__map_type(node.target)),
-                after_name
-            )]
-        )
+                    self.__convert(node.target),
+                    py.TypeHint(
+                        random_id(),
+                        self.__source_before(':'),
+                        Markers.EMPTY,
+                        self.__convert_type_hint(node.annotation),
+                        self.__map_type(node.annotation)
+                    ),
+                    self.__map_type(node)
+                ),
+                self.__pad_left(
+                    self.__source_before('='),
+                    self.__convert(node.value)
+                ) if node.value else None,
+                self.__map_type(node)
+            )
+        else:
+            name = self.__convert(node.target)
+            initializer = self.__pad_left(
+                self.__source_before('='),
+                self.__convert(node.value)
+            ) if node.value else None
+
+            return j.VariableDeclarations(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                [],
+                [],
+                None,
+                None,
+                [],
+                [self.__pad_right(
+                    j.VariableDeclarations.NamedVariable(
+                        random_id(),
+                        Space.EMPTY,
+                        Markers.EMPTY,
+                        name,
+                        [],
+                        initializer,
+                        self.__map_type(node.target)),
+                    Space.EMPTY
+                )]
+            )
 
 
     def visit_For(self, node):
