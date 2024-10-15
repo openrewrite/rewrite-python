@@ -12,6 +12,10 @@ plugins {
     id("com.gradle.common-custom-user-data-gradle-plugin") version "1.12.1"
 }
 
+include("rewrite-python")
+include("rewrite-python-remote")
+include("rewrite-test-engine-remote")
+
 develocity {
     server = "https://ge.openrewrite.org/"
 
