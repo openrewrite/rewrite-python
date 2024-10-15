@@ -74,6 +74,21 @@ def test_kwonlyargs():
     )
 
 
+def test_trailing_comma_on_kwonly_arg():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def play(
+                *proto_animations,
+                lag_ratio,
+            ):
+                pass
+            """
+        )
+    )
+
+
 def test_varargs_and_kwonlyargs():
     # language=python
     rewrite_run(
