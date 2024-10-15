@@ -79,6 +79,21 @@ def test_string_literal_concatenation_2():
     )
 
 
+def test_string_literal_concatenation_with_comments():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            assert ('a'
+                'b'
+                # foo
+                'c'
+            )
+            """
+        )
+    )
+
+
 def test_bytes():
     # language=python
     rewrite_run(python("assert b'\x68\x65\x6c\x6c\x6f'"))

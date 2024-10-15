@@ -43,6 +43,10 @@ class PythonVisitor(JavaVisitor[P]):
 
     def visit_literal_type(self, literal_type: LiteralType, p: P) -> J:
         literal_type = literal_type.with_prefix(self.visit_space(literal_type.prefix, PySpace.Location.LITERAL_TYPE_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(literal_type, p))
+        if not isinstance(temp_expression, LiteralType):
+            return temp_expression
+        literal_type = cast(LiteralType, temp_expression)
         literal_type = literal_type.with_markers(self.visit_markers(literal_type.markers, p))
         literal_type = literal_type.with_literal(self.visit_and_cast(literal_type.literal, Expression, p))
         return literal_type

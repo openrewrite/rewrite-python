@@ -242,7 +242,7 @@ class ExceptionType(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class LiteralType(Py, TypeTree):
+class LiteralType(Py, Expression, TypeTree):
     _id: UUID
 
     @property

@@ -1201,7 +1201,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Constant(self, node):
         tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         tok = next(tokens)  # skip ENCODING token
-        while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT):
+        while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
             pass
 
         prefix = self.__whitespace()
@@ -1210,7 +1210,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         while tok.type == token.STRING:
             try:
-                while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT):
+                while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
                     pass
             except IndentationError:
                 # sometimes the tokenized INDENT and DEDENT tokens don't match up
@@ -1626,6 +1626,7 @@ class ParserVisitor(ast.NodeVisitor):
                 [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
                 Markers.EMPTY
             )
+
             if self._cursor < len(self._source) and  self._source[self._cursor] == ')':
                 # we need to backtrack as the parentheses belonged to a nested element
                 elements = None
@@ -1845,8 +1846,8 @@ class ParserVisitor(ast.NodeVisitor):
                 self._cursor += 1
                 markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace())])
             elif self._source[self._cursor] != end_delim:
-                padding = Space.EMPTY
-                self._cursor = save_cursor
+                if not pad_last:
+                    self._cursor = save_cursor
             if end_delim and self._source[self._cursor] == end_delim:
                 self._cursor += len(end_delim)
         elif last:

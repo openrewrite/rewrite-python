@@ -233,7 +233,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @Data
-    final class LiteralType implements Py, TypeTree {
+    final class LiteralType implements Py, Expression, TypeTree {
         @With
         @EqualsAndHashCode.Include
         UUID id;
@@ -254,6 +254,11 @@ public interface Py extends J {
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
             return v.visitLiteralType(this, p);
+        }
+
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
         }
     }
 
