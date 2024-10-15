@@ -32,7 +32,7 @@ dependencies {
     testImplementation("org.junit-pioneer:junit-pioneer:latest.release")
 }
 
-val poetryProjectDir = file("rewrite")
+val poetryProjectDir = file("../rewrite")
 val outputDir = layout.buildDirectory.dir("resources/main/META-INF")
 val requirementsFile = outputDir.map { it.file("python-requirements.txt") }
 
