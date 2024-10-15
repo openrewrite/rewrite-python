@@ -198,6 +198,33 @@ public interface Py extends J {
         }
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @Data
+    final class LiteralType implements Py, TypeTree {
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        // Not `J.Literal` so that also literals like `-1` are captured
+        @With
+        Expression literal;
+
+        @With
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitLiteralType(this, p);
+        }
+    }
+
     @Getter
     @With
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
