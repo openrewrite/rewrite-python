@@ -35,6 +35,11 @@ def test_sequence_unpack():
     )
 
 
+def test_mixed_order():
+    # language=python
+    rewrite_run(python("set_stroke(color=color, width=width, *args, **kwargs)"))
+
+
 def test_named_arguments():
     # language=python
     rewrite_run(

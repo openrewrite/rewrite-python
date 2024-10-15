@@ -1091,7 +1091,7 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             raise NotImplementedError(f"Calls to functions other than methods are not yet supported: {type(node.func)}")
 
-        all_args = node.args + node.keywords
+        all_args = self.__sort_call_arguments(node)
         args = JContainer(
             self.__source_before('('),
             [self.__pad_list_element(self.__convert(a), last=i == len(all_args) - 1, end_delim=')') for i, a in
@@ -1111,6 +1111,18 @@ class ParserVisitor(ast.NodeVisitor):
             args,
             self.__map_type(node)
         )
+
+    def __sort_call_arguments(self, call: ast.Call) -> List[Union[ast.expr, ast.keyword]]:
+        all_args = []
+
+        for arg in call.args:
+            all_args.append((arg.lineno, arg.col_offset, arg))
+
+        for kw in call.keywords:
+            all_args.append((kw.value.lineno, kw.value.col_offset, kw))
+
+        all_args.sort(key=lambda x: (x[0], x[1]))
+        return [arg[2] for arg in all_args]
 
 
     def visit_Compare(self, node):
