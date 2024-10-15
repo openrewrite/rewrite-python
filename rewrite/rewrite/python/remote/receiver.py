@@ -32,6 +32,14 @@ class PythonReceiver(Receiver):
             self.cursor = self.cursor.parent
             return cast(J, tree)
 
+        def visit_await(self, await_: Await, ctx: ReceiverContext) -> J:
+            await_ = await_.with_id(ctx.receive_value(await_.id, UUID))
+            await_ = await_.with_prefix(ctx.receive_node(await_.prefix, PythonReceiver.receive_space))
+            await_ = await_.with_markers(ctx.receive_node(await_.markers, ctx.receive_markers))
+            await_ = await_.with_expression(ctx.receive_node(await_.expression, ctx.receive_tree))
+            await_ = await_.with_type(ctx.receive_value(await_.type, JavaType))
+            return await_
+
         def visit_python_binary(self, binary: Binary, ctx: ReceiverContext) -> J:
             binary = binary.with_id(ctx.receive_value(binary.id, UUID))
             binary = binary.with_prefix(ctx.receive_node(binary.prefix, PythonReceiver.receive_space))
@@ -51,6 +59,14 @@ class PythonReceiver(Receiver):
             exception_type = exception_type.with_exception_group(ctx.receive_value(exception_type.exception_group, bool))
             exception_type = exception_type.with_expression(ctx.receive_node(exception_type.expression, ctx.receive_tree))
             return exception_type
+
+        def visit_literal_type(self, literal_type: LiteralType, ctx: ReceiverContext) -> J:
+            literal_type = literal_type.with_id(ctx.receive_value(literal_type.id, UUID))
+            literal_type = literal_type.with_prefix(ctx.receive_node(literal_type.prefix, PythonReceiver.receive_space))
+            literal_type = literal_type.with_markers(ctx.receive_node(literal_type.markers, ctx.receive_markers))
+            literal_type = literal_type.with_literal(ctx.receive_node(literal_type.literal, ctx.receive_tree))
+            literal_type = literal_type.with_type(ctx.receive_value(literal_type.type, JavaType))
+            return literal_type
 
         def visit_type_hint(self, type_hint: TypeHint, ctx: ReceiverContext) -> J:
             type_hint = type_hint.with_id(ctx.receive_value(type_hint.id, UUID))
@@ -178,14 +194,6 @@ class PythonReceiver(Receiver):
             clause = clause.with_conditions(ctx.receive_nodes(clause.conditions, ctx.receive_tree))
             return clause
 
-        def visit_await(self, await_: Await, ctx: ReceiverContext) -> J:
-            await_ = await_.with_id(ctx.receive_value(await_.id, UUID))
-            await_ = await_.with_prefix(ctx.receive_node(await_.prefix, PythonReceiver.receive_space))
-            await_ = await_.with_markers(ctx.receive_node(await_.markers, ctx.receive_markers))
-            await_ = await_.with_expression(ctx.receive_node(await_.expression, ctx.receive_tree))
-            await_ = await_.with_type(ctx.receive_value(await_.type, JavaType))
-            return await_
-
         def visit_yield_from(self, yield_from: YieldFrom, ctx: ReceiverContext) -> J:
             yield_from = yield_from.with_id(ctx.receive_value(yield_from.id, UUID))
             yield_from = yield_from.with_prefix(ctx.receive_node(yield_from.prefix, PythonReceiver.receive_space))
@@ -193,6 +201,14 @@ class PythonReceiver(Receiver):
             yield_from = yield_from.with_expression(ctx.receive_node(yield_from.expression, ctx.receive_tree))
             yield_from = yield_from.with_type(ctx.receive_value(yield_from.type, JavaType))
             return yield_from
+
+        def visit_union(self, union: Union, ctx: ReceiverContext) -> J:
+            union = union.with_id(ctx.receive_value(union.id, UUID))
+            union = union.with_prefix(ctx.receive_node(union.prefix, PythonReceiver.receive_space))
+            union = union.with_markers(ctx.receive_node(union.markers, ctx.receive_markers))
+            union = union.padding.with_types(ctx.receive_nodes(union.padding.types, PythonReceiver.receive_right_padded_tree))
+            union = union.with_type(ctx.receive_value(union.type, JavaType))
+            return union
 
         def visit_variable_scope(self, variable_scope: VariableScope, ctx: ReceiverContext) -> J:
             variable_scope = variable_scope.with_id(ctx.receive_value(variable_scope.id, UUID))
@@ -240,8 +256,8 @@ class PythonReceiver(Receiver):
             type_hinted_expression = type_hinted_expression.with_id(ctx.receive_value(type_hinted_expression.id, UUID))
             type_hinted_expression = type_hinted_expression.with_prefix(ctx.receive_node(type_hinted_expression.prefix, PythonReceiver.receive_space))
             type_hinted_expression = type_hinted_expression.with_markers(ctx.receive_node(type_hinted_expression.markers, ctx.receive_markers))
-            type_hinted_expression = type_hinted_expression.with_type_hint(ctx.receive_node(type_hinted_expression.type_hint, ctx.receive_tree))
             type_hinted_expression = type_hinted_expression.with_expression(ctx.receive_node(type_hinted_expression.expression, ctx.receive_tree))
+            type_hinted_expression = type_hinted_expression.with_type_hint(ctx.receive_node(type_hinted_expression.type_hint, ctx.receive_tree))
             type_hinted_expression = type_hinted_expression.with_type(ctx.receive_value(type_hinted_expression.type, JavaType))
             return type_hinted_expression
 
@@ -882,6 +898,15 @@ class PythonReceiver(Receiver):
     # noinspection PyTypeChecker
     class Factory(ReceiverFactory):
         def create(self, type: str, ctx: ReceiverContext) -> Tree:
+            if type in ["rewrite.python.tree.Await", "org.openrewrite.python.tree.Py$Await"]:
+                return Await(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
+                )
+
             if type in ["rewrite.python.tree.Binary", "org.openrewrite.python.tree.Py$Binary"]:
                 return Binary(
                     ctx.receive_value(None, UUID),
@@ -902,6 +927,15 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, JavaType),
                     ctx.receive_value(None, bool),
                     ctx.receive_node(None, ctx.receive_tree)
+                )
+
+            if type in ["rewrite.python.tree.LiteralType", "org.openrewrite.python.tree.Py$LiteralType"]:
+                return LiteralType(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
                 )
 
             if type in ["rewrite.python.tree.TypeHint", "org.openrewrite.python.tree.Py$TypeHint"]:
@@ -1045,8 +1079,8 @@ class PythonReceiver(Receiver):
                     ctx.receive_nodes(None, ctx.receive_tree)
                 )
 
-            if type in ["rewrite.python.tree.Await", "org.openrewrite.python.tree.Py$Await"]:
-                return Await(
+            if type in ["rewrite.python.tree.YieldFrom", "org.openrewrite.python.tree.Py$YieldFrom"]:
+                return YieldFrom(
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, PythonReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
@@ -1054,12 +1088,12 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, JavaType)
                 )
 
-            if type in ["rewrite.python.tree.YieldFrom", "org.openrewrite.python.tree.Py$YieldFrom"]:
-                return YieldFrom(
+            if type in ["rewrite.python.tree.Union", "org.openrewrite.python.tree.Py$Union"]:
+                return Union(
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, PythonReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
-                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_nodes(None, PythonReceiver.receive_right_padded_tree),
                     ctx.receive_value(None, JavaType)
                 )
 

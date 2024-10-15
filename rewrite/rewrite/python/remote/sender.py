@@ -26,6 +26,14 @@ class PythonSender(Sender):
 
             return cast(Py, tree)
 
+        def visit_await(self, await_: Await, ctx: SenderContext) -> J:
+            ctx.send_value(await_, attrgetter('_id'))
+            ctx.send_node(await_, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(await_, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(await_, attrgetter('_expression'), ctx.send_tree)
+            ctx.send_typed_value(await_, attrgetter('_type'))
+            return await_
+
         def visit_python_binary(self, binary: Binary, ctx: SenderContext) -> J:
             ctx.send_value(binary, attrgetter('_id'))
             ctx.send_node(binary, attrgetter('_prefix'), PythonSender.send_space)
@@ -45,6 +53,14 @@ class PythonSender(Sender):
             ctx.send_value(exception_type, attrgetter('_exception_group'))
             ctx.send_node(exception_type, attrgetter('_expression'), ctx.send_tree)
             return exception_type
+
+        def visit_literal_type(self, literal_type: LiteralType, ctx: SenderContext) -> J:
+            ctx.send_value(literal_type, attrgetter('_id'))
+            ctx.send_node(literal_type, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(literal_type, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(literal_type, attrgetter('_literal'), ctx.send_tree)
+            ctx.send_typed_value(literal_type, attrgetter('_type'))
+            return literal_type
 
         def visit_type_hint(self, type_hint: TypeHint, ctx: SenderContext) -> J:
             ctx.send_value(type_hint, attrgetter('_id'))
@@ -172,14 +188,6 @@ class PythonSender(Sender):
             ctx.send_nodes(clause, attrgetter('_conditions'), ctx.send_tree, attrgetter('id'))
             return clause
 
-        def visit_await(self, await_: Await, ctx: SenderContext) -> J:
-            ctx.send_value(await_, attrgetter('_id'))
-            ctx.send_node(await_, attrgetter('_prefix'), PythonSender.send_space)
-            ctx.send_node(await_, attrgetter('_markers'), ctx.send_markers)
-            ctx.send_node(await_, attrgetter('_expression'), ctx.send_tree)
-            ctx.send_typed_value(await_, attrgetter('_type'))
-            return await_
-
         def visit_yield_from(self, yield_from: YieldFrom, ctx: SenderContext) -> J:
             ctx.send_value(yield_from, attrgetter('_id'))
             ctx.send_node(yield_from, attrgetter('_prefix'), PythonSender.send_space)
@@ -187,6 +195,14 @@ class PythonSender(Sender):
             ctx.send_node(yield_from, attrgetter('_expression'), ctx.send_tree)
             ctx.send_typed_value(yield_from, attrgetter('_type'))
             return yield_from
+
+        def visit_union(self, union: Union, ctx: SenderContext) -> J:
+            ctx.send_value(union, attrgetter('_id'))
+            ctx.send_node(union, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(union, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_nodes(union, attrgetter('_types'), PythonSender.send_right_padded, lambda t: t.element.id)
+            ctx.send_typed_value(union, attrgetter('_type'))
+            return union
 
         def visit_variable_scope(self, variable_scope: VariableScope, ctx: SenderContext) -> J:
             ctx.send_value(variable_scope, attrgetter('_id'))
@@ -234,8 +250,8 @@ class PythonSender(Sender):
             ctx.send_value(type_hinted_expression, attrgetter('_id'))
             ctx.send_node(type_hinted_expression, attrgetter('_prefix'), PythonSender.send_space)
             ctx.send_node(type_hinted_expression, attrgetter('_markers'), ctx.send_markers)
-            ctx.send_node(type_hinted_expression, attrgetter('_type_hint'), ctx.send_tree)
             ctx.send_node(type_hinted_expression, attrgetter('_expression'), ctx.send_tree)
+            ctx.send_node(type_hinted_expression, attrgetter('_type_hint'), ctx.send_tree)
             ctx.send_typed_value(type_hinted_expression, attrgetter('_type'))
             return type_hinted_expression
 
