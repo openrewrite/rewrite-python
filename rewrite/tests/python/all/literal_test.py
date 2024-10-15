@@ -97,6 +97,20 @@ def test_multiline_string_with_flags():
     )
 
 
+def test_string_concatenation():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            raise Exception(
+                'foo'
+                'bar'
+            )
+            """
+        )
+    )
+
+
 def test_double_quoted_string():
     # language=python
     rewrite_run(python('assert "foo"'))

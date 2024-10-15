@@ -1162,15 +1162,21 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Constant(self, node):
-        prefix = self.__whitespace()
-
-        start = self._cursor
         tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         tok = next(tokens)  # skip ENCODING token
-        tok = self.__next_lexer_token(tokens)
+        while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT):
+            pass
+
+        prefix = self.__whitespace()
+        start = self._cursor
+        self._cursor += len(tok.string)
 
         while tok.type == token.STRING:
-            while (tok := next(tokens)).type in (token.NEWLINE, token.INDENT, token.DEDENT):
+            try:
+                while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT):
+                    pass
+            except IndentationError:
+                # sometimes the tokenized INDENT and DEDENT tokens don't match up
                 pass
             if tok.type == token.STRING:
                 self._cursor = self._source.index(tok.string, self._cursor)
