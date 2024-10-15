@@ -1629,18 +1629,25 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert_type_hint(self, node) -> Optional[TypeTree]:
         if isinstance(node, ast.Constant):
-            literal = cast(j.Literal, self.__convert(node))
             if node.value is None or node.value is Ellipsis:
-                return literal
-            return j.Identifier(
-                random_id(),
-                literal.prefix,
-                Markers.EMPTY.with_markers([Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
-                [],
-                str(literal.value),
-                self.__map_type(node),
-                None
-            )
+                return py.LiteralType(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    self.__convert(node),
+                    self.__map_type(node)
+                )
+            else:
+                literal = cast(j.Literal, self.__convert(node))
+                return j.Identifier(
+                    random_id(),
+                    literal.prefix,
+                    Markers.EMPTY.with_markers([Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
+                    [],
+                    str(literal.value),
+                    self.__map_type(node),
+                    None
+                )
         elif isinstance(node, ast.Subscript):
             slices = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
             return j.ParameterizedType(

@@ -31,6 +31,12 @@ class PythonVisitor(JavaVisitor[P]):
         exception_type = exception_type.with_expression(self.visit_and_cast(exception_type.expression, Expression, p))
         return exception_type
 
+    def visit_literal_type(self, literal_type: LiteralType, p: P) -> J:
+        literal_type = literal_type.with_prefix(self.visit_space(literal_type.prefix, PySpace.Location.LITERAL_TYPE_PREFIX, p))
+        literal_type = literal_type.with_markers(self.visit_markers(literal_type.markers, p))
+        literal_type = literal_type.with_literal(self.visit_and_cast(literal_type.literal, Expression, p))
+        return literal_type
+
     def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
         type_hint = type_hint.with_prefix(self.visit_space(type_hint.prefix, PySpace.Location.TYPE_HINT_PREFIX, p))
         type_hint = type_hint.with_markers(self.visit_markers(type_hint.markers, p))

@@ -31,6 +31,7 @@ __all__ = [
     'ExpressionStatement',
     'FormattedString',
     'KeyValue',
+    'LiteralType',
     'MatchCase',
     'MultiImport',
     'NamedArgument',
@@ -42,6 +43,7 @@ __all__ = [
     'TrailingElseWrapper',
     'TypeHint',
     'TypeHintedExpression',
+    'Union',
     'VariableScope',
     'YieldFrom',
 ]

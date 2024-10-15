@@ -191,6 +191,57 @@ class ExceptionType(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class LiteralType(Py, TypeTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> LiteralType:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> LiteralType:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> LiteralType:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _literal: Expression
+
+    @property
+    def literal(self) -> Expression:
+        return self._literal
+
+    def with_literal(self, literal: Expression) -> LiteralType:
+        return self if literal is self._literal else replace(self, _literal=literal)
+
+    _type: JavaType
+
+    @property
+    def type(self) -> JavaType:
+        return self._type
+
+    def with_type(self, type: JavaType) -> LiteralType:
+        return self if type is self._type else replace(self, _type=type)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_literal_type(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class TypeHint(Py, TypeTree):
     _id: UUID
 

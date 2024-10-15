@@ -93,6 +93,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.LiteralType visitLiteralType(Py.LiteralType literalType, P p) {
+        return (Py.LiteralType) super.visitLiteralType(literalType, p);
+    }
+
+    @Override
     public Py.MatchCase visitMatchCase(Py.MatchCase ogMatch, P p) {
         return (Py.MatchCase) super.visitMatchCase(ogMatch, p);
     }

@@ -380,6 +380,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitLiteralType(Py.LiteralType literalType, PrintOutputCapture<P> p) {
+        beforeSyntax(literalType, PySpace.Location.LITERAL_TYPE_PREFIX, p);
+        visit(literalType.getLiteral(), p);
+        afterSyntax(literalType, p);
+        return literalType;
+    }
+
+    @Override
     public J visitMatchCase(Py.MatchCase match, PrintOutputCapture<P> p) {
         beforeSyntax(match, PySpace.Location.MATCH_CASE_PREFIX, p);
         visit(match.getPattern(), p);

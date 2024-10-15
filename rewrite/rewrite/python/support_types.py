@@ -57,6 +57,7 @@ class PySpace:
         FORMATTED_STRING_VALUE_PREFIX = auto()
         KEY_VALUE_PREFIX = auto()
         KEY_VALUE_SUFFIX = auto()
+        LITERAL_TYPE_PREFIX = auto()
         MATCH_CASE_GUARD = auto()
         MATCH_CASE_PATTERN_CHILDREN_PREFIX = auto()
         MATCH_CASE_PATTERN_PREFIX = auto()
