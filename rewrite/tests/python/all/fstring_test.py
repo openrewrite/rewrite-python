@@ -20,6 +20,20 @@ def test_multiline():
     )
 
 
+@pytest.mark.xfail(reason="String concatenation together with f-strings is a nightmare", strict=True)
+def test_concat_fstring():
+    # language=python
+    rewrite_run(
+        python("""
+             print(
+                 f"[warning]Both package arguments and --package-list / PACKAGE_LIST passed. "
+                 f"Overriding to {None}"
+             )
+            """
+               )
+    )
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))

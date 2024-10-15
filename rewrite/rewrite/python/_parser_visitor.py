@@ -1686,7 +1686,7 @@ class ParserVisitor(ast.NodeVisitor):
                 return j.Identifier(
                     random_id(),
                     literal.prefix,
-                    Markers.EMPTY.with_markers([Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
+                    Markers.build(random_id(), [Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
                     [],
                     str(literal.value),
                     self.__map_type(node),
@@ -1829,7 +1829,7 @@ class ParserVisitor(ast.NodeVisitor):
         padding = self.__whitespace('\n')
         if self._cursor < len(self._source) and self._source[self._cursor] == ';':
             self._cursor += 1
-            markers = Markers.EMPTY.with_markers([Semicolon(random_id())])
+            markers = Markers.build(random_id(), [Semicolon(random_id())])
         else:
             padding = Space.EMPTY
             markers = Markers.EMPTY
@@ -2104,6 +2104,8 @@ class ParserVisitor(ast.NodeVisitor):
                 ))
                 self._cursor += len(tok.string)
                 tok = next(tokens)
+            elif tok.type == token.FSTRING_END:
+                raise NotImplementedError("Unsupported: String concatenation with f-strings")
             else:  # FSTRING_MIDDLE
                 save_cursor = self._cursor
                 while True:

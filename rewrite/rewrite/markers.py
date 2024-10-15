@@ -64,6 +64,10 @@ class Markers:
     def __hash__(self) -> int:
         return hash(self.id)
 
+    @classmethod
+    def build(cls, id, markers) -> Markers:
+        return Markers(id, markers)
+
 
 Markers.EMPTY = Markers(random_id(), [])
 
