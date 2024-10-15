@@ -1,3 +1,5 @@
+import pytest
+
 from rewrite.test import rewrite_run, python
 
 
@@ -84,3 +86,9 @@ def test_generator_with_if():
 def test_generator_with_multiple_ifs():
     # language=python
     rewrite_run(python("a = {e:None for e in range(10) if e > 1 if e < 10}"))
+
+
+@pytest.mark.xfail(reason="These optional parentheses are really difficult to parse correctly", strict=True)
+def test_generator_without_parens_inside_call():
+    # language=python
+    rewrite_run(python("a = sum((2 - 1) * k for k in [1])"))
