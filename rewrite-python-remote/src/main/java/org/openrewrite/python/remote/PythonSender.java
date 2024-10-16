@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.python.remote;
 
-import java.util.function.Function;
+/*
+ * -------------------THIS FILE IS AUTO GENERATED--------------------------
+ * Changes to this file may cause incorrect behavior and will be lost if
+ * the code is regenerated.
+*/
+
+package org.openrewrite.python.remote;
 
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
-import org.openrewrite.java.tree.Comment;
-import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.JContainer;
-import org.openrewrite.java.tree.JLeftPadded;
-import org.openrewrite.java.tree.JRightPadded;
-import org.openrewrite.java.tree.Space;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.Py;
+import org.openrewrite.python.tree.*;
+import org.openrewrite.java.*;
+import org.openrewrite.java.tree.*;
 import org.openrewrite.remote.Sender;
 import org.openrewrite.remote.SenderContext;
+
+import java.util.function.Function;
 
 @Value
 public class PythonSender implements Sender<Py> {
@@ -51,6 +54,16 @@ public class PythonSender implements Sender<Py> {
             setCursor(getCursor().getParent());
 
             return (J) tree;
+        }
+
+        @Override
+        public Py.Await visitAwait(Py.Await await, SenderContext ctx) {
+            ctx.sendValue(await, Py.Await::getId);
+            ctx.sendNode(await, Py.Await::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(await, Py.Await::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(await, Py.Await::getExpression, ctx::sendTree);
+            ctx.sendTypedValue(await, Py.Await::getType);
+            return await;
         }
 
         @Override
@@ -75,6 +88,16 @@ public class PythonSender implements Sender<Py> {
             ctx.sendValue(exceptionType, Py.ExceptionType::isExceptionGroup);
             ctx.sendNode(exceptionType, Py.ExceptionType::getExpression, ctx::sendTree);
             return exceptionType;
+        }
+
+        @Override
+        public Py.LiteralType visitLiteralType(Py.LiteralType literalType, SenderContext ctx) {
+            ctx.sendValue(literalType, Py.LiteralType::getId);
+            ctx.sendNode(literalType, Py.LiteralType::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(literalType, Py.LiteralType::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(literalType, Py.LiteralType::getLiteral, ctx::sendTree);
+            ctx.sendTypedValue(literalType, Py.LiteralType::getType);
+            return literalType;
         }
 
         @Override
@@ -234,16 +257,6 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
-        public Py.Await visitAwait(Py.Await await, SenderContext ctx) {
-            ctx.sendValue(await, Py.Await::getId);
-            ctx.sendNode(await, Py.Await::getPrefix, PythonSender::sendSpace);
-            ctx.sendNode(await, Py.Await::getMarkers, ctx::sendMarkers);
-            ctx.sendNode(await, Py.Await::getExpression, ctx::sendTree);
-            ctx.sendTypedValue(await, Py.Await::getType);
-            return await;
-        }
-
-        @Override
         public Py.YieldFrom visitYieldFrom(Py.YieldFrom yieldFrom, SenderContext ctx) {
             ctx.sendValue(yieldFrom, Py.YieldFrom::getId);
             ctx.sendNode(yieldFrom, Py.YieldFrom::getPrefix, PythonSender::sendSpace);
@@ -251,6 +264,16 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(yieldFrom, Py.YieldFrom::getExpression, ctx::sendTree);
             ctx.sendTypedValue(yieldFrom, Py.YieldFrom::getType);
             return yieldFrom;
+        }
+
+        @Override
+        public Py.Union visitUnion(Py.Union union, SenderContext ctx) {
+            ctx.sendValue(union, Py.Union::getId);
+            ctx.sendNode(union, Py.Union::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(union, Py.Union::getMarkers, ctx::sendMarkers);
+            ctx.sendNodes(union, e -> e.getPadding().getTypes(), PythonSender::sendRightPadded, e -> e.getElement().getId());
+            ctx.sendTypedValue(union, Py.Union::getType);
+            return union;
         }
 
         @Override
@@ -310,8 +333,8 @@ public class PythonSender implements Sender<Py> {
             ctx.sendValue(typeHintedExpression, Py.TypeHintedExpression::getId);
             ctx.sendNode(typeHintedExpression, Py.TypeHintedExpression::getPrefix, PythonSender::sendSpace);
             ctx.sendNode(typeHintedExpression, Py.TypeHintedExpression::getMarkers, ctx::sendMarkers);
-            ctx.sendNode(typeHintedExpression, Py.TypeHintedExpression::getTypeHint, ctx::sendTree);
             ctx.sendNode(typeHintedExpression, Py.TypeHintedExpression::getExpression, ctx::sendTree);
+            ctx.sendNode(typeHintedExpression, Py.TypeHintedExpression::getTypeHint, ctx::sendTree);
             ctx.sendTypedValue(typeHintedExpression, Py.TypeHintedExpression::getType);
             return typeHintedExpression;
         }

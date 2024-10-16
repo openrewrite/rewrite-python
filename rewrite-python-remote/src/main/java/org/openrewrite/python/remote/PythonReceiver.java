@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite.python.remote;
 
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.util.UUID;
+/*
+ * -------------------THIS FILE IS AUTO GENERATED--------------------------
+ * Changes to this file may cause incorrect behavior and will be lost if
+ * the code is regenerated.
+*/
+
+package org.openrewrite.python.remote;
 
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
@@ -25,18 +28,19 @@ import org.openrewrite.Checksum;
 import org.openrewrite.Cursor;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.Tree;
-import org.openrewrite.java.tree.Comment;
-import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.JContainer;
-import org.openrewrite.java.tree.JLeftPadded;
-import org.openrewrite.java.tree.JRightPadded;
-import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.tree.Space;
+import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.Py;
+import org.openrewrite.python.tree.*;
+import org.openrewrite.java.*;
+import org.openrewrite.java.tree.*;
 import org.openrewrite.remote.Receiver;
 import org.openrewrite.remote.ReceiverContext;
 import org.openrewrite.remote.ReceiverFactory;
+
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
 
 @Value
 public class PythonReceiver implements Receiver<Py> {
@@ -67,6 +71,16 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.Await visitAwait(Py.Await await, ReceiverContext ctx) {
+            await = await.withId(ctx.receiveNonNullValue(await.getId(), UUID.class));
+            await = await.withPrefix(ctx.receiveNonNullNode(await.getPrefix(), PythonReceiver::receiveSpace));
+            await = await.withMarkers(ctx.receiveNonNullNode(await.getMarkers(), ctx::receiveMarkers));
+            await = await.withExpression(ctx.receiveNonNullNode(await.getExpression(), ctx::receiveTree));
+            await = await.withType(ctx.receiveValue(await.getType(), JavaType.class));
+            return await;
+        }
+
+        @Override
         public Py.Binary visitBinary(Py.Binary binary, ReceiverContext ctx) {
             binary = binary.withId(ctx.receiveNonNullValue(binary.getId(), UUID.class));
             binary = binary.withPrefix(ctx.receiveNonNullNode(binary.getPrefix(), PythonReceiver::receiveSpace));
@@ -88,6 +102,16 @@ public class PythonReceiver implements Receiver<Py> {
             exceptionType = exceptionType.withExceptionGroup(ctx.receiveNonNullValue(exceptionType.isExceptionGroup(), boolean.class));
             exceptionType = exceptionType.withExpression(ctx.receiveNonNullNode(exceptionType.getExpression(), ctx::receiveTree));
             return exceptionType;
+        }
+
+        @Override
+        public Py.LiteralType visitLiteralType(Py.LiteralType literalType, ReceiverContext ctx) {
+            literalType = literalType.withId(ctx.receiveNonNullValue(literalType.getId(), UUID.class));
+            literalType = literalType.withPrefix(ctx.receiveNonNullNode(literalType.getPrefix(), PythonReceiver::receiveSpace));
+            literalType = literalType.withMarkers(ctx.receiveNonNullNode(literalType.getMarkers(), ctx::receiveMarkers));
+            literalType = literalType.withLiteral(ctx.receiveNonNullNode(literalType.getLiteral(), ctx::receiveTree));
+            literalType = literalType.withType(ctx.receiveValue(literalType.getType(), JavaType.class));
+            return literalType;
         }
 
         @Override
@@ -192,8 +216,7 @@ public class PythonReceiver implements Receiver<Py> {
             value = value.withPrefix(ctx.receiveNonNullNode(value.getPrefix(), PythonReceiver::receiveSpace));
             value = value.withMarkers(ctx.receiveNonNullNode(value.getMarkers(), ctx::receiveMarkers));
             value = value.getPadding().withExpression(ctx.receiveNonNullNode(value.getPadding().getExpression(), PythonReceiver::receiveRightPaddedTree));
-            value = value.getPadding().withDebug(ctx.receiveNode(value.getPadding().getDebug(), rightPaddedValueReceiver(
-		            Boolean.class)));
+            value = value.getPadding().withDebug(ctx.receiveNode(value.getPadding().getDebug(), rightPaddedValueReceiver(java.lang.Boolean.class)));
             value = value.withConversion(ctx.receiveValue(value.getConversion(), Py.FormattedString.Value.Conversion.class));
             value = value.withFormat(ctx.receiveNode(value.getFormat(), ctx::receiveTree));
             return value;
@@ -251,16 +274,6 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
-        public Py.Await visitAwait(Py.Await await, ReceiverContext ctx) {
-            await = await.withId(ctx.receiveNonNullValue(await.getId(), UUID.class));
-            await = await.withPrefix(ctx.receiveNonNullNode(await.getPrefix(), PythonReceiver::receiveSpace));
-            await = await.withMarkers(ctx.receiveNonNullNode(await.getMarkers(), ctx::receiveMarkers));
-            await = await.withExpression(ctx.receiveNonNullNode(await.getExpression(), ctx::receiveTree));
-            await = await.withType(ctx.receiveValue(await.getType(), JavaType.class));
-            return await;
-        }
-
-        @Override
         public Py.YieldFrom visitYieldFrom(Py.YieldFrom yieldFrom, ReceiverContext ctx) {
             yieldFrom = yieldFrom.withId(ctx.receiveNonNullValue(yieldFrom.getId(), UUID.class));
             yieldFrom = yieldFrom.withPrefix(ctx.receiveNonNullNode(yieldFrom.getPrefix(), PythonReceiver::receiveSpace));
@@ -268,6 +281,16 @@ public class PythonReceiver implements Receiver<Py> {
             yieldFrom = yieldFrom.withExpression(ctx.receiveNonNullNode(yieldFrom.getExpression(), ctx::receiveTree));
             yieldFrom = yieldFrom.withType(ctx.receiveValue(yieldFrom.getType(), JavaType.class));
             return yieldFrom;
+        }
+
+        @Override
+        public Py.Union visitUnion(Py.Union union, ReceiverContext ctx) {
+            union = union.withId(ctx.receiveNonNullValue(union.getId(), UUID.class));
+            union = union.withPrefix(ctx.receiveNonNullNode(union.getPrefix(), PythonReceiver::receiveSpace));
+            union = union.withMarkers(ctx.receiveNonNullNode(union.getMarkers(), ctx::receiveMarkers));
+            union = union.getPadding().withTypes(ctx.receiveNonNullNodes(union.getPadding().getTypes(), PythonReceiver::receiveRightPaddedTree));
+            union = union.withType(ctx.receiveValue(union.getType(), JavaType.class));
+            return union;
         }
 
         @Override
@@ -327,8 +350,8 @@ public class PythonReceiver implements Receiver<Py> {
             typeHintedExpression = typeHintedExpression.withId(ctx.receiveNonNullValue(typeHintedExpression.getId(), UUID.class));
             typeHintedExpression = typeHintedExpression.withPrefix(ctx.receiveNonNullNode(typeHintedExpression.getPrefix(), PythonReceiver::receiveSpace));
             typeHintedExpression = typeHintedExpression.withMarkers(ctx.receiveNonNullNode(typeHintedExpression.getMarkers(), ctx::receiveMarkers));
-            typeHintedExpression = typeHintedExpression.withTypeHint(ctx.receiveNonNullNode(typeHintedExpression.getTypeHint(), ctx::receiveTree));
             typeHintedExpression = typeHintedExpression.withExpression(ctx.receiveNonNullNode(typeHintedExpression.getExpression(), ctx::receiveTree));
+            typeHintedExpression = typeHintedExpression.withTypeHint(ctx.receiveNonNullNode(typeHintedExpression.getTypeHint(), ctx::receiveTree));
             typeHintedExpression = typeHintedExpression.withType(ctx.receiveValue(typeHintedExpression.getType(), JavaType.class));
             return typeHintedExpression;
         }
@@ -415,8 +438,7 @@ public class PythonReceiver implements Receiver<Py> {
             arrayType = arrayType.withMarkers(ctx.receiveNonNullNode(arrayType.getMarkers(), ctx::receiveMarkers));
             arrayType = arrayType.withElementType(ctx.receiveNonNullNode(arrayType.getElementType(), ctx::receiveTree));
             arrayType = arrayType.withAnnotations(ctx.receiveNodes(arrayType.getAnnotations(), ctx::receiveTree));
-            arrayType = arrayType.withDimension(ctx.receiveNode(arrayType.getDimension(), leftPaddedNodeReceiver(
-		            Space.class)));
+            arrayType = arrayType.withDimension(ctx.receiveNode(arrayType.getDimension(), leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)));
             arrayType = arrayType.withType(ctx.receiveValue(arrayType.getType(), JavaType.class));
             return arrayType;
         }
@@ -448,8 +470,7 @@ public class PythonReceiver implements Receiver<Py> {
             assignmentOperation = assignmentOperation.withPrefix(ctx.receiveNonNullNode(assignmentOperation.getPrefix(), PythonReceiver::receiveSpace));
             assignmentOperation = assignmentOperation.withMarkers(ctx.receiveNonNullNode(assignmentOperation.getMarkers(), ctx::receiveMarkers));
             assignmentOperation = assignmentOperation.withVariable(ctx.receiveNonNullNode(assignmentOperation.getVariable(), ctx::receiveTree));
-            assignmentOperation = assignmentOperation.getPadding().withOperator(ctx.receiveNonNullNode(assignmentOperation.getPadding().getOperator(), leftPaddedValueReceiver(
-		            J.AssignmentOperation.Type.class)));
+            assignmentOperation = assignmentOperation.getPadding().withOperator(ctx.receiveNonNullNode(assignmentOperation.getPadding().getOperator(), leftPaddedValueReceiver(org.openrewrite.java.tree.J.AssignmentOperation.Type.class)));
             assignmentOperation = assignmentOperation.withAssignment(ctx.receiveNonNullNode(assignmentOperation.getAssignment(), ctx::receiveTree));
             assignmentOperation = assignmentOperation.withType(ctx.receiveValue(assignmentOperation.getType(), JavaType.class));
             return assignmentOperation;
@@ -461,8 +482,7 @@ public class PythonReceiver implements Receiver<Py> {
             binary = binary.withPrefix(ctx.receiveNonNullNode(binary.getPrefix(), PythonReceiver::receiveSpace));
             binary = binary.withMarkers(ctx.receiveNonNullNode(binary.getMarkers(), ctx::receiveMarkers));
             binary = binary.withLeft(ctx.receiveNonNullNode(binary.getLeft(), ctx::receiveTree));
-            binary = binary.getPadding().withOperator(ctx.receiveNonNullNode(binary.getPadding().getOperator(), leftPaddedValueReceiver(
-		            J.Binary.Type.class)));
+            binary = binary.getPadding().withOperator(ctx.receiveNonNullNode(binary.getPadding().getOperator(), leftPaddedValueReceiver(org.openrewrite.java.tree.J.Binary.Type.class)));
             binary = binary.withRight(ctx.receiveNonNullNode(binary.getRight(), ctx::receiveTree));
             binary = binary.withType(ctx.receiveValue(binary.getType(), JavaType.class));
             return binary;
@@ -473,8 +493,7 @@ public class PythonReceiver implements Receiver<Py> {
             block = block.withId(ctx.receiveNonNullValue(block.getId(), UUID.class));
             block = block.withPrefix(ctx.receiveNonNullNode(block.getPrefix(), PythonReceiver::receiveSpace));
             block = block.withMarkers(ctx.receiveNonNullNode(block.getMarkers(), ctx::receiveMarkers));
-            block = block.getPadding().withStatic(ctx.receiveNonNullNode(block.getPadding().getStatic(), rightPaddedValueReceiver(
-		            Boolean.class)));
+            block = block.getPadding().withStatic(ctx.receiveNonNullNode(block.getPadding().getStatic(), rightPaddedValueReceiver(java.lang.Boolean.class)));
             block = block.getPadding().withStatements(ctx.receiveNonNullNodes(block.getPadding().getStatements(), PythonReceiver::receiveRightPaddedTree));
             block = block.withEnd(ctx.receiveNonNullNode(block.getEnd(), PythonReceiver::receiveSpace));
             return block;
@@ -667,8 +686,7 @@ public class PythonReceiver implements Receiver<Py> {
             import_ = import_.withId(ctx.receiveNonNullValue(import_.getId(), UUID.class));
             import_ = import_.withPrefix(ctx.receiveNonNullNode(import_.getPrefix(), PythonReceiver::receiveSpace));
             import_ = import_.withMarkers(ctx.receiveNonNullNode(import_.getMarkers(), ctx::receiveMarkers));
-            import_ = import_.getPadding().withStatic(ctx.receiveNonNullNode(import_.getPadding().getStatic(), leftPaddedValueReceiver(
-		            Boolean.class)));
+            import_ = import_.getPadding().withStatic(ctx.receiveNonNullNode(import_.getPadding().getStatic(), leftPaddedValueReceiver(java.lang.Boolean.class)));
             import_ = import_.withQualid(ctx.receiveNonNullNode(import_.getQualid(), ctx::receiveTree));
             import_ = import_.getPadding().withAlias(ctx.receiveNode(import_.getPadding().getAlias(), PythonReceiver::receiveLeftPaddedTree));
             return import_;
@@ -995,8 +1013,7 @@ public class PythonReceiver implements Receiver<Py> {
             unary = unary.withId(ctx.receiveNonNullValue(unary.getId(), UUID.class));
             unary = unary.withPrefix(ctx.receiveNonNullNode(unary.getPrefix(), PythonReceiver::receiveSpace));
             unary = unary.withMarkers(ctx.receiveNonNullNode(unary.getMarkers(), ctx::receiveMarkers));
-            unary = unary.getPadding().withOperator(ctx.receiveNonNullNode(unary.getPadding().getOperator(), leftPaddedValueReceiver(
-		            J.Unary.Type.class)));
+            unary = unary.getPadding().withOperator(ctx.receiveNonNullNode(unary.getPadding().getOperator(), leftPaddedValueReceiver(org.openrewrite.java.tree.J.Unary.Type.class)));
             unary = unary.withExpression(ctx.receiveNonNullNode(unary.getExpression(), ctx::receiveTree));
             unary = unary.withType(ctx.receiveValue(unary.getType(), JavaType.class));
             return unary;
@@ -1011,8 +1028,7 @@ public class PythonReceiver implements Receiver<Py> {
             variableDeclarations = variableDeclarations.withModifiers(ctx.receiveNonNullNodes(variableDeclarations.getModifiers(), PythonReceiver::receiveModifier));
             variableDeclarations = variableDeclarations.withTypeExpression(ctx.receiveNode(variableDeclarations.getTypeExpression(), ctx::receiveTree));
             variableDeclarations = variableDeclarations.withVarargs(ctx.receiveNode(variableDeclarations.getVarargs(), PythonReceiver::receiveSpace));
-            variableDeclarations = variableDeclarations.withDimensionsBeforeName(ctx.receiveNonNullNodes(variableDeclarations.getDimensionsBeforeName(), leftPaddedNodeReceiver(
-		            Space.class)));
+            variableDeclarations = variableDeclarations.withDimensionsBeforeName(ctx.receiveNonNullNodes(variableDeclarations.getDimensionsBeforeName(), leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)));
             variableDeclarations = variableDeclarations.getPadding().withVariables(ctx.receiveNonNullNodes(variableDeclarations.getPadding().getVariables(), PythonReceiver::receiveRightPaddedTree));
             return variableDeclarations;
         }
@@ -1023,8 +1039,7 @@ public class PythonReceiver implements Receiver<Py> {
             namedVariable = namedVariable.withPrefix(ctx.receiveNonNullNode(namedVariable.getPrefix(), PythonReceiver::receiveSpace));
             namedVariable = namedVariable.withMarkers(ctx.receiveNonNullNode(namedVariable.getMarkers(), ctx::receiveMarkers));
             namedVariable = namedVariable.withName(ctx.receiveNonNullNode(namedVariable.getName(), ctx::receiveTree));
-            namedVariable = namedVariable.withDimensionsAfterName(ctx.receiveNonNullNodes(namedVariable.getDimensionsAfterName(), leftPaddedNodeReceiver(
-		            Space.class)));
+            namedVariable = namedVariable.withDimensionsAfterName(ctx.receiveNonNullNodes(namedVariable.getDimensionsAfterName(), leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)));
             namedVariable = namedVariable.getPadding().withInitializer(ctx.receiveNode(namedVariable.getPadding().getInitializer(), PythonReceiver::receiveLeftPaddedTree));
             namedVariable = namedVariable.withVariableType(ctx.receiveValue(namedVariable.getVariableType(), JavaType.Variable.class));
             return namedVariable;
@@ -1045,8 +1060,7 @@ public class PythonReceiver implements Receiver<Py> {
             wildcard = wildcard.withId(ctx.receiveNonNullValue(wildcard.getId(), UUID.class));
             wildcard = wildcard.withPrefix(ctx.receiveNonNullNode(wildcard.getPrefix(), PythonReceiver::receiveSpace));
             wildcard = wildcard.withMarkers(ctx.receiveNonNullNode(wildcard.getMarkers(), ctx::receiveMarkers));
-            wildcard = wildcard.getPadding().withBound(ctx.receiveNode(wildcard.getPadding().getBound(), leftPaddedValueReceiver(
-		            J.Wildcard.Bound.class)));
+            wildcard = wildcard.getPadding().withBound(ctx.receiveNode(wildcard.getPadding().getBound(), leftPaddedValueReceiver(org.openrewrite.java.tree.J.Wildcard.Bound.class)));
             wildcard = wildcard.withBoundedType(ctx.receiveNode(wildcard.getBoundedType(), ctx::receiveTree));
             return wildcard;
         }
@@ -1086,6 +1100,16 @@ public class PythonReceiver implements Receiver<Py> {
         @Override
         @SuppressWarnings("unchecked")
         public <T> T create(Class<T> type, ReceiverContext ctx) {
+            if (type == Py.Await.class) {
+                return (T) new Py.Await(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
+                );
+            }
+
             if (type == Py.Binary.class) {
                 return (T) new Py.Binary(
                     ctx.receiveNonNullValue(null, UUID.class),
@@ -1107,6 +1131,16 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveValue(null, JavaType.class),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
+                );
+            }
+
+            if (type == Py.LiteralType.class) {
+                return (T) new Py.LiteralType(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
                 );
             }
 
@@ -1209,7 +1243,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
-                    ctx.receiveNode(null, rightPaddedValueReceiver(Boolean.class)),
+                    ctx.receiveNode(null, rightPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveValue(null, Py.FormattedString.Value.Conversion.class),
                     ctx.receiveNode(null, ctx::receiveTree)
                 );
@@ -1266,8 +1300,8 @@ public class PythonReceiver implements Receiver<Py> {
                 );
             }
 
-            if (type == Py.Await.class) {
-                return (T) new Py.Await(
+            if (type == Py.YieldFrom.class) {
+                return (T) new Py.YieldFrom(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1276,12 +1310,12 @@ public class PythonReceiver implements Receiver<Py> {
                 );
             }
 
-            if (type == Py.YieldFrom.class) {
-                return (T) new Py.YieldFrom(
+            if (type == Py.Union.class) {
+                return (T) new Py.Union(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
                 );
             }
@@ -1431,7 +1465,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNodes(null, ctx::receiveTree),
-                    ctx.receiveNode(null, leftPaddedNodeReceiver(Space.class)),
+                    ctx.receiveNode(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveValue(null, JavaType.class)
                 );
             }
@@ -1463,7 +1497,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
-                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(J.AssignmentOperation.Type.class)),
+                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.AssignmentOperation.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
                 );
@@ -1475,7 +1509,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
-                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(J.Binary.Type.class)),
+                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Binary.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
                 );
@@ -1486,7 +1520,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                    ctx.receiveNonNullNode(null, rightPaddedValueReceiver(Boolean.class)),
+                    ctx.receiveNonNullNode(null, rightPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace)
                 );
@@ -1689,7 +1723,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(Boolean.class)),
+                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree)
                 );
@@ -2047,7 +2081,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(J.Unary.Type.class)),
+                    ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Unary.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
                 );
@@ -2062,7 +2096,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveSpace),
-                    ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(Space.class)),
+                    ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
                 );
             }
@@ -2073,7 +2107,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
-                    ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(Space.class)),
+                    ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.Variable.class)
                 );
@@ -2094,7 +2128,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                    ctx.receiveNode(null, leftPaddedValueReceiver(J.Wildcard.Bound.class)),
+                    ctx.receiveNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Wildcard.Bound.class)),
                     ctx.receiveNode(null, ctx::receiveTree)
                 );
             }
