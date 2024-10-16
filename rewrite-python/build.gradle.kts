@@ -27,6 +27,8 @@ dependencies {
     implementation(platform("org.openrewrite:rewrite-bom:$latest"))
     implementation("org.openrewrite:rewrite-core")
     implementation("org.openrewrite:rewrite-java")
+    // FIXME: temporary until we've decided how to best integrate into CLI
+    runtimeOnly("org.openrewrite:rewrite-python-remote:$latest")
 
     testImplementation("org.openrewrite:rewrite-test")
     testImplementation("org.junit-pioneer:junit-pioneer:latest.release")
