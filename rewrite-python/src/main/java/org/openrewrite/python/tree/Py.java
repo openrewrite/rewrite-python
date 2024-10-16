@@ -1359,7 +1359,7 @@ public interface Py extends J {
     @RequiredArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Data
-    final class Union implements Py, Expression, TypeTree {
+    final class UnionType implements Py, Expression, TypeTree {
 
         @Nullable
         @NonFinal
@@ -1381,7 +1381,7 @@ public interface Py extends J {
             return JRightPadded.getElements(types);
         }
 
-        public Union withTypes(List<Expression> types) {
+        public UnionType withTypes(List<Expression> types) {
             return getPadding().withTypes(JRightPadded.withElements(this.types, types));
         }
 
@@ -1391,7 +1391,7 @@ public interface Py extends J {
 
         @Override
         public <P> J acceptPython(PythonVisitor<P> v, P p) {
-            return v.visitUnion(this, p);
+            return v.visitUnionType(this, p);
         }
 
         @Transient
@@ -1417,14 +1417,14 @@ public interface Py extends J {
 
         @RequiredArgsConstructor
         public static class Padding {
-            private final Union t;
+            private final UnionType t;
 
             public List<JRightPadded<Expression>> getTypes() {
                 return t.types;
             }
 
-            public Union withTypes(List<JRightPadded<Expression>> types) {
-                return t.types == types ? t : new Union(t.id, t.prefix, t.markers, types, t.type);
+            public UnionType withTypes(List<JRightPadded<Expression>> types) {
+                return t.types == types ? t : new UnionType(t.id, t.prefix, t.markers, types, t.type);
             }
         }
     }

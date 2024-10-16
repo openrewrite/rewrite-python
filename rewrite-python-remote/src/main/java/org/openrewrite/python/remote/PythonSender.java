@@ -267,13 +267,13 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
-        public Py.Union visitUnion(Py.Union union, SenderContext ctx) {
-            ctx.sendValue(union, Py.Union::getId);
-            ctx.sendNode(union, Py.Union::getPrefix, PythonSender::sendSpace);
-            ctx.sendNode(union, Py.Union::getMarkers, ctx::sendMarkers);
-            ctx.sendNodes(union, e -> e.getPadding().getTypes(), PythonSender::sendRightPadded, e -> e.getElement().getId());
-            ctx.sendTypedValue(union, Py.Union::getType);
-            return union;
+        public Py.UnionType visitUnionType(Py.UnionType unionType, SenderContext ctx) {
+            ctx.sendValue(unionType, Py.UnionType::getId);
+            ctx.sendNode(unionType, Py.UnionType::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(unionType, Py.UnionType::getMarkers, ctx::sendMarkers);
+            ctx.sendNodes(unionType, e -> e.getPadding().getTypes(), PythonSender::sendRightPadded, e -> e.getElement().getId());
+            ctx.sendTypedValue(unionType, Py.UnionType::getType);
+            return unionType;
         }
 
         @Override

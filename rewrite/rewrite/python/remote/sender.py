@@ -196,13 +196,13 @@ class PythonSender(Sender):
             ctx.send_typed_value(yield_from, attrgetter('_type'))
             return yield_from
 
-        def visit_union(self, union: Union, ctx: SenderContext) -> J:
-            ctx.send_value(union, attrgetter('_id'))
-            ctx.send_node(union, attrgetter('_prefix'), PythonSender.send_space)
-            ctx.send_node(union, attrgetter('_markers'), ctx.send_markers)
-            ctx.send_nodes(union, attrgetter('_types'), PythonSender.send_right_padded, lambda t: t.element.id)
-            ctx.send_typed_value(union, attrgetter('_type'))
-            return union
+        def visit_union_type(self, union_type: UnionType, ctx: SenderContext) -> J:
+            ctx.send_value(union_type, attrgetter('_id'))
+            ctx.send_node(union_type, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(union_type, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_nodes(union_type, attrgetter('_types'), PythonSender.send_right_padded, lambda t: t.element.id)
+            ctx.send_typed_value(union_type, attrgetter('_type'))
+            return union_type
 
         def visit_variable_scope(self, variable_scope: VariableScope, ctx: SenderContext) -> J:
             ctx.send_value(variable_scope, attrgetter('_id'))

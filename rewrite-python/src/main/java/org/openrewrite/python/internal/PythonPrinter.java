@@ -640,11 +640,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
-    public J visitUnion(Py.Union union, PrintOutputCapture<P> p) {
-        beforeSyntax(union, PySpace.Location.UNION_PREFIX, p);
-        visitRightPadded(union.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE, "|", p);
-        afterSyntax(union, p);
-        return union;
+    public J visitUnionType(Py.UnionType unionType, PrintOutputCapture<P> p) {
+        beforeSyntax(unionType, PySpace.Location.UNION_TYPE_PREFIX, p);
+        visitRightPadded(unionType.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE_TYPE, "|", p);
+        afterSyntax(unionType, p);
+        return unionType;
     }
 
     @SuppressWarnings("SameParameterValue")

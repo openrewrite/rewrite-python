@@ -37,7 +37,7 @@ public class PyRightPadded {
         SLICE_EXPRESSION_STEP(PySpace.Location.SLICE_STEP_SUFFIX),
         SLICE_EXPRESSION_STOP(PySpace.Location.SLICE_STOP_SUFFIX),
         TOP_LEVEL_STATEMENT_SUFFIX(PySpace.Location.TOP_LEVEL_STATEMENT),
-        UNION_TYPE(PySpace.Location.UNION_ELEMENT_SUFFIX),
+        UNION_TYPE_TYPE(PySpace.Location.UNION_ELEMENT_SUFFIX),
         VARIABLE_SCOPE_ELEMENT(PySpace.Location.VARIABLE_SCOPE_NAME_SUFFIX),
         ;
 

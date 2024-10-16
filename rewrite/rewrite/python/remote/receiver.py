@@ -202,13 +202,13 @@ class PythonReceiver(Receiver):
             yield_from = yield_from.with_type(ctx.receive_value(yield_from.type, JavaType))
             return yield_from
 
-        def visit_union(self, union: Union, ctx: ReceiverContext) -> J:
-            union = union.with_id(ctx.receive_value(union.id, UUID))
-            union = union.with_prefix(ctx.receive_node(union.prefix, PythonReceiver.receive_space))
-            union = union.with_markers(ctx.receive_node(union.markers, ctx.receive_markers))
-            union = union.padding.with_types(ctx.receive_nodes(union.padding.types, PythonReceiver.receive_right_padded_tree))
-            union = union.with_type(ctx.receive_value(union.type, JavaType))
-            return union
+        def visit_union_type(self, union_type: UnionType, ctx: ReceiverContext) -> J:
+            union_type = union_type.with_id(ctx.receive_value(union_type.id, UUID))
+            union_type = union_type.with_prefix(ctx.receive_node(union_type.prefix, PythonReceiver.receive_space))
+            union_type = union_type.with_markers(ctx.receive_node(union_type.markers, ctx.receive_markers))
+            union_type = union_type.padding.with_types(ctx.receive_nodes(union_type.padding.types, PythonReceiver.receive_right_padded_tree))
+            union_type = union_type.with_type(ctx.receive_value(union_type.type, JavaType))
+            return union_type
 
         def visit_variable_scope(self, variable_scope: VariableScope, ctx: ReceiverContext) -> J:
             variable_scope = variable_scope.with_id(ctx.receive_value(variable_scope.id, UUID))
@@ -1088,8 +1088,8 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, JavaType)
                 )
 
-            if type in ["rewrite.python.tree.Union", "org.openrewrite.python.tree.Py$Union"]:
-                return Union(
+            if type in ["rewrite.python.tree.UnionType", "org.openrewrite.python.tree.Py$UnionType"]:
+                return UnionType(
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, PythonReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),

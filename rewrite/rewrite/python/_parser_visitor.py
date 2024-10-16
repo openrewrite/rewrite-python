@@ -1714,7 +1714,7 @@ class ParserVisitor(ast.NodeVisitor):
             # FIXME consider flattening nested unions
             left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type_hint), self.__source_before('|'))
             right = self.__pad_right(self.__convert_internal(node.right, self.__convert_type_hint), Space.EMPTY)
-            return py.Union(
+            return py.UnionType(
                 random_id(),
                 prefix,
                 Markers.EMPTY,

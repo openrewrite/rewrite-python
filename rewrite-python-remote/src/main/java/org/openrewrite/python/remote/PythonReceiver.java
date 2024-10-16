@@ -284,13 +284,13 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
-        public Py.Union visitUnion(Py.Union union, ReceiverContext ctx) {
-            union = union.withId(ctx.receiveNonNullValue(union.getId(), UUID.class));
-            union = union.withPrefix(ctx.receiveNonNullNode(union.getPrefix(), PythonReceiver::receiveSpace));
-            union = union.withMarkers(ctx.receiveNonNullNode(union.getMarkers(), ctx::receiveMarkers));
-            union = union.getPadding().withTypes(ctx.receiveNonNullNodes(union.getPadding().getTypes(), PythonReceiver::receiveRightPaddedTree));
-            union = union.withType(ctx.receiveValue(union.getType(), JavaType.class));
-            return union;
+        public Py.UnionType visitUnionType(Py.UnionType unionType, ReceiverContext ctx) {
+            unionType = unionType.withId(ctx.receiveNonNullValue(unionType.getId(), UUID.class));
+            unionType = unionType.withPrefix(ctx.receiveNonNullNode(unionType.getPrefix(), PythonReceiver::receiveSpace));
+            unionType = unionType.withMarkers(ctx.receiveNonNullNode(unionType.getMarkers(), ctx::receiveMarkers));
+            unionType = unionType.getPadding().withTypes(ctx.receiveNonNullNodes(unionType.getPadding().getTypes(), PythonReceiver::receiveRightPaddedTree));
+            unionType = unionType.withType(ctx.receiveValue(unionType.getType(), JavaType.class));
+            return unionType;
         }
 
         @Override
@@ -1310,8 +1310,8 @@ public class PythonReceiver implements Receiver<Py> {
                 );
             }
 
-            if (type == Py.Union.class) {
-                return (T) new Py.Union(
+            if (type == Py.UnionType.class) {
+                return (T) new Py.UnionType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),

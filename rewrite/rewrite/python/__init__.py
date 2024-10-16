@@ -43,7 +43,7 @@ __all__ = [
     'TrailingElseWrapper',
     'TypeHint',
     'TypeHintedExpression',
-    'Union',
+    'UnionType',
     'VariableScope',
     'YieldFrom',
 ]

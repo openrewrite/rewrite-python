@@ -1419,14 +1419,14 @@ class YieldFrom(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Union(Py, Expression, TypeTree):
+class UnionType(Py, Expression, TypeTree):
     _id: UUID
 
     @property
     def id(self) -> UUID:
         return self._id
 
-    def with_id(self, id: UUID) -> Union:
+    def with_id(self, id: UUID) -> UnionType:
         return self if id is self._id else replace(self, _id=id)
 
     _prefix: Space
@@ -1435,7 +1435,7 @@ class Union(Py, Expression, TypeTree):
     def prefix(self) -> Space:
         return self._prefix
 
-    def with_prefix(self, prefix: Space) -> Union:
+    def with_prefix(self, prefix: Space) -> UnionType:
         return self if prefix is self._prefix else replace(self, _prefix=prefix)
 
     _markers: Markers
@@ -1444,7 +1444,7 @@ class Union(Py, Expression, TypeTree):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> Union:
+    def with_markers(self, markers: Markers) -> UnionType:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _types: List[JRightPadded[Expression]]
@@ -1453,7 +1453,7 @@ class Union(Py, Expression, TypeTree):
     def types(self) -> List[Expression]:
         return JRightPadded.get_elements(self._types)
 
-    def with_types(self, types: List[Expression]) -> Union:
+    def with_types(self, types: List[Expression]) -> UnionType:
         return self.padding.with_types(JRightPadded.with_elements(self._types, types))
 
     _type: Optional[JavaType]
@@ -1462,38 +1462,38 @@ class Union(Py, Expression, TypeTree):
     def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: Optional[JavaType]) -> Union:
+    def with_type(self, type: Optional[JavaType]) -> UnionType:
         return self if type is self._type else replace(self, _type=type)
 
     @dataclass
     class PaddingHelper:
-        _t: Union
+        _t: UnionType
 
         @property
         def types(self) -> List[JRightPadded[Expression]]:
             return self._t._types
 
-        def with_types(self, types: List[JRightPadded[Expression]]) -> Union:
+        def with_types(self, types: List[JRightPadded[Expression]]) -> UnionType:
             return self._t if self._t._types is types else replace(self._t, _types=types)
 
     _padding: weakref.ReferenceType[PaddingHelper] = None
 
     @property
     def padding(self) -> PaddingHelper:
-        p: Union.PaddingHelper
+        p: UnionType.PaddingHelper
         if self._padding is None:
-            p = Union.PaddingHelper(self)
+            p = UnionType.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
         else:
             p = self._padding()
             # noinspection PyProtectedMember
             if p is None or p._t != self:
-                p = Union.PaddingHelper(self)
+                p = UnionType.PaddingHelper(self)
                 object.__setattr__(self, '_padding', weakref.ref(p))
         return p
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
-        return v.visit_union(self, p)
+        return v.visit_union_type(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)

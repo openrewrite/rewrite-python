@@ -158,8 +158,8 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
-    public Py.Union visitUnion(Py.Union union, P p) {
-        return (Py.Union) super.visitUnion(union, p);
+    public Py.UnionType visitUnionType(Py.UnionType unionType, P p) {
+        return (Py.UnionType) super.visitUnionType(unionType, p);
     }
 
     @Override
