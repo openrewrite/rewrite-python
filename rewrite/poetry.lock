@@ -156,13 +156,13 @@ files = [
 
 [[package]]
 name = "openrewrite-remote"
-version = "0.3.3"
+version = "0.4.2"
 description = "Remoting functionality for the OpenRewrite library."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "openrewrite_remote-0.3.3-py3-none-any.whl", hash = "sha256:76f249cddc2ccf5b89b8671124fc8d7b12da4b0185143194a6d88d0a6988abc8"},
-    {file = "openrewrite_remote-0.3.3.tar.gz", hash = "sha256:e76b8ccaca74d607d4f7987b90779b0dd0ff9dd92e3b78e1ff5818e9300b6f8d"},
+    {file = "openrewrite_remote-0.4.2-py3-none-any.whl", hash = "sha256:0821ddcf19b854b3c91403db715f4c62d4b58c5bcf39db4b28da8693f250da1b"},
+    {file = "openrewrite_remote-0.4.2.tar.gz", hash = "sha256:7b4c92795c9054e192e896dda474ff77d92cfc4199841810c3160c618f94c5e0"},
 ]
 
 [package.dependencies]
@@ -321,4 +321,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9"
-content-hash = "39e75964b1558a35f80f8ac06722b1899163b480f4f554cf6d31de9ffe653d96"
+content-hash = "0750b1c3e734ac59e6a86cead65c6818f770798a6312d84dffb368ddb3ad527a"
