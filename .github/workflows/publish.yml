@@ -86,7 +86,6 @@ jobs:
         working-directory: rewrite
         if: (!contains(github.ref, '-rc.'))
         run: |
-          rm -rf .venv
           poetry install --no-interaction --no-ansi
           poetry build
           poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
