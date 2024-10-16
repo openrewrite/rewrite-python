@@ -53,9 +53,3 @@ tests/__pycache__/
 
 # System-specific files (macOS)
 .DS_Store
-
-# Distribution / Packages
-dist/
-
-!**/.venv/lib
-!**/.venv/bin
