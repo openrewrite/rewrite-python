@@ -693,7 +693,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_ExceptHandler(self, node):
         prefix = self.__source_before('except')
-        except_type = self.__convert(node.type) if node.type else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY)
+        except_type = self.__convert_type(node.type) if node.type else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY)
         if node.name:
             before_as = self.__source_before('as')
             except_type_name = self.__convert_name(node.name)
@@ -1735,6 +1735,18 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def __convert(self, node) -> Optional[J]:
+        return self.__convert_internal(node, self.__convert)
+
+
+    def __convert_type(self, node) -> Optional[j.TypeTree]:
+        if isinstance(node, ast.Tuple):
+            return py.LiteralType(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert_internal(node, self.__convert_type),
+                self.__map_type(node)
+            )
         return self.__convert_internal(node, self.__convert)
 
 

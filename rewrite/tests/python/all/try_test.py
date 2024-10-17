@@ -39,6 +39,21 @@ def test_try_except_finally():
     )
 
 
+def test_try_multicatch():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test():
+                try:
+                    pass
+                except (NotImplementedError, OverflowError) as e:
+                    pass
+            """
+        )
+    )
+
+
 @pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_try_else():
     # language=python
