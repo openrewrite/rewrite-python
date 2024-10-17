@@ -137,6 +137,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitChainedAssignment(Py.ChainedAssignment chainedAssignment, PrintOutputCapture<P> p) {
+        beforeSyntax(chainedAssignment, PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p);
+        visitRightPadded(chainedAssignment.getPadding().getVariables(), PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLE, "=", p);
+        visit(chainedAssignment.getAssignment(), p);
+        afterSyntax(chainedAssignment, p);
+        return chainedAssignment;
+    }
+
+    @Override
     public J visitCollectionLiteral(Py.CollectionLiteral coll, PrintOutputCapture<P> p) {
         beforeSyntax(coll, PySpace.Location.COLLECTION_LITERAL_PREFIX, p);
         JContainer<Expression> elements = coll.getPadding().getElements();

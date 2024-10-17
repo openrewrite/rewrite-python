@@ -45,6 +45,15 @@ class PythonSender(Sender):
             ctx.send_typed_value(binary, attrgetter('_type'))
             return binary
 
+        def visit_chained_assignment(self, chained_assignment: ChainedAssignment, ctx: SenderContext) -> J:
+            ctx.send_value(chained_assignment, attrgetter('_id'))
+            ctx.send_node(chained_assignment, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(chained_assignment, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_nodes(chained_assignment, attrgetter('_variables'), PythonSender.send_right_padded, lambda t: t.element.id)
+            ctx.send_node(chained_assignment, attrgetter('_assignment'), ctx.send_tree)
+            ctx.send_typed_value(chained_assignment, attrgetter('_type'))
+            return chained_assignment
+
         def visit_exception_type(self, exception_type: ExceptionType, ctx: SenderContext) -> J:
             ctx.send_value(exception_type, attrgetter('_id'))
             ctx.send_node(exception_type, attrgetter('_prefix'), PythonSender.send_space)

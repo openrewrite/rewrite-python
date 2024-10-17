@@ -34,6 +34,17 @@ class PythonVisitor(JavaVisitor[P]):
         binary = binary.with_right(self.visit_and_cast(binary.right, Expression, p))
         return binary
 
+    def visit_chained_assignment(self, chained_assignment: ChainedAssignment, p: P) -> J:
+        chained_assignment = chained_assignment.with_prefix(self.visit_space(chained_assignment.prefix, PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(chained_assignment, p))
+        if not isinstance(temp_statement, ChainedAssignment):
+            return temp_statement
+        chained_assignment = cast(ChainedAssignment, temp_statement)
+        chained_assignment = chained_assignment.with_markers(self.visit_markers(chained_assignment.markers, p))
+        chained_assignment = chained_assignment.padding.with_variables([self.visit_right_padded(v, PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, p) for v in chained_assignment.padding.variables])
+        chained_assignment = chained_assignment.with_assignment(self.visit_and_cast(chained_assignment.assignment, Expression, p))
+        return chained_assignment
+
     def visit_exception_type(self, exception_type: ExceptionType, p: P) -> J:
         exception_type = exception_type.with_prefix(self.visit_space(exception_type.prefix, PySpace.Location.EXCEPTION_TYPE_PREFIX, p))
         exception_type = exception_type.with_markers(self.visit_markers(exception_type.markers, p))

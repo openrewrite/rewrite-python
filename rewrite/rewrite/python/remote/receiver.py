@@ -51,6 +51,15 @@ class PythonReceiver(Receiver):
             binary = binary.with_type(ctx.receive_value(binary.type, JavaType))
             return binary
 
+        def visit_chained_assignment(self, chained_assignment: ChainedAssignment, ctx: ReceiverContext) -> J:
+            chained_assignment = chained_assignment.with_id(ctx.receive_value(chained_assignment.id, UUID))
+            chained_assignment = chained_assignment.with_prefix(ctx.receive_node(chained_assignment.prefix, PythonReceiver.receive_space))
+            chained_assignment = chained_assignment.with_markers(ctx.receive_node(chained_assignment.markers, ctx.receive_markers))
+            chained_assignment = chained_assignment.padding.with_variables(ctx.receive_nodes(chained_assignment.padding.variables, PythonReceiver.receive_right_padded_tree))
+            chained_assignment = chained_assignment.with_assignment(ctx.receive_node(chained_assignment.assignment, ctx.receive_tree))
+            chained_assignment = chained_assignment.with_type(ctx.receive_value(chained_assignment.type, JavaType))
+            return chained_assignment
+
         def visit_exception_type(self, exception_type: ExceptionType, ctx: ReceiverContext) -> J:
             exception_type = exception_type.with_id(ctx.receive_value(exception_type.id, UUID))
             exception_type = exception_type.with_prefix(ctx.receive_node(exception_type.prefix, PythonReceiver.receive_space))
@@ -915,6 +924,16 @@ class PythonReceiver(Receiver):
                     ctx.receive_node(None, ctx.receive_tree),
                     ctx.receive_node(None, PythonReceiver.left_padded_value_receiver(Binary.Type)),
                     ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
+                )
+
+            if type in ["rewrite.python.tree.ChainedAssignment", "org.openrewrite.python.tree.Py$ChainedAssignment"]:
+                return ChainedAssignment(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_nodes(None, PythonReceiver.receive_right_padded_tree),
                     ctx.receive_node(None, ctx.receive_tree),
                     ctx.receive_value(None, JavaType)
                 )

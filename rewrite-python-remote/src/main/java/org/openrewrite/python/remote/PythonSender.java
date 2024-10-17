@@ -80,6 +80,17 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.ChainedAssignment visitChainedAssignment(Py.ChainedAssignment chainedAssignment, SenderContext ctx) {
+            ctx.sendValue(chainedAssignment, Py.ChainedAssignment::getId);
+            ctx.sendNode(chainedAssignment, Py.ChainedAssignment::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(chainedAssignment, Py.ChainedAssignment::getMarkers, ctx::sendMarkers);
+            ctx.sendNodes(chainedAssignment, e -> e.getPadding().getVariables(), PythonSender::sendRightPadded, e -> e.getElement().getId());
+            ctx.sendNode(chainedAssignment, Py.ChainedAssignment::getAssignment, ctx::sendTree);
+            ctx.sendTypedValue(chainedAssignment, Py.ChainedAssignment::getType);
+            return chainedAssignment;
+        }
+
+        @Override
         public Py.ExceptionType visitExceptionType(Py.ExceptionType exceptionType, SenderContext ctx) {
             ctx.sendValue(exceptionType, Py.ExceptionType::getId);
             ctx.sendNode(exceptionType, Py.ExceptionType::getPrefix, PythonSender::sendSpace);

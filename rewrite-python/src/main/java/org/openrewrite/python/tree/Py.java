@@ -202,6 +202,84 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Data
+    final class ChainedAssignment implements Py, Statement, TypedTree {
+
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        List<JRightPadded<Expression>> variables;
+
+        public List<Expression> getVariables() {
+            return JRightPadded.getElements(variables);
+        }
+
+        public ChainedAssignment withVariables(List<Expression> variables) {
+            return getPadding().withVariables(JRightPadded.withElements(this.variables, variables));
+        }
+
+        @With
+        Expression assignment;
+
+        @With
+        @Nullable
+        JavaType type;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitChainedAssignment(this, p);
+        }
+
+        @Transient
+        @Override
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final ChainedAssignment t;
+
+            public List<JRightPadded<Expression>> getVariables() {
+                return t.variables;
+            }
+
+            public ChainedAssignment withVariables(List<JRightPadded<Expression>> variables) {
+                return t.variables == variables ? t : new ChainedAssignment(t.id, t.prefix, t.markers, variables, t.assignment, t.type);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @Data
     final class ExceptionType implements Py, TypeTree {

@@ -182,6 +182,93 @@ class Binary(Py, Expression, TypedTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class ChainedAssignment(Py, Statement, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> ChainedAssignment:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> ChainedAssignment:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> ChainedAssignment:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _variables: List[JRightPadded[Expression]]
+
+    @property
+    def variables(self) -> List[Expression]:
+        return JRightPadded.get_elements(self._variables)
+
+    def with_variables(self, variables: List[Expression]) -> ChainedAssignment:
+        return self.padding.with_variables(JRightPadded.with_elements(self._variables, variables))
+
+    _assignment: Expression
+
+    @property
+    def assignment(self) -> Expression:
+        return self._assignment
+
+    def with_assignment(self, assignment: Expression) -> ChainedAssignment:
+        return self if assignment is self._assignment else replace(self, _assignment=assignment)
+
+    _type: Optional[JavaType]
+
+    @property
+    def type(self) -> Optional[JavaType]:
+        return self._type
+
+    def with_type(self, type: Optional[JavaType]) -> ChainedAssignment:
+        return self if type is self._type else replace(self, _type=type)
+
+    @dataclass
+    class PaddingHelper:
+        _t: ChainedAssignment
+
+        @property
+        def variables(self) -> List[JRightPadded[Expression]]:
+            return self._t._variables
+
+        def with_variables(self, variables: List[JRightPadded[Expression]]) -> ChainedAssignment:
+            return self._t if self._t._variables is variables else replace(self._t, _variables=variables)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: ChainedAssignment.PaddingHelper
+        if self._padding is None:
+            p = ChainedAssignment.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = ChainedAssignment.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_chained_assignment(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class ExceptionType(Py, TypeTree):
     _id: UUID
 

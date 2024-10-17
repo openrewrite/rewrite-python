@@ -23,6 +23,7 @@ public class PyRightPadded {
     @RequiredArgsConstructor
     public enum Location {
         ASSERT_ELEMENT(PySpace.Location.ASSERT_ELEMENT_SUFFIX),
+        CHAINED_ASSIGNMENT_VARIABLE(PySpace.Location.CHAINED_ASSIGNMENT_VARIABLE_SUFFIX),
         COLLECTION_LITERAL_ELEMENT(PySpace.Location.COLLECTION_LITERAL_ELEMENT_SUFFIX),
         DEL_ELEMENT(PySpace.Location.DEL_ELEMENT_SUFFIX),
         DICT_ENTRY_KEY(PySpace.Location.DICT_ENTRY_KEY_SUFFIX),

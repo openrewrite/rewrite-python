@@ -66,6 +66,21 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return b;
     }
 
+    public J visitChainedAssignment(Py.ChainedAssignment chainedAssignment, P p) {
+        Py.ChainedAssignment ca = chainedAssignment;
+        ca = ca.withPrefix(visitSpace(ca.getPrefix(), PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p));
+        ca = ca.withMarkers(visitMarkers(ca.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(ca, p);
+        if (!(temp instanceof Py.ChainedAssignment)) {
+            return temp;
+        } else {
+            ca = (Py.ChainedAssignment) temp;
+        }
+        ca = ca.getPadding().withVariables(ListUtils.map(ca.getPadding().getVariables(), t -> visitRightPadded(t, PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLE, p)));
+        ca = ca.withAssignment(visitAndCast(ca.getAssignment(), p));
+        return ca;
+    }
+
     public J visitCollectionLiteral(Py.CollectionLiteral coll, P p) {
         Py.CollectionLiteral c = coll;
         c = c.withPrefix(visitSpace(c.getPrefix(), PySpace.Location.COLLECTION_LITERAL_PREFIX, p));

@@ -28,6 +28,21 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.Binary visitBinary(Py.Binary binary, P p) {
+        return (Py.Binary) super.visitBinary(binary, p);
+    }
+
+    @Override
+    public Py.ChainedAssignment visitChainedAssignment(Py.ChainedAssignment chainedAssignment, P p) {
+        return (Py.ChainedAssignment) super.visitChainedAssignment(chainedAssignment, p);
+    }
+
+    @Override
+    public Py.CollectionLiteral visitCollectionLiteral(Py.CollectionLiteral coll, P p) {
+        return (Py.CollectionLiteral) super.visitCollectionLiteral(coll, p);
+    }
+
+    @Override
     public Py.CompilationUnit visitCompilationUnit(Py.CompilationUnit cu, P p) {
         return (Py.CompilationUnit) super.visitCompilationUnit(cu, p);
     }
@@ -50,11 +65,6 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     @Override
     public Py.Del visitDel(Py.Del ogDel, P p) {
         return (Py.Del) super.visitDel(ogDel, p);
-    }
-
-    @Override
-    public Py.CollectionLiteral visitCollectionLiteral(Py.CollectionLiteral coll, P p) {
-        return (Py.CollectionLiteral) super.visitCollectionLiteral(coll, p);
     }
 
     @Override
@@ -225,11 +235,6 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     @Override
     public J.Binary visitBinary(J.Binary binary, P p) {
         return (J.Binary) super.visitBinary(binary, p);
-    }
-
-    @Override
-    public Py.Binary visitBinary(Py.Binary binary, P p) {
-        return (Py.Binary) super.visitBinary(binary, p);
     }
 
     @Override

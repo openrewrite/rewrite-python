@@ -94,6 +94,17 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.ChainedAssignment visitChainedAssignment(Py.ChainedAssignment chainedAssignment, ReceiverContext ctx) {
+            chainedAssignment = chainedAssignment.withId(ctx.receiveNonNullValue(chainedAssignment.getId(), UUID.class));
+            chainedAssignment = chainedAssignment.withPrefix(ctx.receiveNonNullNode(chainedAssignment.getPrefix(), PythonReceiver::receiveSpace));
+            chainedAssignment = chainedAssignment.withMarkers(ctx.receiveNonNullNode(chainedAssignment.getMarkers(), ctx::receiveMarkers));
+            chainedAssignment = chainedAssignment.getPadding().withVariables(ctx.receiveNonNullNodes(chainedAssignment.getPadding().getVariables(), PythonReceiver::receiveRightPaddedTree));
+            chainedAssignment = chainedAssignment.withAssignment(ctx.receiveNonNullNode(chainedAssignment.getAssignment(), ctx::receiveTree));
+            chainedAssignment = chainedAssignment.withType(ctx.receiveValue(chainedAssignment.getType(), JavaType.class));
+            return chainedAssignment;
+        }
+
+        @Override
         public Py.ExceptionType visitExceptionType(Py.ExceptionType exceptionType, ReceiverContext ctx) {
             exceptionType = exceptionType.withId(ctx.receiveNonNullValue(exceptionType.getId(), UUID.class));
             exceptionType = exceptionType.withPrefix(ctx.receiveNonNullNode(exceptionType.getPrefix(), PythonReceiver::receiveSpace));
@@ -1118,6 +1129,17 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.python.tree.Py.Binary.Type.class)),
                     ctx.receiveNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
+                );
+            }
+
+            if (type == Py.ChainedAssignment.class) {
+                return (T) new Py.ChainedAssignment(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
                 );
