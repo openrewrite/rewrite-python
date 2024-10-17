@@ -24,7 +24,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     _source: str
     _cursor: int
-    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int]]
+    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int, ast.AST]]
 
     @property
     def _source_after_cursor(self) -> str:
@@ -189,7 +189,7 @@ class ParserVisitor(ast.NodeVisitor):
         name = self.__convert_name(node.name)
         save_cursor = self._cursor
         interfaces_prefix = self.__whitespace()
-        if self._source[self._cursor] == '(' and node.bases:
+        if node.bases and self.__cursor_at('('):
             self.__skip('(')
             interfaces = JContainer(
                 interfaces_prefix,
@@ -198,7 +198,7 @@ class ParserVisitor(ast.NodeVisitor):
                     enumerate(node.bases)],
                 Markers.EMPTY
             )
-        elif self._source[self._cursor] == '(':
+        elif self.__cursor_at('('):
             self.__skip('(')
             interfaces = JContainer(
                 interfaces_prefix,
@@ -1628,7 +1628,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_Tuple(self, node):
         prefix = self.__whitespace()
 
-        if self._source[self._cursor] == '(' and node.elts:
+        if self.__cursor_at('(') and node.elts:
             save_cursor = self._cursor
             elements = JContainer(
                 Space.EMPTY,
@@ -1636,7 +1636,7 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY
             )
 
-            if self._cursor < len(self._source) and  self._source[self._cursor] == ')':
+            if self.__cursor_at(')'):
                 # we need to backtrack as the parentheses belonged to a nested element
                 elements = None
                 self._cursor = save_cursor
@@ -1646,7 +1646,7 @@ class ParserVisitor(ast.NodeVisitor):
             elements = None
 
         if elements is None:
-            omit_parens = self._source[self._cursor] != '('
+            omit_parens = not self.__cursor_at('(')
             if not omit_parens:
                 self._cursor += 1
             elements = JContainer(
@@ -1755,7 +1755,7 @@ class ParserVisitor(ast.NodeVisitor):
                         prefix,
                         Markers.EMPTY,
                         self.__pad_right(e.with_prefix(expr_prefix), r)
-                    ), self._cursor))
+                    ), self._cursor, node))
                     # handle nested parens
                     result = recursion(node)
                 else:
@@ -1773,9 +1773,15 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor += 1
                     result = self._parentheses_stack.pop()[0](result, suffix)
                 else:
+                    if len(self._parentheses_stack) > 0:
+                        while len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node:
+                            self._parentheses_stack.pop()
                     self._cursor = save_cursor_2
                 return result
             else:
+                if not self.__cursor_at('(') and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][1] == self._cursor:
+                    self._parentheses_stack.pop()
+                    self._cursor -= 1
                 return self.visit(cast(ast.AST, node))
         else:
             return None
@@ -2144,3 +2150,6 @@ class ParserVisitor(ast.NodeVisitor):
             delimiter,
             parts
         ), tok)
+
+    def __cursor_at(self, s: str):
+        return self._cursor < len(self._source) and (len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))

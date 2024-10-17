@@ -30,6 +30,32 @@ def test_else_single():
     )
 
 
+def test_if_with_tuple_1():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            import sys
+            if (sys.version_info[0], sys.version_info[1]) < (3, 8):
+                pass
+            """
+        )
+    )
+
+
+def test_if_with_tuple_2():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            import sys
+            if ((sys.version_info[0], sys.version_info[1]) < (3, 8)):
+                pass
+            """
+        )
+    )
+
+
 def test_else_multiple():
     # language=python
     rewrite_run(
