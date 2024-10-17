@@ -446,11 +446,11 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Raise(self, node):
-        return py.Throw(
+        return j.Throw(
             random_id(),
             self.__source_before('raise'),
             Markers.EMPTY,
-            self.__convert(node.exc),
+            self.__convert(node.exc) if node.exc else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
         )
 
 

@@ -54,6 +54,20 @@ def test_try_multicatch():
     )
 
 
+def test_reraise():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            try:
+                pass
+            except OverflowError:
+                raise
+            """
+        )
+    )
+
+
 @pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_try_else():
     # language=python
