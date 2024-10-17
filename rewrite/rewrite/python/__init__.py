@@ -22,6 +22,7 @@ __all__ = [
 
     # AST types
     'Await',
+    'ChainedAssignment',
     'CollectionLiteral',
     'ComprehensionExpression',
     'Del',
