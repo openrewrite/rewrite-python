@@ -560,8 +560,17 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Global(self, node):
-        raise NotImplementedError("Implement visit_Global!")
-
+        return py.VariableScope(
+            random_id(),
+            self.__source_before('global'),
+            Markers.EMPTY,
+            py.VariableScope.Kind.GLOBAL,
+            [self.__pad_list_element(
+                cast(j.Identifier, self.__convert_name(n)),
+                i == len(node.names) - 1,
+                pad_last=False) for i, n in enumerate(node.names)
+            ]
+        )
 
     def visit_Nonlocal(self, node):
         raise NotImplementedError("Implement visit_Nonlocal!")
@@ -1837,7 +1846,7 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(statement, padding, markers)
 
 
-    def __pad_list_element(self, element: J, last: bool = False, pad_last: bool = True, end_delim: str = None) -> JRightPadded[J]:
+    def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, end_delim: str = None) -> JRightPadded[J2]:
         save_cursor = self._cursor
         padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
