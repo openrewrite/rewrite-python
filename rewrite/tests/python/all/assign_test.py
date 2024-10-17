@@ -6,9 +6,14 @@ def test_assign():
     rewrite_run(python("a = 1"))
 
 
-def test_assign():
+def test_assign_2():
     # language=python
     rewrite_run(python("a.b: int = 1"))
+
+
+def test_assign_no_init():
+    # language=python
+    rewrite_run(python("a : int"))
 
 
 def test_assign_expression():

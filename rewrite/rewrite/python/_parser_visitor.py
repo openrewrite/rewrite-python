@@ -245,7 +245,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_AnnAssign(self, node):
         prefix = self.__whitespace()
 
-        if node.annotation:
+        if node.value:
             return j.Assignment(
                 random_id(),
                 prefix,
@@ -272,6 +272,13 @@ class ParserVisitor(ast.NodeVisitor):
             )
         else:
             name = self.__convert(node.target)
+            if node.annotation:
+                after = self.__source_before(':')
+                type = self.__convert_type_hint(node.annotation)
+            else:
+                after = Space.EMPTY
+                type = None
+
             initializer = self.__pad_left(
                 self.__source_before('='),
                 self.__convert(node.value)
@@ -283,7 +290,7 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 [],
                 [],
-                None,
+                type,
                 None,
                 [],
                 [self.__pad_right(
@@ -295,7 +302,7 @@ class ParserVisitor(ast.NodeVisitor):
                         [],
                         initializer,
                         self.__map_type(node.target)),
-                    Space.EMPTY
+                    after
                 )]
             )
 
