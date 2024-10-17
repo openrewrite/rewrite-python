@@ -591,7 +591,17 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Nonlocal(self, node):
-        raise NotImplementedError("Implement visit_Nonlocal!")
+        return py.VariableScope(
+            random_id(),
+            self.__source_before('nonlocal'),
+            Markers.EMPTY,
+            py.VariableScope.Kind.NONLOCAL,
+            [self.__pad_list_element(
+                cast(j.Identifier, self.__convert_name(n)),
+                i == len(node.names) - 1,
+                pad_last=False) for i, n in enumerate(node.names)
+            ]
+        )
 
 
     def visit_Pass(self, node):
