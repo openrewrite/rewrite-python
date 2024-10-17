@@ -148,8 +148,19 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.value)
             )
         else:
-            # FIXME implement me
-            raise NotImplementedError("Multiple assignments are not yet supported")
+            return py.ChainedAssignment(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                [self.__pad_list_element(
+                    self.__convert(t),
+                    i == len(node.targets) - 1,
+                    delim='=',
+                    end_delim='=',
+                    pad_last=True) for i, t in enumerate(node.targets)],
+                self.__convert(node.value),
+                self.__map_type(node.value)
+            )
 
 
     def visit_AugAssign(self, node):
@@ -1871,13 +1882,13 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(statement, padding, markers)
 
 
-    def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, end_delim: str = None) -> JRightPadded[J2]:
+    def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, delim: str = ',', end_delim: str = None) -> JRightPadded[J2]:
         save_cursor = self._cursor
         padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
         if last and self._cursor < len(self._source):
-            if self._source[self._cursor] == ',' and end_delim != ',':
-                self._cursor += 1
+            if self._source[self._cursor] == delim and end_delim != delim:
+                self._cursor += len(delim)
                 markers = markers.with_markers([TrailingComma(random_id(), self.__whitespace())])
             elif self._source[self._cursor] != end_delim:
                 if not pad_last:
@@ -1888,7 +1899,7 @@ class ParserVisitor(ast.NodeVisitor):
             padding = Space.EMPTY
             self._cursor = save_cursor
         elif not last:
-            self._cursor += 1
+            self._cursor += len(delim)
             markers = Markers.EMPTY
         return JRightPadded(element, padding, markers)
 

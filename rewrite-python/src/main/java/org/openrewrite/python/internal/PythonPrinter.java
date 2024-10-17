@@ -140,6 +140,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitChainedAssignment(Py.ChainedAssignment chainedAssignment, PrintOutputCapture<P> p) {
         beforeSyntax(chainedAssignment, PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p);
         visitRightPadded(chainedAssignment.getPadding().getVariables(), PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLE, "=", p);
+        p.append('=');
         visit(chainedAssignment.getAssignment(), p);
         afterSyntax(chainedAssignment, p);
         return chainedAssignment;

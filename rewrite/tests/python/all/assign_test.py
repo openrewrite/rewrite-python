@@ -16,6 +16,11 @@ def test_assign_no_init():
     rewrite_run(python("a : int"))
 
 
+def test_chained_assign():
+    # language=python
+    rewrite_run(python("a = b = c = 3"))
+
+
 def test_assign_expression():
     # language=python
     rewrite_run(python("(a := 1)"))
