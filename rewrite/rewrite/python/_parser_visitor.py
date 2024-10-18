@@ -5,6 +5,7 @@ from argparse import ArgumentError
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
+from sys import exception
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union, Iterator
 
@@ -473,11 +474,26 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Raise(self, node):
+        prefix = self.__source_before('raise')
+        if node.cause:
+            exc = py.ErrorFrom(
+                random_id(),
+                self.__whitespace(),
+                Markers.EMPTY,
+                self.__convert(node.exc),
+                self.__pad_left(self.__source_before('from'), self.__convert(node.cause)),
+                self.__map_type(node)
+            )
+        elif node.exc:
+            exc = self.__convert(node.exc)
+        else:
+            exc = j.Empty(random_id(), Space.EMPTY, Markers.EMPTY)
+
         return j.Throw(
             random_id(),
-            self.__source_before('raise'),
+            prefix,
             Markers.EMPTY,
-            self.__convert(node.exc) if node.exc else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+            exc,
         )
 
 
