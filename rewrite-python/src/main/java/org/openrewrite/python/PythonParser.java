@@ -80,7 +80,7 @@ public class PythonParser implements Parser {
 
     @Override
     public Stream<SourceFile> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
-        if (!ensureServerRunning(ctx)) {
+        if (!ensureServerRunning(ctx) || client == null) {
             return PlainTextParser.builder().build().parseInputs(inputs, relativeTo, ctx);
         }
 
@@ -119,6 +119,9 @@ public class PythonParser implements Parser {
             } catch (Throwable t) {
                 ctx.getOnError().accept(t);
                 return ParseError.build(this, input, relativeTo, ctx, t);
+            } finally {
+                // NOTE: this is only because we parse one source at the time
+                client.getContext().reset();
             }
         });
     }
