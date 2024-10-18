@@ -615,6 +615,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitTrailingElseWrapper(Py.TrailingElseWrapper wrapper, PrintOutputCapture<P> p) {
+        beforeSyntax(wrapper, PySpace.Location.TRAILING_ELSE_WRAPPER_PREFIX, p);
         visit(wrapper.getStatement(), p);
         visitSpace(
                 wrapper.getPadding().getElseBlock().getBefore(),
@@ -623,6 +624,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         );
         p.append("else");
         visit(wrapper.getElseBlock(), p);
+        afterSyntax(wrapper, p);
         return wrapper;
     }
 
