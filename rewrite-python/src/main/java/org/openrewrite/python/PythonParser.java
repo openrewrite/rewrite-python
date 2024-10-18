@@ -176,12 +176,12 @@ public class PythonParser implements Parser {
                 processBuilder.redirectError(new File("/dev/null"));
             }
             pythonProcess = processBuilder.start();
-            for (int i = 0; i < 5 && pythonProcess.isAlive(); i++) {
+            for (int i = 0; i < 30 && pythonProcess.isAlive(); i++) {
                 if (isServerRunning(port)) {
                     break;
                 }
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(100);
                 } catch (InterruptedException ignore) {
                 }
             }
