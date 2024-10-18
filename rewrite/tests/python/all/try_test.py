@@ -68,6 +68,22 @@ def test_reraise():
     )
 
 
+def test_or_else():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            try:
+                pass
+            except OverflowError:
+                raise
+            else:
+                pass
+            """
+        )
+    )
+
+
 @pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_try_else():
     # language=python

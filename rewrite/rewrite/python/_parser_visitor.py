@@ -473,15 +473,25 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Try(self, node):
-        return j.Try(
+        prefix = self.__source_before('try')
+        body = self.__convert_block(node.body)
+        handlers = [cast(j.Try.Catch, self.__convert(handler)) for handler in node.handlers]
+        if node.orelse:
+            else_block = self.__pad_left(
+                self.__source_before('else'),
+                self.__convert_block(node.orelse)
+            )
+
+        finally_ = self.__pad_left(self.__source_before('finally'),
+                               self.__convert_block(node.finalbody)) if node.finalbody else None
+        try_ = j.Try(random_id(), prefix, Markers.EMPTY, JContainer.empty(), body, handlers, finally_)
+
+        return try_ if not node.orelse else py.TrailingElseWrapper(
             random_id(),
-            self.__source_before('try'),
+            try_.prefix,
             Markers.EMPTY,
-            JContainer.empty(),
-            self.__convert_block(node.body),
-            [self.__convert(handler) for handler in node.handlers],
-            self.__pad_left(self.__source_before('finally'),
-                            self.__convert_block(node.finalbody)) if node.finalbody else None
+            try_.with_prefix(Space.EMPTY),
+            else_block
         )
 
 
