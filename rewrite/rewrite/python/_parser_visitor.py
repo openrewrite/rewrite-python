@@ -320,7 +320,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_For(self, node):
         targets = node.target.elts if isinstance(node.target, ast.Tuple) else [node.target]
-        return j.ForEachLoop(
+        loop = j.ForEachLoop(
             random_id(),
             self.__source_before('for'),
             Markers.EMPTY,
@@ -348,15 +348,25 @@ class ParserVisitor(ast.NodeVisitor):
                                 None,
                                 self.__map_type(t)
                             ),
-                            i == len(targets) - 1,
-                            False
-                        ) for i, t in enumerate(targets)]
+                            i == len(targets) - 1, False) for i, t in enumerate(targets)
+                        ]
                     ),
                     self.__source_before('in')
                 ),
-                self.__pad_right(self.__convert(node.iter), Space.EMPTY),
+                self.__pad_right(self.__convert(node.iter), Space.EMPTY)
             ),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+
+        return loop if not node.orelse else py.TrailingElseWrapper(
+            random_id(),
+            loop.prefix,
+            Markers.EMPTY,
+            loop.with_prefix(Space.EMPTY),
+            self.__pad_left(
+                self.__source_before('else'),
+                self.__convert_block(node.orelse)
+            )
         )
 
 

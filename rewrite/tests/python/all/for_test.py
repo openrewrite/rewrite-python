@@ -40,7 +40,6 @@ def test_for_with_destruct_and_parens():
     )
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_for_with_else():
     # language=python
     rewrite_run(
