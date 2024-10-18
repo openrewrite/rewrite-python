@@ -74,6 +74,18 @@ def test_kwonlyargs():
     )
 
 
+def test_all():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def retry_until_timeout(cb_fn, *args, timeout=4, **kwargs):
+                pass
+            """
+        )
+    )
+
+
 def test_trailing_comma_on_kwonly_arg():
     # language=python
     rewrite_run(

@@ -85,7 +85,7 @@ class ParserVisitor(ast.NodeVisitor):
             for i, kwonlyarg in enumerate(node.kwonlyargs):
                 args.append(self.__pad_list_element(
                     self.map_arg(kwonlyarg, node.kw_defaults[i], kwarg=False),
-                    i == len(node.kwonlyargs) - 1,
+                    not node.kwarg and i == len(node.kwonlyargs) - 1,
                     end_delim=')' if with_close_paren else None
                 ))
 
