@@ -1156,7 +1156,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.func.value),
                 None
             )
-        elif isinstance(node.func, (ast.Call, ast.Subscript)):
+        elif isinstance(node.func, (ast.Call, ast.Lambda, ast.Subscript)):
             select = self.__pad_right(cast(Expression, self.__convert(node.func)), self.__whitespace())
             # printer handles empty name by not printing `.` before it
             name = self.__convert_name('')

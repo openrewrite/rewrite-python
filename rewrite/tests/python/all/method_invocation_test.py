@@ -18,6 +18,11 @@ def test_invoke_function_receiver():
     rewrite_run(python("assert a(0)(1)"))
 
 
+def test_invoke_lambda_receiver():
+    # language=python
+    rewrite_run(python("assert (lambda x: x)(1)"))
+
+
 def test_invoke_array_access_receiver():
     # language=python
     rewrite_run(python("assert a[0](1)"))
