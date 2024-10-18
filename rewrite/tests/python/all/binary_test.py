@@ -36,6 +36,17 @@ def test_eq_ops():
     rewrite_run(python("assert 1 != 2"))
 
 
+def test_right_with_tuple():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            assert index > 0 and (token.lineno, token.column) >= pos
+            """
+        )
+    )
+
+
 def test_in():
     # language=python
     rewrite_run(python("assert 1 in [1]"))

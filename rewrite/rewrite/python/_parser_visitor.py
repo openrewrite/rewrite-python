@@ -24,7 +24,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     _source: str
     _cursor: int
-    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int, ast.AST]]
+    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int, ast.AST, Space]]
 
     @property
     def _source_after_cursor(self) -> str:
@@ -1811,7 +1811,7 @@ class ParserVisitor(ast.NodeVisitor):
                         prefix,
                         Markers.EMPTY,
                         self.__pad_right(e.with_prefix(expr_prefix), r)
-                    ), self._cursor, node))
+                    ), self._cursor, node, prefix))
                     # handle nested parens
                     result = recursion(node)
                 else:
@@ -1835,9 +1835,10 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor = save_cursor_2
                 return result
             else:
-                if not self.__cursor_at('(') and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][1] == self._cursor:
-                    self._parentheses_stack.pop()
+                if isinstance(node, ast.expr) and not self.__cursor_at('(') and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][1] == self._cursor:
+                    popped = self._parentheses_stack.pop()
                     self._cursor -= 1
+                    return cast(J, self.visit(cast(ast.AST, node))).with_prefix(popped[3])
                 return self.visit(cast(ast.AST, node))
         else:
             return None
