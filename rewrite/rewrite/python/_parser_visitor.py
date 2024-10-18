@@ -44,23 +44,22 @@ class ParserVisitor(ast.NodeVisitor):
     def generic_visit(self, node):
         return super().generic_visit(node)
 
-    def visit_arguments(self, node) -> JContainer[j.VariableDeclarations]:
+    def visit_arguments(self, node, with_close_paren: bool = True) -> List[JRightPadded[j.VariableDeclarations]]:
         first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
-        prefix = self.__source_before('(')
         if not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
-            return JContainer(prefix, [
-                JRightPadded(j.Empty(random_id(), self.__source_before(')'), Markers.EMPTY), Space.EMPTY,
-                             Markers.EMPTY)], Markers.EMPTY)
+            return [
+                JRightPadded(j.Empty(random_id(), self.__source_before(')') if with_close_paren else Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)
+            ]
 
         args = [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
-            end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')') for i, a in enumerate(node.args)]
+            end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None) for i, a in enumerate(node.args)]
         if node.vararg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.vararg, None, vararg=True),
                 not node.kwarg and not node.kwonlyargs,
-                end_delim=')'
+                end_delim=')' if with_close_paren else None
             ))
         if node.kwonlyargs:
             if not node.vararg:
@@ -86,16 +85,16 @@ class ParserVisitor(ast.NodeVisitor):
                 args.append(self.__pad_list_element(
                     self.map_arg(kwonlyarg, node.kw_defaults[i], kwarg=False),
                     i == len(node.kwonlyargs) - 1,
-                    end_delim=')'
+                    end_delim=')' if with_close_paren else None
                 ))
 
         if node.kwarg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.kwarg, None, kwarg=True),
                 True,
-                end_delim=')'
+                end_delim=')' if with_close_paren else None
             ))
-        return JContainer(prefix, args, Markers.EMPTY)
+        return args
 
 
     def map_arg(self, node, default=None, vararg=False, kwarg=False):
@@ -1380,7 +1379,7 @@ class ParserVisitor(ast.NodeVisitor):
             None
         ), [])
 
-        params = self.visit_arguments(node.args)
+        params = JContainer(self.__source_before('('), self.visit_arguments(node.args), Markers.EMPTY)
         if node.returns is None:
             return_type = None
         else:
@@ -1470,6 +1469,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
+
         return j.Lambda(
             random_id(),
             self.__source_before('lambda'),
@@ -1479,11 +1479,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__whitespace(),
                 Markers.EMPTY,
                 False,
-                [self.__pad_list_element(
-                    self.map_arg(a,
-                                 node.args.defaults[
-                                     i - len(node.args.defaults)] if i >= first_with_default else None),
-                    i == len(node.args.args) - 1) for i, a in enumerate(node.args.args)]
+                self.visit_arguments(node.args, with_close_paren=False)
             ),
             self.__source_before(':'),
             self.__convert(node.body),

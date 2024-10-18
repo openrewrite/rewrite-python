@@ -101,7 +101,6 @@ def test_nested_or_else():
     )
 
 
-@pytest.mark.xfail(reason="Implementation still not quite correct", strict=True)
 def test_try_else():
     # language=python
     rewrite_run(
