@@ -1198,41 +1198,42 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_Compare(self, node):
-        if len(node.ops) != 1:
-            raise NotImplementedError("Multiple comparisons are not yet supported")
-
         prefix = self.__whitespace()
         left = self.__convert(node.left)
-        op = self.__convert_binary_operator(node.ops[0])
 
-        if isinstance(op.element, j.Binary.Type):
-            return j.Binary(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                left,
-                op,
-                self.__convert(node.comparators[0]),
-                self.__map_type(node)
-            )
-        else:
-            if op.element == py.Binary.Type.IsNot:
-                negation = self.__source_before('not')
-            elif op.element == py.Binary.Type.NotIn:
-                negation = self.__source_before('in')
+        for i in range(len(node.ops)):
+            op = self.__convert_binary_operator(node.ops[i])
+
+            if isinstance(op.element, j.Binary.Type):
+                left = j.Binary(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    left,
+                    op,
+                    self.__convert(node.comparators[i]),
+                    self.__map_type(node)
+                )
             else:
-                negation = None
+                if op.element == py.Binary.Type.IsNot:
+                    negation = self.__source_before('not')
+                elif op.element == py.Binary.Type.NotIn:
+                    negation = self.__source_before('in')
+                else:
+                    negation = None
 
-            return py.Binary(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                left,
-                op,
-                negation,
-                self.__convert(node.comparators[0]),
-                self.__map_type(node)
-            )
+                left = py.Binary(
+                    random_id(),
+                    prefix,
+                    Markers.EMPTY,
+                    left,
+                    op,
+                    negation,
+                    self.__convert(node.comparators[0]),
+                    self.__map_type(node)
+                )
+
+        return left.with_prefix(prefix)
 
 
     def __convert_binary_operator(self, op) -> Union[JLeftPadded[j.Binary.Type], JLeftPadded[py.Binary.Type]]:
