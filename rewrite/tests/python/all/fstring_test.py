@@ -169,3 +169,32 @@ def test_nested_fstring_with_format_value():
 def test_adjoining_expressions():
     # language=python
     rewrite_run(python("""a = f'{1}{0}'"""))
+
+
+def test_fstring_literal_concatenation():
+    # language=python
+    rewrite_run(
+        python(
+            """
+            a = (
+                f"foo"
+                f"bar"
+            )
+            """
+        )
+    )
+
+
+def test_fstring_literal_concatenation_with_comments():
+    # language=python
+    rewrite_run(
+        python(
+            """
+            a = (
+                f"foo"
+                # comment
+                f"bar"
+            )
+            """
+        )
+    )

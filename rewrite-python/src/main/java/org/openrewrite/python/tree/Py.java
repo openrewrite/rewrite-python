@@ -2253,4 +2253,86 @@ public interface Py extends J {
         }
     }
 
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    final class StringLiteralConcatenation implements Py, Expression, TypedTree {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @Getter
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @Getter
+        @With
+        Space prefix;
+
+        @Getter
+        @With
+        Markers markers;
+
+        List<JRightPadded<Expression>> literals;
+
+        public List<Expression> getLiterals() {
+            return JRightPadded.getElements(literals);
+        }
+
+        public StringLiteralConcatenation withLiterals(List<Expression> literals) {
+            return getPadding().withLiterals(JRightPadded.withElements(this.literals, literals));
+        }
+
+        @Override
+        public JavaType getType() {
+            return JavaType.Primitive.String;
+        }
+
+        @Override
+        public <T extends J> T withType(@Nullable JavaType type) {
+            //noinspection unchecked
+            return (T) this;
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitStringLiteralConcatenation(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final StringLiteralConcatenation t;
+
+            public List<JRightPadded<Expression>> getLiterals() {
+                return t.literals;
+            }
+
+            public StringLiteralConcatenation withLiterals(List<JRightPadded<Expression>> literals) {
+                return t.literals == literals ? t : new StringLiteralConcatenation(t.id, t.prefix, t.markers, literals, t.type);
+            }
+        }
+    }
 }
