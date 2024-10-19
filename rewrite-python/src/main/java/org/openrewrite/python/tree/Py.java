@@ -2331,7 +2331,7 @@ public interface Py extends J {
             }
 
             public StringLiteralConcatenation withLiterals(List<JRightPadded<Expression>> literals) {
-                return t.literals == literals ? t : new StringLiteralConcatenation(t.id, t.prefix, t.markers, literals, t.type);
+                return t.literals == literals ? t : new StringLiteralConcatenation(t.id, t.prefix, t.markers, literals);
             }
         }
     }

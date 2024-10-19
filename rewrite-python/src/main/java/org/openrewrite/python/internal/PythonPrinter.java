@@ -629,6 +629,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitStringLiteralConcatenation(Py.StringLiteralConcatenation concatenation, PrintOutputCapture<P> p) {
+        beforeSyntax(concatenation, PySpace.Location.STRING_LITERAL_CONCATENATION_PREFIX, p);
+        visitRightPadded(concatenation.getPadding().getLiterals(), PyRightPadded.Location.STRING_LITERAL_CONCATENATION_LITERAL, "", p);
+        afterSyntax(concatenation, p);
+        return concatenation;
+    }
+
+    @Override
     public J visitTypeHint(Py.TypeHint type, PrintOutputCapture<P> p) {
         beforeSyntax(type, PySpace.Location.TYPE_HINT_PREFIX, p);
         J parent = getCursor().getParentTreeCursor().getValue();

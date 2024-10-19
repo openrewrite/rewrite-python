@@ -315,6 +315,16 @@ class PythonVisitor(JavaVisitor[P]):
         slice = slice.padding.with_step(self.visit_right_padded(slice.padding.step, PyRightPadded.Location.SLICE_STEP, p))
         return slice
 
+    def visit_string_literal_concatenation(self, string_literal_concatenation: StringLiteralConcatenation, p: P) -> J:
+        string_literal_concatenation = string_literal_concatenation.with_prefix(self.visit_space(string_literal_concatenation.prefix, PySpace.Location.STRING_LITERAL_CONCATENATION_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(string_literal_concatenation, p))
+        if not isinstance(temp_expression, StringLiteralConcatenation):
+            return temp_expression
+        string_literal_concatenation = cast(StringLiteralConcatenation, temp_expression)
+        string_literal_concatenation = string_literal_concatenation.with_markers(self.visit_markers(string_literal_concatenation.markers, p))
+        string_literal_concatenation = string_literal_concatenation.padding.with_literals([self.visit_right_padded(v, PyRightPadded.Location.STRING_LITERAL_CONCATENATION_LITERALS, p) for v in string_literal_concatenation.padding.literals])
+        return string_literal_concatenation
+
     def visit_container(self, container: Optional[JContainer[J2]], loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if isinstance(loc, JContainer.Location):
             return super().visit_container(container, loc, p)
