@@ -428,15 +428,19 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_With(self, node):
+        prefix = self.__source_before('with')
+        items_prefix = self.__whitespace()
+        omit_parens = not self.__cursor_at('(')
+
         return j.Try(
             random_id(),
-            self.__source_before('with'),
+            prefix,
             Markers.EMPTY,
             JContainer(
-                self.__whitespace(),
+                items_prefix,
                 [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in
                  enumerate(node.items)],
-                Markers.EMPTY
+                Markers.build(random_id(), [OmitParentheses(random_id())]) if omit_parens else Markers.EMPTY
             ),
             self.__convert_block(node.body),
             [],
@@ -1769,7 +1773,7 @@ class ParserVisitor(ast.NodeVisitor):
                 if literal.value_source.startswith("'''"):
                     quote_style = Quoted.Style.TRIPLE_SINGLE
                 elif literal.value_source[0] == "'":
-                    quote_style = Quoted.Style.DOUBLE
+                    quote_style = Quoted.Style.SINGLE
                 elif literal.value_source.startswith('"""'):
                     quote_style = Quoted.Style.TRIPLE_DOUBLE
                 else:

@@ -1209,11 +1209,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             } else {
                 p.append("try");
             }
-            if (isWithStatement && tryable.getPadding().getResources() != null) {
-                visitSpace(tryable.getPadding().getResources().getBefore(), Location.TRY_RESOURCES, p);
-                List<JRightPadded<J.Try.Resource>> resources = tryable.getPadding().getResources().getPadding().getElements();
+            JContainer<J.Try.Resource> resources = tryable.getPadding().getResources();
+            if (isWithStatement && resources != null) {
+                visitSpace(resources.getBefore(), Location.TRY_RESOURCES, p);
+                boolean omitParentheses = resources.getMarkers().findFirst(OmitParentheses.class).isPresent();
+                if (!omitParentheses) {
+                    p.append("(");
+                }
                 boolean first = true;
-                for (JRightPadded<J.Try.Resource> resource : resources) {
+                for (JRightPadded<J.Try.Resource> resource : resources.getPadding().getElements()) {
                     if (!first) {
                         p.append(",");
                     } else {
@@ -1237,6 +1241,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     }
 
                     visitSpace(resource.getAfter(), Location.TRY_RESOURCE_SUFFIX, p);
+                }
+                if (!omitParentheses) {
+                    p.append(")");
                 }
             }
 

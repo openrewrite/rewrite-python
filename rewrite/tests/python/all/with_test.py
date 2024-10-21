@@ -8,9 +8,20 @@ def test_with():
     rewrite_run(
         python(
             """\
-            def test(i):
-                with len([]) as x:
-                    pass
+            with len([]) as x:
+                pass
+            """
+        )
+    )
+
+
+def test_with_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            with (open('/dev/null') as x):
+                pass
             """
         )
     )
