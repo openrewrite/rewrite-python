@@ -1295,15 +1295,31 @@ class ParserVisitor(ast.NodeVisitor):
             else:
                 break
 
-        return j.Literal(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            None if node.value is Ellipsis else node.value,
-            self._source[start:self._cursor],
-            None,
-            self.__map_type(node),
-        )
+        if isinstance(node.value, str) and '\n' in node.value:
+            return py.StringLiteralConcatenation(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                [self.__pad_right(j.Literal(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    None if node.value is Ellipsis else node.value,
+                    self._source[start:self._cursor],
+                    None,
+                    self.__map_type(node),
+                ), Space.EMPTY)]
+            )
+        else:
+            return j.Literal(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                None if node.value is Ellipsis else node.value,
+                self._source[start:self._cursor],
+                None,
+                self.__map_type(node),
+            )
 
 
     def visit_Dict(self, node):
@@ -2145,6 +2161,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
         parts = []
+        literals = []
         for value in node.values:
             if tok.type == token.OP and tok.string == '{':
                 if not isinstance(value, ast.FormattedValue):
@@ -2223,7 +2240,7 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
                     if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
                         break
-                parts.append(j.Literal(
+                literals.append(self.__pad_right(j.Literal(
                     random_id(),
                     Space.EMPTY,
                     Markers.EMPTY,
@@ -2231,7 +2248,7 @@ class ParserVisitor(ast.NodeVisitor):
                     self._source[save_cursor:self._cursor],
                     None,
                     self.__map_type(value),
-                ))
+                ), Space.EMPTY))
 
         if consume_end_delim:
             self._cursor += len(tok.string)  # FSTRING_END token
@@ -2239,13 +2256,21 @@ class ParserVisitor(ast.NodeVisitor):
         elif tok.type == token.FSTRING_MIDDLE and len(tok.string) == 0:
             tok = next(tokens)
 
-        return (py.FormattedString(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            delimiter,
-            parts
-        ), tok)
+        if literals:
+            return (py.StringLiteralConcatenation(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                literals
+            ), tok)
+        else:
+            return (py.FormattedString(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                delimiter,
+                parts
+            ), tok)
 
     def __cursor_at(self, s: str):
         return self._cursor < len(self._source) and (len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))

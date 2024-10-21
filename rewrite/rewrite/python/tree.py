@@ -2387,3 +2387,72 @@ class Slice(Py, Expression, TypedTree):
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_slice(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class StringLiteralConcatenation(Py, Expression, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> StringLiteralConcatenation:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> StringLiteralConcatenation:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> StringLiteralConcatenation:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _literals: List[JRightPadded[Expression]]
+
+    @property
+    def literals(self) -> List[Expression]:
+        return JRightPadded.get_elements(self._literals)
+
+    def with_literals(self, literals: List[Expression]) -> StringLiteralConcatenation:
+        return self.padding.with_literals(JRightPadded.with_elements(self._literals, literals))
+
+    @dataclass
+    class PaddingHelper:
+        _t: StringLiteralConcatenation
+
+        @property
+        def literals(self) -> List[JRightPadded[Expression]]:
+            return self._t._literals
+
+        def with_literals(self, literals: List[JRightPadded[Expression]]) -> StringLiteralConcatenation:
+            return self._t if self._t._literals is literals else replace(self._t, _literals=literals)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: StringLiteralConcatenation.PaddingHelper
+        if self._padding is None:
+            p = StringLiteralConcatenation.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = StringLiteralConcatenation.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_string_literal_concatenation(self, p)

@@ -300,6 +300,13 @@ class PythonSender(Sender):
             ctx.send_node(slice, attrgetter('_step'), PythonSender.send_right_padded)
             return slice
 
+        def visit_string_literal_concatenation(self, string_literal_concatenation: StringLiteralConcatenation, ctx: SenderContext) -> J:
+            ctx.send_value(string_literal_concatenation, attrgetter('_id'))
+            ctx.send_node(string_literal_concatenation, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(string_literal_concatenation, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_nodes(string_literal_concatenation, attrgetter('_literals'), PythonSender.send_right_padded, lambda t: t.element.id)
+            return string_literal_concatenation
+
         def visit_annotated_type(self, annotated_type: AnnotatedType, ctx: SenderContext) -> J:
             ctx.send_value(annotated_type, attrgetter('_id'))
             ctx.send_node(annotated_type, attrgetter('_prefix'), PythonSender.send_space)

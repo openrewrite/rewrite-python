@@ -158,6 +158,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.StringLiteralConcatenation visitStringLiteralConcatenation(Py.StringLiteralConcatenation stringLiteralConcatenation, P p) {
+        return (Py.StringLiteralConcatenation) super.visitStringLiteralConcatenation(stringLiteralConcatenation, p);
+    }
+
+    @Override
     public Py.TypeHint visitTypeHint(Py.TypeHint ogType, P p) {
         return (Py.TypeHint) super.visitTypeHint(ogType, p);
     }

@@ -306,6 +306,13 @@ class PythonReceiver(Receiver):
             slice = slice.padding.with_step(ctx.receive_node(slice.padding.step, PythonReceiver.receive_right_padded_tree))
             return slice
 
+        def visit_string_literal_concatenation(self, string_literal_concatenation: StringLiteralConcatenation, ctx: ReceiverContext) -> J:
+            string_literal_concatenation = string_literal_concatenation.with_id(ctx.receive_value(string_literal_concatenation.id, UUID))
+            string_literal_concatenation = string_literal_concatenation.with_prefix(ctx.receive_node(string_literal_concatenation.prefix, PythonReceiver.receive_space))
+            string_literal_concatenation = string_literal_concatenation.with_markers(ctx.receive_node(string_literal_concatenation.markers, ctx.receive_markers))
+            string_literal_concatenation = string_literal_concatenation.padding.with_literals(ctx.receive_nodes(string_literal_concatenation.padding.literals, PythonReceiver.receive_right_padded_tree))
+            return string_literal_concatenation
+
         def visit_annotated_type(self, annotated_type: AnnotatedType, ctx: ReceiverContext) -> J:
             annotated_type = annotated_type.with_id(ctx.receive_value(annotated_type.id, UUID))
             annotated_type = annotated_type.with_prefix(ctx.receive_node(annotated_type.prefix, PythonReceiver.receive_space))
@@ -1211,6 +1218,14 @@ class PythonReceiver(Receiver):
                     ctx.receive_node(None, PythonReceiver.receive_right_padded_tree),
                     ctx.receive_node(None, PythonReceiver.receive_right_padded_tree),
                     ctx.receive_node(None, PythonReceiver.receive_right_padded_tree)
+                )
+
+            if type in ["rewrite.python.tree.StringLiteralConcatenation", "org.openrewrite.python.tree.Py$StringLiteralConcatenation"]:
+                return StringLiteralConcatenation(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_nodes(None, PythonReceiver.receive_right_padded_tree)
                 )
 
             if type in ["rewrite.python.tree.AnnotatedType", "org.openrewrite.java.tree.J$AnnotatedType"]:

@@ -172,8 +172,8 @@ public class PythonParser implements Parser {
                 processBuilder.redirectOutput(new File("NUL"));
                 processBuilder.redirectError(new File("NUL"));
             } else {
-                processBuilder.redirectOutput(new File("/dev/null"));
-                processBuilder.redirectError(new File("/dev/null"));
+                processBuilder.redirectOutput(new File("/tmp/out.txt"));
+                processBuilder.redirectError(new File("/tmp/err.txt"));
             }
             pythonProcess = processBuilder.start();
             for (int i = 0; i < 30 && pythonProcess.isAlive(); i++) {

@@ -395,6 +395,15 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.StringLiteralConcatenation visitStringLiteralConcatenation(Py.StringLiteralConcatenation stringLiteralConcatenation, SenderContext ctx) {
+            ctx.sendValue(stringLiteralConcatenation, Py.StringLiteralConcatenation::getId);
+            ctx.sendNode(stringLiteralConcatenation, Py.StringLiteralConcatenation::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(stringLiteralConcatenation, Py.StringLiteralConcatenation::getMarkers, ctx::sendMarkers);
+            ctx.sendNodes(stringLiteralConcatenation, e -> e.getPadding().getLiterals(), PythonSender::sendRightPadded, e -> e.getElement().getId());
+            return stringLiteralConcatenation;
+        }
+
+        @Override
         public J.AnnotatedType visitAnnotatedType(J.AnnotatedType annotatedType, SenderContext ctx) {
             ctx.sendValue(annotatedType, J.AnnotatedType::getId);
             ctx.sendNode(annotatedType, J.AnnotatedType::getPrefix, PythonSender::sendSpace);

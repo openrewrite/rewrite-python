@@ -41,6 +41,7 @@ __all__ = [
     'SpecialParameter',
     'Star',
     'StatementExpression',
+    'StringLiteralConcatenation',
     'TrailingElseWrapper',
     'TypeHint',
     'TypeHintedExpression',

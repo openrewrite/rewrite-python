@@ -369,6 +369,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return visitExpression(expr, p);
     }
 
+    public J visitStringLiteralConcatenation(Py.StringLiteralConcatenation stringLiteralConcatenation, P p) {
+        Py.StringLiteralConcatenation slc = stringLiteralConcatenation;
+        slc = slc.withPrefix(visitSpace(slc.getPrefix(), PySpace.Location.STRING_LITERAL_CONCATENATION_PREFIX, p));
+        slc = slc.withMarkers(visitMarkers(slc.getMarkers(), p));
+        Expression temp = (Expression) visitExpression(slc, p);
+        if (!(temp instanceof Py.StringLiteralConcatenation)) {
+            return temp;
+        } else {
+            slc = (Py.StringLiteralConcatenation) temp;
+        }
+        slc = slc.getPadding().withLiterals(ListUtils.map(slc.getPadding().getLiterals(), l -> visitRightPadded(l, PyRightPadded.Location.STRING_LITERAL_CONCATENATION_LITERAL, p)));
+        return slc;
+    }
+
     public J visitTypeHint(Py.TypeHint ogType, P p) {
         Py.TypeHint type = ogType;
         type = type.withPrefix(visitSpace(type.getPrefix(), PySpace.Location.EXCEPTION_TYPE_PREFIX, p));
