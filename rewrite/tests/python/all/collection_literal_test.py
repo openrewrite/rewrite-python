@@ -1,3 +1,5 @@
+import pytest
+
 from rewrite.test import rewrite_run, python
 
 
@@ -35,3 +37,14 @@ def test_single_element_set():
 def test_single_element_set_with_trailing_comma():
     # language=python
     rewrite_run(python("t = {1 , }"))
+
+
+def test_deeply_nested():
+    # language=python
+    rewrite_run(python('d2 = (((((((((((((((((((((((((((("¯\_(ツ)_/¯",),),),),),),),),),),),),),),),),),),),),),),),),),),),)'))
+
+
+@pytest.mark.xfail(reason="Generators are not properly parsed yet", strict=True)
+def test_tuple_generator():
+    # language=python
+    rewrite_run(python("_local = tuple((i, \"\") if isinstance(i, int) else (NegativeInfinity, i) for i in local)"))

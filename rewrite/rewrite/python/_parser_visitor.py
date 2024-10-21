@@ -18,6 +18,7 @@ from rewrite.java import tree as j
 from . import tree as py, PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
 
+T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
 
 
@@ -25,7 +26,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     _source: str
     _cursor: int
-    _parentheses_stack: List[Tuple[Callable[[J, Space], j.Parentheses], int, ast.AST, Space]]
+    _parentheses_stack: List[Tuple[Callable[[T, Space], T], int, ast.AST, Space]]
 
     @property
     def _source_after_cursor(self) -> str:
@@ -1688,43 +1689,55 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Tuple(self, node):
         prefix = self.__whitespace()
+        save_cursor = self._cursor
+        maybe_parens = self.__cursor_at('(')
 
-        if self.__cursor_at('(') and node.elts:
-            save_cursor = self._cursor
-            elements = JContainer(
+        if maybe_parens:
+            self._cursor += 1
+            omit_parens = False
+            expr_prefix = self.__whitespace()
+            self._parentheses_stack.append(
+                (lambda c, r: cast(JContainer, c)
+                 .with_elements(
+                    [e.with_prefix(expr_prefix) if i == 0 else e for i, e in enumerate(c.elements)])
+                if isinstance(c, JContainer) else j.Parentheses(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    self.__pad_right(c.with_prefix(expr_prefix), r)
+                ),
+                 self._cursor, node, Space.EMPTY)
+            )
+        else:
+            self._cursor = save_cursor
+            omit_parens = True
+
+        elements = JContainer(
+            Space.EMPTY,
+            [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
+            Markers.EMPTY
+        ) if node.elts else JContainer(
                 Space.EMPTY,
-                [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
+                [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
                 Markers.EMPTY
             )
 
-            if self.__cursor_at(')'):
-                # we need to backtrack as the parentheses belonged to a nested element
-                elements = None
-                self._cursor = save_cursor
-            else:
-                elements = elements.with_markers(Markers(random_id(), [OmitParentheses(random_id())]))
+        suffix = self.__whitespace()
+        if len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node and self.__cursor_at(')'):
+            self._cursor += 1
+            elements = self._parentheses_stack.pop()[0](elements, suffix)
+            omit_parens = False
+        elif maybe_parens and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node:
+            elements = self._parentheses_stack.pop()
         else:
-            elements = None
+            omit_parens = True
 
-        if elements is None:
-            omit_parens = not self.__cursor_at('(')
-            if not omit_parens:
-                self._cursor += 1
-            elements = JContainer(
-                Space.EMPTY,
-                [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1,
-                                         end_delim=None if omit_parens else ')') for i, e in
-                 enumerate(node.elts)] if node.elts else
-                [self.__pad_right(j.Empty(random_id(), self.__whitespace() if omit_parens else self.__source_before(')'),
-                                          Markers.EMPTY), Space.EMPTY)],
-                Markers(random_id(), [OmitParentheses(random_id())]) if omit_parens else Markers.EMPTY
-            )
         return py.CollectionLiteral(
             random_id(),
             prefix,
             Markers.EMPTY,
             py.CollectionLiteral.Kind.TUPLE,
-            elements,
+            elements.with_markers(Markers.build(random_id(), [OmitParentheses(random_id())])) if omit_parens else elements,
             self.__map_type(node)
         )
 

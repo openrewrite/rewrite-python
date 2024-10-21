@@ -374,7 +374,7 @@ class JRightPadded(Generic[T]):
         if len(elements) == len(before):
             has_changes = False
             for i in range(len(before)):
-                if before[i].element != elements[i]:
+                if before[i].element is not elements[i]:
                     has_changes = True
                     break
             if not has_changes:
