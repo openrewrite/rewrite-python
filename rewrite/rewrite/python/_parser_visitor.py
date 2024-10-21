@@ -1225,12 +1225,12 @@ class ParserVisitor(ast.NodeVisitor):
 
                 left = py.Binary(
                     random_id(),
-                    prefix,
+                    Space.EMPTY,
                     Markers.EMPTY,
                     left,
                     op,
                     negation,
-                    self.__convert(node.comparators[0]),
+                    self.__convert(node.comparators[i]),
                     self.__map_type(node)
                 )
 

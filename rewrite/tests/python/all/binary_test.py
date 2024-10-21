@@ -81,3 +81,8 @@ def test_comparison_ops():
 def test_chained_comparison():
     # language=python
     rewrite_run(python("assert 1 < 2 <= 3  >=0"))
+
+
+def test_chained_comparison_2():
+    # language=python
+    rewrite_run(python("assert 1 is not 2 is not 3"))
