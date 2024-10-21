@@ -60,6 +60,17 @@ def test_string_with_flags():
     rewrite_run(python("assert u'\u0394 (delta)'"))
 
 
+def test_false_string_literal_concatenation():
+    # language=python
+    rewrite_run(
+        python("""
+        "a"
+        b"b"
+        """
+       )
+    )
+
+
 def test_string_literal_concatenation_1():
     # language=python
     rewrite_run(python("assert 'a' 'b'"))

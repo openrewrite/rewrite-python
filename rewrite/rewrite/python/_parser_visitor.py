@@ -1289,7 +1289,7 @@ class ParserVisitor(ast.NodeVisitor):
             except IndentationError:
                 # sometimes the tokenized INDENT and DEDENT tokens don't match up
                 pass
-            if tok.type == token.STRING:
+            if tok.type == token.STRING and not tok.string.startswith(('b', "B")):
                 self._cursor = self._source.index(tok.string, self._cursor)
                 self._cursor += len(tok.string)
             else:
