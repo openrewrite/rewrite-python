@@ -84,6 +84,24 @@ def test_or_else():
     )
 
 
+def test_try_or_else_finally():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            try:
+                pass
+            except Exception:
+                pass
+            else:
+                pass
+            finally:
+                pass
+            """
+        )
+    )
+
+
 def test_nested_or_else():
     # language=python
     rewrite_run(

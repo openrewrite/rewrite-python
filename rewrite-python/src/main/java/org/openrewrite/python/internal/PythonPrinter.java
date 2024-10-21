@@ -617,13 +617,15 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitTrailingElseWrapper(Py.TrailingElseWrapper wrapper, PrintOutputCapture<P> p) {
         beforeSyntax(wrapper, PySpace.Location.TRAILING_ELSE_WRAPPER_PREFIX, p);
         visit(wrapper.getStatement(), p);
-        visitSpace(
-                wrapper.getPadding().getElseBlock().getBefore(),
-                Location.ELSE_PREFIX,
-                p
-        );
-        p.append("else");
-        visit(wrapper.getElseBlock(), p);
+        if (!(wrapper.getStatement() instanceof J.Try)) {
+            visitSpace(
+                    wrapper.getPadding().getElseBlock().getBefore(),
+                    Location.ELSE_PREFIX,
+                    p
+            );
+            p.append("else");
+            visit(wrapper.getElseBlock(), p);
+        }
         afterSyntax(wrapper, p);
         return wrapper;
     }
@@ -688,7 +690,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitAnnotation(J.Annotation annotation, PrintOutputCapture<P> p) {
-            beforeSyntax(annotation, Space.Location.ANNOTATION_PREFIX, p);
+            beforeSyntax(annotation, Location.ANNOTATION_PREFIX, p);
             p.append("@");
             visit(annotation.getAnnotationType(), p);
             visitContainer("(", annotation.getPadding().getArguments(), JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p);
@@ -698,7 +700,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitArrayDimension(J.ArrayDimension arrayDimension, PrintOutputCapture<P> p) {
-            beforeSyntax(arrayDimension, Space.Location.DIMENSION_PREFIX, p);
+            beforeSyntax(arrayDimension, Location.DIMENSION_PREFIX, p);
             p.append("[");
             visitRightPadded(arrayDimension.getPadding().getIndex(), JRightPadded.Location.ARRAY_INDEX, "]", p);
             afterSyntax(arrayDimension, p);
@@ -731,7 +733,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 symbol = ":=";
             }
 
-            beforeSyntax(assignment, Space.Location.ASSIGNMENT_PREFIX, p);
+            beforeSyntax(assignment, Location.ASSIGNMENT_PREFIX, p);
             visit(assignment.getVariable(), p);
             visitLeftPadded(symbol, assignment.getPadding().getAssignment(), JLeftPadded.Location.ASSIGNMENT, p);
             afterSyntax(assignment, p);
@@ -856,9 +858,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     keyword = "and";
                     break;
             }
-            beforeSyntax(binary, Space.Location.BINARY_PREFIX, p);
+            beforeSyntax(binary, Location.BINARY_PREFIX, p);
             visit(binary.getLeft(), p);
-            visitSpace(binary.getPadding().getOperator().getBefore(), Space.Location.BINARY_OPERATOR, p);
+            visitSpace(binary.getPadding().getOperator().getBefore(), Location.BINARY_OPERATOR, p);
 
             p.append(keyword);
 
@@ -873,20 +875,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             p.append(':');
 
             visitStatements(block.getPadding().getStatements(), JRightPadded.Location.BLOCK_STATEMENT, p);
-            visitSpace(block.getEnd(), Space.Location.BLOCK_END, p);
+            visitSpace(block.getEnd(), Location.BLOCK_END, p);
             afterSyntax(block, p);
             return block;
         }
 
         @Override
         public J visitCase(J.Case ca, PrintOutputCapture<P> p) {
-            beforeSyntax(ca, Space.Location.CASE_PREFIX, p);
+            beforeSyntax(ca, Location.CASE_PREFIX, p);
             Expression elem = ca.getExpressions().get(0);
             if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
                 p.append("case");
             }
             visitContainer("", ca.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
-            visitSpace(ca.getPadding().getStatements().getBefore(), Space.Location.CASE, p);
+            visitSpace(ca.getPadding().getStatements().getBefore(), Location.CASE, p);
             visitStatements(ca.getPadding().getStatements().getPadding().getElements(), JRightPadded.Location.CASE, p);
             if (ca.getBody() instanceof Statement) {
                 visitRightPadded(ca.getPadding().getBody(), JRightPadded.Location.LANGUAGE_EXTENSION, p);
@@ -899,11 +901,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitCatch(J.Try.Catch ca, PrintOutputCapture<P> p) {
-            beforeSyntax(ca, Space.Location.CATCH_PREFIX, p);
+            beforeSyntax(ca, Location.CATCH_PREFIX, p);
             p.append("except");
 
             J.VariableDeclarations multiVariable = ca.getParameter().getTree();
-            beforeSyntax(multiVariable, Space.Location.VARIABLE_DECLARATIONS_PREFIX, p);
+            beforeSyntax(multiVariable, Location.VARIABLE_DECLARATIONS_PREFIX, p);
             visit(multiVariable.getTypeExpression(), p);
             for (JRightPadded<J.VariableDeclarations.NamedVariable> paddedVariable : multiVariable.getPadding().getVariables()) {
                 J.VariableDeclarations.NamedVariable variable = paddedVariable.getElement();
@@ -911,7 +913,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     continue;
                 }
                 visitSpace(paddedVariable.getAfter(), Location.LANGUAGE_EXTENSION, p);
-                beforeSyntax(variable, Space.Location.VARIABLE_PREFIX, p);
+                beforeSyntax(variable, Location.VARIABLE_PREFIX, p);
                 p.append("as");
                 visit(variable.getName(), p);
                 afterSyntax(variable, p);
@@ -925,13 +927,13 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitClassDeclaration(J.ClassDeclaration classDecl, PrintOutputCapture<P> p) {
-            beforeSyntax(classDecl, Space.Location.CLASS_DECLARATION_PREFIX, p);
-            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            beforeSyntax(classDecl, Location.CLASS_DECLARATION_PREFIX, p);
+            visitSpace(Space.EMPTY, Location.ANNOTATIONS, p);
             visit(classDecl.getLeadingAnnotations(), p);
             visit(classDecl.getPadding().getKind().getAnnotations(), p);
             visitSpace(
                     classDecl.getPadding().getKind().getPrefix(),
-                    Space.Location.CLASS_KIND,
+                    Location.CLASS_KIND,
                     p
             );
             p.append("class");
@@ -948,7 +950,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public <T extends J> J visitControlParentheses(J.ControlParentheses<T> controlParens, PrintOutputCapture<P> p) {
-            beforeSyntax(controlParens, Space.Location.CONTROL_PARENTHESES_PREFIX, p);
+            beforeSyntax(controlParens, Location.CONTROL_PARENTHESES_PREFIX, p);
             visitRightPadded(controlParens.getPadding().getTree(), JRightPadded.Location.PARENTHESES, "", p);
             afterSyntax(controlParens, p);
             return controlParens;
@@ -956,7 +958,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitElse(J.If.Else else_, PrintOutputCapture<P> p) {
-            beforeSyntax(else_, Space.Location.ELSE_PREFIX, p);
+            beforeSyntax(else_, Location.ELSE_PREFIX, p);
             if (getCursor().getParentTreeCursor().getValue() instanceof J.If && else_.getBody() instanceof J.If) {
                 p.append("el");
                 visit(else_.getBody(), p);
@@ -974,7 +976,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitForEachControl(J.ForEachLoop.Control control, PrintOutputCapture<P> p) {
-            beforeSyntax(control, Space.Location.FOR_EACH_CONTROL_PREFIX, p);
+            beforeSyntax(control, Location.FOR_EACH_CONTROL_PREFIX, p);
             visitRightPadded(control.getPadding().getVariable(), JRightPadded.Location.FOREACH_VARIABLE, p);
             p.append("in");
             visitRightPadded(control.getPadding().getIterable(), JRightPadded.Location.FOREACH_ITERABLE, p);
@@ -984,7 +986,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitForEachLoop(J.ForEachLoop forEachLoop, PrintOutputCapture<P> p) {
-            beforeSyntax(forEachLoop, Space.Location.FOR_EACH_LOOP_PREFIX, p);
+            beforeSyntax(forEachLoop, Location.FOR_EACH_LOOP_PREFIX, p);
             p.append("for");
             visit(forEachLoop.getControl(), p);
             visit(forEachLoop.getBody(), p);
@@ -1005,7 +1007,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitIf(J.If iff, PrintOutputCapture<P> p) {
-            beforeSyntax(iff, Space.Location.IF_PREFIX, p);
+            beforeSyntax(iff, Location.IF_PREFIX, p);
             p.append("if");
             visit(iff.getIfCondition(), p);
 
@@ -1021,7 +1023,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitImport(Import im, PrintOutputCapture<P> p) {
-            beforeSyntax(im, Space.Location.IMPORT_PREFIX, p);
+            beforeSyntax(im, Location.IMPORT_PREFIX, p);
             if (im.getQualid().getTarget() instanceof J.Empty) {
                 visit(im.getQualid().getName(), p);
             } else {
@@ -1034,12 +1036,12 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitLambda(J.Lambda lambda, PrintOutputCapture<P> p) {
-            beforeSyntax(lambda, Space.Location.LAMBDA_PREFIX, p);
+            beforeSyntax(lambda, Location.LAMBDA_PREFIX, p);
             p.append("lambda");
-            visitSpace(lambda.getParameters().getPrefix(), Space.Location.LAMBDA_PARAMETERS_PREFIX, p);
+            visitSpace(lambda.getParameters().getPrefix(), Location.LAMBDA_PARAMETERS_PREFIX, p);
             visitMarkers(lambda.getParameters().getMarkers(), p);
             visitRightPadded(lambda.getParameters().getPadding().getParameters(), JRightPadded.Location.LAMBDA_PARAM, ",", p);
-            visitSpace(lambda.getArrow(), Space.Location.LAMBDA_ARROW_PREFIX, p);
+            visitSpace(lambda.getArrow(), Location.LAMBDA_ARROW_PREFIX, p);
             p.append(":");
             visit(lambda.getBody(), p);
             afterSyntax(lambda, p);
@@ -1053,7 +1055,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 literal = literal.withValueSource("None");
             }
 
-            beforeSyntax(literal, Space.Location.LITERAL_PREFIX, p);
+            beforeSyntax(literal, Location.LITERAL_PREFIX, p);
             List<J.Literal.UnicodeEscape> unicodeEscapes = literal.getUnicodeEscapes();
             if (unicodeEscapes == null) {
                 p.append(literal.getValueSource());
@@ -1098,8 +1100,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitMethodDeclaration(J.MethodDeclaration method, PrintOutputCapture<P> p) {
-            beforeSyntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p);
-            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            beforeSyntax(method, Location.METHOD_DECLARATION_PREFIX, p);
+            visitSpace(Space.EMPTY, Location.ANNOTATIONS, p);
             visit(method.getLeadingAnnotations(), p);
             for (J.Modifier m : method.getModifiers()) {
                 visitModifier(m, p);
@@ -1114,7 +1116,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitMethodInvocation(J.MethodInvocation method, PrintOutputCapture<P> p) {
-            beforeSyntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p);
+            beforeSyntax(method, Location.METHOD_INVOCATION_PREFIX, p);
             visitRightPadded(method.getPadding().getSelect(), JRightPadded.Location.METHOD_SELECT, method.getSimpleName().isEmpty() ? "" : ".", p);
             visitContainer("<", method.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", ">", p);
             visit(method.getName(), p);
@@ -1142,7 +1144,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             }
             if (keyword != null) {
                 visit(mod.getAnnotations(), p);
-                beforeSyntax(mod, Space.Location.MODIFIER_PREFIX, p);
+                beforeSyntax(mod, Location.MODIFIER_PREFIX, p);
                 p.append(keyword);
                 afterSyntax(mod, p);
             }
@@ -1151,7 +1153,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitNewArray(J.NewArray newArray, PrintOutputCapture<P> p) {
-            beforeSyntax(newArray, Space.Location.NEW_ARRAY_PREFIX, p);
+            beforeSyntax(newArray, Location.NEW_ARRAY_PREFIX, p);
             visitContainer("[", newArray.getPadding().getInitializer(), JContainer.Location.NEW_ARRAY_INITIALIZER, ",", "]", p);
             afterSyntax(newArray, p);
             return newArray;
@@ -1159,7 +1161,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitParameterizedType(J.ParameterizedType type, PrintOutputCapture<P> p) {
-            beforeSyntax(type, Space.Location.PARAMETERIZED_TYPE_PREFIX, p);
+            beforeSyntax(type, Location.PARAMETERIZED_TYPE_PREFIX, p);
             visit(type.getClazz(), p);
             visitContainer("[", type.getPadding().getTypeParameters(), JContainer.Location.TYPE_PARAMETERS, ",", "]", p);
             afterSyntax(type, p);
@@ -1168,7 +1170,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitSwitch(J.Switch sw, PrintOutputCapture<P> p) {
-            beforeSyntax(sw, Space.Location.SWITCH_PREFIX, p);
+            beforeSyntax(sw, Location.SWITCH_PREFIX, p);
             p.append("match");
             visit(sw.getSelector(), p);
             visit(sw.getCases(), p);
@@ -1178,7 +1180,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitTernary(J.Ternary ternary, PrintOutputCapture<P> p) {
-            beforeSyntax(ternary, Space.Location.TERNARY_PREFIX, p);
+            beforeSyntax(ternary, Location.TERNARY_PREFIX, p);
             visit(ternary.getTruePart(), p);
             visitSpace(ternary.getPadding().getTruePart().getBefore(), Location.TERNARY_TRUE, p);
             p.append("if");
@@ -1190,7 +1192,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitThrow(J.Throw thrown, PrintOutputCapture<P> p) {
-            beforeSyntax(thrown, Space.Location.THROW_PREFIX, p);
+            beforeSyntax(thrown, Location.THROW_PREFIX, p);
             p.append("raise");
             visit(thrown.getException(), p);
             afterSyntax(thrown, p);
@@ -1201,14 +1203,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         public J visitTry(J.Try tryable, PrintOutputCapture<P> p) {
             boolean isWithStatement = tryable.getResources() != null && !tryable.getResources().isEmpty();
 
-            beforeSyntax(tryable, Space.Location.TRY_PREFIX, p);
+            beforeSyntax(tryable, Location.TRY_PREFIX, p);
             if (isWithStatement) {
                 p.append("with");
             } else {
                 p.append("try");
             }
             if (isWithStatement && tryable.getPadding().getResources() != null) {
-                visitSpace(tryable.getPadding().getResources().getBefore(), Space.Location.TRY_RESOURCES, p);
+                visitSpace(tryable.getPadding().getResources().getBefore(), Location.TRY_RESOURCES, p);
                 List<JRightPadded<J.Try.Resource>> resources = tryable.getPadding().getResources().getPadding().getElements();
                 boolean first = true;
                 for (JRightPadded<J.Try.Resource> resource : resources) {
@@ -1218,7 +1220,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         first = false;
                     }
 
-                    visitSpace(resource.getElement().getPrefix(), Space.Location.TRY_RESOURCE, p);
+                    visitSpace(resource.getElement().getPrefix(), Location.TRY_RESOURCE, p);
                     visitMarkers(resource.getElement().getMarkers(), p);
 
                     TypedTree decl = resource.getElement().getVariableDeclarations();
@@ -1234,26 +1236,24 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                         visit(decl, p);
                     }
 
-                    visitSpace(resource.getAfter(), Space.Location.TRY_RESOURCE_SUFFIX, p);
+                    visitSpace(resource.getAfter(), Location.TRY_RESOURCE_SUFFIX, p);
                 }
             }
 
             J.Block tryBody = tryable.getBody();
-            JRightPadded<Statement> elseBody = null;
-            List<JRightPadded<Statement>> tryStatements = tryable.getBody().getPadding().getStatements();
-            if (tryStatements.get(tryStatements.size() - 1).getElement() instanceof J.Block) {
-                tryBody = tryBody.getPadding().withStatements(tryStatements.subList(0, tryStatements.size() - 1));
-                elseBody = tryStatements.get(tryStatements.size() - 1);
-            }
+            Py.TrailingElseWrapper elseWrapper = getCursor().getParentTreeCursor().getValue() instanceof Py.TrailingElseWrapper ?
+                    ((Py.TrailingElseWrapper) getCursor().getParentTreeCursor().getValue()) : null;
 
             visit(tryBody, p);
             visit(tryable.getCatches(), p);
-            if (elseBody != null) {
-                // padding is reversed for the `else` part because it's wrapped as though it were a normal statement,
-                // so its extra padding (which acts as JLeftPadding) is stored in a JRightPadding
-                visitSpace(elseBody.getAfter(), Location.LANGUAGE_EXTENSION, p);
+            if (elseWrapper != null) {
+                visitSpace(
+                        elseWrapper.getPadding().getElseBlock().getBefore(),
+                        Location.ELSE_PREFIX,
+                        p
+                );
                 p.append("else");
-                visit(elseBody.getElement(), p);
+                visit(elseWrapper.getElseBlock(), p);
             }
 
             visitLeftPadded("finally", tryable.getPadding().getFinally(), JLeftPadded.Location.TRY_FINALLY, p);
@@ -1263,7 +1263,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitUnary(J.Unary unary, PrintOutputCapture<P> p) {
-            beforeSyntax(unary, Space.Location.UNARY_PREFIX, p);
+            beforeSyntax(unary, Location.UNARY_PREFIX, p);
             switch (unary.getOperator()) {
                 case Not:
                     p.append("not");
@@ -1285,7 +1285,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitVariable(J.VariableDeclarations.NamedVariable variable, PrintOutputCapture<P> p) {
-            beforeSyntax(variable, Space.Location.VARIABLE_PREFIX, p);
+            beforeSyntax(variable, Location.VARIABLE_PREFIX, p);
             J.VariableDeclarations vd = getCursor().getParentTreeCursor().getValue();
             JRightPadded<J.VariableDeclarations.NamedVariable> padding = getCursor().getParent().getValue();
             TypeTree type = vd.getTypeExpression();
@@ -1318,8 +1318,8 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         @Override
         public J visitVariableDeclarations(J.VariableDeclarations multiVariable, PrintOutputCapture<P> p) {
-            beforeSyntax(multiVariable, Space.Location.VARIABLE_DECLARATIONS_PREFIX, p);
-            visitSpace(Space.EMPTY, Space.Location.ANNOTATIONS, p);
+            beforeSyntax(multiVariable, Location.VARIABLE_DECLARATIONS_PREFIX, p);
+            visitSpace(Space.EMPTY, Location.ANNOTATIONS, p);
             visit(multiVariable.getLeadingAnnotations(), p);
             for (J.Modifier m : multiVariable.getModifiers()) {
                 visitModifier(m, p);
@@ -1360,7 +1360,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             out -> "/*~~" + out + (out.isEmpty() ? "" : "~~") + ">*/";
 
     private void beforeSyntax(Py py,
-                              @SuppressWarnings("SameParameterValue") Space.Location loc,
+                              @SuppressWarnings("SameParameterValue") Location loc,
                               PrintOutputCapture<P> p) {
         beforeSyntax(py.getPrefix(), py.getMarkers(), loc, p);
     }
@@ -1382,7 +1382,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         }
     }
 
-    private void beforeSyntax(Space prefix, Markers markers, Space.@Nullable Location loc, PrintOutputCapture<P> p) {
+    private void beforeSyntax(Space prefix, Markers markers, @Nullable Location loc, PrintOutputCapture<P> p) {
         for (Marker marker : markers.getMarkers()) {
             p.append(p.getMarkerPrinter().beforePrefix(marker, new Cursor(getCursor(), marker), JAVA_MARKER_WRAPPER));
         }
@@ -1407,11 +1407,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public Space visitSpace(Space space, PySpace.Location loc, PrintOutputCapture<P> p) {
-        return delegate.visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
+        return delegate.visitSpace(space, Location.LANGUAGE_EXTENSION, p);
     }
 
     @Override
-    public Space visitSpace(Space space, Space.Location loc, PrintOutputCapture<P> p) {
+    public Space visitSpace(Space space, Location loc, PrintOutputCapture<P> p) {
         return delegate.visitSpace(space, loc, p);
     }
 
@@ -1430,7 +1430,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                                                   JLeftPadded<T> left,
                                                   @SuppressWarnings({"SameParameterValue", "unused"}) PyLeftPadded.Location loc,
                                                   PrintOutputCapture<P> p) {
-        delegate.visitSpace(left.getBefore(), Space.Location.LANGUAGE_EXTENSION, p);
+        delegate.visitSpace(left.getBefore(), Location.LANGUAGE_EXTENSION, p);
         p.append(s);
         setCursor(new Cursor(this.getCursor(), left));
         T t = left.getElement();
