@@ -34,7 +34,10 @@ public class Quoted implements Marker {
     @Getter
     public enum Style {
         SINGLE("'"),
-        DOUBLE("\"");
+        DOUBLE("\""),
+        TRIPLE_SINGLE("'''"),
+        TRIPLE_DOUBLE("\"\"\""),
+        ;
 
         final String quote;
 

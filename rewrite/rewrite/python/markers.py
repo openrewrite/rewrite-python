@@ -54,3 +54,5 @@ class Quoted(Marker):
     class Style(Enum):
         SINGLE = 0
         DOUBLE = 1
+        TRIPLE_SINGLE = 2
+        TRIPLE_DOUBLE = 3

@@ -99,6 +99,16 @@ def test_variable_with_quoted_type_hint():
     rewrite_run(python("""foo: 'Foo' = None"""))
 
 
+def test_variable_with_double_quoted_type_hint():
+    # language=python
+    rewrite_run(python("""foo: "Foo" = None"""))
+
+
+def test_variable_with_triple_quoted_type_hint():
+    # language=python
+    rewrite_run(python("""foo: '''Foo''' = None"""))
+
+
 def test_literal_type():
     # language=python
     rewrite_run(python("""foo: None = None"""))

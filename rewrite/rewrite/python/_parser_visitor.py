@@ -1766,10 +1766,19 @@ class ParserVisitor(ast.NodeVisitor):
                 )
             else:
                 literal = cast(j.Literal, self.__convert(node))
+                if literal.value_source.startswith("'''"):
+                    quote_style = Quoted.Style.TRIPLE_SINGLE
+                elif literal.value_source[0] == "'":
+                    quote_style = Quoted.Style.DOUBLE
+                elif literal.value_source.startswith('"""'):
+                    quote_style = Quoted.Style.TRIPLE_DOUBLE
+                else:
+                    quote_style = Quoted.Style.DOUBLE
+
                 return j.Identifier(
                     random_id(),
                     literal.prefix,
-                    Markers.build(random_id(), [Quoted(random_id(), Quoted.Style.SINGLE if literal.value_source[0] == "'" else Quoted.Style.DOUBLE)]),
+                    Markers.build(random_id(), [Quoted(random_id(), quote_style)]),
                     [],
                     str(literal.value),
                     self.__map_type(node),
