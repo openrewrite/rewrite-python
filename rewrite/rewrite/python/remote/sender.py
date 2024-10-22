@@ -26,6 +26,13 @@ class PythonSender(Sender):
 
             return cast(Py, tree)
 
+        def visit_async(self, async_: Async, ctx: SenderContext) -> J:
+            ctx.send_value(async_, attrgetter('_id'))
+            ctx.send_node(async_, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(async_, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(async_, attrgetter('_statement'), ctx.send_tree)
+            return async_
+
         def visit_await(self, await_: Await, ctx: SenderContext) -> J:
             ctx.send_value(await_, attrgetter('_id'))
             ctx.send_node(await_, attrgetter('_prefix'), PythonSender.send_space)

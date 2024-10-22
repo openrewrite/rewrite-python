@@ -21,6 +21,7 @@ __all__ = [
     'Quoted',
 
     # AST types
+    'Async',
     'Await',
     'ChainedAssignment',
     'CollectionLiteral',

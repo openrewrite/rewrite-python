@@ -318,6 +318,7 @@ public final class PySpace {
     public enum Location {
         ASSERT_ELEMENT_SUFFIX,
         ASSERT_PREFIX,
+        ASYNC_PREFIX,
         AWAIT_PREFIX,
         BINARY_NEGATION,
         BINARY_OPERATOR,

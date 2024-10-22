@@ -57,6 +57,15 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.Async visitAsync(Py.Async async, SenderContext ctx) {
+            ctx.sendValue(async, Py.Async::getId);
+            ctx.sendNode(async, Py.Async::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(async, Py.Async::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(async, Py.Async::getStatement, ctx::sendTree);
+            return async;
+        }
+
+        @Override
         public Py.Await visitAwait(Py.Await await, SenderContext ctx) {
             ctx.sendValue(await, Py.Await::getId);
             ctx.sendNode(await, Py.Await::getPrefix, PythonSender::sendSpace);

@@ -34,6 +34,20 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return "python";
     }
 
+    public J visitAsync(Py.Async async, P p) {
+        Py.Async a = async;
+        a = a.withPrefix(visitSpace(a.getPrefix(), PySpace.Location.ASYNC_PREFIX, p));
+        a = a.withMarkers(visitMarkers(a.getMarkers(), p));
+        Statement temp = (Statement) visitStatement(a, p);
+        if (!(temp instanceof Py.Async)) {
+            return temp;
+        } else {
+            a = (Py.Async) temp;
+        }
+        a = a.withStatement(visitAndCast(a.getStatement(), p));
+        return a;
+    }
+
     public J visitAwait(Py.Await ogAwait, P p) {
         Py.Await await = ogAwait;
         await = await.withPrefix(visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p));

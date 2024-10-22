@@ -23,6 +23,11 @@ import org.openrewrite.python.tree.Py;
 public class PythonIsoVisitor<P> extends PythonVisitor<P> {
 
     @Override
+    public Py.Async visitAsync(Py.Async async, P p) {
+        return (Py.Async) super.visitAsync(async, p);
+    }
+
+    @Override
     public Py.Await visitAwait(Py.Await ogAwait, P p) {
         return (Py.Await) super.visitAwait(ogAwait, p);
     }

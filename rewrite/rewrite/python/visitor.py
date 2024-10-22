@@ -11,6 +11,16 @@ class PythonVisitor(JavaVisitor[P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Py)
 
+    def visit_async(self, async_: Async, p: P) -> J:
+        async_ = async_.with_prefix(self.visit_space(async_.prefix, PySpace.Location.ASYNC_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(async_, p))
+        if not isinstance(temp_statement, Async):
+            return temp_statement
+        async_ = cast(Async, temp_statement)
+        async_ = async_.with_markers(self.visit_markers(async_.markers, p))
+        async_ = async_.with_statement(self.visit_and_cast(async_.statement, Statement, p))
+        return async_
+
     def visit_await(self, await_: Await, p: P) -> J:
         await_ = await_.with_prefix(self.visit_space(await_.prefix, PySpace.Location.AWAIT_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(await_, p))

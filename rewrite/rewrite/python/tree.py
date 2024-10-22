@@ -16,6 +16,48 @@ from rewrite.java import *
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class Async(Py, Statement):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> Async:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> Async:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> Async:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _statement: Statement
+
+    @property
+    def statement(self) -> Statement:
+        return self._statement
+
+    def with_statement(self, statement: Statement) -> Async:
+        return self if statement is self._statement else replace(self, _statement=statement)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_async(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class Await(Py, Expression):
     _id: UUID
 

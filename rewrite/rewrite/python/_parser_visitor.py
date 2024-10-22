@@ -372,7 +372,12 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_AsyncFor(self, node):
-        raise NotImplementedError("Implement visit_AsyncFor!")
+        return py.Async(
+            random_id(),
+            self.__source_before('async'),
+            Markers.EMPTY,
+            self.visit_For(node)
+        )
 
 
     def visit_While(self, node):
@@ -475,7 +480,12 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_AsyncWith(self, node):
-        raise NotImplementedError("Implement visit_AsyncWith!")
+        return py.Async(
+            random_id(),
+            self.__source_before('async'),
+            Markers.EMPTY,
+            self.visit_With(node)
+        )
 
 
     def visit_Raise(self, node):

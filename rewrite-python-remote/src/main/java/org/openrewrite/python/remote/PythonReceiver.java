@@ -71,6 +71,15 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.Async visitAsync(Py.Async async, ReceiverContext ctx) {
+            async = async.withId(ctx.receiveNonNullValue(async.getId(), UUID.class));
+            async = async.withPrefix(ctx.receiveNonNullNode(async.getPrefix(), PythonReceiver::receiveSpace));
+            async = async.withMarkers(ctx.receiveNonNullNode(async.getMarkers(), ctx::receiveMarkers));
+            async = async.withStatement(ctx.receiveNonNullNode(async.getStatement(), ctx::receiveTree));
+            return async;
+        }
+
+        @Override
         public Py.Await visitAwait(Py.Await await, ReceiverContext ctx) {
             await = await.withId(ctx.receiveNonNullValue(await.getId(), UUID.class));
             await = await.withPrefix(ctx.receiveNonNullNode(await.getPrefix(), PythonReceiver::receiveSpace));
@@ -1111,6 +1120,15 @@ public class PythonReceiver implements Receiver<Py> {
         @Override
         @SuppressWarnings("unchecked")
         public <T> T create(Class<T> type, ReceiverContext ctx) {
+            if (type == Py.Async.class) {
+                return (T) new Py.Async(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree)
+                );
+            }
+
             if (type == Py.Await.class) {
                 return (T) new Py.Await(
                     ctx.receiveNonNullValue(null, UUID.class),

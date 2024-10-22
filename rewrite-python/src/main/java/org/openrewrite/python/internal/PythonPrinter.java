@@ -297,7 +297,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitComprehensionClause(Py.ComprehensionExpression.Clause clause, PrintOutputCapture<P> p) {
-        visitSpace(clause.getPrefix(), PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p);
+        beforeSyntax(clause, PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p);
         p.append("for");
         visit(clause.getIteratorVariable(), p);
         visitSpace(clause.getPadding().getIteratedList().getBefore(), PySpace.Location.COMPREHENSION_IN, p);
@@ -313,15 +313,23 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitComprehensionCondition(Py.ComprehensionExpression.Condition condition, PrintOutputCapture<P> p) {
-        visitSpace(condition.getPrefix(), PySpace.Location.COMPREHENSION_CONDITION_PREFIX, p);
+        beforeSyntax(condition, PySpace.Location.COMPREHENSION_CONDITION_PREFIX, p);
         p.append("if");
         visit(condition.getExpression(), p);
         return condition;
     }
 
     @Override
+    public J visitAsync(Py.Async async, PrintOutputCapture<P> p) {
+        beforeSyntax(async, PySpace.Location.ASYNC_PREFIX, p);
+        p.append("async");
+        visit(async.getStatement(), p);
+        return async;
+    }
+
+    @Override
     public J visitAwait(Py.Await await, PrintOutputCapture<P> p) {
-        visitSpace(await.getPrefix(), PySpace.Location.AWAIT_PREFIX, p);
+        beforeSyntax(await, PySpace.Location.AWAIT_PREFIX, p);
         p.append("await");
         visit(await.getExpression(), p);
         return await;
@@ -329,7 +337,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitYieldFrom(Py.YieldFrom yield, PrintOutputCapture<P> p) {
-        visitSpace(yield.getPrefix(), PySpace.Location.YIELD_FROM_PREFIX, p);
+        beforeSyntax(yield, PySpace.Location.YIELD_FROM_PREFIX, p);
         p.append("from");
         visit(yield.getExpression(), p);
         return yield;
@@ -337,7 +345,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitVariableScope(Py.VariableScope scope, PrintOutputCapture<P> p) {
-        visitSpace(scope.getPrefix(), PySpace.Location.VARIABLE_SCOPE_PREFIX, p);
+        beforeSyntax(scope, PySpace.Location.VARIABLE_SCOPE_PREFIX, p);
         switch (scope.getKind()) {
             case GLOBAL:
                 p.append("global");
@@ -358,7 +366,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitDel(Py.Del del, PrintOutputCapture<P> p) {
-        visitSpace(del.getPrefix(), PySpace.Location.DEL_PREFIX, p);
+        beforeSyntax(del, PySpace.Location.DEL_PREFIX, p);
         p.append("del");
         visitRightPadded(
                 del.getPadding().getTargets(),

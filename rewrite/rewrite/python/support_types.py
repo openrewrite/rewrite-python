@@ -28,6 +28,7 @@ class PySpace:
     class Location(Enum):
         ASSERT_STATEMENT_EXPRESSION_SUFFIX = auto()
         ASSERT_STATEMENT_PREFIX = auto()
+        ASYNC_PREFIX = auto()
         AWAIT_PREFIX = auto()
         BINARY_NEGATION = auto()
         BINARY_OPERATOR = auto()

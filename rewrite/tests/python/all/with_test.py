@@ -27,6 +27,18 @@ def test_with_parens():
     )
 
 
+def test_async_with():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            async with open('/dev/null') as x:
+                pass
+            """
+        )
+    )
+
+
 def test_with_no_target():
     # language=python
     rewrite_run(

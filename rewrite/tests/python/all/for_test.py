@@ -52,3 +52,15 @@ def test_for_with_else():
             """
         )
     )
+
+
+def test_async():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            async for x in [1]:
+                pass
+            """
+        )
+    )

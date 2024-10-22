@@ -32,6 +32,13 @@ class PythonReceiver(Receiver):
             self.cursor = self.cursor.parent
             return cast(J, tree)
 
+        def visit_async(self, async_: Async, ctx: ReceiverContext) -> J:
+            async_ = async_.with_id(ctx.receive_value(async_.id, UUID))
+            async_ = async_.with_prefix(ctx.receive_node(async_.prefix, PythonReceiver.receive_space))
+            async_ = async_.with_markers(ctx.receive_node(async_.markers, ctx.receive_markers))
+            async_ = async_.with_statement(ctx.receive_node(async_.statement, ctx.receive_tree))
+            return async_
+
         def visit_await(self, await_: Await, ctx: ReceiverContext) -> J:
             await_ = await_.with_id(ctx.receive_value(await_.id, UUID))
             await_ = await_.with_prefix(ctx.receive_node(await_.prefix, PythonReceiver.receive_space))
@@ -907,6 +914,14 @@ class PythonReceiver(Receiver):
     # noinspection PyTypeChecker
     class Factory(ReceiverFactory):
         def create(self, type: str, ctx: ReceiverContext) -> Tree:
+            if type in ["rewrite.python.tree.Async", "org.openrewrite.python.tree.Py$Async"]:
+                return Async(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree)
+                )
+
             if type in ["rewrite.python.tree.Await", "org.openrewrite.python.tree.Py$Await"]:
                 return Await(
                     ctx.receive_value(None, UUID),
