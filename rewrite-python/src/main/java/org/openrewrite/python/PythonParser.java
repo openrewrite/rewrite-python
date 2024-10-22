@@ -40,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +54,8 @@ public class PythonParser implements Parser {
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
     private final List<Path> pythonPath;
+    private final @Nullable Path logFile;
+    private final int parseTimeoutMs;
 
     private @Nullable Process pythonProcess;
     private @Nullable RemotingContext remotingContext;
@@ -101,8 +104,19 @@ public class PythonParser implements Parser {
                                 generator.writeString(input.getPath().toString());
                             }
                         }, parser -> {
-                            Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
-                            return (SourceFile) tree;
+                            int oldTimeout = socket.getSoTimeout();
+                            try {
+                                if (parseTimeoutMs > 0) {
+                                    // make sure we don't block forever
+                                    socket.setSoTimeout(parseTimeoutMs);
+                                }
+                                Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
+                                return (SourceFile) tree;
+                            } catch (Exception e) {
+                                return ParseError.build(this, input, relativeTo, ctx, e);
+                            } finally {
+                                socket.setSoTimeout(oldTimeout);
+                            }
                         }, socket)))
                         .withSourcePath(path)
                         .withFileAttributes(FileAttributes.fromPath(input.getPath()))
@@ -168,13 +182,10 @@ public class PythonParser implements Parser {
                 environment.compute("PYTHONPATH", (k, current) ->
                         (current != null ? current + File.pathSeparator : "") + pythonPath.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
             }
-            if (System.getProperty("os.name").startsWith("Windows")) {
-                processBuilder.redirectOutput(new File("NUL"));
-                processBuilder.redirectError(new File("NUL"));
-            } else {
-                processBuilder.redirectOutput(new File("/dev/null"));
-                processBuilder.redirectError(new File("/dev/null"));
-            }
+            File redirectTo = logFile != null ? logFile.toFile() : new File(System.getProperty("os.name").startsWith("Windows") ? "NULL" : "/dev/null");
+            processBuilder.redirectOutput(redirectTo);
+            processBuilder.redirectError(redirectTo);
+
             pythonProcess = processBuilder.start();
             for (int i = 0; i < 30 && pythonProcess.isAlive(); i++) {
                 if (isServerRunning(port)) {
@@ -276,6 +287,8 @@ public class PythonParser implements Parser {
         private boolean logCompilationWarningsAndErrors;
         private final Collection<NamedStyles> styles = new ArrayList<>();
         private List<Path> pythonPath = new ArrayList<>();
+        private @Nullable Path logFile;
+        private long parseTimeoutMs = -1;
 
         private Builder() {
             super(Py.CompilationUnit.class);
@@ -298,6 +311,16 @@ public class PythonParser implements Parser {
             return this;
         }
 
+        public Builder logFile(Path path) {
+            this.logFile = path;
+            return this;
+        }
+
+        public Builder parseTimeout(long timeout, TimeUnit timeUnit) {
+            this.parseTimeoutMs = timeUnit.toMillis(timeout);
+            return this;
+        }
+
         public Builder pythonPath(List<Path> path) {
             this.pythonPath = new ArrayList<>(path);
             return this;
@@ -305,7 +328,7 @@ public class PythonParser implements Parser {
 
         @Override
         public PythonParser build() {
-            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, pythonPath);
+            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, pythonPath, logFile, (int) parseTimeoutMs);
         }
 
         @Override
