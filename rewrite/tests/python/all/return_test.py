@@ -25,6 +25,18 @@ def test_trailing_semicolon():
     )
 
 
+def test_tuple():
+    # language=python
+    rewrite_run(
+        python(
+            """
+            def foo():
+                return 1, 2, 3
+            """
+        )
+    )
+
+
 def test_value():
     # language=python
     rewrite_run(
