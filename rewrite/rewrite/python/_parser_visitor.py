@@ -1709,19 +1709,6 @@ class ParserVisitor(ast.NodeVisitor):
         if maybe_parens:
             self._cursor += 1
             omit_parens = False
-            expr_prefix = self.__whitespace()
-            self._parentheses_stack.append(
-                (lambda c, r: cast(JContainer, c)
-                 .with_elements(
-                    [e.with_prefix(expr_prefix) if i == 0 else e for i, e in enumerate(c.elements)])
-                if isinstance(c, JContainer) else j.Parentheses(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    self.__pad_right(c.with_prefix(expr_prefix), r)
-                ),
-                 self._cursor, node, Space.EMPTY)
-            )
         else:
             self._cursor = save_cursor
             omit_parens = True
@@ -1736,7 +1723,7 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY
             )
 
-        if len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node and self.__cursor_at(')'):
+        if len(self._parentheses_stack) > 0 and self.__cursor_at(')'):
             self._cursor += 1
             elements = self._parentheses_stack.pop()[0](elements, Space.EMPTY)
             omit_parens = False
@@ -1848,7 +1835,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
         if node:
-            if isinstance(node, ast.expr) and not isinstance(node, (ast.Tuple, ast.GeneratorExp)):
+            if isinstance(node, ast.expr) and not isinstance(node, (ast.GeneratorExp)):
                 save_cursor = self._cursor
 
                 # noinspection PyUnusedLocal
@@ -1858,12 +1845,17 @@ class ParserVisitor(ast.NodeVisitor):
                 if self._cursor < len(self._source) and self._source[self._cursor] == '(':
                     self._cursor += 1
                     expr_prefix = self.__whitespace()
-                    self._parentheses_stack.append((lambda e, r: j.Parentheses(
-                        random_id(),
-                        prefix,
-                        Markers.EMPTY,
-                        self.__pad_right(e.with_prefix(expr_prefix), r)
-                    ), self._cursor, node, prefix))
+                    self._parentheses_stack.append(
+                        (lambda e, r: cast(JContainer, e)
+                         .with_before(prefix)
+                         .with_elements(
+                            [e.with_prefix(expr_prefix) if i == 0 else e for i, e in enumerate(e.elements)])
+                        if isinstance(e, JContainer) else j.Parentheses(
+                            random_id(),
+                            prefix,
+                            Markers.EMPTY,
+                            self.__pad_right(e.with_prefix(expr_prefix), r)
+                        ), self._cursor, node, prefix))
                     # handle nested parens
                     result = recursion(node)
                 else:
@@ -1887,10 +1879,6 @@ class ParserVisitor(ast.NodeVisitor):
                     self._cursor = save_cursor_2
                 return result
             else:
-                if isinstance(node, ast.expr) and not self.__cursor_at('(') and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][1] == self._cursor:
-                    popped = self._parentheses_stack.pop()
-                    self._cursor -= 1
-                    return cast(J, self.visit(cast(ast.AST, node))).with_prefix(popped[3])
                 return self.visit(cast(ast.AST, node))
         else:
             return None

@@ -86,3 +86,16 @@ def test_chained_comparison():
 def test_chained_comparison_2():
     # language=python
     rewrite_run(python("assert 1 is not 2 is not 3"))
+
+
+def test_multiline_tuple_comparison():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            (
+            True
+            , False) is not None
+            """,
+        ),
+    )
