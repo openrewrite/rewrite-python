@@ -1736,10 +1736,9 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY
             )
 
-        suffix = self.__whitespace()
         if len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node and self.__cursor_at(')'):
             self._cursor += 1
-            elements = self._parentheses_stack.pop()[0](elements, suffix)
+            elements = self._parentheses_stack.pop()[0](elements, Space.EMPTY)
             omit_parens = False
         elif maybe_parens and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][2] == node:
             elements = self._parentheses_stack.pop()
