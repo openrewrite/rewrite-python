@@ -1109,12 +1109,10 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.func.value),
                 None
             )
-        elif isinstance(node.func, (ast.Call, ast.Lambda, ast.Subscript)):
+        else:
             select = self.__pad_right(cast(Expression, self.__convert(node.func)), self.__whitespace())
             # printer handles empty name by not printing `.` before it
             name = self.__convert_name('')
-        else:
-            raise NotImplementedError(f"Calls to functions other than methods are not yet supported: {type(node.func)}")
 
         all_args = self.__sort_call_arguments(node)
         args = JContainer(
