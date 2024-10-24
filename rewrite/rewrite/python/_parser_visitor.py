@@ -1451,7 +1451,7 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_JoinedStr(self, node):
         tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         next(tokens)  # skip ENCODING token
-        while (tok := next(tokens)).type != token.FSTRING_START:
+        while (tok := next(tokens)).type not in (token.FSTRING_START, token.STRING):
             pass
 
         value_idx = 0
@@ -1459,7 +1459,8 @@ class ParserVisitor(ast.NodeVisitor):
         while tok.type in (token.FSTRING_START, token.STRING):
             if tok.type == token.STRING:
                 current, tok = self.__map_literal(node.values[value_idx], tok, tokens)
-                value_idx += 1
+                if current.value.endswith(node.values[value_idx].value):
+                    value_idx += 1
             else:
                 prefix = self.__whitespace()
                 current, tok, value_idx = self.__map_fstring(node, prefix, tok, tokens, value_idx)

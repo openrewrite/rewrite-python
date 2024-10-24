@@ -60,6 +60,19 @@ def test_concat_fstring_3():
     )
 
 
+def test_concat_fstring_4():
+    # language=python
+    rewrite_run(
+        python("""
+             print(
+                 "Foo. "
+                 f"Bar"
+             )
+            """
+               )
+    )
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))
