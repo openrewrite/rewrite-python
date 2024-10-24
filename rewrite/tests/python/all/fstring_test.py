@@ -99,6 +99,17 @@ def test_concat_fstring_6():
     )
 
 
+@pytest.mark.xfail(reason="F-strings with nested f-string literal concatenations are not yet supported", strict=True)
+def test_concat_fstring_7():
+    # language=python
+    rewrite_run(
+        python("""
+            _ = f"b {f"c" f"d {f"e" f"f"} g"} h"
+            """
+               )
+    )
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))
