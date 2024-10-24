@@ -103,20 +103,13 @@ public class PythonParser implements Parser {
                                 generator.writeString("parse-python-file");
                                 generator.writeString(input.getPath().toString());
                             }
-                        }, parser -> {
-                            int oldTimeout = socket.getSoTimeout();
-                            try {
-                                if (parseTimeoutMs > 0) {
-                                    // make sure we don't block forever
-                                    socket.setSoTimeout(parseTimeoutMs);
-                                }
-                                Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
-                                return (SourceFile) tree;
-                            } catch (Exception e) {
-                                return ParseError.build(this, input, relativeTo, ctx, e);
-                            } finally {
-                                socket.setSoTimeout(oldTimeout);
+                            // make sure we don't block forever when reading
+                            if (parseTimeoutMs > 0) {
+                                socket.setSoTimeout(parseTimeoutMs);
                             }
+                        }, parser -> {
+                            Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
+                            return (SourceFile) tree;
                         }, socket)))
                         .withSourcePath(path)
                         .withFileAttributes(FileAttributes.fromPath(input.getPath()))
