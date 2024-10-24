@@ -73,6 +73,21 @@ def test_concat_fstring_4():
     )
 
 
+def test_concat_fstring_5():
+    # language=python
+    rewrite_run(
+        python("""
+            def query41():
+                return (
+                    "SELECT * "
+                    "FROM table "
+                    f"WHERE var = {var}"
+                )
+            """
+               )
+    )
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))

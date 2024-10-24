@@ -1261,7 +1261,10 @@ class ParserVisitor(ast.NodeVisitor):
                 break
 
             while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
-                tok = next(tokens)
+                try:
+                    tok = next(tokens)
+                except IndentationError:
+                    break
 
         return res
 
@@ -1480,7 +1483,10 @@ class ParserVisitor(ast.NodeVisitor):
                 )
 
             while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
-                tok = next(tokens)
+                try:
+                    tok = next(tokens)
+                except IndentationError:
+                    break
 
         return res
 
