@@ -110,6 +110,11 @@ def test_concat_fstring_7():
     )
 
 
+def test_concat_fstring_9():
+    # language=python
+    rewrite_run(python('_ = f"n{\' \':{1}}Groups"'))
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))
