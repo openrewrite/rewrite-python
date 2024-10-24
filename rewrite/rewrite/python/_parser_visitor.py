@@ -1288,9 +1288,12 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Constant(self, node):
         tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
-        tok = next(tokens)  # skip ENCODING token
-        while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
-            pass
+        return self.__map_literal(node, next(tokens), tokens)[0]
+
+
+    def __map_literal(self, node, tok, tokens):
+        while tok.type in (token.ENCODING, token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
+            tok = next(tokens)
 
         prefix = self.__whitespace()
         start = self._cursor
@@ -1309,7 +1312,7 @@ class ParserVisitor(ast.NodeVisitor):
             else:
                 break
 
-        return j.Literal(
+        return (j.Literal(
             random_id(),
             prefix,
             Markers.EMPTY,
@@ -1317,7 +1320,7 @@ class ParserVisitor(ast.NodeVisitor):
             self._source[start:self._cursor],
             None,
             self.__map_type(node),
-        )
+        ), tok)
 
 
     def visit_Dict(self, node):
@@ -1488,11 +1491,39 @@ class ParserVisitor(ast.NodeVisitor):
 
 
     def visit_JoinedStr(self, node):
-        prefix = self.__whitespace()
-        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         next(tokens)  # skip ENCODING token
-        tok = next(tokens)  # FSTRING_START token
-        return self.__map_fstring(node, prefix, tok, peekable(tokens))[0]
+        while (tok := next(tokens)).type != token.FSTRING_START:
+            pass
+
+        value_idx = 0
+        res = None
+        while tok.type in (token.FSTRING_START, token.STRING):
+            if tok.type == token.STRING:
+                current, tok = self.__map_literal(node.values[value_idx], tok, tokens)
+                value_idx += 1
+            else:
+                prefix = self.__whitespace()
+                current, tok, value_idx = self.__map_fstring(node, prefix, tok, tokens, value_idx)
+
+            if res is None:
+                res = current
+            else:
+                res = py.Binary(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    res,
+                    self.__pad_left(Space.EMPTY, py.Binary.Type.StringConcatenation),
+                    None,
+                    current,
+                    self.__map_type(node)
+                )
+
+            while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
+                tok = next(tokens)
+
+        return res
 
 
     def visit_FormattedValue(self, node):
@@ -2119,8 +2150,8 @@ class ParserVisitor(ast.NodeVisitor):
         return self.__pad_left(self.__source_before(op_str), op)
 
 
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[
-        J, TokenInfo]:
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable, value_idx: int = 0) -> Tuple[
+        J, TokenInfo, int]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
@@ -2134,7 +2165,7 @@ class ParserVisitor(ast.NodeVisitor):
                     format,
                     None,
                     self.__map_type(node.values[0]),
-                ), next(tokens))
+                ), next(tokens), 0)
             else:
                 delimiter = ''
             consume_end_delim = False
@@ -2146,15 +2177,36 @@ class ParserVisitor(ast.NodeVisitor):
 
         # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
         parts = []
-        for value in node.values:
-            if tok.type == token.OP and tok.string == '{':
+        while tok.type != token.FSTRING_END and value_idx < len(node.values):
+            value = node.values[value_idx]
+            if tok.type == token.FSTRING_MIDDLE:
+                save_cursor = self._cursor
+                while True:
+                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
+                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
+                        break
+                s = self._source[save_cursor:self._cursor]
+                parts.append(j.Literal(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    s,
+                    s,
+                    None,
+                    JavaType.Primitive(),
+                ))
+                if cast(ast.Constant, value).value == s:
+                    value_idx += 1
+            elif tok.type == token.OP and tok.string == '{':
+                self._cursor += 1
+                tok = next(tokens)
                 if not isinstance(value, ast.FormattedValue):
                     # this is the case when using the `=` "debug specifier"
-                    continue
-                self._cursor += len(tok.string)
-                tok = next(tokens)
+                    value_idx += 1
+                    value = node.values[value_idx]
+
                 if isinstance(cast(ast.FormattedValue, value).value, ast.JoinedStr):
-                    nested, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value),
+                    nested, tok, _ = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value),
                                                      Space.EMPTY, tok, tokens)
                     expr = self.__pad_right(
                         nested,
@@ -2199,7 +2251,7 @@ class ParserVisitor(ast.NodeVisitor):
                 # format specifier
                 if tok.type == token.OP and tok.string == ':':
                     self._cursor += len(tok.string)
-                    format_spec, tok = self.__map_fstring(
+                    format_spec, tok, _ = self.__map_fstring(
                         cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens),
                         tokens)
                 else:
@@ -2214,25 +2266,11 @@ class ParserVisitor(ast.NodeVisitor):
                     conv,
                     format_spec
                 ))
+                value_idx += 1
                 self._cursor += len(tok.string)
                 tok = next(tokens)
             elif tok.type == token.FSTRING_END:
                 raise NotImplementedError("Unsupported: String concatenation with f-strings")
-            else:  # FSTRING_MIDDLE
-                save_cursor = self._cursor
-                while True:
-                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
-                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
-                        break
-                parts.append(j.Literal(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    cast(ast.Constant, value).s,
-                    self._source[save_cursor:self._cursor],
-                    None,
-                    self.__map_type(value),
-                ))
 
         if consume_end_delim:
             self._cursor += len(tok.string)  # FSTRING_END token
@@ -2246,7 +2284,7 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             delimiter,
             parts
-        ), tok)
+        ), tok, value_idx)
 
     def __cursor_at(self, s: str):
         return self._cursor < len(self._source) and (len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))
