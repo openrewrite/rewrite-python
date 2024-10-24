@@ -2154,7 +2154,7 @@ class ParserVisitor(ast.NodeVisitor):
                     try:
                         while (tokens.peek()).type not in (token.FSTRING_END, token.FSTRING_MIDDLE):
                             tok = next(tokens)
-                            if tok.type == token.OP and tok.string in ('!', ':'):
+                            if tok.type == token.OP and tok.string in ('!'):
                                 break
                             la_tok = tokens.peek()
                             if tok.type == token.OP and tok.string == '}' and (
@@ -2162,6 +2162,8 @@ class ParserVisitor(ast.NodeVisitor):
                                     la_tok.type == token.OP and la_tok.string == '{')):
                                 break
                             if tok.type == token.OP and tok.string == '=' and la_tok.string in ('!', ':', '}'):
+                                break
+                            if tok.type == token.OP and tok.string == ':' and la_tok.string in ('{'):
                                 break
                     except StopIteration:
                         pass

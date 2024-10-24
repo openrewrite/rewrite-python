@@ -110,9 +110,14 @@ def test_concat_fstring_7():
     )
 
 
-def test_concat_fstring_9():
+def test_concat_fstring_8():
     # language=python
     rewrite_run(python('_ = f"n{\' \':{1}}Groups"'))
+
+
+def test_concat_fstring_9():
+    # language=python
+    rewrite_run(python('print(f"Progress: {output.escaped_title[:30]:<30} {default_output:>161}")'))
 
 
 def test_empty():
