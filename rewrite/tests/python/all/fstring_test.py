@@ -88,6 +88,17 @@ def test_concat_fstring_5():
     )
 
 
+def test_concat_fstring_6():
+    # language=python
+    rewrite_run(
+        python("""
+            f'{dict((x, x) for x in range(11)) | dict((x, x) for x in range(11))}'
+            f'{ dict((x, x) for x in range(3)) | dict((x, x) for x in range(3)) }'
+            """
+               )
+    )
+
+
 def test_empty():
     # language=python
     rewrite_run(python("a = f''"))

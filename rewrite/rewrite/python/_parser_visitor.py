@@ -1482,6 +1482,9 @@ class ParserVisitor(ast.NodeVisitor):
                     self.__map_type(node)
                 )
 
+            if value_idx >= len(node.values):
+                break
+
             while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
                 try:
                     tok = next(tokens)
