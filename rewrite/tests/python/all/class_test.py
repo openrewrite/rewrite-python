@@ -25,6 +25,22 @@ def test_field():
     )
 
 
+def test_enum():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            from enum import Enum
+            class Foo(Enum):
+                '''Foo'''
+                Foo = 'Foo'
+                '''Bar'''
+                Bar = 'Bar'
+            """
+        )
+    )
+
+
 def test_single_base():
     # language=python
     rewrite_run(

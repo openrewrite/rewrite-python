@@ -23,7 +23,6 @@ J2 = TypeVar('J2', bound=J)
 
 
 class ParserVisitor(ast.NodeVisitor):
-
     _source: str
     _cursor: int
     _parentheses_stack: List[Tuple[Callable[[T, Space], T], int, ast.AST, Space]]
@@ -50,13 +49,16 @@ class ParserVisitor(ast.NodeVisitor):
         first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
         if not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
             return [
-                JRightPadded(j.Empty(random_id(), self.__source_before(')') if with_close_paren else Space.EMPTY, Markers.EMPTY), Space.EMPTY, Markers.EMPTY)
+                JRightPadded(
+                    j.Empty(random_id(), self.__source_before(')') if with_close_paren else Space.EMPTY, Markers.EMPTY),
+                    Space.EMPTY, Markers.EMPTY)
             ]
 
         args = [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
             i == len(node.args) - 1,
-            end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None) for i, a in enumerate(node.args)]
+            end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None) for
+            i, a in enumerate(node.args)]
         if node.vararg:
             args.append(self.__pad_list_element(
                 self.map_arg(node.vararg, None, vararg=True),
@@ -98,7 +100,6 @@ class ParserVisitor(ast.NodeVisitor):
             ))
         return args
 
-
     def map_arg(self, node, default=None, vararg=False, kwarg=False):
         prefix = self.__source_before('**') if kwarg else self.__whitespace()
         vararg_prefix = self.__source_before('*') if vararg else None
@@ -127,7 +128,6 @@ class ParserVisitor(ast.NodeVisitor):
             ), after_name)],
         )
 
-
     def visit_Assert(self, node):
         return j.Assert(
             random_id(),
@@ -136,7 +136,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.test),
             self.__pad_left(self.__source_before(','), self.__convert(node.msg)) if node.msg else None,
         )
-
 
     def visit_Assign(self, node):
         if len(node.targets) == 1:
@@ -163,7 +162,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.value)
             )
 
-
     def visit_AugAssign(self, node):
         return j.AssignmentOperation(
             random_id(),
@@ -175,7 +173,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_Await(self, node):
         return py.Await(
             random_id(),
@@ -185,14 +182,11 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_Interactive(self, node):
         raise NotImplementedError("Implement visit_Interactive!")
 
-
     def visit_AsyncFunctionDef(self, node):
         return self.visit_FunctionDef(node)
-
 
     def visit_ClassDef(self, node):
         prefix = self.__whitespace() if node.decorator_list else Space.EMPTY
@@ -243,7 +237,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_Delete(self, node):
         return py.Del(
             random_id(),
@@ -252,7 +245,6 @@ class ParserVisitor(ast.NodeVisitor):
             [self.__pad_list_element(self.__convert(e), last=i == len(node.targets) - 1) for i, e in
              enumerate(node.targets)]
         )
-
 
     def visit_AnnAssign(self, node):
         prefix = self.__whitespace()
@@ -318,7 +310,6 @@ class ParserVisitor(ast.NodeVisitor):
                 )]
             )
 
-
     def visit_For(self, node):
         targets = node.target.elts if isinstance(node.target, ast.Tuple) else [node.target]
         loop = j.ForEachLoop(
@@ -370,7 +361,6 @@ class ParserVisitor(ast.NodeVisitor):
             )
         )
 
-
     def visit_AsyncFor(self, node):
         return py.Async(
             random_id(),
@@ -378,7 +368,6 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.visit_For(node)
         )
-
 
     def visit_While(self, node):
         return j.WhileLoop(
@@ -394,7 +383,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )
 
-
     def visit_If(self, node):
         prefix = self.__source_before('if')
         single_statement_then_body = len(node.body) == 1
@@ -402,11 +390,13 @@ class ParserVisitor(ast.NodeVisitor):
                                          self.__pad_right(self.__convert(node.test), self.__source_before(
                                              ':') if single_statement_then_body else Space.EMPTY))
         then = self.__pad_right(
-            self.__convert(node.body[0]) if single_statement_then_body else self.__convert_block(node.body), Space.EMPTY)
+            self.__convert(node.body[0]) if single_statement_then_body else self.__convert_block(node.body),
+            Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
             else_prefix = self.__whitespace()
-            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and self._source.startswith('elif', self._cursor):
+            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and self._source.startswith('elif',
+                                                                                                        self._cursor):
                 single_statement_else_body = True
                 self._cursor += 2
             else:
@@ -431,7 +421,6 @@ class ParserVisitor(ast.NodeVisitor):
             elze
         )
 
-
     def visit_With(self, node):
         prefix = self.__source_before('with')
         items_prefix = self.__whitespace()
@@ -451,7 +440,6 @@ class ParserVisitor(ast.NodeVisitor):
             [],
             None
         )
-
 
     def visit_withitem(self, node):
         prefix = self.__whitespace()
@@ -478,7 +466,6 @@ class ParserVisitor(ast.NodeVisitor):
             False
         )
 
-
     def visit_AsyncWith(self, node):
         return py.Async(
             random_id(),
@@ -486,7 +473,6 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.visit_With(node)
         )
-
 
     def visit_Raise(self, node):
         prefix = self.__source_before('raise')
@@ -511,7 +497,6 @@ class ParserVisitor(ast.NodeVisitor):
             exc,
         )
 
-
     def visit_Try(self, node):
         prefix = self.__source_before('try')
         body = self.__convert_block(node.body)
@@ -523,7 +508,7 @@ class ParserVisitor(ast.NodeVisitor):
             )
 
         finally_ = self.__pad_left(self.__source_before('finally'),
-                               self.__convert_block(node.finalbody)) if node.finalbody else None
+                                   self.__convert_block(node.finalbody)) if node.finalbody else None
         try_ = j.Try(random_id(), prefix, Markers.EMPTY, JContainer.empty(), body, handlers, finally_)
 
         return try_ if not node.orelse else py.TrailingElseWrapper(
@@ -533,7 +518,6 @@ class ParserVisitor(ast.NodeVisitor):
             try_.with_prefix(Space.EMPTY),
             else_block
         )
-
 
     def visit_Import(self, node):
         # TODO only use `MultiImport` when necessary (requires corresponding changes to printer)
@@ -550,7 +534,6 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY
             )
         )
-
 
     def visit_ImportFrom(self, node):
         prefix = self.__source_before('from')
@@ -576,7 +559,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__skip(')')
         return multi_import
 
-
     def visit_alias(self, node):
         return j.Import(
             random_id(),
@@ -587,7 +569,6 @@ class ParserVisitor(ast.NodeVisitor):
             None if not node.asname else
             self.__pad_left(self.__source_before('as'), self.__convert_name(node.asname))
         )
-
 
     def visit_keyword(self, node):
         if node.arg:
@@ -626,7 +607,6 @@ class ParserVisitor(ast.NodeVisitor):
             )
         return cast(j.FieldAccess, self.__convert_name(name))
 
-
     def visit_Global(self, node):
         return py.VariableScope(
             random_id(),
@@ -653,7 +633,6 @@ class ParserVisitor(ast.NodeVisitor):
             ]
         )
 
-
     def visit_Pass(self, node):
         return py.Pass(
             random_id(),
@@ -661,14 +640,11 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
         )
 
-
     def visit_Break(self, node):
         return j.Break(random_id(), self.__source_before('break'), Markers.EMPTY, None)
 
-
     def visit_Continue(self, node):
         return j.Continue(random_id(), self.__source_before('continue'), Markers.EMPTY, None)
-
 
     def visit_GeneratorExp(self, node):
         # this weird logic is here to deal with the case of generator expressions appearing as the argument to a call
@@ -702,13 +678,11 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_Expr(self, node):
         return py.ExpressionStatement(
             random_id(),
             self.__convert(node.value)
         )
-
 
     def visit_Yield(self, node):
         return py.StatementExpression(
@@ -721,7 +695,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert(node.value) if node.value else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
             )
         )
-
 
     def visit_YieldFrom(self, node):
         return py.StatementExpression(
@@ -741,10 +714,8 @@ class ParserVisitor(ast.NodeVisitor):
             )
         )
 
-
     def visit_TypeIgnore(self, node):
         raise NotImplementedError("Implement visit_TypeIgnore!")
-
 
     def visit_Attribute(self, node):
         return j.FieldAccess(
@@ -756,18 +727,14 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
-
     def visit_Del(self, node):
         raise NotImplementedError("Implement visit_Del!")
-
 
     def visit_Load(self, node):
         raise NotImplementedError("Implement visit_Load!")
 
-
     def visit_Store(self, node):
         raise NotImplementedError("Implement visit_Store!")
-
 
     def visit_ExceptHandler(self, node):
         prefix = self.__source_before('except')
@@ -810,7 +777,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert_block(node.body)
         )
 
-
     def visit_Match(self, node):
         return j.Switch(
             random_id(),
@@ -824,7 +790,6 @@ class ParserVisitor(ast.NodeVisitor):
             ),
             self.__convert_block(node.cases)
         )
-
 
     def visit_match_case(self, node):
         prefix = self.__source_before('case')
@@ -850,10 +815,8 @@ class ParserVisitor(ast.NodeVisitor):
         )
         return case
 
-
     def visit_MatchValue(self, node):
         return self.__convert(node.value)
-
 
     def visit_MatchSequence(self, node):
         prefix = self.__whitespace()
@@ -890,10 +853,8 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
-
     def visit_MatchSingleton(self, node):
         raise NotImplementedError("Implement visit_MatchSingleton!")
-
 
     def visit_MatchStar(self, node):
         return py.Star(
@@ -905,10 +866,8 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
-
     def visit_MatchMapping(self, node):
         raise NotImplementedError("Implement visit_MatchMapping!")
-
 
     def visit_MatchClass(self, node):
         prefix = self.__whitespace()
@@ -975,7 +934,6 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
-
     def visit_MatchAs(self, node):
         if node.name is None and node.pattern is None:
             return py.MatchCase(
@@ -1019,7 +977,6 @@ class ParserVisitor(ast.NodeVisitor):
                 None
             )
 
-
     def visit_MatchOr(self, node):
         return py.MatchCase(
             random_id(),
@@ -1042,70 +999,53 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
-
     def visit_TryStar(self, node):
         raise NotImplementedError("Implement visit_TryStar!")
-
 
     def visit_TypeVar(self, node):
         raise NotImplementedError("Implement visit_TypeVar!")
 
-
     def visit_ParamSpec(self, node):
         raise NotImplementedError("Implement visit_ParamSpec!")
-
 
     def visit_TypeVarTuple(self, node):
         raise NotImplementedError("Implement visit_TypeVarTuple!")
 
-
     def visit_TypeAlias(self, node):
         raise NotImplementedError("Implement visit_TypeAlias!")
-
 
     def visit_ExtSlice(self, node):
         raise NotImplementedError("Implement visit_ExtSlice!")
 
-
     def visit_Index(self, node):
         raise NotImplementedError("Implement visit_Index!")
-
 
     def visit_Suite(self, node):
         raise NotImplementedError("Implement visit_Suite!")
 
-
     def visit_AugLoad(self, node):
         raise NotImplementedError("Implement visit_AugLoad!")
-
 
     def visit_AugStore(self, node):
         raise NotImplementedError("Implement visit_AugStore!")
 
-
     def visit_Param(self, node):
         raise NotImplementedError("Implement visit_Param!")
-
 
     def visit_Num(self, node):
         raise NotImplementedError("Implement visit_Num!")
 
-
     def visit_Str(self, node):
         raise NotImplementedError("Implement visit_Str!")
-
 
     def visit_Bytes(self, node):
         raise NotImplementedError("Implement visit_Bytes!")
 
-
     def visit_NameConstant(self, node):
         raise NotImplementedError("Implement visit_NameConstant!")
 
-
     def visit_Ellipsis(self, node):
         raise NotImplementedError("Implement visit_Ellipsis!")
-
 
     def visit_BinOp(self, node):
         prefix = self.__whitespace()
@@ -1134,7 +1074,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
 
-
     def visit_BoolOp(self, node):
         binaries = []
         prefix = Space.EMPTY
@@ -1153,7 +1092,6 @@ class ParserVisitor(ast.NodeVisitor):
             prefix = Space.EMPTY
 
         return binaries[-1]
-
 
     def visit_Call(self, node):
         prefix = self.__whitespace()
@@ -1211,7 +1149,6 @@ class ParserVisitor(ast.NodeVisitor):
         all_args.sort(key=lambda x: (x[0], x[1]))
         return [arg[2] for arg in all_args]
 
-
     def visit_Compare(self, node):
         prefix = self.__whitespace()
         left = self.__convert(node.left)
@@ -1250,7 +1187,6 @@ class ParserVisitor(ast.NodeVisitor):
 
         return left.with_prefix(prefix)
 
-
     def __convert_binary_operator(self, op) -> Union[JLeftPadded[j.Binary.Type], JLeftPadded[py.Binary.Type]]:
         operation_map: Dict[Type[ast], Tuple[j.Binary.Type, str]] = {
             ast.Add: (j.Binary.Type.Addition, '+'),
@@ -1285,40 +1221,74 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-
     def visit_Constant(self, node):
         tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         tok = next(tokens)  # skip ENCODING token
-        while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
-            pass
+        tok = next(tokens)  # skip ENCODING token
+        while tok.type in (token.ENCODING, token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
+            tok = next(tokens)
 
+        if not isinstance(node.value, str):
+            return self.__map_literal(node, tok, tokens)[0]
+
+        is_byte_string = tok.string.startswith(('b', "B"))
+        res = None
+        end_seen = False
+
+        while tok.type in (token.STRING, token.FSTRING_START) and is_byte_string == tok.string.startswith(('b', "B")):
+            if tok.type == token.FSTRING_START:
+                prefix = self.__whitespace()
+                current, tok, _ = self.__map_fstring(node, prefix, tok, tokens)
+            else:
+                current, tok = self.__map_literal(node, tok, tokens)
+                end_seen = current.value.endswith(node.value)
+
+            if res is None:
+                res = current
+            else:
+                res = py.Binary(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    res,
+                    self.__pad_left(Space.EMPTY, py.Binary.Type.StringConcatenation),
+                    None,
+                    current,
+                    self.__map_type(node)
+                )
+
+            if end_seen:
+                break
+
+            while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
+                try:
+                    tok = next(tokens)
+                except IndentationError:
+                    break
+
+        return res
+
+    def __map_literal(self, node, tok, tokens):
         prefix = self.__whitespace()
         start = self._cursor
         self._cursor += len(tok.string)
 
-        while tok.type == token.STRING:
-            try:
-                while (tok := next(tokens)).type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
-                    pass
-            except IndentationError:
-                # sometimes the tokenized INDENT and DEDENT tokens don't match up
-                pass
-            if tok.type == token.STRING and not tok.string.startswith(('b', "B")):
-                self._cursor = self._source.index(tok.string, self._cursor)
-                self._cursor += len(tok.string)
-            else:
-                break
-
-        return j.Literal(
+        return (j.Literal(
             random_id(),
             prefix,
             Markers.EMPTY,
-            None if node.value is Ellipsis else node.value,
+            self.__map_literal_value(node, tok),
             self._source[start:self._cursor],
             None,
             self.__map_type(node),
-        )
+        ), next(tokens))
 
+    def __map_literal_value(self, node, tok):
+        if node.value is Ellipsis:
+            return None
+        elif isinstance(node.value, str):
+            return ast.literal_eval(ast.parse(tok.string, mode='eval').body)
+        return node.value
 
     def visit_Dict(self, node):
         return py.DictLiteral(
@@ -1335,7 +1305,6 @@ class ParserVisitor(ast.NodeVisitor):
             ),
             self.__map_type(node)
         )
-
 
     def visit_DictComp(self, node):
         return py.ComprehensionExpression(
@@ -1356,7 +1325,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def __map_dict_entry(self, key: Optional[ast.expr], value: ast.expr, last: bool) -> JRightPadded[J]:
         if key is None:
             element = py.Star(
@@ -1373,7 +1341,6 @@ class ParserVisitor(ast.NodeVisitor):
                                   self.__convert(value),
                                   self.__map_type(value))
         return self.__pad_list_element(element, last, end_delim='}')
-
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
@@ -1440,7 +1407,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node),
         )
 
-
     def __map_decorator(self, decorator) -> j.Annotation:
         prefix = self.__source_before('@')
         if isinstance(decorator, (ast.Attribute, ast.Name)):
@@ -1468,7 +1434,6 @@ class ParserVisitor(ast.NodeVisitor):
             args
         )
 
-
     def visit_IfExp(self, node):
         # TODO check if we actually want to use `J.Ternary` as it requires "reversing" some of the padding
         prefix = self.__whitespace()
@@ -1486,18 +1451,50 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_JoinedStr(self, node):
-        prefix = self.__whitespace()
-        tokens = tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline)
+        tokens = peekable(tokenize(BytesIO(self._source[self._cursor:].encode('utf-8')).readline))
         next(tokens)  # skip ENCODING token
-        tok = next(tokens)  # FSTRING_START token
-        return self.__map_fstring(node, prefix, tok, peekable(tokens))[0]
+        while (tok := next(tokens)).type not in (token.FSTRING_START, token.STRING):
+            pass
 
+        value_idx = 0
+        res = None
+        while tok.type in (token.FSTRING_START, token.STRING):
+            if tok.type == token.STRING:
+                current, tok = self.__map_literal(node.values[value_idx], tok, tokens)
+                if current.value.endswith(node.values[value_idx].value):
+                    value_idx += 1
+            else:
+                prefix = self.__whitespace()
+                current, tok, value_idx = self.__map_fstring(node, prefix, tok, tokens, value_idx)
+
+            if res is None:
+                res = current
+            else:
+                res = py.Binary(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    res,
+                    self.__pad_left(Space.EMPTY, py.Binary.Type.StringConcatenation),
+                    None,
+                    current,
+                    self.__map_type(node)
+                )
+
+            if value_idx >= len(node.values):
+                break
+
+            while tok.type in (token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
+                try:
+                    tok = next(tokens)
+                except IndentationError:
+                    break
+
+        return res
 
     def visit_FormattedValue(self, node):
         raise ValueError("This method should not be called directly")
-
 
     def visit_Lambda(self, node):
         first_with_default = len(node.args.args) - len(node.args.defaults)
@@ -1518,7 +1515,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_List(self, node):
         prefix = self.__source_before('[')
         elements = JContainer(
@@ -1537,7 +1533,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_ListComp(self, node):
         return py.ComprehensionExpression(
             random_id(),
@@ -1550,7 +1545,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_comprehension(self, node):
         return py.ComprehensionExpression.Clause(
             random_id(),
@@ -1561,7 +1555,6 @@ class ParserVisitor(ast.NodeVisitor):
             [self._map_comprehension_condition(i) for i in node.ifs] if node.ifs else []
         )
 
-
     def _map_comprehension_condition(self, i):
         return py.ComprehensionExpression.Condition(
             random_id(),
@@ -1569,7 +1562,6 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.__convert(i)
         )
-
 
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
         cu = py.CompilationUnit(
@@ -1589,7 +1581,6 @@ class ParserVisitor(ast.NodeVisitor):
         # assert self._cursor == len(self._source)
         return cu
 
-
     def visit_Name(self, node):
         return j.Identifier(
             random_id(),
@@ -1601,7 +1592,6 @@ class ParserVisitor(ast.NodeVisitor):
             None
         )
 
-
     def visit_NamedExpr(self, node):
         return j.Assignment(
             random_id(),
@@ -1612,7 +1602,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node.value)
         )
 
-
     def visit_Return(self, node):
         return j.Return(
             random_id(),
@@ -1620,7 +1609,6 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             self.__convert(node.value) if node.value else None
         )
-
 
     def visit_Set(self, node):
         prefix = self.__source_before('{')
@@ -1640,7 +1628,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-
     def visit_SetComp(self, node):
         return py.ComprehensionExpression(
             random_id(),
@@ -1652,7 +1639,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__source_before('}'),
             self.__map_type(node)
         )
-
 
     def visit_Slice(self, node):
         prefix = self.__whitespace()
@@ -1673,7 +1659,6 @@ class ParserVisitor(ast.NodeVisitor):
             step
         )
 
-
     def visit_Starred(self, node):
         return py.Star(
             random_id(),
@@ -1683,7 +1668,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.value),
             self.__map_type(node),
         )
-
 
     def visit_Subscript(self, node):
         return j.ArrayAccess(
@@ -1699,7 +1683,6 @@ class ParserVisitor(ast.NodeVisitor):
             ),
             self.__map_type(node)
         )
-
 
     def visit_Tuple(self, node):
         prefix = self.__whitespace()
@@ -1718,10 +1701,10 @@ class ParserVisitor(ast.NodeVisitor):
             [self.__pad_list_element(self.__convert(e), last=i == len(node.elts) - 1) for i, e in enumerate(node.elts)],
             Markers.EMPTY
         ) if node.elts else JContainer(
-                Space.EMPTY,
-                [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
-                Markers.EMPTY
-            )
+            Space.EMPTY,
+            [self.__pad_right(j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), Space.EMPTY)],
+            Markers.EMPTY
+        )
 
         if len(self._parentheses_stack) > 0 and self.__cursor_at(')'):
             self._cursor += 1
@@ -1737,10 +1720,10 @@ class ParserVisitor(ast.NodeVisitor):
             prefix,
             Markers.EMPTY,
             py.CollectionLiteral.Kind.TUPLE,
-            elements.with_markers(Markers.build(random_id(), [OmitParentheses(random_id())])) if omit_parens else elements,
+            elements.with_markers(
+                Markers.build(random_id(), [OmitParentheses(random_id())])) if omit_parens else elements,
             self.__map_type(node)
         )
-
 
     def visit_UnaryOp(self, node):
         mapped = self._map_unary_operator(node.op)
@@ -1752,7 +1735,6 @@ class ParserVisitor(ast.NodeVisitor):
             self.__convert(node.operand),
             self.__map_type(node)
         )
-
 
     def __convert_type_hint(self, node) -> Optional[TypeTree]:
         if isinstance(node, ast.Constant):
@@ -1793,7 +1775,8 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert(node.value),
                 JContainer(
                     self.__source_before('['),
-                    [self.__pad_list_element(self.__convert_type_hint(s), last=i == len(slices) - 1, end_delim=']') for i, s in
+                    [self.__pad_list_element(self.__convert_type_hint(s), last=i == len(slices) - 1, end_delim=']') for
+                     i, s in
                      enumerate(slices)],
                     Markers.EMPTY
                 ),
@@ -1804,7 +1787,8 @@ class ParserVisitor(ast.NodeVisitor):
             # NOTE: Type unions using `|` was added in Python 3.10
             prefix = self.__whitespace()
             # FIXME consider flattening nested unions
-            left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type_hint), self.__source_before('|'))
+            left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type_hint),
+                                    self.__source_before('|'))
             right = self.__pad_right(self.__convert_internal(node.right, self.__convert_type_hint), Space.EMPTY)
             return py.UnionType(
                 random_id(),
@@ -1816,10 +1800,8 @@ class ParserVisitor(ast.NodeVisitor):
 
         return self.__convert_internal(node, self.__convert_type_hint)
 
-
     def __convert(self, node) -> Optional[J]:
         return self.__convert_internal(node, self.__convert)
-
 
     def __convert_type(self, node) -> Optional[j.TypeTree]:
         if isinstance(node, ast.Tuple):
@@ -1831,7 +1813,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
         return self.__convert_internal(node, self.__convert)
-
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
         if node:
@@ -1883,7 +1864,6 @@ class ParserVisitor(ast.NodeVisitor):
         else:
             return None
 
-
     def __convert_name(self, name: str, name_type: Optional[JavaType] = None) -> NameTree:
         def ident_or_field(parts: List[str]) -> NameTree:
             if len(parts) == 1:
@@ -1906,17 +1886,14 @@ class ParserVisitor(ast.NodeVisitor):
 
         return ident_or_field(name.split('.'))
 
-
     def __next_lexer_token(self, tokens: Iterator[TokenInfo]) -> TokenInfo:
         tok = next(tokens)
         value_source = tok.string
         self._cursor += len(value_source)
         return tok
 
-
     def __convert_all(self, trees: Sequence) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
-
 
     def __convert_block(self, statements: Sequence, prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
@@ -1933,7 +1910,6 @@ class ParserVisitor(ast.NodeVisitor):
             Space.EMPTY
         )
 
-
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
         statement = self.__convert(stmt)
         # use whitespace until end of line as padding; what follows will be the prefix of next element
@@ -1948,8 +1924,8 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor = save_cursor
         return JRightPadded(statement, padding, markers)
 
-
-    def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, delim: str = ',', end_delim: str = None) -> JRightPadded[J2]:
+    def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, delim: str = ',',
+                           end_delim: str = None) -> JRightPadded[J2]:
         save_cursor = self._cursor
         padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
@@ -1970,16 +1946,13 @@ class ParserVisitor(ast.NodeVisitor):
             markers = Markers.EMPTY
         return JRightPadded(element, padding, markers)
 
-
     def __pad_right(self, tree, space: Space) -> JRightPadded[J2]:
         return JRightPadded(tree, space, Markers.EMPTY)
-
 
     def __pad_left(self, space: Space, tree) -> JLeftPadded[J2]:
         if isinstance(tree, ast.AST):
             raise ArgumentError(tree, "must be a Tree but is a {}".format(type(tree)))
         return JLeftPadded(space, tree, Markers.EMPTY)
-
 
     def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:
         if self._source.startswith(until_delim, self._cursor):
@@ -2006,7 +1979,6 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor = delim_index + len(until_delim)
         return space
 
-
     def __skip(self, tok: Optional[str]) -> Optional[str]:
         if tok is None:
             return None
@@ -2014,11 +1986,9 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor += len(tok)
         return tok
 
-
     def __whitespace(self, stop: str = None) -> Space:
         space, self._cursor = self.__format(self._source, self._cursor, stop)
         return space
-
 
     def __format(self, source: str, offset: int, stop: str = None) -> Tuple[Space, int]:
         prefix = None
@@ -2055,7 +2025,6 @@ class ParserVisitor(ast.NodeVisitor):
             comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
         return Space(comments, prefix), offset
 
-
     def __position_of_next(self, until_delim: str, stop: str = None) -> int:
         in_single_line_comment = False
 
@@ -2080,11 +2049,9 @@ class ParserVisitor(ast.NodeVisitor):
 
         return -1 if delim_index > len(self._source) - len(until_delim) else delim_index
 
-
     # noinspection PyUnusedLocal
     def __map_type(self, node) -> Optional[JavaType]:
         return None
-
 
     def _map_unary_operator(self, op) -> Tuple[j.Unary.Type, str]:
         operation_map: Dict[Type[ast], Tuple[j.Unary.Type, str]] = {
@@ -2094,7 +2061,6 @@ class ParserVisitor(ast.NodeVisitor):
             ast.USub: (j.Unary.Type.Negative, '-'),
         }
         return operation_map[type(op)]
-
 
     def _map_assignment_operator(self, op):
         operation_map: Dict[Type[ast], Tuple[j.AssignmentOperation.Type, str]] = {
@@ -2118,9 +2084,8 @@ class ParserVisitor(ast.NodeVisitor):
             raise ValueError(f"Unsupported operator: {op}")
         return self.__pad_left(self.__source_before(op_str), op)
 
-
-    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable) -> Tuple[
-        J, TokenInfo]:
+    def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable, value_idx: int = 0) -> \
+    Tuple[J, TokenInfo, int]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
@@ -2134,7 +2099,7 @@ class ParserVisitor(ast.NodeVisitor):
                     format,
                     None,
                     self.__map_type(node.values[0]),
-                ), next(tokens))
+                ), next(tokens), 0)
             else:
                 delimiter = ''
             consume_end_delim = False
@@ -2146,16 +2111,37 @@ class ParserVisitor(ast.NodeVisitor):
 
         # tokenizer tokens: FSTRING_START, FSTRING_MIDDLE, OP, ..., OP, FSTRING_MIDDLE, FSTRING_END
         parts = []
-        for value in node.values:
-            if tok.type == token.OP and tok.string == '{':
+        while tok.type != token.FSTRING_END and value_idx < len(node.values):
+            value = node.values[value_idx]
+            if tok.type == token.FSTRING_MIDDLE:
+                save_cursor = self._cursor
+                while True:
+                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
+                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
+                        break
+                s = self._source[save_cursor:self._cursor]
+                parts.append(j.Literal(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    s,
+                    s,
+                    None,
+                    JavaType.Primitive(),
+                ))
+                if cast(ast.Constant, value).value == s:
+                    value_idx += 1
+            elif tok.type == token.OP and tok.string == '{':
+                self._cursor += 1
+                tok = next(tokens)
                 if not isinstance(value, ast.FormattedValue):
                     # this is the case when using the `=` "debug specifier"
-                    continue
-                self._cursor += len(tok.string)
-                tok = next(tokens)
+                    value_idx += 1
+                    value = node.values[value_idx]
+
                 if isinstance(cast(ast.FormattedValue, value).value, ast.JoinedStr):
-                    nested, tok = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value),
-                                                     Space.EMPTY, tok, tokens)
+                    nested, tok, _ = self.__map_fstring(cast(ast.JoinedStr, cast(ast.FormattedValue, value).value),
+                                                        Space.EMPTY, tok, tokens)
                     expr = self.__pad_right(
                         nested,
                         Space.EMPTY
@@ -2171,7 +2157,9 @@ class ParserVisitor(ast.NodeVisitor):
                             if tok.type == token.OP and tok.string == '!':
                                 break
                             la_tok = tokens.peek()
-                            if tok.type == token.OP and tok.string == '}' and (la_tok.type in (token.FSTRING_END, token.FSTRING_MIDDLE) or (la_tok.type == token.OP and la_tok.string == '{')):
+                            if tok.type == token.OP and tok.string == '}' and (
+                                    la_tok.type in (token.FSTRING_END, token.FSTRING_MIDDLE) or (
+                                    la_tok.type == token.OP and la_tok.string == '{')):
                                 break
                             if tok.type == token.OP and tok.string == '=' and la_tok.string in ('!', ':', '}'):
                                 break
@@ -2199,7 +2187,7 @@ class ParserVisitor(ast.NodeVisitor):
                 # format specifier
                 if tok.type == token.OP and tok.string == ':':
                     self._cursor += len(tok.string)
-                    format_spec, tok = self.__map_fstring(
+                    format_spec, tok, _ = self.__map_fstring(
                         cast(ast.JoinedStr, cast(ast.FormattedValue, value).format_spec), Space.EMPTY, next(tokens),
                         tokens)
                 else:
@@ -2214,25 +2202,11 @@ class ParserVisitor(ast.NodeVisitor):
                     conv,
                     format_spec
                 ))
+                value_idx += 1
                 self._cursor += len(tok.string)
                 tok = next(tokens)
             elif tok.type == token.FSTRING_END:
                 raise NotImplementedError("Unsupported: String concatenation with f-strings")
-            else:  # FSTRING_MIDDLE
-                save_cursor = self._cursor
-                while True:
-                    self._cursor += len(tok.string) + (1 if tok.string.endswith('{') or tok.string.endswith('}') else 0)
-                    if (tok := next(tokens)).type != token.FSTRING_MIDDLE:
-                        break
-                parts.append(j.Literal(
-                    random_id(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    cast(ast.Constant, value).s,
-                    self._source[save_cursor:self._cursor],
-                    None,
-                    self.__map_type(value),
-                ))
 
         if consume_end_delim:
             self._cursor += len(tok.string)  # FSTRING_END token
@@ -2246,7 +2220,8 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             delimiter,
             parts
-        ), tok)
+        ), tok, value_idx)
 
     def __cursor_at(self, s: str):
-        return self._cursor < len(self._source) and (len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))
+        return self._cursor < len(self._source) and (
+                    len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))
