@@ -114,6 +114,11 @@ def test_literal_type():
     rewrite_run(python("""foo: None = None"""))
 
 
+def test_literal_type_2():
+    # language=python
+    rewrite_run(python("""foo: Literal[False] = False"""))
+
+
 def test_union_type():
     # language=python
     rewrite_run(python("""foo: None | ... = None"""))

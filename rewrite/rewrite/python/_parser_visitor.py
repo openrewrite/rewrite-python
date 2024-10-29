@@ -5,11 +5,13 @@ from argparse import ArgumentError
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
+from shlex import quote
 from sys import exception
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union, Iterator
 
 from more_itertools import peekable
+from mypy.messages import quote_type_string
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
@@ -1752,13 +1754,15 @@ class ParserVisitor(ast.NodeVisitor):
                     quote_style = Quoted.Style.SINGLE
                 elif literal.value_source.startswith('"""'):
                     quote_style = Quoted.Style.TRIPLE_DOUBLE
-                else:
+                elif literal.value_source.startswith('""'):
                     quote_style = Quoted.Style.DOUBLE
+                else:
+                    quote_style = None
 
                 return j.Identifier(
                     random_id(),
                     literal.prefix,
-                    Markers.build(random_id(), [Quoted(random_id(), quote_style)]),
+                    Markers.build(random_id(), [Quoted(random_id(), quote_style)]) if quote_style else Markers.EMPTY,
                     [],
                     str(literal.value),
                     self.__map_type(node),
