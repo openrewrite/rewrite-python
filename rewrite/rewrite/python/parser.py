@@ -19,7 +19,7 @@ class PythonParser(Parser):
             try:
                 source_str = source.source().read()
                 tree = ast.parse(source_str, source.path)
-                cu = ParserVisitor(source_str).visit(tree)
+                cu = ParserVisitor(source_str).visit(tree).with_source_path(source.path)
                 cu = require_print_equals_input(self, cu, source, relative_to, ctx)
             except Exception as e:
                 logging.error(f"An error was encountered while parsing {source.path}: {str(e)}", exc_info=True)

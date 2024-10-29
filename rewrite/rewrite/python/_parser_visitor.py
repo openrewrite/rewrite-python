@@ -277,7 +277,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
         else:
-            name = self.__convert(node.target)
+            name = cast(j.Identifier, self.__convert(node.target))
             if node.annotation:
                 after = self.__source_before(':')
                 type = self.__convert_type_hint(node.annotation)
@@ -337,7 +337,7 @@ class ParserVisitor(ast.NodeVisitor):
                                 random_id(),
                                 Space.EMPTY,
                                 Markers.EMPTY,
-                                self.__convert(t),
+                                cast(j.Identifier, self.__convert(t)),
                                 [],
                                 None,
                                 self.__map_type(t)
