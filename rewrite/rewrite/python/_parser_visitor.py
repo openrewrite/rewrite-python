@@ -5,13 +5,10 @@ from argparse import ArgumentError
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from shlex import quote
-from sys import exception
 from tokenize import tokenize, TokenInfo
 from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, Sequence, Union, Iterator
 
 from more_itertools import peekable
-from mypy.messages import quote_type_string
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
@@ -1754,7 +1751,7 @@ class ParserVisitor(ast.NodeVisitor):
                     quote_style = Quoted.Style.SINGLE
                 elif literal.value_source.startswith('"""'):
                     quote_style = Quoted.Style.TRIPLE_DOUBLE
-                elif literal.value_source.startswith('""'):
+                elif literal.value_source.startswith('"'):
                     quote_style = Quoted.Style.DOUBLE
                 else:
                     quote_style = None
@@ -1806,15 +1803,15 @@ class ParserVisitor(ast.NodeVisitor):
         return self.__convert_internal(node, self.__convert)
 
     def __convert_type(self, node) -> Optional[j.TypeTree]:
-        if isinstance(node, ast.Tuple):
-            return py.LiteralType(
-                random_id(),
-                self.__whitespace(),
-                Markers.EMPTY,
-                self.__convert_internal(node, self.__convert_type),
-                self.__map_type(node)
-            )
-        return self.__convert_internal(node, self.__convert)
+        prefix = self.__whitespace()
+        converted_type = self.__convert_internal(node, self.__convert_type)
+        return converted_type.with_prefix(prefix) if is_of_type(converted_type, TypeTree) else py.LiteralType(
+            random_id(),
+            prefix,
+            Markers.EMPTY,
+            converted_type,
+            self.__map_type(node)
+        )
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
         if node:
@@ -2087,7 +2084,7 @@ class ParserVisitor(ast.NodeVisitor):
         return self.__pad_left(self.__source_before(op_str), op)
 
     def __map_fstring(self, node: ast.JoinedStr, prefix: Space, tok: TokenInfo, tokens: peekable, value_idx: int = 0) -> \
-    Tuple[J, TokenInfo, int]:
+            Tuple[J, TokenInfo, int]:
         if tok.type != token.FSTRING_START:
             if len(node.values) == 1 and isinstance(node.values[0], ast.Constant):
                 # format specifiers are stored as f-strings in the AST; e.g. `f'{1:n}'`
@@ -2228,4 +2225,8 @@ class ParserVisitor(ast.NodeVisitor):
 
     def __cursor_at(self, s: str):
         return self._cursor < len(self._source) and (
-                    len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))
+                len(s) == 1 and self._source[self._cursor] == s or self._source.startswith(s, self._cursor))
+
+
+def is_of_type(obj, type):
+    return type in obj.__class__.__mro__
