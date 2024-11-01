@@ -22,9 +22,9 @@ import org.openrewrite.*;
 import org.openrewrite.internal.EncodingDetectingInputStream;
 import org.openrewrite.java.internal.JavaTypeCache;
 import org.openrewrite.python.tree.Py;
-import org.openrewrite.remote.ReceiverContext;
 import org.openrewrite.remote.RemotingContext;
 import org.openrewrite.remote.RemotingExecutionContextView;
+import org.openrewrite.remote.RemotingMessenger;
 import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.text.PlainTextParser;
@@ -83,7 +83,7 @@ public class PythonParser implements Parser {
 
     @Override
     public Stream<SourceFile> parseInputs(Iterable<Input> inputs, @Nullable Path relativeTo, ExecutionContext ctx) {
-        if (!ensureServerRunning(ctx) || client == null) {
+        if (!ensureServerRunning(ctx) || client == null || remotingContext == null) {
             return PlainTextParser.builder().build().parseInputs(inputs, relativeTo, ctx);
         }
 
@@ -108,7 +108,7 @@ public class PythonParser implements Parser {
                                 socket.setSoTimeout(parseTimeoutMs);
                             }
                         }, parser -> {
-                            Tree tree = new ReceiverContext(remotingContext.newReceiver(parser), remotingContext).receiveTree(null);
+                            Tree tree = RemotingMessenger.receiveTree(remotingContext, parser, null);
                             return (SourceFile) tree;
                         }, socket)))
                         .withSourcePath(path)
