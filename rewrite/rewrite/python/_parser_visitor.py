@@ -1824,50 +1824,58 @@ class ParserVisitor(ast.NodeVisitor):
             )
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
-        if not node:
-            return None
-
-        if not isinstance(node, ast.expr) or isinstance(node, ast.GeneratorExp):
-            return self.visit(cast(ast.AST, node))
+        if not node or not isinstance(node, ast.expr) or isinstance(node, ast.GeneratorExp):
+            return self.visit(cast(ast.AST, node)) if node else None
 
         save_cursor = self._cursor
         prefix = self.__whitespace()
-        result = self._handle_expression(node, recursion, save_cursor, prefix)
+
+        # Handle normal expression or parenthesized expression
+        result = self._parse_expr(node, recursion, save_cursor, prefix)
 
         save_cursor_2 = self._cursor
         suffix = self.__whitespace()
 
-        return self._process_closing_parentheses(node, result, suffix, save_cursor, save_cursor_2)
+        # Process closing parentheses if any
+        while self._is_closing_paren(save_cursor):
+            self._cursor += 1
+            transformer, save_cursor, _, _, _ = self._parentheses_stack.pop()
+            result = transformer(result, suffix)
+            save_cursor_2 = self._cursor
+            suffix = self.__whitespace()
 
-    def _handle_expression(self, node, recursion, save_cursor: int, prefix: str) -> J:
-        """Handle expression parsing, including opening parentheses."""
-        if self._cursor < len(self._source) and self._source[self._cursor] == '(':
-            return self._handle_opening_parenthesis(node, recursion, save_cursor, prefix)
+        # Clean up unmatched parentheses for this node
+        while self._parentheses_stack and self._parentheses_stack[-1][3] == node:
+            self._parentheses_stack.pop()
 
-        self._cursor = save_cursor
-        return self.visit(cast(ast.AST, node))
+        self._cursor = save_cursor_2
+        return result
 
-    def _handle_opening_parenthesis(self, node, recursion, save_cursor: int, prefix: str) -> J:
-        """Process opening parenthesis and set up stack frame."""
+    def _parse_expr(self, node, recursion, save_cursor: int, prefix: str) -> J:
+        """Parse either a normal expression or a parenthesized expression."""
+        if not (self._cursor < len(self._source) and self._source[self._cursor] == '('):
+            self._cursor = save_cursor
+            return self.visit(cast(ast.AST, node))
+
         self._cursor += 1
         expr_prefix = self.__whitespace()
 
-        def transform_result(e, r):
-            if isinstance(e, JContainer):
-                return (cast(JContainer, e)
+        self._parentheses_stack.append((
+            lambda e, r: (
+                cast(JContainer, e)
                 .with_before(prefix)
                 .with_elements([
-                    e.with_prefix(expr_prefix) if i == 0 else e for i, e in enumerate(e.elements)
-                ]))
-            return j.Parentheses(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                self.__pad_right(e.with_prefix(expr_prefix), r)
-            )
-
-        self._parentheses_stack.append((
-            transform_result,
+                    e.with_prefix(expr_prefix) if i == 0 else e
+                    for i, e in enumerate(e.elements)
+                ])
+                if isinstance(e, JContainer)
+                else j.Parentheses(
+                    random_id(),
+                    prefix,
+                    Markers.EMPTY,
+                    self.__pad_right(e.with_prefix(expr_prefix), r)
+                )
+            ),
             save_cursor,
             self._cursor,
             node,
@@ -1876,52 +1884,16 @@ class ParserVisitor(ast.NodeVisitor):
 
         return recursion(node)
 
-    def _can_close_parenthesis(self, save_cursor: int) -> bool:
-        """Check if current position can close a parenthesis."""
-        if not self._parentheses_stack:
-            return False
-
-        if self._cursor >= len(self._source):
-            return False
-
-        if self._source[self._cursor] != ')':
+    def _is_closing_paren(self, save_cursor: int) -> bool:
+        """Check if current position has a valid closing parenthesis."""
+        if (not self._parentheses_stack or
+                self._cursor >= len(self._source) or
+                self._source[self._cursor] != ')'):
             return False
 
         stack_cursor = self._parentheses_stack[-1][2]
-        source_slice = self._source[stack_cursor:save_cursor]
-
-        return (stack_cursor == save_cursor or
-                source_slice.isspace() or
-                source_slice == '(')
-
-    def _process_closing_parentheses(self, node: ast.expr, result: J, suffix: str,
-                                     save_cursor: int, save_cursor_2: int) -> J:
-        """Process all closing parentheses at current position."""
-        if not self._can_close_parenthesis(save_cursor):
-            return self._handle_unclosed_parentheses(node, result, save_cursor_2)
-
-        while self._can_close_parenthesis(save_cursor):
-            self._cursor += 1
-            popped = self._parentheses_stack.pop()
-            result = popped[0](result, suffix)
-            save_cursor = popped[1]
-            save_cursor_2 = self._cursor
-            suffix = self.__whitespace()
-
-            if not self._can_close_parenthesis(save_cursor):
-                self._cursor = save_cursor_2
-                break
-
-        return result
-
-    def _handle_unclosed_parentheses(self, node: ast.expr, result: J, save_cursor: int) -> J:
-        """Handle any remaining unclosed parentheses for the current node."""
-        if self._parentheses_stack:
-            while (self._parentheses_stack and
-                   self._parentheses_stack[-1][3] == node):
-                self._parentheses_stack.pop()
-        self._cursor = save_cursor
-        return result
+        slice_content = self._source[stack_cursor:save_cursor]
+        return stack_cursor == save_cursor or slice_content.isspace() or slice_content == '('
 
     def __convert_name(self, name: str, name_type: Optional[JavaType] = None) -> NameTree:
         def ident_or_field(parts: List[str]) -> NameTree:
