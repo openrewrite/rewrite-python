@@ -11,9 +11,19 @@ def test_left():
     rewrite_run(python("assert (True) or False"))
 
 
-def test_double():
+def test_double_1():
     # language=python
     rewrite_run(python("assert ((True))"))
+
+
+def test_double_2():
+    # language=python
+    rewrite_run(python("((5)) * 8"))
+
+
+def test_triple():
+    # language=python
+    rewrite_run(python("1 ^ (((5)) // 8)"))
 
 
 def test_nested_1():
