@@ -93,6 +93,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.ExpressionTypeTree visitExpressionTypeTree(Py.ExpressionTypeTree expressionTypeTree, P p) {
+        return (Py.ExpressionTypeTree) super.visitExpressionTypeTree(expressionTypeTree, p);
+    }
+
+    @Override
     public Py.FormattedString visitFormattedString(Py.FormattedString fString, P p) {
         return (Py.FormattedString) super.visitFormattedString(fString, p);
     }

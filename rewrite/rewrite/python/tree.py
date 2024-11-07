@@ -639,6 +639,48 @@ class ExpressionStatement(Py, Expression, Statement):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class ExpressionTypeTree(Py, Expression, TypeTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> ExpressionTypeTree:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> ExpressionTypeTree:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> ExpressionTypeTree:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _reference: J
+
+    @property
+    def reference(self) -> J:
+        return self._reference
+
+    def with_reference(self, reference: J) -> ExpressionTypeTree:
+        return self if reference is self._reference else replace(self, _reference=reference)
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_expression_type_tree(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class StatementExpression(Py, Expression, Statement):
     _id: UUID
 

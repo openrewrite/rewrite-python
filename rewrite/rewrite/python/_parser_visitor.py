@@ -199,7 +199,7 @@ class ParserVisitor(ast.NodeVisitor):
             interfaces = JContainer(
                 interfaces_prefix,
                 [
-                    self.__pad_list_element(self.__convert(n), i == len(node.bases) - 1, end_delim=')') for i, n in
+                    self.__pad_list_element(self.__convert_type(n), i == len(node.bases) - 1, end_delim=')') for i, n in
                     enumerate(node.bases)],
                 Markers.EMPTY
             )
@@ -1805,13 +1805,23 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_type(self, node) -> Optional[j.TypeTree]:
         prefix = self.__whitespace()
         converted_type = self.__convert_internal(node, self.__convert_type)
-        return converted_type.with_prefix(prefix) if is_of_type(converted_type, TypeTree) else py.LiteralType(
-            random_id(),
-            prefix,
-            Markers.EMPTY,
-            converted_type,
-            self.__map_type(node)
-        )
+        if is_of_type(converted_type, TypeTree):
+            return converted_type.with_prefix(prefix)
+        elif isinstance(converted_type, j.Literal):
+            return py.LiteralType(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                converted_type,
+                self.__map_type(node)
+            )
+        else:
+            return py.ExpressionTypeTree(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                converted_type
+            )
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
         if node:

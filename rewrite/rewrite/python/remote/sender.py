@@ -105,6 +105,13 @@ class PythonSender(Sender):
             ctx.send_node(expression_statement, attrgetter('_expression'), ctx.send_tree)
             return expression_statement
 
+        def visit_expression_type_tree(self, expression_type_tree: ExpressionTypeTree, ctx: SenderContext) -> J:
+            ctx.send_value(expression_type_tree, attrgetter('_id'))
+            ctx.send_node(expression_type_tree, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(expression_type_tree, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(expression_type_tree, attrgetter('_reference'), ctx.send_tree)
+            return expression_type_tree
+
         def visit_statement_expression(self, statement_expression: StatementExpression, ctx: SenderContext) -> J:
             ctx.send_value(statement_expression, attrgetter('_id'))
             ctx.send_node(statement_expression, attrgetter('_statement'), ctx.send_tree)

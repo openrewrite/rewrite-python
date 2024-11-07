@@ -111,6 +111,13 @@ class PythonReceiver(Receiver):
             expression_statement = expression_statement.with_expression(ctx.receive_node(expression_statement.expression, ctx.receive_tree))
             return expression_statement
 
+        def visit_expression_type_tree(self, expression_type_tree: ExpressionTypeTree, ctx: ReceiverContext) -> J:
+            expression_type_tree = expression_type_tree.with_id(ctx.receive_value(expression_type_tree.id, UUID))
+            expression_type_tree = expression_type_tree.with_prefix(ctx.receive_node(expression_type_tree.prefix, PythonReceiver.receive_space))
+            expression_type_tree = expression_type_tree.with_markers(ctx.receive_node(expression_type_tree.markers, ctx.receive_markers))
+            expression_type_tree = expression_type_tree.with_reference(ctx.receive_node(expression_type_tree.reference, ctx.receive_tree))
+            return expression_type_tree
+
         def visit_statement_expression(self, statement_expression: StatementExpression, ctx: ReceiverContext) -> J:
             statement_expression = statement_expression.with_id(ctx.receive_value(statement_expression.id, UUID))
             statement_expression = statement_expression.with_statement(ctx.receive_node(statement_expression.statement, ctx.receive_tree))
@@ -999,6 +1006,14 @@ class PythonReceiver(Receiver):
             if type in ["rewrite.python.tree.ExpressionStatement", "org.openrewrite.python.tree.Py$ExpressionStatement"]:
                 return ExpressionStatement(
                     ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, ctx.receive_tree)
+                )
+
+            if type in ["rewrite.python.tree.ExpressionTypeTree", "org.openrewrite.python.tree.Py$ExpressionTypeTree"]:
+                return ExpressionTypeTree(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
                     ctx.receive_node(None, ctx.receive_tree)
                 )
 

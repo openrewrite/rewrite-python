@@ -628,6 +628,50 @@ public interface Py extends J {
         }
     }
 
+    @Value
+    @With
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    class ExpressionTypeTree implements Py, Expression, TypeTree {
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        Space prefix;
+        Markers markers;
+
+        J reference;
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitExpressionTypeTree(this, p);
+        }
+
+        @Override
+        public @Nullable JavaType getType() {
+            if (reference instanceof Expression) {
+                return ((Expression) reference).getType();
+            } else if (reference instanceof TypedTree) {
+                return ((TypedTree) reference).getType();
+            }
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public ExpressionTypeTree withType(@Nullable JavaType type) {
+            if (reference instanceof Expression) {
+                return withReference(((Expression) reference).withType(type));
+            } else if (reference instanceof TypedTree) {
+                return withReference(((TypedTree) reference).withType(type));
+            }
+            return this;
+        }
+
+        @Override
+        public CoordinateBuilder.Expression getCoordinates() {
+            return new CoordinateBuilder.Expression(this);
+        }
+    }
+
     @Getter
     @ToString
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)

@@ -221,6 +221,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return expr;
     }
 
+
+    public J visitExpressionTypeTree(Py.ExpressionTypeTree expressionTypeTree, P p) {
+        Py.ExpressionTypeTree t = expressionTypeTree;
+        t = t.withPrefix(visitSpace(t.getPrefix(), PySpace.Location.EXPRESSION_TYPE_TREE_PREFIX, p));
+        t = t.withMarkers(visitMarkers(t.getMarkers(), p));
+        t = t.withReference(visit(t.getReference(), p));
+        return t;
+    }
+
     public J visitFormattedString(Py.FormattedString fString, P p) {
         Py.FormattedString fs = fString;
         fs = fs.withPrefix(visitSpace(fs.getPrefix(), PySpace.Location.FORMATTED_STRING_PREFIX, p));

@@ -89,6 +89,16 @@ class PythonVisitor(JavaVisitor[P]):
         expression_statement = expression_statement.with_expression(self.visit_and_cast(expression_statement.expression, Expression, p))
         return expression_statement
 
+    def visit_expression_type_tree(self, expression_type_tree: ExpressionTypeTree, p: P) -> J:
+        expression_type_tree = expression_type_tree.with_prefix(self.visit_space(expression_type_tree.prefix, PySpace.Location.EXPRESSION_TYPE_TREE_PREFIX, p))
+        temp_expression = cast(Expression, self.visit_expression(expression_type_tree, p))
+        if not isinstance(temp_expression, ExpressionTypeTree):
+            return temp_expression
+        expression_type_tree = cast(ExpressionTypeTree, temp_expression)
+        expression_type_tree = expression_type_tree.with_markers(self.visit_markers(expression_type_tree.markers, p))
+        expression_type_tree = expression_type_tree.with_reference(self.visit_and_cast(expression_type_tree.reference, J, p))
+        return expression_type_tree
+
     def visit_statement_expression(self, statement_expression: StatementExpression, p: P) -> J:
         statement_expression = statement_expression.with_statement(self.visit_and_cast(statement_expression.statement, Statement, p))
         return statement_expression

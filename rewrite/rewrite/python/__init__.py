@@ -31,6 +31,7 @@ __all__ = [
     'ErrorFrom',
     'ExceptionType',
     'ExpressionStatement',
+    'ExpressionTypeTree',
     'FormattedString',
     'KeyValue',
     'LiteralType',

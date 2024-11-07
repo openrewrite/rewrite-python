@@ -77,3 +77,18 @@ def test_empty_parens():
             """
         )
     )
+
+
+def test_bases_via_call():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def fun():
+                return []
+            
+            class Derived(fun()):
+                pass
+            """
+        )
+    )

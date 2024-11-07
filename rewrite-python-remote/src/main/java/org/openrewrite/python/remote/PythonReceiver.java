@@ -171,6 +171,15 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.ExpressionTypeTree visitExpressionTypeTree(Py.ExpressionTypeTree expressionTypeTree, ReceiverContext ctx) {
+            expressionTypeTree = expressionTypeTree.withId(ctx.receiveNonNullValue(expressionTypeTree.getId(), UUID.class));
+            expressionTypeTree = expressionTypeTree.withPrefix(ctx.receiveNonNullNode(expressionTypeTree.getPrefix(), PythonReceiver::receiveSpace));
+            expressionTypeTree = expressionTypeTree.withMarkers(ctx.receiveNonNullNode(expressionTypeTree.getMarkers(), ctx::receiveMarkers));
+            expressionTypeTree = expressionTypeTree.withReference(ctx.receiveNonNullNode(expressionTypeTree.getReference(), ctx::receiveTree));
+            return expressionTypeTree;
+        }
+
+        @Override
         public Py.StatementExpression visitStatementExpression(Py.StatementExpression statementExpression, ReceiverContext ctx) {
             statementExpression = statementExpression.withId(ctx.receiveNonNullValue(statementExpression.getId(), UUID.class));
             statementExpression = statementExpression.withStatement(ctx.receiveNonNullNode(statementExpression.getStatement(), ctx::receiveTree));
@@ -1213,6 +1222,15 @@ public class PythonReceiver implements Receiver<Py> {
             if (type == Py.ExpressionStatement.class) {
                 return (T) new Py.ExpressionStatement(
                     ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree)
+                );
+            }
+
+            if (type == Py.ExpressionTypeTree.class) {
+                return (T) new Py.ExpressionTypeTree(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
                 );
             }

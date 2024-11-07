@@ -55,6 +55,7 @@ class PySpace:
         ERROR_FROM_EXPRESSION_FROM_PREFIX = auto()
         ERROR_FROM_PREFIX = auto()
         EXCEPTION_TYPE_PREFIX = auto()
+        EXPRESSION_TYPE_TREE_PREFIX = auto()
         FORMATTED_STRING_PREFIX = auto()
         FORMATTED_STRING_VALUE_DEBUG_SUFFIX = auto()
         FORMATTED_STRING_VALUE_PREFIX = auto()

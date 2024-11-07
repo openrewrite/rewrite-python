@@ -154,6 +154,15 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.ExpressionTypeTree visitExpressionTypeTree(Py.ExpressionTypeTree expressionTypeTree, SenderContext ctx) {
+            ctx.sendValue(expressionTypeTree, Py.ExpressionTypeTree::getId);
+            ctx.sendNode(expressionTypeTree, Py.ExpressionTypeTree::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(expressionTypeTree, Py.ExpressionTypeTree::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(expressionTypeTree, Py.ExpressionTypeTree::getReference, ctx::sendTree);
+            return expressionTypeTree;
+        }
+
+        @Override
         public Py.StatementExpression visitStatementExpression(Py.StatementExpression statementExpression, SenderContext ctx) {
             ctx.sendValue(statementExpression, Py.StatementExpression::getId);
             ctx.sendNode(statementExpression, Py.StatementExpression::getStatement, ctx::sendTree);
