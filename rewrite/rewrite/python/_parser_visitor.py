@@ -369,7 +369,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_While(self, node):
-        return j.WhileLoop(
+        while_ = j.WhileLoop(
             random_id(),
             self.__source_before('while'),
             Markers.EMPTY,
@@ -380,6 +380,17 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__pad_right(self.__convert(node.test), Space.EMPTY)
             ),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+        )
+
+        return while_ if not node.orelse else py.TrailingElseWrapper(
+            random_id(),
+            while_.prefix,
+            Markers.EMPTY,
+            while_.with_prefix(Space.EMPTY),
+            self.__pad_left(
+                self.__source_before('else'),
+                self.__convert_block(node.orelse)
+            )
         )
 
     def visit_If(self, node):
