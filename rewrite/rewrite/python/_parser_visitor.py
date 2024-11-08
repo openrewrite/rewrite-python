@@ -12,7 +12,7 @@ from more_itertools import peekable
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
-    NameTree, OmitParentheses, Expression, TypeTree
+    NameTree, OmitParentheses, Expression, TypeTree, TypedTree
 from rewrite.java import tree as j
 from . import tree as py, PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
@@ -467,6 +467,14 @@ class ParserVisitor(ast.NodeVisitor):
             )
         else:
             var = expr
+
+        if not is_of_type(var, TypedTree):
+            var = py.ExpressionTypeTree(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                var
+            )
 
         return j.Try.Resource(
             random_id(),

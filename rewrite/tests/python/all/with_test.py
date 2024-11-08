@@ -51,6 +51,18 @@ def test_async_with():
     )
 
 
+def test_async_with_await():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            async with await open('/dev/null'):
+                pass
+            """
+        )
+    )
+
+
 def test_with_no_target():
     # language=python
     rewrite_run(
