@@ -84,6 +84,8 @@ class PySpace:
         STAR_PREFIX = auto()
         TOP_LEVEL_STATEMENT = auto()
         TRAILING_ELSE_WRAPPER_PREFIX = auto()
+        TYPE_ALIAS_PREFIX = auto()
+        TYPE_ALIAS_VALUE = auto()
         TYPE_HINTED_EXPRESSION_PREFIX = auto()
         TYPE_HINT_PREFIX = auto()
         UNION_TYPES_SUFFIX = auto()
@@ -135,6 +137,7 @@ class PyLeftPadded:
         MATCH_CASE_GUARD = PySpace.Location.MATCH_CASE_GUARD
         NAMED_ARGUMENT_VALUE = PySpace.Location.NAMED_ARGUMENT
         TRAILING_ELSE_WRAPPER_ELSE_BLOCK = PySpace.Location.ELSE_WRAPPER_ELSE_BLOCK_PREFIX
+        TYPE_ALIAS_VALUE = PySpace.Location.TYPE_ALIAS_VALUE
         YIELD_FROM = PySpace.Location.YIELD_FROM_PREFIX
 
         def __init__(self, before_location: PySpace.Location):
@@ -143,9 +146,11 @@ class PyLeftPadded:
 
 class PyContainer:
     class Location(Enum):
-        COLLECTION_LITERAL_ELEMENTS = (PySpace.Location.COLLECTION_LITERAL_PREFIX, PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT)
+        COLLECTION_LITERAL_ELEMENTS = (
+        PySpace.Location.COLLECTION_LITERAL_PREFIX, PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT)
         DICT_LITERAL_ELEMENTS = (PySpace.Location.DICT_LITERAL_PREFIX, PyRightPadded.Location.DICT_LITERAL_ELEMENT)
-        MATCH_CASE_PATTERN_CHILDREN = (PySpace.Location.MATCH_CASE_PATTERN_CHILDREN_PREFIX, PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD)
+        MATCH_CASE_PATTERN_CHILDREN = (
+        PySpace.Location.MATCH_CASE_PATTERN_CHILDREN_PREFIX, PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD)
         MULTI_IMPORT_NAMES = (PySpace.Location.MULTI_IMPORT_NAME_PREFIX, PyRightPadded.Location.MULTI_IMPORT_NAME)
 
         def __init__(self, before_location: PySpace.Location, element_location: PyRightPadded.Location):
@@ -155,7 +160,6 @@ class PyContainer:
 
 @dataclass(frozen=True)
 class PyComment(Comment):
-
     _aligned_to_indent: bool
 
     @property
@@ -163,7 +167,8 @@ class PyComment(Comment):
         return self._aligned_to_indent
 
     def with_aligned_to_indent(self, aligned_to_indent: bool) -> Comment:
-        return self if aligned_to_indent is self._aligned_to_indent else replace(self, _aligned_to_indent=aligned_to_indent)
+        return self if aligned_to_indent is self._aligned_to_indent else replace(self,
+                                                                                 _aligned_to_indent=aligned_to_indent)
 
     @property
     def multiline(self) -> bool:

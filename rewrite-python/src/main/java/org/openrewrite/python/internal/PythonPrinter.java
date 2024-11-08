@@ -666,6 +666,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitTypeAlias(Py.TypeAlias typeAlias, PrintOutputCapture<P> p) {
+        beforeSyntax(typeAlias, PySpace.Location.UNION_TYPE_PREFIX, p);
+        p.append("type");
+        visit(typeAlias.getName(), p);
+        visitLeftPadded("=", typeAlias.getPadding().getValue(), PyLeftPadded.Location.TYPE_ALIAS_VALUE, p);
+        afterSyntax(typeAlias, p);
+        return typeAlias;
+    }
+
+    @Override
     public J visitUnionType(Py.UnionType unionType, PrintOutputCapture<P> p) {
         beforeSyntax(unionType, PySpace.Location.UNION_TYPE_PREFIX, p);
         visitRightPadded(unionType.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE_TYPE, "|", p);

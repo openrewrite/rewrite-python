@@ -212,6 +212,15 @@ class PythonSender(Sender):
             ctx.send_nodes(clause, attrgetter('_conditions'), ctx.send_tree, attrgetter('id'))
             return clause
 
+        def visit_type_alias(self, type_alias: TypeAlias, ctx: SenderContext) -> J:
+            ctx.send_value(type_alias, attrgetter('_id'))
+            ctx.send_node(type_alias, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(type_alias, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(type_alias, attrgetter('_name'), ctx.send_tree)
+            ctx.send_node(type_alias, attrgetter('_value'), PythonSender.send_left_padded)
+            ctx.send_typed_value(type_alias, attrgetter('_type'))
+            return type_alias
+
         def visit_yield_from(self, yield_from: YieldFrom, ctx: SenderContext) -> J:
             ctx.send_value(yield_from, attrgetter('_id'))
             ctx.send_node(yield_from, attrgetter('_prefix'), PythonSender.send_space)

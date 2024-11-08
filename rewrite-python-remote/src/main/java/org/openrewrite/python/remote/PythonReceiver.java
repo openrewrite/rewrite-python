@@ -304,6 +304,17 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.TypeAlias visitTypeAlias(Py.TypeAlias typeAlias, ReceiverContext ctx) {
+            typeAlias = typeAlias.withId(ctx.receiveNonNullValue(typeAlias.getId(), UUID.class));
+            typeAlias = typeAlias.withPrefix(ctx.receiveNonNullNode(typeAlias.getPrefix(), PythonReceiver::receiveSpace));
+            typeAlias = typeAlias.withMarkers(ctx.receiveNonNullNode(typeAlias.getMarkers(), ctx::receiveMarkers));
+            typeAlias = typeAlias.withName(ctx.receiveNonNullNode(typeAlias.getName(), ctx::receiveTree));
+            typeAlias = typeAlias.getPadding().withValue(ctx.receiveNonNullNode(typeAlias.getPadding().getValue(), PythonReceiver::receiveLeftPaddedTree));
+            typeAlias = typeAlias.withType(ctx.receiveValue(typeAlias.getType(), JavaType.class));
+            return typeAlias;
+        }
+
+        @Override
         public Py.YieldFrom visitYieldFrom(Py.YieldFrom yieldFrom, ReceiverContext ctx) {
             yieldFrom = yieldFrom.withId(ctx.receiveNonNullValue(yieldFrom.getId(), UUID.class));
             yieldFrom = yieldFrom.withPrefix(ctx.receiveNonNullNode(yieldFrom.getPrefix(), PythonReceiver::receiveSpace));
@@ -1357,6 +1368,17 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveNodes(null, ctx::receiveTree)
+                );
+            }
+
+            if (type == Py.TypeAlias.class) {
+                return (T) new Py.TypeAlias(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
+                    ctx.receiveValue(null, JavaType.class)
                 );
             }
 

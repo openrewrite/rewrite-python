@@ -214,6 +214,17 @@ class PythonVisitor(JavaVisitor[P]):
         clause = clause.with_conditions([self.visit_and_cast(v, ComprehensionExpression.Condition, p) for v in clause.conditions])
         return clause
 
+    def visit_type_alias(self, type_alias: TypeAlias, p: P) -> J:
+        type_alias = type_alias.with_prefix(self.visit_space(type_alias.prefix, PySpace.Location.TYPE_ALIAS_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(type_alias, p))
+        if not isinstance(temp_statement, TypeAlias):
+            return temp_statement
+        type_alias = cast(TypeAlias, temp_statement)
+        type_alias = type_alias.with_markers(self.visit_markers(type_alias.markers, p))
+        type_alias = type_alias.with_name(self.visit_and_cast(type_alias.name, Identifier, p))
+        type_alias = type_alias.padding.with_value(self.visit_left_padded(type_alias.padding.value, PyLeftPadded.Location.TYPE_ALIAS_VALUE, p))
+        return type_alias
+
     def visit_yield_from(self, yield_from: YieldFrom, p: P) -> J:
         yield_from = yield_from.with_prefix(self.visit_space(yield_from.prefix, PySpace.Location.YIELD_FROM_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(yield_from, p))

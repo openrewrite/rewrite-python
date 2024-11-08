@@ -287,6 +287,17 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.TypeAlias visitTypeAlias(Py.TypeAlias typeAlias, SenderContext ctx) {
+            ctx.sendValue(typeAlias, Py.TypeAlias::getId);
+            ctx.sendNode(typeAlias, Py.TypeAlias::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(typeAlias, Py.TypeAlias::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(typeAlias, Py.TypeAlias::getName, ctx::sendTree);
+            ctx.sendNode(typeAlias, e -> e.getPadding().getValue(), PythonSender::sendLeftPadded);
+            ctx.sendTypedValue(typeAlias, Py.TypeAlias::getType);
+            return typeAlias;
+        }
+
+        @Override
         public Py.YieldFrom visitYieldFrom(Py.YieldFrom yieldFrom, SenderContext ctx) {
             ctx.sendValue(yieldFrom, Py.YieldFrom::getId);
             ctx.sendNode(yieldFrom, Py.YieldFrom::getPrefix, PythonSender::sendSpace);

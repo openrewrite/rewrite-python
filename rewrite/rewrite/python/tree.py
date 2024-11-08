@@ -1562,6 +1562,93 @@ class ComprehensionExpression(Py, Expression):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class TypeAlias(Py, Statement, TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> TypeAlias:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> TypeAlias:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> TypeAlias:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _name: Identifier
+
+    @property
+    def name(self) -> Identifier:
+        return self._name
+
+    def with_name(self, name: Identifier) -> TypeAlias:
+        return self if name is self._name else replace(self, _name=name)
+
+    _value: JLeftPadded[J]
+
+    @property
+    def value(self) -> J:
+        return self._value.element
+
+    def with_value(self, value: J) -> TypeAlias:
+        return self.padding.with_value(JLeftPadded.with_element(self._value, value))
+
+    _type: Optional[JavaType]
+
+    @property
+    def type(self) -> Optional[JavaType]:
+        return self._type
+
+    def with_type(self, type: Optional[JavaType]) -> TypeAlias:
+        return self if type is self._type else replace(self, _type=type)
+
+    @dataclass
+    class PaddingHelper:
+        _t: TypeAlias
+
+        @property
+        def value(self) -> JLeftPadded[J]:
+            return self._t._value
+
+        def with_value(self, value: JLeftPadded[J]) -> TypeAlias:
+            return self._t if self._t._value is value else replace(self._t, _value=value)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: TypeAlias.PaddingHelper
+        if self._padding is None:
+            p = TypeAlias.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = TypeAlias.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_type_alias(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class YieldFrom(Py, Expression):
     _id: UUID
 

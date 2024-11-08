@@ -218,6 +218,15 @@ class PythonReceiver(Receiver):
             clause = clause.with_conditions(ctx.receive_nodes(clause.conditions, ctx.receive_tree))
             return clause
 
+        def visit_type_alias(self, type_alias: TypeAlias, ctx: ReceiverContext) -> J:
+            type_alias = type_alias.with_id(ctx.receive_value(type_alias.id, UUID))
+            type_alias = type_alias.with_prefix(ctx.receive_node(type_alias.prefix, PythonReceiver.receive_space))
+            type_alias = type_alias.with_markers(ctx.receive_node(type_alias.markers, ctx.receive_markers))
+            type_alias = type_alias.with_name(ctx.receive_node(type_alias.name, ctx.receive_tree))
+            type_alias = type_alias.padding.with_value(ctx.receive_node(type_alias.padding.value, PythonReceiver.receive_left_padded_tree))
+            type_alias = type_alias.with_type(ctx.receive_value(type_alias.type, JavaType))
+            return type_alias
+
         def visit_yield_from(self, yield_from: YieldFrom, ctx: ReceiverContext) -> J:
             yield_from = yield_from.with_id(ctx.receive_value(yield_from.id, UUID))
             yield_from = yield_from.with_prefix(ctx.receive_node(yield_from.prefix, PythonReceiver.receive_space))
@@ -1128,6 +1137,16 @@ class PythonReceiver(Receiver):
                     ctx.receive_node(None, ctx.receive_tree),
                     ctx.receive_node(None, PythonReceiver.receive_left_padded_tree),
                     ctx.receive_nodes(None, ctx.receive_tree)
+                )
+
+            if type in ["rewrite.python.tree.TypeAlias", "org.openrewrite.python.tree.Py$TypeAlias"]:
+                return TypeAlias(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_node(None, PythonReceiver.receive_left_padded_tree),
+                    ctx.receive_value(None, JavaType)
                 )
 
             if type in ["rewrite.python.tree.YieldFrom", "org.openrewrite.python.tree.Py$YieldFrom"]:

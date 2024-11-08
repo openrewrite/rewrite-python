@@ -431,6 +431,15 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return wrapper;
     }
 
+    public J visitTypeAlias(Py.TypeAlias typeAlias, P p) {
+        Py.TypeAlias a = typeAlias;
+        a = a.withPrefix(visitSpace(a.getPrefix(), PySpace.Location.TYPE_ALIAS_PREFIX, p));
+        a = a.withMarkers(visitMarkers(a.getMarkers(), p));
+        a = a.withName(visitAndCast(a.getName(), p));
+        a = a.withValue(visitAndCast(a.getValue(), p));
+        return a;
+    }
+
     public J visitUnionType(Py.UnionType unionType, P p) {
         Py.UnionType u = unionType;
         u = u.withPrefix(visitSpace(u.getPrefix(), PySpace.Location.UNION_TYPE_PREFIX, p));

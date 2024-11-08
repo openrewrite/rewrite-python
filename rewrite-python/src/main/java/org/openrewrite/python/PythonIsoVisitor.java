@@ -178,6 +178,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.TypeAlias visitTypeAlias(Py.TypeAlias typeAlias, P p) {
+        return (Py.TypeAlias) super.visitTypeAlias(typeAlias, p);
+    }
+
+    @Override
     public Py.UnionType visitUnionType(Py.UnionType unionType, P p) {
         return (Py.UnionType) super.visitUnionType(unionType, p);
     }

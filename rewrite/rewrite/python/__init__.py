@@ -44,6 +44,7 @@ __all__ = [
     'Star',
     'StatementExpression',
     'TrailingElseWrapper',
+    'TypeAlias',
     'TypeHint',
     'TypeHintedExpression',
     'UnionType',

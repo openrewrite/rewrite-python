@@ -1022,7 +1022,14 @@ class ParserVisitor(ast.NodeVisitor):
         raise NotImplementedError("Implement visit_TypeVarTuple!")
 
     def visit_TypeAlias(self, node):
-        raise NotImplementedError("Implement visit_TypeAlias!")
+        return py.TypeAlias(
+            random_id(),
+            self.__source_before("type"),
+            Markers.EMPTY,
+            self.__convert(node.name),
+            self.__pad_left(self.__source_before('='), self.__convert(node.value)),
+            self.__map_type(node)
+        )
 
     def visit_ExtSlice(self, node):
         raise NotImplementedError("Implement visit_ExtSlice!")
