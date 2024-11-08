@@ -45,7 +45,8 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node, with_close_paren: bool = True) -> List[JRightPadded[j.VariableDeclarations]]:
-        first_with_default = len(node.posonlyargs) + len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
+        first_with_default = len(node.posonlyargs) + len(node.args) - len(
+            node.defaults) if node.defaults else sys.maxsize
         if not node.posonlyargs and not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
             return [
                 JRightPadded(
@@ -87,7 +88,8 @@ class ParserVisitor(ast.NodeVisitor):
 
         mapped += [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
-            i == len(node.args) + len(node.posonlyargs) - 1 and not node.vararg and not node.kwarg and not node.kwonlyargs,
+            i == len(node.args) + len(
+                node.posonlyargs) - 1 and not node.vararg and not node.kwarg and not node.kwonlyargs,
             end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None) for
             (i, a) in [(i + len(node.posonlyargs), a) for i, a in enumerate(node.args)]]
         if node.vararg:
@@ -466,18 +468,32 @@ class ParserVisitor(ast.NodeVisitor):
     def visit_With(self, node):
         prefix = self.__source_before('with')
         items_prefix = self.__whitespace()
-        omit_parens = not self.__cursor_at('(')
+
+        parenthesized = self.__cursor_at('(')
+        parens_handler = self.__push_parentheses(node, items_prefix, self._cursor) if parenthesized else None
+
+        resources = [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in enumerate(node.items)]
+
+        if parenthesized and self._parentheses_stack and self._parentheses_stack[-1] is parens_handler:
+            self._cursor += 1
+            self._parentheses_stack.pop()
+            resources_container = JContainer(
+                items_prefix,
+                resources,
+                Markers.EMPTY
+            )
+        else:
+            resources_container = JContainer(
+                items_prefix if not parenthesized else Space.EMPTY,
+                resources,
+                Markers.build(random_id(), [OmitParentheses(random_id())])
+            )
 
         return j.Try(
             random_id(),
             prefix,
             Markers.EMPTY,
-            JContainer(
-                items_prefix,
-                [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in
-                 enumerate(node.items)],
-                Markers.build(random_id(), [OmitParentheses(random_id())]) if omit_parens else Markers.EMPTY
-            ),
+            resources_container,
             self.__convert_block(node.body),
             [],
             None
@@ -1909,7 +1925,8 @@ class ParserVisitor(ast.NodeVisitor):
             suffix = self.__whitespace()
 
         # Clean up unmatched parentheses for this node
-        while len(self._parentheses_stack) > 1 and self._parentheses_stack[-1][3] is node and self._parentheses_stack[-2][3] is not node:
+        while len(self._parentheses_stack) > 1 and self._parentheses_stack[-1][3] is node and \
+                self._parentheses_stack[-2][3] is not node:
             self._parentheses_stack.pop()
 
         self._cursor = save_cursor_2
@@ -1921,10 +1938,14 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor = save_cursor
             return self.visit(cast(ast.AST, node))
 
+        self.__push_parentheses(node, prefix, save_cursor)
+
+        return recursion(node)
+
+    def __push_parentheses(self, node, prefix, save_cursor):
         self._cursor += 1
         expr_prefix = self.__whitespace()
-
-        self._parentheses_stack.append((
+        handler = (
             lambda e, r: (
                 cast(JContainer, e)
                 .with_before(prefix)
@@ -1944,9 +1965,9 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor,
             node,
             prefix
-        ))
-
-        return recursion(node)
+        )
+        self._parentheses_stack.append(handler)
+        return handler
 
     def _is_closing_paren(self, save_cursor: int) -> bool:
         """Check if current position has a valid closing parenthesis."""

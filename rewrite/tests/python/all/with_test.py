@@ -74,3 +74,16 @@ def test_with_no_target():
             """
         )
     )
+
+
+def test_with_parentheses():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(i):
+                with ("/" / "crates/ruff_linter/src/codes.rs").open("w") as fp:
+                    pass
+            """
+        )
+    )
