@@ -835,11 +835,11 @@ class ParserVisitor(ast.NodeVisitor):
         pattern_prefix = self.__whitespace()
 
         pattern = self.__convert(node.pattern)
-        # if isinstance(pattern, py.MatchCase):
-        #     guard = self.__pad_left(self.__source_before('if'), self.__convert(node.guard))
-        #     pattern = pattern.padding.with_guard(guard)
+        if isinstance(pattern, py.MatchCase) and node.guard:
+            guard = self.__pad_left(self.__source_before('if'), self.__convert(node.guard))
+            pattern = pattern.padding.with_guard(guard)
 
-        case = j.Case(
+        return j.Case(
             random_id(),
             prefix,
             Markers.EMPTY,
@@ -852,7 +852,6 @@ class ParserVisitor(ast.NodeVisitor):
             JContainer.empty(),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )
-        return case
 
     def visit_MatchValue(self, node):
         return self.__convert(node.value)
@@ -990,8 +989,6 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
-        elif node.name is not None and node.pattern is not None:
-            return self.__convert_name(node.name)
         else:
             return py.MatchCase(
                 random_id(),
