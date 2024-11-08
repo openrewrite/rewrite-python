@@ -1427,6 +1427,17 @@ public interface Py extends J {
             @Getter
             Markers markers;
 
+            @Nullable
+            JRightPadded<Boolean> async;
+
+            public boolean isAsync() {
+                return async != null && async.getElement();
+            }
+
+            public Clause withAsync(boolean async) {
+                return getPadding().withAsync(JRightPadded.withElement(this.async, async));
+            }
+
             @With
             @Getter
             Expression iteratorVariable;
@@ -1475,7 +1486,15 @@ public interface Py extends J {
                 }
 
                 public Clause withIteratedList(JLeftPadded<Expression> iteratedList) {
-                    return t.iteratedList == iteratedList ? t : new Clause(t.id, t.prefix, t.markers, t.iteratorVariable, iteratedList, t.conditions);
+                    return t.iteratedList == iteratedList ? t : new Clause(t.id, t.prefix, t.markers, t.async, t.iteratorVariable, iteratedList, t.conditions);
+                }
+
+                public @Nullable JRightPadded<Boolean> getAsync() {
+                    return t.async;
+                }
+
+                public Clause withAsync(JRightPadded<Boolean> async) {
+                    return t.async == async ? t : new Clause(t.id, t.prefix, t.markers, async, t.iteratorVariable, t.iteratedList, t.conditions);
                 }
             }
         }

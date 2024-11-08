@@ -296,6 +296,7 @@ public class PythonReceiver implements Receiver<Py> {
             clause = clause.withId(ctx.receiveNonNullValue(clause.getId(), UUID.class));
             clause = clause.withPrefix(ctx.receiveNonNullNode(clause.getPrefix(), PythonReceiver::receiveSpace));
             clause = clause.withMarkers(ctx.receiveNonNullNode(clause.getMarkers(), ctx::receiveMarkers));
+            clause = clause.getPadding().withAsync(ctx.receiveNode(clause.getPadding().getAsync(), rightPaddedValueReceiver(java.lang.Boolean.class)));
             clause = clause.withIteratorVariable(ctx.receiveNonNullNode(clause.getIteratorVariable(), ctx::receiveTree));
             clause = clause.getPadding().withIteratedList(ctx.receiveNonNullNode(clause.getPadding().getIteratedList(), PythonReceiver::receiveLeftPaddedTree));
             clause = clause.withConditions(ctx.receiveNodes(clause.getConditions(), ctx::receiveTree));
@@ -1352,6 +1353,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNode(null, rightPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveNodes(null, ctx::receiveTree)

@@ -8,6 +8,11 @@ def test_basic_list_comprehension():
     rewrite_run(python("a = [ e+1 for e in [1, 2, ]]"))
 
 
+def test_async_list_comprehension():
+    # language=python
+    rewrite_run(python("a = [ e+1 async for e in [1, 2, ]]"))
+
+
 def test_list_comprehension_with_if():
     # language=python
     rewrite_run(python("a = [ e+1 for e in [1, 2, ] if e > 1]"))

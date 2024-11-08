@@ -279,6 +279,7 @@ public class PythonSender implements Sender<Py> {
             ctx.sendValue(clause, Py.ComprehensionExpression.Clause::getId);
             ctx.sendNode(clause, Py.ComprehensionExpression.Clause::getPrefix, PythonSender::sendSpace);
             ctx.sendNode(clause, Py.ComprehensionExpression.Clause::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(clause, e -> e.getPadding().getAsync(), PythonSender::sendRightPadded);
             ctx.sendNode(clause, Py.ComprehensionExpression.Clause::getIteratorVariable, ctx::sendTree);
             ctx.sendNode(clause, e -> e.getPadding().getIteratedList(), PythonSender::sendLeftPadded);
             ctx.sendNodes(clause, Py.ComprehensionExpression.Clause::getConditions, ctx::sendTree, Tree::getId);

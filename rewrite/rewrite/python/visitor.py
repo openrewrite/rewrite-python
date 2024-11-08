@@ -208,6 +208,7 @@ class PythonVisitor(JavaVisitor[P]):
     def visit_comprehension_clause(self, clause: ComprehensionExpression.Clause, p: P) -> J:
         clause = clause.with_prefix(self.visit_space(clause.prefix, PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_PREFIX, p))
         clause = clause.with_markers(self.visit_markers(clause.markers, p))
+        clause = clause.padding.with_async(self.visit_right_padded(clause.padding.async_, PyRightPadded.Location.COMPREHENSION_EXPRESSION_CLAUSE_ASYNC, p))
         clause = clause.with_iterator_variable(self.visit_and_cast(clause.iterator_variable, Expression, p))
         clause = clause.padding.with_iterated_list(self.visit_left_padded(clause.padding.iterated_list, PyLeftPadded.Location.COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST, p))
         clause = clause.with_conditions([self.visit_and_cast(v, ComprehensionExpression.Condition, p) for v in clause.conditions])

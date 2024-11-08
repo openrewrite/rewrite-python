@@ -1543,10 +1543,18 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_comprehension(self, node):
+        if node.is_async:
+            prefix = self.__source_before('async')
+            async_ = JRightPadded(True, self.__source_before('for'), Markers.EMPTY)
+        else:
+            prefix = self.__source_before('for')
+            async_ = None
+
         return py.ComprehensionExpression.Clause(
             random_id(),
-            self.__source_before('for'),
+            prefix,
             Markers.EMPTY,
+            async_,
             self.__convert(node.target),
             self.__pad_left(self.__source_before('in'), self.__convert(node.iter)),
             [self._map_comprehension_condition(i) for i in node.ifs] if node.ifs else []

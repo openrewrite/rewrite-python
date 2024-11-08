@@ -19,16 +19,16 @@ def visit_container(v: 'PythonVisitor', container: Optional[JContainer[J2]],
 # noinspection PyUnusedLocal
 def visit_right_padded(v: 'PythonVisitor', right: Optional[JRightPadded[T]],
                        loc: PyRightPadded.Location, p) -> Optional[JRightPadded[T]]:
-    return extensions.visit_container(v, right, JRightPadded.Location.LANGUAGE_EXTENSION, p)
+    return extensions.visit_right_padded(v, right, JRightPadded.Location.LANGUAGE_EXTENSION, p)
 
 
 # noinspection PyUnusedLocal
 def visit_left_padded(v: 'PythonVisitor', left: Optional[JLeftPadded[T]],
                       loc: PyLeftPadded.Location, p) -> Optional[JLeftPadded[T]]:
-    return extensions.visit_container(v, left, JLeftPadded.Location.LANGUAGE_EXTENSION, p)
+    return extensions.visit_left_padded(v, left, JLeftPadded.Location.LANGUAGE_EXTENSION, p)
 
 
 # noinspection PyUnusedLocal
 def visit_space(v: 'PythonVisitor', space: Optional[Space],
                 loc: PySpace.Location, p):
-    return extensions.visit_container(v, space, Space.Location.LANGUAGE_EXTENSION, p)
+    return extensions.visit_space(v, space, Space.Location.LANGUAGE_EXTENSION, p)

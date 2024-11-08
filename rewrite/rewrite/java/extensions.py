@@ -3,7 +3,7 @@ from typing import Optional, TypeVar, TYPE_CHECKING
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
 
 if TYPE_CHECKING:
-    from ..visitor import JavaVisitor
+    from .visitor import JavaVisitor
     from .tree import *
 
 T = TypeVar('T')
@@ -28,7 +28,8 @@ def visit_right_padded(v: 'JavaVisitor', right: Optional[JRightPadded[T]], loc: 
 
     t = right.element
     v.cursor = Cursor(v.cursor, right)
-    t = v.visit_and_cast(t, T, p)
+    if isinstance(t, Tree):
+        t = v.visit_and_cast(t, T, p)
     v.cursor = v.cursor.parent
 
     if t is None:

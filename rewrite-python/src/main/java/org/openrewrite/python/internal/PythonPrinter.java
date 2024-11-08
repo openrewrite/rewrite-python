@@ -298,6 +298,10 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitComprehensionClause(Py.ComprehensionExpression.Clause clause, PrintOutputCapture<P> p) {
         beforeSyntax(clause, PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p);
+        if (clause.isAsync()) {
+            p.append("async");
+            visitSpace(clause.getPadding().getAsync().getAfter(), PySpace.Location.COMPREHENSION_CLAUSE_ASYNC, p);
+        }
         p.append("for");
         visit(clause.getIteratorVariable(), p);
         visitSpace(clause.getPadding().getIteratedList().getBefore(), PySpace.Location.COMPREHENSION_IN, p);

@@ -1484,6 +1484,15 @@ class ComprehensionExpression(Py, Expression):
         def with_markers(self, markers: Markers) -> ComprehensionExpression.Clause:
             return self if markers is self._markers else replace(self, _markers=markers)
 
+        _async: Optional[JRightPadded[bool]]
+
+        @property
+        def async_(self) -> Optional[bool]:
+            return self._async.element
+
+        def with_async(self, async_: Optional[bool]) -> ComprehensionExpression.Clause:
+            return self.padding.with_async(JRightPadded.with_element(self._async, async_))
+
         _iterator_variable: Expression
 
         @property
@@ -1514,6 +1523,13 @@ class ComprehensionExpression(Py, Expression):
         @dataclass
         class PaddingHelper:
             _t: ComprehensionExpression.Clause
+
+            @property
+            def async_(self) -> Optional[JRightPadded[bool]]:
+                return self._t._async
+
+            def with_async(self, async_: Optional[JRightPadded[bool]]) -> ComprehensionExpression.Clause:
+                return self._t if self._t._async is async_ else replace(self._t, _async=async_)
 
             @property
             def iterated_list(self) -> JLeftPadded[Expression]:

@@ -206,6 +206,7 @@ class PythonSender(Sender):
             ctx.send_value(clause, attrgetter('_id'))
             ctx.send_node(clause, attrgetter('_prefix'), PythonSender.send_space)
             ctx.send_node(clause, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(clause, attrgetter('_async'), PythonSender.send_right_padded)
             ctx.send_node(clause, attrgetter('_iterator_variable'), ctx.send_tree)
             ctx.send_node(clause, attrgetter('_iterated_list'), PythonSender.send_left_padded)
             ctx.send_nodes(clause, attrgetter('_conditions'), ctx.send_tree, attrgetter('id'))

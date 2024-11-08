@@ -212,6 +212,7 @@ class PythonReceiver(Receiver):
             clause = clause.with_id(ctx.receive_value(clause.id, UUID))
             clause = clause.with_prefix(ctx.receive_node(clause.prefix, PythonReceiver.receive_space))
             clause = clause.with_markers(ctx.receive_node(clause.markers, ctx.receive_markers))
+            clause = clause.padding.with_async(ctx.receive_node(clause.padding.async_, PythonReceiver.right_padded_value_receiver(bool)))
             clause = clause.with_iterator_variable(ctx.receive_node(clause.iterator_variable, ctx.receive_tree))
             clause = clause.padding.with_iterated_list(ctx.receive_node(clause.padding.iterated_list, PythonReceiver.receive_left_padded_tree))
             clause = clause.with_conditions(ctx.receive_nodes(clause.conditions, ctx.receive_tree))
@@ -1123,6 +1124,7 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, PythonReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, PythonReceiver.right_padded_value_receiver(bool)),
                     ctx.receive_node(None, ctx.receive_tree),
                     ctx.receive_node(None, PythonReceiver.receive_left_padded_tree),
                     ctx.receive_nodes(None, ctx.receive_tree)
