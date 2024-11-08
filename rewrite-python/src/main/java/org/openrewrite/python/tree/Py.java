@@ -1980,7 +1980,7 @@ public interface Py extends J {
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @RequiredArgsConstructor
-    final class Star implements Py, Expression {
+    final class Star implements Py, Expression, TypeTree {
 
         public enum Kind {
             LIST,

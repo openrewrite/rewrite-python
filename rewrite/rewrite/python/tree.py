@@ -2087,7 +2087,7 @@ class SpecialParameter(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
-class Star(Py, Expression):
+class Star(Py, Expression, TypeTree):
     class Kind(Enum):
         LIST = 0
         DICT = 1
