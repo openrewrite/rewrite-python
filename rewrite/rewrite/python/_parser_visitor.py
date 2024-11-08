@@ -45,21 +45,53 @@ class ParserVisitor(ast.NodeVisitor):
         return super().generic_visit(node)
 
     def visit_arguments(self, node, with_close_paren: bool = True) -> List[JRightPadded[j.VariableDeclarations]]:
-        first_with_default = len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
-        if not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
+        first_with_default = len(node.posonlyargs) + len(node.args) - len(node.defaults) if node.defaults else sys.maxsize
+        if not node.posonlyargs and not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs:
             return [
                 JRightPadded(
                     j.Empty(random_id(), self.__source_before(')') if with_close_paren else Space.EMPTY, Markers.EMPTY),
                     Space.EMPTY, Markers.EMPTY)
             ]
 
-        args = [self.__pad_list_element(
+        mapped = []
+        if node.posonlyargs:
+            mapped += [self.__pad_list_element(
+                self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None)) for
+                i, a in enumerate(node.posonlyargs)]
+            mapped.append(self.__pad_list_element(
+                j.VariableDeclarations(
+                    random_id(),
+                    self.__whitespace(),
+                    Markers.EMPTY,
+                    [],
+                    [],
+                    None,
+                    None,
+                    [],
+                    [self.__pad_right(
+                        j.VariableDeclarations.NamedVariable(
+                            random_id(),
+                            Space.EMPTY,
+                            Markers.EMPTY,
+                            cast(j.Identifier, self.__convert_name('/', None)),
+                            [],
+                            None,
+                            None
+                        ),
+                        Space.EMPTY
+                    )]
+                ),
+                last=not node.args and not node.vararg and not node.kwarg and not node.kwonlyargs,
+                end_delim=',' if node.args or node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None
+            ))
+
+        mapped += [self.__pad_list_element(
             self.map_arg(a, node.defaults[i - first_with_default] if i >= first_with_default else None),
-            i == len(node.args) - 1,
+            i == len(node.args) + len(node.posonlyargs) - 1 and not node.vararg and not node.kwarg and not node.kwonlyargs,
             end_delim=',' if node.vararg or node.kwarg or node.kwonlyargs else ')' if with_close_paren else None) for
-            i, a in enumerate(node.args)]
+            (i, a) in [(i + len(node.posonlyargs), a) for i, a in enumerate(node.args)]]
         if node.vararg:
-            args.append(self.__pad_list_element(
+            mapped.append(self.__pad_list_element(
                 self.map_arg(node.vararg, None, vararg=True),
                 not node.kwarg and not node.kwonlyargs,
                 end_delim=')' if with_close_paren else None
@@ -70,7 +102,7 @@ class ParserVisitor(ast.NodeVisitor):
                                                                   cast(j.Identifier, self.__convert_name('', None)), [],
                                                                   None, None, None)
                 kwonly_prefix = self.__source_before('*')
-                args.append(
+                mapped.append(
                     JRightPadded(
                         j.VariableDeclarations(
                             random_id(),
@@ -85,19 +117,19 @@ class ParserVisitor(ast.NodeVisitor):
                     ))
 
             for i, kwonlyarg in enumerate(node.kwonlyargs):
-                args.append(self.__pad_list_element(
+                mapped.append(self.__pad_list_element(
                     self.map_arg(kwonlyarg, node.kw_defaults[i], kwarg=False),
                     not node.kwarg and i == len(node.kwonlyargs) - 1,
                     end_delim=')' if with_close_paren else None
                 ))
 
         if node.kwarg:
-            args.append(self.__pad_list_element(
+            mapped.append(self.__pad_list_element(
                 self.map_arg(node.kwarg, None, kwarg=True),
                 True,
                 end_delim=')' if with_close_paren else None
             ))
-        return args
+        return mapped
 
     def map_arg(self, node, default=None, vararg=False, kwarg=False):
         prefix = self.__source_before('**') if kwarg else self.__whitespace()
@@ -1520,8 +1552,6 @@ class ParserVisitor(ast.NodeVisitor):
         raise ValueError("This method should not be called directly")
 
     def visit_Lambda(self, node):
-        first_with_default = len(node.args.args) - len(node.args.defaults)
-
         return j.Lambda(
             random_id(),
             self.__source_before('lambda'),
@@ -2019,7 +2049,10 @@ class ParserVisitor(ast.NodeVisitor):
             raise ArgumentError(tree, "must be a Tree but is a {}".format(type(tree)))
         return JLeftPadded(space, tree, Markers.EMPTY)
 
-    def __source_before(self, until_delim: str, stop: Optional[str] = None) -> Space:
+    def __source_before(self, until_delim: Optional[str], stop: Optional[str] = None) -> Space:
+        if not until_delim:
+            return Space.EMPTY
+
         if self._source.startswith(until_delim, self._cursor):
             self._cursor += len(until_delim)
             return Space.EMPTY
