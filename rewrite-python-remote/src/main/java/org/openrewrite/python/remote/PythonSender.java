@@ -111,6 +111,17 @@ public class PythonSender implements Sender<Py> {
         }
 
         @Override
+        public Py.ForLoop visitForLoop(Py.ForLoop forLoop, SenderContext ctx) {
+            ctx.sendValue(forLoop, Py.ForLoop::getId);
+            ctx.sendNode(forLoop, Py.ForLoop::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(forLoop, Py.ForLoop::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(forLoop, Py.ForLoop::getTarget, ctx::sendTree);
+            ctx.sendNode(forLoop, e -> e.getPadding().getIterable(), PythonSender::sendLeftPadded);
+            ctx.sendNode(forLoop, e -> e.getPadding().getBody(), PythonSender::sendRightPadded);
+            return forLoop;
+        }
+
+        @Override
         public Py.LiteralType visitLiteralType(Py.LiteralType literalType, SenderContext ctx) {
             ctx.sendValue(literalType, Py.LiteralType::getId);
             ctx.sendNode(literalType, Py.LiteralType::getPrefix, PythonSender::sendSpace);

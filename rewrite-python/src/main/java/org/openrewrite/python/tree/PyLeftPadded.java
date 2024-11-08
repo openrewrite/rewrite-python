@@ -24,6 +24,7 @@ public class PyLeftPadded {
     public enum Location {
         BINARY_OPERATOR(PySpace.Location.BINARY_OPERATOR),
         ERROR_FROM(PySpace.Location.ERROR_FROM_SOURCE),
+        FOR_LOOP_ITERABLE(PySpace.Location.FOR_LOOP_ITERABLE),
         MATCH_CASE_GUARD(PySpace.Location.MATCH_CASE_GUARD),
         NAMED_ARGUMENT(PySpace.Location.NAMED_ARGUMENT),
         TYPE_ALIAS_VALUE(PySpace.Location.TYPE_ALIAS_VALUE),

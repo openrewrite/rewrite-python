@@ -178,6 +178,16 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     }
 
     @Override
+    public J visitForLoop(Py.ForLoop forLoop, PrintOutputCapture<P> p) {
+        beforeSyntax(forLoop, PySpace.Location.FOR_LOOP_PREFIX, p);
+        p.append("for");
+        visit(forLoop.getTarget(), p);
+        visitLeftPadded("in", forLoop.getPadding().getIterable(), PyLeftPadded.Location.FOR_LOOP_ITERABLE, p);
+        visitRightPadded(forLoop.getPadding().getBody(), PyRightPadded.Location.FOR_LOOP_BODY, p);
+        return forLoop;
+    }
+
+    @Override
     public J visitFormattedString(Py.FormattedString fString, PrintOutputCapture<P> p) {
         beforeSyntax(fString, PySpace.Location.FORMATTED_STRING_PREFIX, p);
         p.append(fString.getDelimiter());

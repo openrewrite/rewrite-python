@@ -70,6 +70,15 @@ class PythonSender(Sender):
             ctx.send_node(exception_type, attrgetter('_expression'), ctx.send_tree)
             return exception_type
 
+        def visit_python_for_loop(self, for_loop: ForLoop, ctx: SenderContext) -> J:
+            ctx.send_value(for_loop, attrgetter('_id'))
+            ctx.send_node(for_loop, attrgetter('_prefix'), PythonSender.send_space)
+            ctx.send_node(for_loop, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(for_loop, attrgetter('_target'), ctx.send_tree)
+            ctx.send_node(for_loop, attrgetter('_iterable'), PythonSender.send_left_padded)
+            ctx.send_node(for_loop, attrgetter('_body'), PythonSender.send_right_padded)
+            return for_loop
+
         def visit_literal_type(self, literal_type: LiteralType, ctx: SenderContext) -> J:
             ctx.send_value(literal_type, attrgetter('_id'))
             ctx.send_node(literal_type, attrgetter('_prefix'), PythonSender.send_space)

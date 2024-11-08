@@ -98,6 +98,11 @@ public class PythonIsoVisitor<P> extends PythonVisitor<P> {
     }
 
     @Override
+    public Py.ForLoop visitForLoop(Py.ForLoop forLoop, P p) {
+        return (Py.ForLoop) super.visitForLoop(forLoop, p);
+    }
+
+    @Override
     public Py.FormattedString visitFormattedString(Py.FormattedString fString, P p) {
         return (Py.FormattedString) super.visitFormattedString(fString, p);
     }

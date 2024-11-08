@@ -230,6 +230,16 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         return t;
     }
 
+    public J visitForLoop(Py.ForLoop forLoop, P p) {
+        Py.ForLoop fl = forLoop;
+        fl = fl.withPrefix(visitSpace(fl.getPrefix(), PySpace.Location.FOR_LOOP_PREFIX, p));
+        fl = fl.withMarkers(visitMarkers(fl.getMarkers(), p));
+        fl = fl.withTarget(visitAndCast(fl.getTarget(), p));
+        fl = fl.getPadding().withIterable(visitLeftPadded(fl.getPadding().getIterable(), PyLeftPadded.Location.FOR_LOOP_ITERABLE, p));
+        fl = fl.getPadding().withBody(visitRightPadded(fl.getPadding().getBody(), PyRightPadded.Location.FOR_LOOP_BODY, p));
+        return fl;
+    }
+
     public J visitFormattedString(Py.FormattedString fString, P p) {
         Py.FormattedString fs = fString;
         fs = fs.withPrefix(visitSpace(fs.getPrefix(), PySpace.Location.FORMATTED_STRING_PREFIX, p));

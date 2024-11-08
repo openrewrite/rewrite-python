@@ -344,41 +344,14 @@ class ParserVisitor(ast.NodeVisitor):
             )
 
     def visit_For(self, node):
-        targets = node.target.elts if isinstance(node.target, ast.Tuple) else [node.target]
-        loop = j.ForEachLoop(
+        loop = py.ForLoop(
             random_id(),
             self.__source_before('for'),
             Markers.EMPTY,
-            j.ForEachLoop.Control(
-                random_id(),
-                self.__whitespace(),
-                Markers.EMPTY,
-                self.__pad_right(
-                    j.VariableDeclarations(
-                        random_id(),
-                        Space.EMPTY,
-                        Markers.EMPTY,
-                        [],
-                        [],
-                        None,
-                        None,
-                        [],
-                        [self.__pad_list_element(
-                            j.VariableDeclarations.NamedVariable(
-                                random_id(),
-                                Space.EMPTY,
-                                Markers.EMPTY,
-                                cast(j.Identifier, self.__convert(t)),
-                                [],
-                                None,
-                                self.__map_type(t)
-                            ),
-                            i == len(targets) - 1, False) for i, t in enumerate(targets)
-                        ]
-                    ),
-                    self.__source_before('in')
-                ),
-                self.__pad_right(self.__convert(node.iter), Space.EMPTY)
+            self.__convert(node.target),
+            self.__pad_left(
+                self.__source_before('in'),
+                self.__convert(node.iter)
             ),
             self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         )

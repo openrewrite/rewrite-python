@@ -76,6 +76,15 @@ class PythonReceiver(Receiver):
             exception_type = exception_type.with_expression(ctx.receive_node(exception_type.expression, ctx.receive_tree))
             return exception_type
 
+        def visit_python_for_loop(self, for_loop: ForLoop, ctx: ReceiverContext) -> J:
+            for_loop = for_loop.with_id(ctx.receive_value(for_loop.id, UUID))
+            for_loop = for_loop.with_prefix(ctx.receive_node(for_loop.prefix, PythonReceiver.receive_space))
+            for_loop = for_loop.with_markers(ctx.receive_node(for_loop.markers, ctx.receive_markers))
+            for_loop = for_loop.with_target(ctx.receive_node(for_loop.target, ctx.receive_tree))
+            for_loop = for_loop.padding.with_iterable(ctx.receive_node(for_loop.padding.iterable, PythonReceiver.receive_left_padded_tree))
+            for_loop = for_loop.padding.with_body(ctx.receive_node(for_loop.padding.body, PythonReceiver.receive_right_padded_tree))
+            return for_loop
+
         def visit_literal_type(self, literal_type: LiteralType, ctx: ReceiverContext) -> J:
             literal_type = literal_type.with_id(ctx.receive_value(literal_type.id, UUID))
             literal_type = literal_type.with_prefix(ctx.receive_node(literal_type.prefix, PythonReceiver.receive_space))
@@ -978,6 +987,16 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, JavaType),
                     ctx.receive_value(None, bool),
                     ctx.receive_node(None, ctx.receive_tree)
+                )
+
+            if type in ["rewrite.python.tree.ForLoop", "org.openrewrite.python.tree.Py$ForLoop"]:
+                return ForLoop(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, PythonReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_node(None, PythonReceiver.receive_left_padded_tree),
+                    ctx.receive_node(None, PythonReceiver.receive_right_padded_tree)
                 )
 
             if type in ["rewrite.python.tree.LiteralType", "org.openrewrite.python.tree.Py$LiteralType"]:

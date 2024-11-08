@@ -61,6 +61,18 @@ class PythonVisitor(JavaVisitor[P]):
         exception_type = exception_type.with_expression(self.visit_and_cast(exception_type.expression, Expression, p))
         return exception_type
 
+    def visit_python_for_loop(self, for_loop: ForLoop, p: P) -> J:
+        for_loop = for_loop.with_prefix(self.visit_space(for_loop.prefix, PySpace.Location.FOR_LOOP_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(for_loop, p))
+        if not isinstance(temp_statement, ForLoop):
+            return temp_statement
+        for_loop = cast(ForLoop, temp_statement)
+        for_loop = for_loop.with_markers(self.visit_markers(for_loop.markers, p))
+        for_loop = for_loop.with_target(self.visit_and_cast(for_loop.target, Expression, p))
+        for_loop = for_loop.padding.with_iterable(self.visit_left_padded(for_loop.padding.iterable, PyLeftPadded.Location.FOR_LOOP_ITERABLE, p))
+        for_loop = for_loop.padding.with_body(self.visit_right_padded(for_loop.padding.body, PyRightPadded.Location.FOR_LOOP_BODY, p))
+        return for_loop
+
     def visit_literal_type(self, literal_type: LiteralType, p: P) -> J:
         literal_type = literal_type.with_prefix(self.visit_space(literal_type.prefix, PySpace.Location.LITERAL_TYPE_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(literal_type, p))

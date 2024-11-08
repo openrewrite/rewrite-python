@@ -17,6 +17,7 @@ __all__ = [
 
     # AST interfaces
     'JavaSourceFile',
+    'Loop',
     'TypeTree',
     'TypedTree',
     'NameTree',

@@ -125,6 +125,17 @@ public class PythonReceiver implements Receiver<Py> {
         }
 
         @Override
+        public Py.ForLoop visitForLoop(Py.ForLoop forLoop, ReceiverContext ctx) {
+            forLoop = forLoop.withId(ctx.receiveNonNullValue(forLoop.getId(), UUID.class));
+            forLoop = forLoop.withPrefix(ctx.receiveNonNullNode(forLoop.getPrefix(), PythonReceiver::receiveSpace));
+            forLoop = forLoop.withMarkers(ctx.receiveNonNullNode(forLoop.getMarkers(), ctx::receiveMarkers));
+            forLoop = forLoop.withTarget(ctx.receiveNonNullNode(forLoop.getTarget(), ctx::receiveTree));
+            forLoop = forLoop.getPadding().withIterable(ctx.receiveNonNullNode(forLoop.getPadding().getIterable(), PythonReceiver::receiveLeftPaddedTree));
+            forLoop = forLoop.getPadding().withBody(ctx.receiveNonNullNode(forLoop.getPadding().getBody(), PythonReceiver::receiveRightPaddedTree));
+            return forLoop;
+        }
+
+        @Override
         public Py.LiteralType visitLiteralType(Py.LiteralType literalType, ReceiverContext ctx) {
             literalType = literalType.withId(ctx.receiveNonNullValue(literalType.getId(), UUID.class));
             literalType = literalType.withPrefix(ctx.receiveNonNullNode(literalType.getPrefix(), PythonReceiver::receiveSpace));
@@ -1192,6 +1203,17 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveValue(null, JavaType.class),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
+                );
+            }
+
+            if (type == Py.ForLoop.class) {
+                return (T) new Py.ForLoop(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
                 );
             }
 

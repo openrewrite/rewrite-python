@@ -371,6 +371,100 @@ class ExceptionType(Py, TypeTree):
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
+class ForLoop(Py, Loop):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> ForLoop:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> ForLoop:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> ForLoop:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _target: Expression
+
+    @property
+    def target(self) -> Expression:
+        return self._target
+
+    def with_target(self, target: Expression) -> ForLoop:
+        return self if target is self._target else replace(self, _target=target)
+
+    _iterable: JLeftPadded[Expression]
+
+    @property
+    def iterable(self) -> Expression:
+        return self._iterable.element
+
+    def with_iterable(self, iterable: Expression) -> ForLoop:
+        return self.padding.with_iterable(JLeftPadded.with_element(self._iterable, iterable))
+
+    _body: JRightPadded[Statement]
+
+    @property
+    def body(self) -> Statement:
+        return self._body.element
+
+    def with_body(self, body: Statement) -> ForLoop:
+        return self.padding.with_body(JRightPadded.with_element(self._body, body))
+
+    @dataclass
+    class PaddingHelper:
+        _t: ForLoop
+
+        @property
+        def iterable(self) -> JLeftPadded[Expression]:
+            return self._t._iterable
+
+        def with_iterable(self, iterable: JLeftPadded[Expression]) -> ForLoop:
+            return self._t if self._t._iterable is iterable else replace(self._t, _iterable=iterable)
+
+        @property
+        def body(self) -> JRightPadded[Statement]:
+            return self._t._body
+
+        def with_body(self, body: JRightPadded[Statement]) -> ForLoop:
+            return self._t if self._t._body is body else replace(self._t, _body=body)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: ForLoop.PaddingHelper
+        if self._padding is None:
+            p = ForLoop.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = ForLoop.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_python(self, v: PythonVisitor[P], p: P) -> J:
+        return v.visit_python_for_loop(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
 class LiteralType(Py, Expression, TypeTree):
     _id: UUID
 

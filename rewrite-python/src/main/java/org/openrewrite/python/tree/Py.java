@@ -338,6 +338,102 @@ public interface Py extends J {
     }
 
     @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+    @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+    @RequiredArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Data
+    final class ForLoop implements Py, Loop {
+        @Nullable
+        @NonFinal
+        transient WeakReference<Padding> padding;
+
+        @With
+        @EqualsAndHashCode.Include
+        UUID id;
+
+        @With
+        Space prefix;
+
+        @With
+        Markers markers;
+
+        @With
+        Expression target;
+
+        JLeftPadded<Expression> iterable;
+
+        public Expression getIterable() {
+            return iterable.getElement();
+        }
+
+        public Py.ForLoop withIterable(Expression iterable) {
+            return getPadding().withIterable(JLeftPadded.withElement(this.iterable, iterable));
+        }
+
+        JRightPadded<Statement> body;
+
+        public Statement getBody() {
+            return this.body.getElement();
+        }
+
+        public Py.ForLoop withBody(Statement body) {
+            return this.getPadding().withBody(this.body.withElement(body));
+        }
+
+        @Override
+        public <P> J acceptPython(PythonVisitor<P> v, P p) {
+            return v.visitForLoop(this, p);
+        }
+
+        @Override
+        @Transient
+        public CoordinateBuilder.Statement getCoordinates() {
+            return new CoordinateBuilder.Statement(this);
+        }
+
+        public Padding getPadding() {
+            Padding p;
+            if (this.padding == null) {
+                p = new Padding(this);
+                this.padding = new WeakReference<>(p);
+            } else {
+                p = this.padding.get();
+                if (p == null || p.t != this) {
+                    p = new Padding(this);
+                    this.padding = new WeakReference<>(p);
+                }
+            }
+            return p;
+        }
+
+        @Override
+        public String toString() {
+            return withPrefix(Space.EMPTY).printTrimmed(new PythonPrinter<>());
+        }
+
+        @RequiredArgsConstructor
+        public static class Padding {
+            private final Py.ForLoop t;
+
+            public JLeftPadded<Expression> getIterable() {
+                return t.iterable;
+            }
+
+            public Py.ForLoop withIterable(JLeftPadded<Expression> iterable) {
+                return t.iterable == iterable ? t : new Py.ForLoop(t.id, t.prefix, t.markers, t.target, iterable, t.body);
+            }
+
+            public JRightPadded<Statement> getBody() {
+                return t.body;
+            }
+
+            public Py.ForLoop withBody(JRightPadded<Statement> body) {
+                return t.body == body ? t : new Py.ForLoop(t.id, t.prefix, t.markers, t.target, t.iterable, body);
+            }
+        }
+    }
+
+    @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
     @EqualsAndHashCode(callSuper = false)
     @Data
     final class LiteralType implements Py, Expression, TypeTree {

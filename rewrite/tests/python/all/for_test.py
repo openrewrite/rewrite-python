@@ -1,5 +1,3 @@
-import pytest
-
 from rewrite.test import rewrite_run, python
 
 
@@ -27,13 +25,24 @@ def test_for_with_destruct():
     )
 
 
-@pytest.mark.xfail(reason="Still need to decide how to map this", strict=True)
-def test_for_with_destruct_and_parens():
+def test_for_with_destruct_and_parens_1():
     # language=python
     rewrite_run(
         python(
             """\
             for (x, y) in [(1,2),(3,4)]:
+                pass
+            """
+        )
+    )
+
+
+def test_for_with_target_expression():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            for d['a'] in [1, 2, 3]:
                 pass
             """
         )

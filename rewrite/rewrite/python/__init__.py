@@ -32,6 +32,7 @@ __all__ = [
     'ExceptionType',
     'ExpressionStatement',
     'ExpressionTypeTree',
+    'ForLoop',
     'FormattedString',
     'KeyValue',
     'LiteralType',
