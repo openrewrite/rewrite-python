@@ -72,3 +72,8 @@ def test_dict_unpack():
 def test_keyword_argument():
     # language=python
     rewrite_run(python("l = sorted([1, 2, 3], key=lambda x: x, reverse=True)"))
+
+
+def test_no_name():
+    # language=python
+    rewrite_run(python("v = (a)()"))

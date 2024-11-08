@@ -1201,9 +1201,9 @@ class ParserVisitor(ast.NodeVisitor):
             random_id(),
             prefix,
             Markers.EMPTY,
-            select,
+            select if isinstance(name, j.Identifier) else self.__pad_right(name, Space.EMPTY),
             None,
-            name,
+            name if isinstance(name, j.Identifier) else j.Identifier(random_id(), Space.EMPTY, Markers.EMPTY, [], "", None, None),
             args,
             self.__map_type(node)
         )
