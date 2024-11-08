@@ -15,6 +15,18 @@ def test_with():
     )
 
 
+def test_with_trailing_comma():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            with (len([]) as x ,  ):
+                pass
+            """
+        )
+    )
+
+
 def test_with_parens():
     # language=python
     rewrite_run(

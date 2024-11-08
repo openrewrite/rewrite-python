@@ -1273,7 +1273,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                     }
 
                     visitSpace(resource.getAfter(), Location.TRY_RESOURCE_SUFFIX, p);
+                    visitMarkers(resource.getMarkers(), p);
                 }
+                visitMarkers(resources.getMarkers(), p);
                 if (!omitParentheses) {
                     p.append(")");
                 }
