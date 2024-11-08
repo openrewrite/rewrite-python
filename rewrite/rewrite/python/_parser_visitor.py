@@ -1845,7 +1845,7 @@ class ParserVisitor(ast.NodeVisitor):
             suffix = self.__whitespace()
 
         # Clean up unmatched parentheses for this node
-        while self._parentheses_stack and self._parentheses_stack[-1][3] == node:
+        while len(self._parentheses_stack) > 1 and self._parentheses_stack[-1][3] is node and self._parentheses_stack[-2][3] is not node:
             self._parentheses_stack.pop()
 
         self._cursor = save_cursor_2
