@@ -57,8 +57,8 @@ tasks.register("appendOpenRewriteRequirements") {
     doLast {
         val file = requirementsFile.get().asFile
         file.appendText("cbor2\n")
-        file.appendText("openrewrite${generatePipVersionConstraint(project.version.toString())}\n")
-        file.appendText("openrewrite-remote${generatePipVersionConstraint(getDirectDependencyVersion("org.openrewrite:rewrite-remote-java"))}\n")
+        file.appendText("openrewrite${generatePipVersionConstraint(project.version.toString(), false)}\n")
+        file.appendText("openrewrite-remote${generatePipVersionConstraint(getDirectDependencyVersion("org.openrewrite:rewrite-remote-java"), true)}\n")
     }
 }
 
@@ -66,7 +66,7 @@ tasks.named("processResources") {
     dependsOn("appendOpenRewriteRequirements")
 }
 
-fun generatePipVersionConstraint(version: String): String {
+fun generatePipVersionConstraint(version: String, boundByMajorVersion: Boolean): String {
     if (version.endsWith("-SNAPSHOT")) {
         return "<${version.replace("-SNAPSHOT", "")}"
     }
@@ -75,13 +75,17 @@ fun generatePipVersionConstraint(version: String): String {
         throw IllegalArgumentException("Invalid version format: $version")
     }
 
-    val major = versionParts[0]
+    val major = versionParts[0].toInt()
     val minor = versionParts[1].toInt()
     val patch = versionParts[2]
 
-    val nextMinor = minor + 1
-
-    return ">=${major}.${minor}.${patch},<${major}.${nextMinor}.0"
+    return if (boundByMajorVersion) {
+        val nextMajor = (major + 1).toString() + ".0.0"
+        ">=${major}.${minor}.${patch},<${nextMajor}"
+    } else {
+        val nextMinor = major.toString() + "." + (minor + 1) + ".0"
+        ">=${major}.${minor}.${patch},<${nextMinor}"
+    }
 }
 
 fun Task.getDirectDependencyVersion(dependencyName: String): String {
