@@ -1269,7 +1269,7 @@ class ParserVisitor(ast.NodeVisitor):
         while tok.type in (token.ENCODING, token.NL, token.NEWLINE, token.INDENT, token.DEDENT, token.COMMENT):
             tok = next(tokens)
 
-        if not isinstance(node.value, str):
+        if not isinstance(node.value, (str, bytes)):
             return self.__map_literal(node, tok, tokens)[0]
 
         is_byte_string = tok.string.startswith(('b', "B"))
@@ -1327,7 +1327,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __map_literal_value(self, node, tok):
         if node.value is Ellipsis:
             return None
-        elif isinstance(node.value, str):
+        elif isinstance(node.value, (str, bytes)):
             return ast.literal_eval(ast.parse(tok.string, mode='eval').body)
         return node.value
 

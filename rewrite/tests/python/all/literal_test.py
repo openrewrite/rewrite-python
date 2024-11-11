@@ -40,6 +40,11 @@ def test_large_int():
     rewrite_run(python("assert 0xC03A0019"))
 
 
+def test_byte_string_concatenation():
+    # language=python
+    rewrite_run(python("assert b'hello' b'world'"))
+
+
 def test_bigint():
     # language=python
     rewrite_run(python("assert 9223372036854775808"))
