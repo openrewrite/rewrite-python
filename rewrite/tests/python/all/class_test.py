@@ -86,8 +86,21 @@ def test_bases_via_call():
             """\
             def fun():
                 return []
-            
+
             class Derived(fun()):
+                pass
+            """
+        )
+    )
+
+
+def test_metaclass():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            from typing import Type
+            class Derived(metaclass=Type):
                 pass
             """
         )

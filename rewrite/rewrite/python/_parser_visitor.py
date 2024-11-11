@@ -228,13 +228,14 @@ class ParserVisitor(ast.NodeVisitor):
         name = self.__convert_name(node.name)
         save_cursor = self._cursor
         interfaces_prefix = self.__whitespace()
-        if node.bases and self.__cursor_at('('):
+        if (node.bases or node.keywords) and self.__cursor_at('('):
+            all = node.bases + node.keywords
             self.__skip('(')
             interfaces = JContainer(
                 interfaces_prefix,
                 [
-                    self.__pad_list_element(self.__convert_type(n), i == len(node.bases) - 1, end_delim=')') for i, n in
-                    enumerate(node.bases)],
+                    self.__pad_list_element(self.__convert_type(n), i == len(all) - 1, end_delim=')') for i, n in
+                    enumerate(all)],
                 Markers.EMPTY
             )
         elif self.__cursor_at('('):
