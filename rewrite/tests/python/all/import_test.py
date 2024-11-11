@@ -1,3 +1,5 @@
+import pytest
+
 from rewrite.test import rewrite_run, python
 
 
@@ -11,6 +13,13 @@ def test_simple():
 def test_simple_with_alias():
     # language=python
     rewrite_run(python("import io as io"))
+
+
+# noinspection PyUnresolvedReferences
+@pytest.mark.xfail(reason="The parser performs Unicode normalization which can't be disabled", strict=True)
+def test_unicode_char_normalization():
+    # language=python
+    rewrite_run(python("from .main import MaµToMan"))
 
 
 # noinspection PyUnresolvedReferences
