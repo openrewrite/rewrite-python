@@ -41,7 +41,7 @@ def test_single_element_set_with_trailing_comma():
 
 def test_deeply_nested():
     # language=python
-    rewrite_run(python('d2 = (((((((((((((((((((((((((((("¯\_(ツ)_/¯",),),),),),),),),),),),),),),),),),),),),),),),),),),),)'))
+    rewrite_run(python('d2 = (((((((((((((((((((((((((((("¯\\_(ツ)_/¯",),),),),),),),),),),),),),),),),),),),),),),),),),),),)'))
 
 
 @pytest.mark.xfail(reason="Generators are not properly parsed yet", strict=True)
