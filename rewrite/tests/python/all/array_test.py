@@ -26,6 +26,16 @@ def test_array_slice_no_upper():
     rewrite_run(python("a = [1, 2][0:]"))
 
 
+def test_array_slice_all_empty():
+    # language=python
+    rewrite_run(python("a = [1, 2][ :  :   ]"))
+
+
+def test_array_slice_empty_upper_and_step():
+    # language=python
+    rewrite_run(python("a = [1, 2][0::]"))
+
+
 def test_array_slice_no_lower():
     # language=python
     rewrite_run(python("a = [1, 2][:1]"))

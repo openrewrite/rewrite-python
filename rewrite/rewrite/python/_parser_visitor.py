@@ -1743,14 +1743,22 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_Slice(self, node):
         prefix = self.__whitespace()
-        if node.lower:
-            lower = self.__pad_right(self.__convert(node.lower), self.__source_before(':'))
-        else:
-            lower = self.__pad_right(j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), self.__source_before(':'))
-        upper = self.__pad_right(
-            self.__convert(node.upper) if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
-            self.__source_before(':') if node.step else self.__whitespace('\n'))
-        step = self.__pad_right(self.__convert(node.step), self.__whitespace('\n')) if node.step else None
+
+        lower_expr = self.__convert(node.lower) if node.lower else None
+        right_padding = self.__whitespace(':')
+        lower = self.__pad_right(lower_expr, right_padding) if lower_expr else None
+        self._cursor += 1
+
+        upper_expr = self.__convert(node.upper) if node.upper else None
+        right_padding = self.__whitespace()
+        has_step = self.__cursor_at(':')
+        upper = self.__pad_right(upper_expr if node.upper else j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), right_padding)
+        self._cursor += 1
+
+        step = self.__pad_right(
+            self.__convert(node.step) if node.step else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+            self.__whitespace(']')) if node.step or has_step else None
+
         return py.Slice(
             random_id(),
             prefix,
