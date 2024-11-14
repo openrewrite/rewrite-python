@@ -102,7 +102,7 @@ class ParserVisitor(ast.NodeVisitor):
             if not node.vararg:
                 empty_name = j.VariableDeclarations.NamedVariable(random_id(), Space.EMPTY, Markers.EMPTY,
                                                                   cast(j.Identifier, self.__convert_name('', None)), [],
-                                                                  None, None, None)
+                                                                  None, None)
                 kwonly_prefix = self.__source_before('*')
                 mapped.append(
                     JRightPadded(
@@ -307,6 +307,24 @@ class ParserVisitor(ast.NodeVisitor):
                     self.__convert(node.value)
                 ) if node.value else None,
                 self.__map_type(node)
+            )
+        elif not node.value:
+            return py.ExpressionStatement(
+                random_id(),
+                py.TypeHintedExpression(
+                    random_id(),
+                    prefix,
+                    Markers.EMPTY,
+                    self.__convert(node.target),
+                    py.TypeHint(
+                        random_id(),
+                        self.__source_before(':'),
+                        Markers.EMPTY,
+                        self.__convert_type(node.annotation),
+                        self.__map_type(node.annotation)
+                    ),
+                    self.__map_type(node)
+                )
             )
         else:
             name = cast(j.Identifier, self.__convert(node.target))

@@ -25,6 +25,19 @@ def test_field():
     )
 
 
+def test_typed_field():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            class Foo:
+                def __init__(self):
+                    self.target: int
+            """
+        )
+    )
+
+
 def test_enum():
     # language=python
     rewrite_run(
