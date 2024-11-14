@@ -138,7 +138,7 @@ class ParserVisitor(ast.NodeVisitor):
         vararg_prefix = self.__source_before('*') if vararg else None
         name = self.__convert_name(node.arg, self.__map_type(node))
         after_name = self.__source_before(':') if node.annotation else Space.EMPTY
-        type_expression = self.__convert_type_hint(node.annotation) if node.annotation else None
+        type_expression = self.__convert_type(node.annotation) if node.annotation else None
         initializer = self.__pad_left(self.__source_before('='), self.__convert(default)) if default else None
 
         return j.VariableDeclarations(
@@ -297,7 +297,7 @@ class ParserVisitor(ast.NodeVisitor):
                         random_id(),
                         self.__source_before(':'),
                         Markers.EMPTY,
-                        self.__convert_type_hint(node.annotation),
+                        self.__convert_type(node.annotation),
                         self.__map_type(node.annotation)
                     ),
                     self.__map_type(node)
@@ -312,7 +312,7 @@ class ParserVisitor(ast.NodeVisitor):
             name = cast(j.Identifier, self.__convert(node.target))
             if node.annotation:
                 after = self.__source_before(':')
-                type = self.__convert_type_hint(node.annotation)
+                type = self.__convert_type(node.annotation)
             else:
                 after = Space.EMPTY
                 type = None
@@ -446,7 +446,8 @@ class ParserVisitor(ast.NodeVisitor):
         parenthesized = self.__cursor_at('(')
         parens_handler = self.__push_parentheses(node, items_prefix, self._cursor) if parenthesized else None
 
-        resources = [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in enumerate(node.items)]
+        resources = [self.__pad_list_element(self.__convert(r), i == len(node.items) - 1) for i, r in
+                     enumerate(node.items)]
 
         if parenthesized and self._parentheses_stack and self._parentheses_stack[-1] is parens_handler:
             self._cursor += 1
@@ -778,7 +779,8 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_ExceptHandler(self, node):
         prefix = self.__source_before('except')
-        except_type = self.__convert_type(node.type) if node.type else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY)
+        except_type = self.__convert_type(node.type) if node.type else j.Empty(random_id(), Space.EMPTY,
+                                                                               Markers.EMPTY)
         if node.name:
             before_as = self.__source_before('as')
             except_type_name = self.__convert_name(node.name)
@@ -1174,7 +1176,8 @@ class ParserVisitor(ast.NodeVisitor):
             Markers.EMPTY,
             select if isinstance(name, j.Identifier) else self.__pad_right(name, Space.EMPTY),
             None,
-            name if isinstance(name, j.Identifier) else j.Identifier(random_id(), Space.EMPTY, Markers.EMPTY, [], "", None, None),
+            name if isinstance(name, j.Identifier) else j.Identifier(random_id(), Space.EMPTY, Markers.EMPTY, [], "",
+                                                                     None, None),
             args,
             self.__map_type(node)
         )
@@ -1784,7 +1787,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_type(node)
         )
 
-    def __convert_type_hint(self, node) -> Optional[TypeTree]:
+    def __convert_type(self, node) -> Optional[TypeTree]:
         if isinstance(node, ast.Constant):
             if node.value is None or node.value is Ellipsis:
                 return py.LiteralType(
@@ -1825,7 +1828,7 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__convert(node.value),
                 JContainer(
                     self.__source_before('['),
-                    [self.__pad_list_element(self.__convert_type_hint(s), last=i == len(slices) - 1, end_delim=']') for
+                    [self.__pad_list_element(self.__convert_type(s), last=i == len(slices) - 1, end_delim=']') for
                      i, s in
                      enumerate(slices)],
                     Markers.EMPTY
@@ -1837,9 +1840,9 @@ class ParserVisitor(ast.NodeVisitor):
             # NOTE: Type unions using `|` was added in Python 3.10
             prefix = self.__whitespace()
             # FIXME consider flattening nested unions
-            left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type_hint),
+            left = self.__pad_right(self.__convert_internal(node.left, self.__convert_type),
                                     self.__source_before('|'))
-            right = self.__pad_right(self.__convert_internal(node.right, self.__convert_type_hint), Space.EMPTY)
+            right = self.__pad_right(self.__convert_internal(node.right, self.__convert_type), Space.EMPTY)
             return py.UnionType(
                 random_id(),
                 prefix,
@@ -1848,12 +1851,6 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
 
-        return self.__convert_internal(node, self.__convert_type_hint)
-
-    def __convert(self, node) -> Optional[J]:
-        return self.__convert_internal(node, self.__convert)
-
-    def __convert_type(self, node) -> Optional[j.TypeTree]:
         prefix = self.__whitespace()
         converted_type = self.__convert_internal(node, self.__convert_type)
         if is_of_type(converted_type, TypeTree):
@@ -1873,6 +1870,9 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 converted_type
             )
+
+    def __convert(self, node) -> Optional[J]:
+        return self.__convert_internal(node, self.__convert)
 
     def __convert_internal(self, node, recursion) -> Optional[J]:
         if not node or not isinstance(node, ast.expr) or isinstance(node, ast.GeneratorExp):

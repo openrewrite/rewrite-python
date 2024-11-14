@@ -125,6 +125,18 @@ def test_kwargs():
     )
 
 
+def test_param_type_with_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def foo(i: (int)) :
+                pass
+            """
+        )
+    )
+
+
 def test_one_line():
     # language=python
     rewrite_run(python("def f(x): x = x + 1; return x"))
