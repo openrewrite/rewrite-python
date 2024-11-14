@@ -469,11 +469,9 @@ class ParserVisitor(ast.NodeVisitor):
 
         if parenthesized and self._parentheses_stack and self._parentheses_stack[-1] is parens_handler:
             self._cursor += 1
-            self._parentheses_stack.pop()
-            resources_container = JContainer(
-                items_prefix,
-                resources,
-                Markers.EMPTY
+            resources_container = self._parentheses_stack.pop()[0](
+                JContainer(items_prefix, resources, Markers.EMPTY),
+                Space.EMPTY
             )
         else:
             resources_container = JContainer(

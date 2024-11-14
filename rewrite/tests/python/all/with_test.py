@@ -32,7 +32,8 @@ def test_with_parens():
     rewrite_run(
         python(
             """\
-            with (open('/dev/null') as x):
+            with (
+                open('/dev/null') as x):
                 pass
             """
         )
