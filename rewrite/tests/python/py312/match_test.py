@@ -184,8 +184,22 @@ def test_mapping():
             """\
             def test(x):
                 match x:
+                    case {"x": x, "y": y}:
+                        return x+y
+            """
+        )
+    )
+
+
+def test_mapping_with_rest():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def test(x):
+                match x:
                     case {"x": x, "y": y, **z}:
-                        return x+y+z
+                        return x+y+sum(z.values())
             """
         )
     )
@@ -211,7 +225,7 @@ def test_class(args):
         python(
             """\
             from abc import ABC
-            
+
             def test(x, y):
                 match x:
                     case ABC({0}):

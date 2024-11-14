@@ -926,7 +926,40 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_MatchMapping(self, node):
-        raise NotImplementedError("Implement visit_MatchMapping!")
+        return py.MatchCase(
+            random_id(),
+            self.__whitespace(),
+            Markers.EMPTY,
+            py.MatchCase.Pattern(
+                random_id(),
+                Space.EMPTY,
+                Markers.EMPTY,
+                py.MatchCase.Pattern.Kind.MAPPING,
+                JContainer(
+                    self.__source_before('{'),
+                    [self.__pad_list_element(py.MatchCase.Pattern(
+                        random_id(),
+                        Space.EMPTY,
+                        Markers.EMPTY,
+                        py.MatchCase.Pattern.Kind.KEY_VALUE,
+                        JContainer(
+                            Space.EMPTY,
+                            [
+                                self.__pad_right(self.__convert(node.keys[i]), self.__source_before(':')),
+                                self.__pad_right(self.__convert(node.patterns[i]), Space.EMPTY),
+                            ],
+                            Markers.EMPTY
+                        ),
+                        None
+                    ), last=i == len(node.patterns) - 1, end_delim='}') for i, e in
+                        enumerate(node.patterns)] if node.patterns else [],
+                    Markers.EMPTY
+                ),
+                None
+            ),
+            None,
+            None
+        )
 
     def visit_MatchClass(self, node):
         prefix = self.__whitespace()
@@ -1010,7 +1043,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
-        else:
+        elif node.pattern:
             return py.MatchCase(
                 random_id(),
                 self.__whitespace(),
@@ -1033,6 +1066,7 @@ class ParserVisitor(ast.NodeVisitor):
                 None,
                 None
             )
+        return self.__convert_name(node.name)
 
     def visit_MatchOr(self, node):
         return py.MatchCase(
