@@ -1788,6 +1788,19 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def __convert_type(self, node) -> Optional[TypeTree]:
+        prefix = self.__whitespace()
+        converted_type = self.__convert_internal(node, self.__convert_type, self.__convert_type_mapper)
+        if is_of_type(converted_type, TypeTree):
+            return converted_type.with_prefix(prefix)
+        else:
+            return py.ExpressionTypeTree(
+                random_id(),
+                prefix,
+                Markers.EMPTY,
+                converted_type
+            )
+
+    def __convert_type_mapper(self, node) -> Optional[TypeTree]:
         if isinstance(node, ast.Constant):
             if node.value is None or node.value is Ellipsis:
                 return py.LiteralType(
@@ -1833,7 +1846,6 @@ class ParserVisitor(ast.NodeVisitor):
                      enumerate(slices)],
                     Markers.EMPTY
                 ),
-                None,
                 None
             )
         elif isinstance(node, ast.BinOp):
@@ -1851,30 +1863,12 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node)
             )
 
-        prefix = self.__whitespace()
-        converted_type = self.__convert_internal(node, self.__convert_type)
-        if is_of_type(converted_type, TypeTree):
-            return converted_type.with_prefix(prefix)
-        elif isinstance(converted_type, j.Literal):
-            return py.LiteralType(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                converted_type,
-                self.__map_type(node)
-            )
-        else:
-            return py.ExpressionTypeTree(
-                random_id(),
-                prefix,
-                Markers.EMPTY,
-                converted_type
-            )
+        return self.__convert_internal(node, self.__convert_type)
 
     def __convert(self, node) -> Optional[J]:
         return self.__convert_internal(node, self.__convert)
 
-    def __convert_internal(self, node, recursion) -> Optional[J]:
+    def __convert_internal(self, node, recursion, mapping = None) -> Optional[J]:
         if not node or not isinstance(node, ast.expr) or isinstance(node, ast.GeneratorExp):
             return self.visit(cast(ast.AST, node)) if node else None
 
@@ -1882,7 +1876,7 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__whitespace()
 
         # Handle normal expression or parenthesized expression
-        result = self._parse_expr(node, recursion, save_cursor, prefix)
+        result = self.__parse_expr(node, mapping or self.visit, recursion, save_cursor, prefix)
 
         save_cursor_2 = self._cursor
         suffix = self.__whitespace()
@@ -1903,17 +1897,17 @@ class ParserVisitor(ast.NodeVisitor):
         self._cursor = save_cursor_2
         return result
 
-    def _parse_expr(self, node, recursion, save_cursor: int, prefix: str) -> J:
+    def __parse_expr(self, node, mapping, recursion, save_cursor: int, prefix: Space) -> J:
         """Parse either a normal expression or a parenthesized expression."""
         if not (self._cursor < len(self._source) and self._source[self._cursor] == '('):
             self._cursor = save_cursor
-            return self.visit(cast(ast.AST, node))
+            return mapping(cast(ast.AST, node))
 
         self.__push_parentheses(node, prefix, save_cursor)
 
         return recursion(node)
 
-    def __push_parentheses(self, node, prefix, save_cursor):
+    def __push_parentheses(self, node, prefix: Space, save_cursor):
         self._cursor += 1
         expr_prefix = self.__whitespace()
         handler = (

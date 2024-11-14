@@ -130,7 +130,8 @@ def test_param_type_with_parens():
     rewrite_run(
         python(
             """\
-            def foo(i: (int)) :
+            from typing import Tuple
+            def foo(i: (Tuple[int])):
                 pass
             """
         )
