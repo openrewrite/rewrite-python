@@ -1745,19 +1745,21 @@ class ParserVisitor(ast.NodeVisitor):
         prefix = self.__whitespace()
 
         lower_expr = self.__convert(node.lower) if node.lower else None
-        right_padding = self.__whitespace(':')
+        right_padding = self.__whitespace(':') if node.lower else Space.EMPTY
         lower = self.__pad_right(lower_expr, right_padding) if lower_expr else None
         self._cursor += 1
 
         upper_expr = self.__convert(node.upper) if node.upper else None
         right_padding = self.__whitespace()
+        upper = self.__pad_right(upper_expr if node.upper else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY), right_padding)
         has_step = self.__cursor_at(':')
-        upper = self.__pad_right(upper_expr if node.upper else j.Empty(random_id(), self.__whitespace(), Markers.EMPTY), right_padding)
-        self._cursor += 1
-
-        step = self.__pad_right(
-            self.__convert(node.step) if node.step else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
-            self.__whitespace(']')) if node.step or has_step else None
+        if has_step:
+            self._cursor += 1
+            step = self.__pad_right(
+                self.__convert(node.step) if node.step else j.Empty(random_id(), Space.EMPTY, Markers.EMPTY),
+                self.__whitespace(']')) if node.step or has_step else Space.EMPTY
+        else:
+            step = None
 
         return py.Slice(
             random_id(),

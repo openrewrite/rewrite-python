@@ -31,6 +31,17 @@ def test_array_slice_all_empty():
     rewrite_run(python("a = [1, 2][ :  :   ]"))
 
 
+def test_comment():
+    # language=python
+    rewrite_run(
+        python(r'''
+            a = d[:0]
+            a = d[0:]
+            '''
+       )
+    )
+
+
 def test_array_slice_empty_upper_and_step():
     # language=python
     rewrite_run(python("a = [1, 2][0::]"))
