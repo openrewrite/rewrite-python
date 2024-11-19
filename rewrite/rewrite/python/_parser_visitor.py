@@ -1203,6 +1203,23 @@ class ParserVisitor(ast.NodeVisitor):
                 self.__map_type(node.func.value),
                 None
             )
+            save_cursor = self._cursor
+            parens_right_padding = self.__whitespace()
+            if self.__cursor_at(')'):
+                name = j.FieldAccess(
+                    random_id(),
+                    Space.EMPTY,
+                    Markers.EMPTY,
+                    select.element,
+                    JLeftPadded(select.after, name, Markers.EMPTY),
+                    None
+                )
+                while len(self._parentheses_stack) > 0 and self.__cursor_at(')'):
+                    self._cursor += 1
+                    name = self._parentheses_stack.pop()[0](name, parens_right_padding)
+                    save_cursor = self._cursor
+                    parens_right_padding = self.__whitespace()
+            self._cursor = save_cursor
         else:
             select = self.__pad_right(cast(Expression, self.__convert(node.func)), self.__whitespace())
             # printer handles empty name by not printing `.` before it

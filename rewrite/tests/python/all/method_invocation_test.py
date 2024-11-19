@@ -18,6 +18,21 @@ def test_invoke_function_receiver():
     rewrite_run(python("assert a(0)(1)"))
 
 
+def test_qualified_receiver_with_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """
+            class Foo:
+                def getter(self, row):
+                    pass
+                def foo(self):
+                    return (self.getter )(1)
+            """
+        )
+    )
+
+
 def test_invoke_lambda_receiver():
     # language=python
     rewrite_run(python("assert (lambda x: x)(1)"))
