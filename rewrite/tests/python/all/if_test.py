@@ -15,6 +15,17 @@ def test_if():
     )
 
 
+def test_semicolon_terminated_then():
+    # language=python
+    rewrite_run(
+        python(r"""
+            if True:  i = 1;
+            else:     i = 2;
+            """
+       )
+    )
+
+
 def test_else_single():
     # language=python
     rewrite_run(

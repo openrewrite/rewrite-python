@@ -425,9 +425,8 @@ class ParserVisitor(ast.NodeVisitor):
         condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
                                          self.__pad_right(self.__convert(node.test), self.__source_before(
                                              ':') if single_statement_then_body else Space.EMPTY))
-        then = self.__pad_right(
-            self.__convert(node.body[0]) if single_statement_then_body else self.__convert_block(node.body),
-            Space.EMPTY)
+        then = self.__pad_statement(node.body[0]) if single_statement_then_body else self.__pad_right(
+            self.__convert_block(node.body), Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
             else_prefix = self.__whitespace()
@@ -443,9 +442,8 @@ class ParserVisitor(ast.NodeVisitor):
                 random_id(),
                 else_prefix,
                 Markers.EMPTY,
-                self.__pad_right(
-                    self.__convert(node.orelse[0]) if single_statement_else_body else self.__convert_block(node.orelse),
-                    Space.EMPTY
+                self.__pad_statement(node.orelse[0]) if single_statement_else_body else self.__pad_right(
+                    self.__convert_block(node.orelse), Space.EMPTY
                 )
             )
         return j.If(
