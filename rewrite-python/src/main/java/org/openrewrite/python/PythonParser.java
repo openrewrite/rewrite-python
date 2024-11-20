@@ -44,17 +44,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PythonParser implements Parser {
+
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
     private final List<Path> pythonPath;
+
     private final @Nullable Path logFile;
+
     private final int parseTimeoutMs;
 
     private @Nullable Process pythonProcess;
@@ -248,14 +250,10 @@ public class PythonParser implements Parser {
     }
 
     public static Builder usingRemotingInstallation(Path dir) {
-        try {
-            return verifyRemotingInstallation(dir);
-        } catch (IOException | InterruptedException ignore) {
-        }
-        return builder();
+        return new Builder(dir);
     }
 
-    private static Builder verifyRemotingInstallation(Path dir) throws IOException, InterruptedException {
+    private static boolean verifyRemotingInstallation(Path dir, @Nullable Path logFile) throws IOException, InterruptedException {
         if (!Files.isDirectory(dir)) {
             Files.createDirectories(dir);
         }
@@ -267,24 +265,37 @@ public class PythonParser implements Parser {
             command.addAll(packages);
 
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            Process process = processBuilder.start();
+            File redirectTo = logFile != null ? logFile.toFile() : new File(System.getProperty("os.name").startsWith("Windows") ? "NULL" : "/dev/null");
+            processBuilder.redirectOutput(redirectTo);
+            processBuilder.redirectError(redirectTo);
 
-            int exitCode = process.waitFor();
-            return new Builder().pythonPath(singletonList(dir));
+            Process process = processBuilder.start();
+            return process.waitFor() == 0;
         }
     }
 
     @SuppressWarnings("unused")
     public static class Builder extends Parser.Builder {
         private JavaTypeCache typeCache = new JavaTypeCache();
+
+        @Nullable
+        private Path installationDir;
+
         private boolean logCompilationWarningsAndErrors;
         private final Collection<NamedStyles> styles = new ArrayList<>();
         private List<Path> pythonPath = new ArrayList<>();
+
         private @Nullable Path logFile;
+
         private long parseTimeoutMs = -1;
 
         private Builder() {
             super(Py.CompilationUnit.class);
+        }
+
+        private Builder(Path installationDir) {
+            super(Py.CompilationUnit.class);
+            this.installationDir = installationDir;
         }
 
         public Builder logCompilationWarningsAndErrors(boolean logCompilationWarningsAndErrors) {
@@ -321,6 +332,14 @@ public class PythonParser implements Parser {
 
         @Override
         public PythonParser build() {
+            if (installationDir != null) {
+                try {
+                    if (verifyRemotingInstallation(installationDir, logFile) && !pythonPath.contains(installationDir)) {
+                        pythonPath.add(installationDir);
+                    }
+                } catch (IOException | InterruptedException ignore) {
+                }
+            }
             return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, pythonPath, logFile, (int) parseTimeoutMs);
         }
 
