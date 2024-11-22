@@ -1908,7 +1908,7 @@ class ParserVisitor(ast.NodeVisitor):
                     None
                 )
         elif isinstance(node, ast.Subscript):
-            slices = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+            slices = [node.slice]
             return j.ParameterizedType(
                 random_id(),
                 self.__whitespace(),
