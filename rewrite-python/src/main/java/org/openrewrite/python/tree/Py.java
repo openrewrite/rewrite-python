@@ -2046,6 +2046,14 @@ public interface Py extends J {
 
         JLeftPadded<Expression> value;
 
+        public Expression getValue() {
+            return value.getElement();
+        }
+
+        public NamedArgument withValue(Expression value) {
+            return getPadding().withValue(JLeftPadded.withElement(this.value, value));
+        }
+
         @With
         @Getter
         @Nullable

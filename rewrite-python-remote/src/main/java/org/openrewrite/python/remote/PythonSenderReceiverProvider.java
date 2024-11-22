@@ -20,6 +20,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.remote.Receiver;
 import org.openrewrite.remote.Sender;
 import org.openrewrite.remote.SenderReceiverProvider;
+import org.openrewrite.remote.Validator;
 
 @AutoService(SenderReceiverProvider.class)
 public class PythonSenderReceiverProvider implements SenderReceiverProvider<Py> {
@@ -36,5 +37,10 @@ public class PythonSenderReceiverProvider implements SenderReceiverProvider<Py> 
     @Override
     public Receiver<Py> newReceiver() {
         return new PythonReceiver();
+    }
+
+    @Override
+    public Validator newValidator() {
+        return Validator.fromVisitor(new PythonValidator<>());
     }
 }

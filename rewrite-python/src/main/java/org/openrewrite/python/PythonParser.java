@@ -25,6 +25,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.remote.RemotingContext;
 import org.openrewrite.remote.RemotingExecutionContextView;
 import org.openrewrite.remote.RemotingMessenger;
+import org.openrewrite.remote.Validator;
 import org.openrewrite.remote.java.RemotingClient;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.text.PlainTextParser;
@@ -124,7 +125,11 @@ public class PythonParser implements Parser {
 
                 Py.CompilationUnit py = (Py.CompilationUnit) parsed;
                 parsingListener.parsed(input, py);
-                return requirePrintEqualsInput(py, input, relativeTo, ctx);
+                SourceFile sourceFile = validate(py, input, relativeTo, ctx);
+                if (sourceFile instanceof ParseError) {
+                    return ((ParseError) sourceFile).withErroneous(null);
+                }
+                return sourceFile;
             } catch (Throwable t) {
                 ctx.getOnError().accept(t);
                 return ParseError.build(this, input, relativeTo, ctx, t);
@@ -133,6 +138,17 @@ public class PythonParser implements Parser {
                 client.getContext().reset();
             }
         });
+    }
+
+    private SourceFile validate(SourceFile sourceFile, Input input, @Nullable Path relativeTo, ExecutionContext ctx) {
+        assert remotingContext != null;
+        Validator validator = remotingContext.getProvider(sourceFile.getClass()).newValidator();
+        try {
+            validator.validate(sourceFile, ctx);
+        } catch (Exception e) {
+            return ParseError.build(this, input, relativeTo, ctx, e);
+        }
+        return requirePrintEqualsInput(sourceFile, input, relativeTo, ctx);
     }
 
     private boolean ensureServerRunning(ExecutionContext ctx) {
