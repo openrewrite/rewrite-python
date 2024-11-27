@@ -19,5 +19,5 @@ openrewrite-remote = "*"
 #openrewrite-remote = { path = "../../../moderneinc/rewrite-remote/python/rewrite-remote", develop = true }
 
 [build-system]
-requires = ["poetry-core>=1.9.0", "poetry-plugin-export>=1.8.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
