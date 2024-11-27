@@ -23,6 +23,10 @@ class Py(J, Protocol):
     def accept_python(self, v: 'PythonVisitor[P]', p: P) -> Optional['J']:
         ...
 
+    def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
+        from .visitor import PythonVisitor
+        return isinstance(v, PythonVisitor)
+
 
 class PySpace:
     class Location(Enum):

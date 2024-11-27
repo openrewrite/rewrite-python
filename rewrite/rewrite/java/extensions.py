@@ -1,6 +1,8 @@
 from typing import Optional, TypeVar, TYPE_CHECKING
 
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+from ..visitor import Cursor
+from ..tree import Tree
 
 if TYPE_CHECKING:
     from .visitor import JavaVisitor
@@ -16,7 +18,7 @@ def visit_container(v: 'JavaVisitor', container: Optional[JContainer[J2]], loc: 
 
     v.cursor = Cursor(v.cursor, container)
     before = v.visit_space(container.before, loc.before_location, p)
-    js = [v.visit_right_padded(el.element, loc.element_location, p) for el in container.padding.elements]
+    js = [v.visit_right_padded(el, loc.element_location, p) for el in container.padding.elements]
     v.cursor = v.cursor.parent
 
     return container if js == container.padding.elements and before is container.before else JContainer(before, js, container.markers)

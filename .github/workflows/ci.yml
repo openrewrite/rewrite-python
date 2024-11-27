@@ -43,6 +43,9 @@ jobs:
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
+        with:
+          version: 1.8.1
+          plugins: poetry-plugin-export
 
       - name: build-java
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
