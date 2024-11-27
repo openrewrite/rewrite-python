@@ -41,7 +41,7 @@ class Cursor:
 class TreeVisitor(Protocol[T, P]):
     _visit_count: int = 0
     _cursor: Cursor = Cursor(None, "root")
-    _after_visit: Optional[List[TreeVisitor[Any, P]]]
+    _after_visit: Optional[List[TreeVisitor[Any, P]]] = None
 
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return True

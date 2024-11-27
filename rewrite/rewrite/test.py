@@ -72,7 +72,9 @@ def rewrite_run(*sources: list[SourceSpec]):
 
                     if spec.after is not None:
                         after = spec.after(source_file.print_all())
-                        assert after == spec.before
+                        assert source_file.print_all() == after
+                    else:
+                        assert source_file.print_all() == spec.before
                     break
     except Exception:
         raise
@@ -85,6 +87,6 @@ def python(before: str, after: str = None) -> list[SourceSpec]:
         random_id(),
         PythonParserBuilder(),
         textwrap.dedent(before),
-        None if after is None else lambda: after,
+        None if after is None else lambda _: textwrap.dedent(after),
         None
     )]
