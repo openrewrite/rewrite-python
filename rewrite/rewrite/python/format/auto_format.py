@@ -30,5 +30,5 @@ class SpacesVisitor(PythonVisitor):
 
     def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
         return method_declaration.padding.with_parameters(
-            method_declaration.padding.parameters.with_before(Space.SINGLE_SPACE if self._style.beforeParentheses._method_declaration else Space.EMPTY)
+            method_declaration.padding.parameters.with_before(Space.SINGLE_SPACE if self._style._before_parentheses.method_declaration else Space.EMPTY)
         )
