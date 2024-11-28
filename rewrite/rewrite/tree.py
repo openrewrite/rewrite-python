@@ -5,10 +5,12 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING, Generic, ClassVar, Callable
+from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING, Generic, ClassVar, \
+    Callable, Type
 from uuid import UUID
 
-from rewrite import Markers
+from .markers import Markers
+from .style import NamedStyles, Style
 
 if TYPE_CHECKING:
     from rewrite import TreeVisitor, ExecutionContext
@@ -72,6 +74,8 @@ class PrinterFactory(Protocol):
         ...
 
 
+S = TypeVar('S', bound=Style)
+
 @runtime_checkable
 class SourceFile(Tree, Protocol):
     @property
@@ -99,6 +103,9 @@ class SourceFile(Tree, Protocol):
     def print_equals_input(self, input: 'ParserInput', ctx: ExecutionContext) -> bool:
         printed = self.print_all()
         return printed == input.source().read()
+
+    def get_style(self, style: Type[S]) -> Optional[S]:
+        return NamedStyles.merge(style, self.markers.find_all(NamedStyles))
 
 
 @dataclass(frozen=True)

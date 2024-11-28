@@ -54,6 +54,9 @@ class Markers:
                 return marker
         return None
 
+    def find_all(self, type: type):
+        return [m for m in self.markers if isinstance(m, type)]
+
     EMPTY: ClassVar[Markers]
 
     def __eq__(self, other: object) -> bool:

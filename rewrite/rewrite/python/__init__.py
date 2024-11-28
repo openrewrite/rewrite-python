@@ -57,6 +57,7 @@ __all__ = [
     # Style
     'PythonStyle',
     'SpacesStyle',
+    'IntelliJ',
 
     # Formatter
     'AutoFormat',

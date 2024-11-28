@@ -41,4 +41,5 @@ __all__ = [
 
     # Style
     'Style',
+    'NamedStyles',
 ]

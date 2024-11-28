@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ..style import Style
+from ..style import Style, NamedStyles
 
 
 class PythonStyle(Style):
@@ -41,7 +41,6 @@ class SpacesStyle(PythonStyle):
     class Other:
         before_comma: bool
         after_comma: bool
-        before_semicolon: bool
         before_for_semicolon: bool
         before_colon: bool
         after_colon: bool
@@ -53,3 +52,45 @@ class SpacesStyle(PythonStyle):
     aroundOperators: AroundOperators
     within: Within
     other: Other
+
+
+class IntelliJ(NamedStyles):
+    @classmethod
+    def spaces(cls) -> SpacesStyle:
+        return SpacesStyle(
+            SpacesStyle.BeforeParentheses(
+                method_call_parentheses=False,
+                method_parentheses=False,
+                left_bracket=False,
+            ),
+            SpacesStyle.AroundOperators(
+                assignment=True,
+                equality=True,
+                relational=True,
+                bitwise=True,
+                additive=True,
+                multiplicative=True,
+                shift=True,
+                power=True,
+                eq_in_named_parameter=False,
+                eq_in_keyword_argument=False,
+            ),
+            SpacesStyle.Within(
+                brackets=False,
+                method_parentheses=False,
+                empty_method_parentheses=False,
+                method_call_parentheses=False,
+                empty_method_call_parentheses=False,
+                braces=False,
+            ),
+            SpacesStyle.Other(
+                before_comma=False,
+                after_comma=True,
+                before_for_semicolon=False,
+                before_colon=False,
+                after_colon=True,
+                before_backslash=True,
+                before_hash=True,
+                after_hash=True,
+            ),
+        )

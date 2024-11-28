@@ -39,6 +39,9 @@ class Cursor:
             c = c.parent
         return None
 
+    def fork(self) -> Cursor:
+        return Cursor(self.parent.fork(), self.value)
+
 
 class TreeVisitor(Protocol[T, P]):
     _visit_count: int = 0
