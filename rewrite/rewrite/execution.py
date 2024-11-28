@@ -1,5 +1,7 @@
 from typing import Protocol, Any, ClassVar
 
+from rewrite import TreeVisitor
+
 
 class ExecutionContext(Protocol):
     REQUIRE_PRINT_EQUALS_INPUT: ClassVar[str] = "org.openrewrite.requirePrintEqualsInput"
@@ -34,10 +36,20 @@ class InMemoryExecutionContext(ExecutionContext):
 
 
 class RecipeRunException(Exception):
-    # FIXME implement
-    pass
+    def __init__(self, cause: Exception, cursor=None):
+        super().__init__()
+        self._cause = cause
+        self._cursor = cursor
+
+    @property
+    def cause(self):
+        return self._cause
+
+    @property
+    def cursor(self):
+        return self._cursor
 
 
 class Recipe:
-    # FIXME implement
-    pass
+    def get_visitor(self):
+        return TreeVisitor.noop()

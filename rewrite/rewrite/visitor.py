@@ -43,6 +43,10 @@ class TreeVisitor(Protocol[T, P]):
     _cursor: Cursor = Cursor(None, "root")
     _after_visit: Optional[List[TreeVisitor[Any, P]]] = None
 
+    @classmethod
+    def noop(cls):
+        return NoopVisitor()
+
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return True
 
@@ -126,3 +130,8 @@ class TreeVisitor(Protocol[T, P]):
     def adapt(self, tree_type, visitor_type: Type[TV]) -> TV:
         # FIXME implement the visitor adapting
         return self
+
+
+class NoopVisitor(TreeVisitor):
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
+        return tree
