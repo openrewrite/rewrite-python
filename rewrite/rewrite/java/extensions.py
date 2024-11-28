@@ -22,7 +22,7 @@ def visit_container(v: 'JavaVisitor', container: Optional[JContainer[J2]], loc: 
     js = [v.visit_right_padded(el, loc.element_location, p) for el in container.padding.elements]
     v.cursor = v.cursor.parent
 
-    return container if js == container.padding.elements and before is container.before else JContainer(before, js, container.markers)
+    return container if js is container.padding.elements and before is container.before else JContainer(before, js, container.markers)
 
 
 def visit_right_padded(v: 'JavaVisitor', right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p) -> Optional[JRightPadded[T]]:
