@@ -1,8 +1,9 @@
 from typing import Optional
 
+from rewrite import NamedStyles
 from rewrite.java import Space, P
-from rewrite.python import PythonVisitor, AutoFormat
-from rewrite.test import rewrite_run, python, from_visitor
+from rewrite.python import PythonVisitor, AutoFormat, PythonParserBuilder, IntelliJ
+from rewrite.test import rewrite_run, python, from_visitor, RecipeSpec
 
 
 def test_remove_all_spaces_demo():
@@ -15,7 +16,9 @@ def test_remove_all_spaces_demo():
                     pass
             """, """classFoo:defgetter(self,row):pass"""
         ),
-        recipe=from_visitor(NoSpaces())
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(NoSpaces()))
+        .with_parsers([PythonParserBuilder().styles(NamedStyles.build(IntelliJ.spaces()))])
     )
 
 
@@ -34,7 +37,7 @@ def test_spaces_before_method_parentheses():
                     pass
             """
         ),
-        recipe=AutoFormat()
+        spec=RecipeSpec(_recipe=AutoFormat())
     )
 
 class NoSpaces(PythonVisitor):

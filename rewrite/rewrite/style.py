@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Protocol, TypeVar, Type, Iterable, Optional, Set
+from typing import Protocol, TypeVar, Type, Iterable, Optional, Set, runtime_checkable
 from uuid import UUID
 
 from rewrite import Marker, random_id
 
 
+@runtime_checkable
 class Style(Protocol):
     def merge(self, lower_precedence: Style) -> Style:
         return self
