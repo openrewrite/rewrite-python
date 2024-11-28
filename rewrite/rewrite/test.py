@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import socket
 import textwrap
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
@@ -44,11 +46,28 @@ class SourceSpec:
         return self._source_path
 
 
+@dataclass(frozen=True, eq=False)
 class RecipeSpec:
-    pass
+    _recipe: Recipe = None
+
+    @property
+    def recipe(self) -> Recipe:
+        return self._recipe
+
+    def with_recipe(self, recipe: Recipe) -> RecipeSpec:
+        return self if recipe is self._recipe else RecipeSpec(recipe)
+
+    _parsers: Iterable[ParserBuilder] = field(default_factory=list)
+
+    @property
+    def parsers(self) -> Iterable[ParserBuilder]:
+        return self._parsers
+
+    def with_parsers(self, parsers: Iterable[ParserBuilder]) -> RecipeSpec:
+        return self if parsers is self._parsers else RecipeSpec(self._recipe, parsers)
 
 
-def rewrite_run(*source_specs: list[SourceSpec], recipe: Recipe = None):
+def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
     from rewrite.remote import RemotingContext, RemotePrinterFactory
     from rewrite.remote.server import register_remoting_factories
     remoting_context = RemotingContext()
@@ -62,26 +81,28 @@ def rewrite_run(*source_specs: list[SourceSpec], recipe: Recipe = None):
         ctx = InMemoryExecutionContext()
         ctx.put_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, False)
 
+        configured_parsers = {p.source_file_type: p for p in spec.parsers} if spec else {}
+        parsers = {s.parser.source_file_type: configured_parsers.get(s.parser.source_file_type, s.parser) for source_spec in source_specs for s in source_spec}
         for source in source_specs:
-            for spec in source:
-                parser = spec.parser.build()
-                source_path = spec.source_path if spec.source_path \
-                    else parser.source_path_from_source_text(Path('.'), spec.before)
+            for source_spec in source:
+                parser = parsers[source_spec.parser.source_file_type].build()
+                source_path = source_spec.source_path if source_spec.source_path \
+                    else parser.source_path_from_source_text(Path('.'), source_spec.before)
                 for source_file in parser.parse_inputs(
-                        [ParserInput(source_path, None, True, lambda: StringIO(spec.before))], None, ctx):
+                        [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'
                     remoting_context.client.reset()
-                    assert source_file.print_all() == spec.before
+                    assert source_file.print_all() == source_spec.before
 
-                    if recipe:
-                        source_file = recipe.get_visitor().visit(source_file, ctx)
+                    if spec:
+                        source_file = spec.recipe.get_visitor().visit(source_file, ctx)
 
-                    if spec.after is not None:
-                        after = spec.after(source_file.print_all())
+                    if source_spec.after is not None:
+                        after = source_spec.after(source_file.print_all())
                         assert source_file.print_all() == after
                     else:
-                        assert source_file.print_all() == spec.before
+                        assert source_file.print_all() == source_spec.before
                     break
     except Exception:
         raise

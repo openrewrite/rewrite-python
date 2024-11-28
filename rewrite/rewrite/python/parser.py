@@ -40,11 +40,11 @@ class PythonParser(Parser):
 
 class PythonParserBuilder(ParserBuilder):
     def __init__(self):
-        self._source_file_type = type(CompilationUnit)
+        super().__init__(CompilationUnit)
         self._dsl_name = 'python'
         self._styles = None
 
-    def styles(self, styles: Iterable[NamedStyles]):
+    def styles(self, *styles: NamedStyles):
         self._styles = styles
         return self
 

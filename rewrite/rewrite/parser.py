@@ -43,6 +43,7 @@ class ParserInput:
 
 P = TypeVar('P')
 
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class ParseError(SourceFile):
@@ -145,6 +146,7 @@ class ParseError(SourceFile):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         return cast(ParseErrorVisitor, v).visit_parse_error(self, p)
 
+
 class ParseErrorVisitor(TreeVisitor[Tree, P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, ParseError)
@@ -167,7 +169,8 @@ class Parser(ABC):
     def source_path_from_source_text(self, prefix: Path, source_code: str) -> Path:
         pass
 
-    def parse(self, source_files: Iterable[Path], relative_to: Optional[Path], ctx: ExecutionContext) -> Iterable[SourceFile]:
+    def parse(self, source_files: Iterable[Path], relative_to: Optional[Path], ctx: ExecutionContext) -> Iterable[
+        SourceFile]:
         inputs = [ParserInput(path, None, False, lambda: io.FileIO(path)) for path in source_files]
         return self.parse_inputs(inputs, relative_to, ctx)
 
@@ -197,6 +200,9 @@ class Parser(ABC):
 class ParserBuilder(ABC):
     _source_file_type: type
 
+    def __init__(self, source_file_type: type):
+        self._source_file_type = source_file_type
+
     @property
     def source_file_type(self) -> type:
         return self._source_file_type
@@ -213,7 +219,7 @@ class ParserBuilder(ABC):
 
 
 def require_print_equals_input(parser: Parser, source_file: SourceFile, parser_input: ParserInput,
-                                   relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
+                               relative_to: Optional[Path], ctx: ExecutionContext) -> SourceFile:
     required = ctx.get_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, True)
     if (required and not source_file.print_equals_input(parser_input, ctx)):
         diff = Result.diff(
