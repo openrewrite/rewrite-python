@@ -40,7 +40,7 @@ class Cursor:
         return None
 
     def fork(self) -> Cursor:
-        return Cursor(self.parent.fork(), self.value)
+        return Cursor(self.parent.fork(), self.value) if self.parent else self
 
 
 class TreeVisitor(Protocol[T, P]):

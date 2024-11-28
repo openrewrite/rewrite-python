@@ -1,7 +1,7 @@
 from typing import Optional
 
 from rewrite import Recipe, Tree, Cursor
-from rewrite.java import JavaSourceFile
+from rewrite.java import JavaSourceFile, MethodDeclaration, J, Space
 from rewrite.python import PythonVisitor, SpacesStyle, IntelliJ
 from rewrite.visitor import P, T
 
@@ -27,3 +27,8 @@ class SpacesVisitor(PythonVisitor):
     def __init__(self, style: SpacesStyle, stop_after: Tree = None):
         self._style = style
         self._stop_after = stop_after
+
+    def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
+        return method_declaration.padding.with_parameters(
+            method_declaration.padding.parameters.with_before(Space.SINGLE_SPACE if self._style.beforeParentheses.method_parentheses else Space.EMPTY)
+        )
