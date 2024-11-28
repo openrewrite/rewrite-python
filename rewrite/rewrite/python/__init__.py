@@ -4,6 +4,7 @@ from .support_types import *
 from .parser import *
 from .visitor import *
 from .markers import *
+from .style import *
 from .format import *
 
 __all__ = [
@@ -52,6 +53,10 @@ __all__ = [
     'UnionType',
     'VariableScope',
     'YieldFrom',
+
+    # Style
+    'PythonStyle',
+    'SpacesStyle',
 
     # Formatter
     'AutoFormat',

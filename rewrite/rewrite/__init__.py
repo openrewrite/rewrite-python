@@ -11,6 +11,7 @@ from .utils import random_id
 from .visitor import Cursor, TreeVisitor
 from .parser import *
 from .result import *
+from .style import *
 
 __all__ = [
     'Checksum',
@@ -36,5 +37,8 @@ __all__ = [
     'ParserBuilder',
     'ParseExceptionResult',
     'Result',
-    'SourceFile'
+    'SourceFile',
+
+    # Style
+    'Style',
 ]
