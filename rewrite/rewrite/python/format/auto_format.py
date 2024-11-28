@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, cast
 
 from rewrite import Recipe, Tree, Cursor
 from rewrite.java import JavaSourceFile, MethodDeclaration, J, Space
@@ -26,9 +26,13 @@ class AutoFormatVisitor(PythonVisitor):
 class SpacesVisitor(PythonVisitor):
     def __init__(self, style: SpacesStyle, stop_after: Tree = None):
         self._style = style
+        self._before_parentheses = style.before_parentheses
         self._stop_after = stop_after
 
     def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
+        method_declaration: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(method_declaration, p))
         return method_declaration.padding.with_parameters(
-            method_declaration.padding.parameters.with_before(Space.SINGLE_SPACE if self._style._before_parentheses.method_declaration else Space.EMPTY)
+            method_declaration.padding.parameters.with_before(
+                Space.SINGLE_SPACE if self._before_parentheses.method_declaration else Space.EMPTY
+            )
         )
