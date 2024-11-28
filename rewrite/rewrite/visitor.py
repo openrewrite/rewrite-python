@@ -3,10 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .markers import Marker, Markers
-    from .execution import RecipeRunException
-    from .tree import SourceFile, Tree
+from .execution import RecipeRunException
+from .markers import Marker, Markers
+from .tree import SourceFile, Tree
 
 O = TypeVar('O')
 T = TypeVar('T', bound='Tree')
