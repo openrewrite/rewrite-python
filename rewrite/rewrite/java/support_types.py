@@ -26,6 +26,10 @@ class J(Tree, Protocol):
     def with_prefix(self, prefix: Space) -> 'J':
         ...
 
+    def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
+        from .visitor import JavaVisitor
+        return isinstance(v, JavaVisitor)
+
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         from .visitor import JavaVisitor
         return self.accept_java(v.adapt(J, JavaVisitor), p)
