@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar
+from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, TYPE_CHECKING
 
-from rewrite import SourceFile, Tree, RecipeRunException, Marker, Markers
+if TYPE_CHECKING:
+    from .markers import Marker, Markers
+    from .execution import RecipeRunException
+    from .tree import SourceFile, Tree
 
 O = TypeVar('O')
-T = TypeVar('T', bound=Tree)
-T2 = TypeVar('T2', bound=Tree)
+T = TypeVar('T', bound='Tree')
+T2 = TypeVar('T2', bound='Tree')
 TV = TypeVar('TV', bound='TreeVisitor[Any, Any]')
 P = TypeVar('P')
 

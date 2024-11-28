@@ -7,7 +7,7 @@ from typing import Optional, Callable
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
-    ExecutionContext
+    ExecutionContext, Recipe, TreeVisitor
 from rewrite.python.parser import PythonParserBuilder
 
 
@@ -44,7 +44,11 @@ class SourceSpec:
         return self._source_path
 
 
-def rewrite_run(*sources: list[SourceSpec]):
+class RecipeSpec:
+    pass
+
+
+def rewrite_run(*source_specs: list[SourceSpec], recipe: Recipe = None):
     from rewrite.remote import RemotingContext, RemotePrinterFactory
     from rewrite.remote.server import register_remoting_factories
     remoting_context = RemotingContext()
@@ -58,7 +62,7 @@ def rewrite_run(*sources: list[SourceSpec]):
         ctx = InMemoryExecutionContext()
         ctx.put_message(ExecutionContext.REQUIRE_PRINT_EQUALS_INPUT, False)
 
-        for source in sources:
+        for source in source_specs:
             for spec in source:
                 parser = spec.parser.build()
                 source_path = spec.source_path if spec.source_path \
@@ -69,6 +73,9 @@ def rewrite_run(*sources: list[SourceSpec]):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'
                     remoting_context.client.reset()
                     assert source_file.print_all() == spec.before
+
+                    if recipe:
+                        source_file = recipe.get_visitor().visit(source_file, ctx)
 
                     if spec.after is not None:
                         after = spec.after(source_file.print_all())
@@ -90,3 +97,15 @@ def python(before: str, after: str = None) -> list[SourceSpec]:
         None if after is None else lambda _: textwrap.dedent(after),
         None
     )]
+
+
+def from_visitor(visitor: TreeVisitor[any, any]) -> Recipe:
+    return AdHocRecipe(visitor)
+
+
+@dataclass(frozen=True)
+class AdHocRecipe(Recipe):
+    visitor: TreeVisitor[any, any]
+
+    def get_visitor(self) -> TreeVisitor[any, any]:
+        return self.visitor

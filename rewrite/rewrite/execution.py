@@ -1,6 +1,7 @@
-from typing import Protocol, Any, ClassVar
+from typing import Protocol, Any, ClassVar, TYPE_CHECKING
 
-from rewrite import TreeVisitor
+if TYPE_CHECKING:
+    from .visitor import TreeVisitor
 
 
 class ExecutionContext(Protocol):
@@ -52,4 +53,5 @@ class RecipeRunException(Exception):
 
 class Recipe:
     def get_visitor(self):
+        from .visitor import TreeVisitor
         return TreeVisitor.noop()
