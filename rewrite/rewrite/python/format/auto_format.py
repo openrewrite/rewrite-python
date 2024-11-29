@@ -65,7 +65,7 @@ class SpacesVisitor(PythonVisitor):
                 index_padding.with_element(
                     index_padding.element.with_prefix(element_prefix)
                 ).with_after(index_after)
-            )
+            ).with_prefix(update_space(a.dimension.prefix, self._style.before_parentheses.left_bracket))
         )
         return a
 
