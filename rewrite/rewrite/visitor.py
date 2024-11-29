@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, TYPE_CHECKING
+from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar
 
 from .execution import RecipeRunException
 from .markers import Marker, Markers
@@ -24,6 +24,14 @@ class Cursor:
 
     def get_message(self, key: str, default_value: O) -> O:
         return default_value if self.messages is None else cast(O, self.messages.get(key))
+
+    def parent_tree_cursor(self) -> Optional[Cursor]:
+        c = self.parent
+        while c is not None:
+            if isinstance(c.value, Tree):
+                return c
+            c = c.parent
+        return None
 
     def first_enclosing_or_throw(self, type: Type[P]) -> P:
         result = self.first_enclosing(type)

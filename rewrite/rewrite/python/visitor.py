@@ -98,6 +98,14 @@ class PythonVisitor(JavaVisitor[P]):
         return compilation_unit
 
     def visit_expression_statement(self, expression_statement: ExpressionStatement, p: P) -> J:
+        temp_statement = cast(Statement, self.visit_statement(expression_statement, p))
+        if not isinstance(temp_statement, ExpressionStatement):
+            return temp_statement
+        expression_statement = cast(ExpressionStatement, temp_statement)
+        temp_expression = cast(Expression, self.visit_expression(expression_statement, p))
+        if not isinstance(temp_expression, ExpressionStatement):
+            return temp_expression
+        expression_statement = cast(ExpressionStatement, temp_expression)
         expression_statement = expression_statement.with_expression(self.visit_and_cast(expression_statement.expression, Expression, p))
         return expression_statement
 
@@ -112,6 +120,14 @@ class PythonVisitor(JavaVisitor[P]):
         return expression_type_tree
 
     def visit_statement_expression(self, statement_expression: StatementExpression, p: P) -> J:
+        temp_statement = cast(Statement, self.visit_statement(statement_expression, p))
+        if not isinstance(temp_statement, StatementExpression):
+            return temp_statement
+        statement_expression = cast(StatementExpression, temp_statement)
+        temp_expression = cast(Expression, self.visit_expression(statement_expression, p))
+        if not isinstance(temp_expression, StatementExpression):
+            return temp_expression
+        statement_expression = cast(StatementExpression, temp_expression)
         statement_expression = statement_expression.with_statement(self.visit_and_cast(statement_expression.statement, Statement, p))
         return statement_expression
 

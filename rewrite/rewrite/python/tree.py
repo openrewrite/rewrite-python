@@ -719,6 +719,13 @@ class ExpressionStatement(Py, Expression, Statement):
     def with_id(self, id: UUID) -> ExpressionStatement:
         return self if id is self._id else replace(self, _id=id)
 
+    @property
+    def prefix(self) -> Space:
+        return self._expression.prefix
+
+    def with_prefix(self, prefix: Space) -> ExpressionStatement:
+        return self.with_expression(self._expression.with_prefix(prefix))
+
     _expression: Expression
 
     @property
@@ -790,7 +797,7 @@ class StatementExpression(Py, Expression, Statement):
         return self._statement.prefix
 
     def with_prefix(self, prefix: Space) -> StatementExpression:
-        return self._statement.with_prefix(prefix)
+        return self.with_statement(self._statement.with_prefix(prefix))
 
     _statement: Statement
 
