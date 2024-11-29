@@ -300,6 +300,54 @@ class SpacesStyle(PythonStyle):
         return self if other is self._other else replace(self, _other=other)
 
 
+@dataclass(frozen=True)
+class TabsAndIndentsStyle(PythonStyle):
+    _use_tab_character: bool
+
+    @property
+    def use_tab_character(self) -> bool:
+        return self._use_tab_character
+
+    def with_use_tab_character(self, use_tab_character: bool) -> TabsAndIndentsStyle:
+        return self if use_tab_character is self._use_tab_character else replace(self, _use_tab_character=use_tab_character)
+
+    _tab_size: int
+
+    @property
+    def tab_size(self) -> int:
+        return self._tab_size
+
+    def with_tab_size(self, tab_size: int) -> TabsAndIndentsStyle:
+        return self if tab_size is self._tab_size else replace(self, _tab_size=tab_size)
+
+    _indent_size: int
+
+    @property
+    def indent_size(self) -> int:
+        return self._indent_size
+
+    def with_indent_size(self, indent_size: int) -> TabsAndIndentsStyle:
+        return self if indent_size is self._indent_size else replace(self, _indent_size=indent_size)
+
+    _continuation_indent: int
+
+    @property
+    def continuation_indent(self) -> int:
+        return self._continuation_indent
+
+    def with_continuation_indent(self, continuation_indent: int) -> TabsAndIndentsStyle:
+        return self if continuation_indent is self._continuation_indent else replace(self, _continuation_indent=continuation_indent)
+
+    _keep_indents_on_empty_lines: bool
+
+    @property
+    def keep_indents_on_empty_lines(self) -> bool:
+        return self._keep_indents_on_empty_lines
+
+    def with_keep_indents_on_empty_lines(self, keep_indents_on_empty_lines: bool) -> TabsAndIndentsStyle:
+        return self if keep_indents_on_empty_lines is self._keep_indents_on_empty_lines else replace(self, _keep_indents_on_empty_lines=keep_indents_on_empty_lines)
+
+
 class IntelliJ(NamedStyles):
     @classmethod
     def spaces(cls) -> SpacesStyle:
@@ -339,4 +387,14 @@ class IntelliJ(NamedStyles):
                 _before_hash=True,
                 _after_hash=True,
             ),
+        )
+
+    @classmethod
+    def tabs_and_indents(cls) -> TabsAndIndentsStyle:
+        return TabsAndIndentsStyle(
+            _use_tab_character=False,
+            _tab_size=4,
+            _indent_size=4,
+            _continuation_indent=9,
+            _keep_indents_on_empty_lines=False,
         )
