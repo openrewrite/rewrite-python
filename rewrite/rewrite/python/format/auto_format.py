@@ -1,6 +1,7 @@
 from typing import Optional, cast, TypeVar
 
 from .normalize_format import NormalizeFormatVisitor
+from .. import BlankLinesVisitor, BlankLinesStyle
 from ..style import SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
@@ -22,6 +23,7 @@ class AutoFormatVisitor(PythonVisitor):
         cu = tree if isinstance(tree, JavaSourceFile) else self._cursor.first_enclosing_or_throw(JavaSourceFile)
 
         tree = NormalizeFormatVisitor(self._stop_after).visit(tree, p, self._cursor.fork())
+        tree = BlankLinesVisitor(cu.get_style(BlankLinesStyle) or IntelliJ.blank_lines(), self._stop_after).visit(tree, p, self._cursor.fork())
         tree = SpacesVisitor(cu.get_style(SpacesStyle) or IntelliJ.spaces(), self._stop_after).visit(tree, p, self._cursor.fork())
         return tree
 
