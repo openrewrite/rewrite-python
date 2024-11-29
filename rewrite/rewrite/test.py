@@ -5,11 +5,12 @@ import textwrap
 from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Callable, Iterable
+from typing import Optional, Callable, Iterable, List
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
     ExecutionContext, Recipe, TreeVisitor
+from rewrite.execution import InMemoryLargeSourceSet
 from rewrite.python.parser import PythonParserBuilder
 
 
@@ -46,6 +47,14 @@ class SourceSpec:
         return self._source_path
 
 
+@dataclass(frozen=True)
+class CompositeRecipe(Recipe):
+    recipes: Iterable[Recipe]
+
+    def get_recipe_list(self) -> List[Recipe]:
+        return list(self.recipes)
+
+
 @dataclass(frozen=True, eq=False)
 class RecipeSpec:
     _recipe: Recipe = None
@@ -56,6 +65,9 @@ class RecipeSpec:
 
     def with_recipe(self, recipe: Recipe) -> RecipeSpec:
         return self if recipe is self._recipe else RecipeSpec(recipe)
+
+    def with_recipes(self, *recipes: Recipe):
+        return RecipeSpec(CompositeRecipe(recipes))
 
     _parsers: Iterable[ParserBuilder] = field(default_factory=list)
 
@@ -83,6 +95,8 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
 
         configured_parsers = {p.source_file_type: p for p in spec.parsers} if spec else {}
         parsers = {s.parser.source_file_type: configured_parsers.get(s.parser.source_file_type, s.parser) for source_spec in source_specs for s in source_spec}
+
+        spec_by_source_file = {}
         for source in source_specs:
             for source_spec in source:
                 parser = parsers[source_spec.parser.source_file_type].build()
@@ -95,15 +109,22 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
                     remoting_context.client.reset()
                     assert source_file.print_all() == source_spec.before
 
-                    if spec:
-                        source_file = spec.recipe.get_visitor().visit(source_file, ctx)
+                    spec_by_source_file[source_file] = source_spec
 
+        if spec:
+            recipe = spec.recipe
+            before = InMemoryLargeSourceSet(list(spec_by_source_file.keys()))
+            result = recipe.run(before, ctx)
+            for res in result:
+                if res._before and res._after:
+                    source_spec = spec_by_source_file[res._before]
+                    after_printed = res._after.print_all()
                     if source_spec.after is not None:
-                        after = source_spec.after(source_file.print_all())
-                        assert source_file.print_all() == after
+                        after = source_spec.after(after_printed)
+                        assert after_printed == after
                     else:
-                        assert source_file.print_all() == source_spec.before
-                    break
+                        assert after_printed == source_spec.before
+
     except Exception:
         raise
     finally:

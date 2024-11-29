@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 from enum import Enum, auto
 from functools import cached_property
 from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
-    TYPE_CHECKING
+    TYPE_CHECKING, Iterable
 from uuid import UUID
 
 from rewrite import Tree, SourceFile, TreeVisitor
@@ -113,6 +113,10 @@ class Space:
 
     def is_empty(self) -> bool:
         return len(self._comments) == 0 and (self._whitespace is None or self._whitespace == '')
+
+    @classmethod
+    def first_prefix(cls, trees: Optional[Iterable[J]]) -> Space:
+        return Space.EMPTY if trees is None or not trees else next(iter(trees)).prefix
 
     EMPTY: ClassVar[Space] = None
     SINGLE_SPACE: ClassVar[Space] = None

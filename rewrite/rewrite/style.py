@@ -4,7 +4,8 @@ from dataclasses import dataclass, replace
 from typing import Protocol, TypeVar, Type, Iterable, Optional, Set, runtime_checkable
 from uuid import UUID
 
-from rewrite import Marker, random_id
+from .markers import Marker
+from .utils import random_id
 
 
 @runtime_checkable

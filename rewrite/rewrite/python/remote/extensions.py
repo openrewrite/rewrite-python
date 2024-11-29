@@ -68,7 +68,7 @@ def receive_comment(comment: Optional[Comment], _: Optional[str], ctx: ReceiverC
     if comment:
         comment = comment.with_text(ctx.receive_value(comment.text, str))
         comment = comment.with_suffix(ctx.receive_value(comment.suffix, str))
-        comment = comment.with_multiline(ctx.receive_value(comment.aligned_to_indent, bool))
+        comment = comment.with_aligned_to_indent(ctx.receive_value(comment.aligned_to_indent, bool))
         comment = comment.with_markers(ctx.receive_node(comment.markers, ctx.receive_markers))
     else:
         comment = PyComment(
