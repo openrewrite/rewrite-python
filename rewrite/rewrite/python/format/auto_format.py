@@ -1,8 +1,8 @@
 from typing import Optional, cast, TypeVar
 
+from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
-from .. import BlankLinesVisitor, BlankLinesStyle
-from ..style import SpacesStyle, IntelliJ
+from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
 from ...java import JavaSourceFile, MethodDeclaration, J, Space
