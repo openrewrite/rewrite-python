@@ -61,4 +61,5 @@ __all__ = [
 
     # Formatter
     'AutoFormat',
+    'SpacesVisitor',
 ]

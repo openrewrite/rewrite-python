@@ -1,6 +1,6 @@
 from rewrite import NamedStyles
-from rewrite.python import AutoFormat, PythonParserBuilder, IntelliJ
-from rewrite.test import rewrite_run, python, RecipeSpec
+from rewrite.python import PythonParserBuilder, IntelliJ, SpacesVisitor
+from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
 
 def test_before_parentheses_method_declaration():
@@ -23,6 +23,5 @@ def test_before_parentheses_method_declaration():
             """
         ),
         spec=RecipeSpec()
-        .with_recipe(AutoFormat())
-        .with_parsers([PythonParserBuilder().styles(NamedStyles.build(style))])
+        .with_recipe(from_visitor(SpacesVisitor(style)))
     )
