@@ -54,6 +54,54 @@ def test_spaces_before_method_call_parentheses():
     )
 
 
+def test_spaces_within_method_call_parameters_with_args():
+    style = IntelliJ.spaces()
+    style = style.with_within(
+        style.within.with_brackets(True).with_method_call_parentheses(False)
+    ).with_before_parentheses(
+        style.before_parentheses.with_method_declaration(False)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """
+            foo( 1 )
+            foo( 1, 2 )
+            foo( 1,2,3 )
+            """,
+            """
+            foo(1)
+            foo(1, 2)
+            foo(1, 2, 3)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
+def test_spaces_within_method_call_parameters_no_args():
+    style = IntelliJ.spaces()
+    style = style.with_within(
+        style.within.with_brackets(False)
+    ).with_before_parentheses(
+        style.before_parentheses.with_method_declaration(False)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """
+            foo( )
+            """,
+            """
+            foo()
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
 def test_spaces_within_array_access_brackets():
     style = IntelliJ.spaces()
     style = style.with_within(
@@ -79,6 +127,32 @@ def test_spaces_within_array_access_brackets():
             a[0][1]
             a[0][1]
             a[0][1]
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
+def test_spaces_after_comma_method_call():
+    style = IntelliJ.spaces()
+    style = style.with_other(
+        style.other.with_after_comma(True)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """
+            foo(1 )
+            foo(1, 2)
+            foo(1,2)
+            foo(1, 2,3)
+            """,
+            """
+            foo(1)
+            foo(1, 2)
+            foo(1, 2)
+            foo(1, 2, 3)
             """
         ),
         spec=RecipeSpec()
