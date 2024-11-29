@@ -2,7 +2,7 @@ from typing import Optional, cast, TypeVar
 
 from rewrite import Recipe, Tree, Cursor
 from rewrite.java import JavaSourceFile, MethodDeclaration, J, Space
-from rewrite.python import PythonVisitor, SpacesStyle, IntelliJ
+from rewrite.python import PythonVisitor, SpacesStyle, IntelliJ, NormalizeFormatVisitor
 from rewrite.visitor import P, T
 
 
@@ -19,6 +19,7 @@ class AutoFormatVisitor(PythonVisitor):
         self._cursor = parent if parent is not None else Cursor(None, Cursor.ROOT_VALUE)
         cu = tree if isinstance(tree, JavaSourceFile) else self._cursor.first_enclosing_or_throw(JavaSourceFile)
 
+        tree = NormalizeFormatVisitor(self._stop_after).visit(tree, p, self._cursor.fork())
         tree = SpacesVisitor(cu.get_style(SpacesStyle) or IntelliJ.spaces(), self._stop_after).visit(tree, p, self._cursor.fork())
         return tree
 
