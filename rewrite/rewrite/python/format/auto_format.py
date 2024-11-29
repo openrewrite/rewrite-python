@@ -43,6 +43,7 @@ class SpacesVisitor(PythonVisitor):
     def space_before(self, j: J2, space_before: bool) -> J2:
         space: Space = cast(Space, j.prefix)
         if space.comments or '\\' in space.whitespace:
+            # don't touch whitespaces with comments or continuation characters
             return j
 
-        return j.with_prefix(space.with_whitespace(' ' if space_before else ''))
+        return j.with_prefix(Space.SINGLE_SPACE if space_before else Space.EMPTY)
