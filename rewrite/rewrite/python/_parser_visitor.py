@@ -1453,31 +1453,29 @@ class ParserVisitor(ast.NodeVisitor):
         return self.__pad_list_element(element, last, end_delim='}')
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> j.MethodDeclaration:
+        prefix = self.__whitespace()
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
 
-        save_cursor = self._cursor
-        async_prefix = self.__source_before('async', 'def') if isinstance(node, ast.AsyncFunctionDef) else None
         modifiers = []
-        if save_cursor != self._cursor:
+        if isinstance(node, ast.AsyncFunctionDef):
             modifiers.append(j.Modifier(
                 random_id(),
-                async_prefix,
+                self.__source_before('async'),
                 Markers.EMPTY,
                 'async',
                 j.Modifier.Type.Async,
                 []
             ))
-        save_cursor = self._cursor
+
         def_prefix = self.__source_before('def')
-        if save_cursor != self._cursor:
-            modifiers.append(j.Modifier(
-                random_id(),
-                def_prefix,
-                Markers.EMPTY,
-                'def',
-                j.Modifier.Type.Default,
-                []
-            ))
+        modifiers.append(j.Modifier(
+            random_id(),
+            def_prefix,
+            Markers.EMPTY,
+            'def',
+            j.Modifier.Type.Default,
+            []
+        ))
         name = j.MethodDeclaration.IdentifierWithAnnotations(j.Identifier(
             random_id(),
             self.__source_before(node.name),
@@ -1503,7 +1501,7 @@ class ParserVisitor(ast.NodeVisitor):
 
         return j.MethodDeclaration(
             random_id(),
-            Space.EMPTY,
+            prefix,
             Markers.EMPTY,
             decorators,
             modifiers,
