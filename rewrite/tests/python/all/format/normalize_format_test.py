@@ -1,4 +1,5 @@
-from rewrite.python import NormalizeFormatVisitor, PythonVisitor
+from rewrite.java import Space
+from rewrite.python import NormalizeFormatVisitor, PythonVisitor, CompilationUnit
 from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
 
@@ -8,6 +9,9 @@ class RemoveDecorators(PythonVisitor):
 
 
 def test_remove_decorator():
+    def assert_prefix(cu: CompilationUnit):
+        assert cu.statements[1].prefix == Space([], '\n')
+
     rewrite_run(
         # language=python
         python(
@@ -24,7 +28,8 @@ def test_remove_decorator():
 
             def f(n):
                 return n
-            """
+            """,
+            assert_prefix
         ),
         spec=RecipeSpec()
         .with_recipes(

@@ -5,14 +5,17 @@ import textwrap
 from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List
+from typing import Optional, Callable, Iterable, List, TypeVar
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
-    ExecutionContext, Recipe, TreeVisitor
+    ExecutionContext, Recipe, TreeVisitor, SourceFile
 from rewrite.execution import InMemoryLargeSourceSet
+from rewrite.python import CompilationUnit
 from rewrite.python.parser import PythonParserBuilder
 
+
+S = TypeVar('S', bound=SourceFile)
 
 @dataclass(frozen=True, eq=False)
 class SourceSpec:
@@ -45,6 +48,12 @@ class SourceSpec:
     @property
     def source_path(self) -> Optional[Path]:
         return self._source_path
+
+    _after_recipe: Callable[[S], None] = lambda _: None
+
+    @property
+    def after_recipe(self) -> Callable[[S], None]:
+        return self._after_recipe
 
 
 @dataclass(frozen=True)
@@ -118,6 +127,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
             for res in result:
                 if res._before and res._after:
                     source_spec = spec_by_source_file[res._before]
+                    source_spec.after_recipe(res._after)
                     after_printed = res._after.print_all()
                     if source_spec.after is not None:
                         after = source_spec.after(after_printed)
@@ -131,13 +141,14 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
         remoting_context.close()
 
 
-def python(before: str, after: str = None) -> list[SourceSpec]:
+def python(before: str, after: str = None, after_recipe: Callable[[CompilationUnit], None] = lambda s: None) -> list[SourceSpec]:
     return [SourceSpec(
         random_id(),
         PythonParserBuilder(),
         textwrap.dedent(before),
         None if after is None else lambda _: textwrap.dedent(after),
-        None
+        None,
+        after_recipe
     )]
 
 

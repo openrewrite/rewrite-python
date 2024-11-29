@@ -27,6 +27,7 @@ __all__ = [
     'Await',
     'ChainedAssignment',
     'CollectionLiteral',
+    'CompilationUnit',
     'ComprehensionExpression',
     'Del',
     'DictLiteral',
