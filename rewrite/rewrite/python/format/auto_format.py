@@ -1,9 +1,11 @@
 from typing import Optional, cast, TypeVar
 
-from rewrite import Recipe, Tree, Cursor
-from rewrite.java import JavaSourceFile, MethodDeclaration, J, Space
-from rewrite.python import PythonVisitor, SpacesStyle, IntelliJ, NormalizeFormatVisitor
-from rewrite.visitor import P, T
+from .normalize_format import NormalizeFormatVisitor
+from ..style import SpacesStyle, IntelliJ
+from ..visitor import PythonVisitor
+from ... import Recipe, Tree, Cursor
+from ...java import JavaSourceFile, MethodDeclaration, J, Space
+from ...visitor import P, T
 
 
 class AutoFormat(Recipe):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import cast, Optional, TypeVar
 
 from rewrite import Tree, P, Cursor
-from rewrite.java import MethodDeclaration, J, Space
+from rewrite.java import MethodDeclaration, J, Space, ClassDeclaration
 from rewrite.python import PythonVisitor, PyComment
 from rewrite.visitor import T
 
@@ -14,6 +14,15 @@ class NormalizeFormatVisitor(PythonVisitor):
     def __init__(self, stop_after: Tree = None):
         self._stop_after = stop_after
         self._stop = False
+
+    def visit_class_declaration(self, cd: ClassDeclaration, p: P) -> J:
+        cd: ClassDeclaration = cast(ClassDeclaration, super().visit_class_declaration(cd, p))
+        if cd.leading_annotations:
+            cd = _concatenate_prefix(cd, Space.first_prefix(cd.leading_annotations))
+            cd = cd.with_leading_annotations(Space.format_first_prefix(cd.leading_annotations, Space.EMPTY))
+            return cd
+
+        return cd
 
     def visit_method_declaration(self, md: MethodDeclaration, p: P) -> J:
         md: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(md, p))
