@@ -42,6 +42,7 @@ __all__ = [
     'MultiImport',
     'NamedArgument',
     'Pass',
+    'PyComment',
     'Slice',
     'SpecialParameter',
     'Star',

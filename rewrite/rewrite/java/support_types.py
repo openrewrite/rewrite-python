@@ -118,6 +118,15 @@ class Space:
     def first_prefix(cls, trees: Optional[Iterable[J]]) -> Space:
         return Space.EMPTY if trees is None or not trees else next(iter(trees)).prefix
 
+    @classmethod
+    def format_first_prefix(cls, trees: List[J2], prefix: Space) -> List[J2]:
+        if trees and next(iter(trees)).prefix != prefix:
+            formatted_trees = list(trees)
+            formatted_trees[0] = formatted_trees[0].with_prefix(prefix)
+            return formatted_trees
+        return trees
+
+
     EMPTY: ClassVar[Space] = None
     SINGLE_SPACE: ClassVar[Space] = None
 
