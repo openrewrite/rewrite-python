@@ -58,6 +58,8 @@ __all__ = [
     'PythonStyle',
     'SpacesStyle',
     'TabsAndIndentsStyle',
+    'WrappingAndBracesStyle',
+    'BlankLinesStyle',
     'IntelliJ',
 
     # Formatter

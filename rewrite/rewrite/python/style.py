@@ -348,6 +348,108 @@ class TabsAndIndentsStyle(PythonStyle):
         return self if keep_indents_on_empty_lines is self._keep_indents_on_empty_lines else replace(self, _keep_indents_on_empty_lines=keep_indents_on_empty_lines)
 
 
+@dataclass(frozen=True)
+class WrappingAndBracesStyle(PythonStyle):
+    pass
+
+
+@dataclass(frozen=True)
+class BlankLinesStyle(PythonStyle):
+    @dataclass(frozen=True)
+    class KeepMaximum:
+        _in_declarations: int
+
+        @property
+        def in_declarations(self) -> int:
+            return self._in_declarations
+
+        def with_in_declarations(self, in_declarations: int) -> BlankLinesStyle.KeepMaximum:
+            return self if in_declarations is self._in_declarations else replace(self, _in_declarations=in_declarations)
+
+        _in_code: int
+
+        @property
+        def in_code(self) -> int:
+            return self._in_code
+
+        def with_in_code(self, in_code: int) -> BlankLinesStyle.KeepMaximum:
+            return self if in_code is self._in_code else replace(self, _in_code=in_code)
+
+    @dataclass(frozen=True)
+    class Minimum:
+        _after_top_level_imports: int
+
+        @property
+        def after_top_level_imports(self) -> int:
+            return self._after_top_level_imports
+
+        def with_after_top_level_imports(self, after_top_level_imports: int) -> BlankLinesStyle.Minimum:
+            return self if after_top_level_imports is self._after_top_level_imports else replace(self, _after_top_level_imports=after_top_level_imports)
+
+        _around_class: int
+
+        @property
+        def around_class(self) -> int:
+            return self._around_class
+
+        def with_around_class(self, around_class: int) -> BlankLinesStyle.Minimum:
+            return self if around_class is self._around_class else replace(self, _around_class=around_class)
+
+        _around_method: int
+
+        @property
+        def around_method(self) -> int:
+            return self._around_method
+
+        def with_around_method(self, around_method: int) -> BlankLinesStyle.Minimum:
+            return self if around_method is self._around_method else replace(self, _around_method=around_method)
+
+        _around_top_level_classes_functions: int
+
+        @property
+        def around_top_level_classes_functions(self) -> int:
+            return self._around_top_level_classes_functions
+
+        def with_around_top_level_classes_functions(self, around_top_level_classes_functions: int) -> BlankLinesStyle.Minimum:
+            return self if around_top_level_classes_functions is self._around_top_level_classes_functions else replace(self, _around_top_level_classes_functions=around_top_level_classes_functions)
+
+        _after_local_imports: int
+
+        @property
+        def after_local_imports(self) -> int:
+            return self._after_local_imports
+
+        def with_after_local_imports(self, after_local_imports: int) -> BlankLinesStyle.Minimum:
+            return self if after_local_imports is self._after_local_imports else replace(self, _after_local_imports=after_local_imports)
+
+        _before_first_method: int
+
+        @property
+        def before_first_method(self) -> int:
+            return self._before_first_method
+
+        def with_before_first_method(self, before_first_method: int) -> BlankLinesStyle.Minimum:
+            return self if before_first_method is self._before_first_method else replace(self, _before_first_method=before_first_method)
+
+    _keep_maximum: KeepMaximum
+
+    @property
+    def keep_maximum(self) -> KeepMaximum:
+        return self._keep_maximum
+
+    def with_keep_maximum(self, keep_maximum: KeepMaximum) -> BlankLinesStyle:
+        return self if keep_maximum is self._keep_maximum else replace(self, _keep_maximum=keep_maximum)
+
+    _minimum: Minimum
+
+    @property
+    def minimum(self) -> Minimum:
+        return self._minimum
+
+    def with_minimum(self, minimum: Minimum) -> BlankLinesStyle:
+        return self if minimum is self._minimum else replace(self, _minimum=minimum)
+
+
 class IntelliJ(NamedStyles):
     @classmethod
     def spaces(cls) -> SpacesStyle:
@@ -395,6 +497,27 @@ class IntelliJ(NamedStyles):
             _use_tab_character=False,
             _tab_size=4,
             _indent_size=4,
-            _continuation_indent=9,
+            _continuation_indent=8,
             _keep_indents_on_empty_lines=False,
+        )
+
+    @classmethod
+    def wrapping_and_braces(cls) -> WrappingAndBracesStyle:
+        return WrappingAndBracesStyle()
+
+    @classmethod
+    def blank_lines(cls) -> BlankLinesStyle:
+        return BlankLinesStyle(
+            BlankLinesStyle.KeepMaximum(
+                _in_declarations=1,
+                _in_code=1,
+            ),
+            BlankLinesStyle.Minimum(
+                _after_top_level_imports=1,
+                _around_class=1,
+                _around_method=1,
+                _around_top_level_classes_functions=2,
+                _after_local_imports=0,
+                _before_first_method=0,
+            )
         )
