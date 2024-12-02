@@ -222,7 +222,7 @@ class ParserVisitor(ast.NodeVisitor):
         return self.visit_FunctionDef(node)
 
     def visit_ClassDef(self, node):
-        prefix = self.__whitespace() if node.decorator_list else Space.EMPTY
+        prefix = self.__whitespace()
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
         kind_prefix = self.__source_before('class')
         name = self.__convert_name(node.name)
@@ -584,7 +584,7 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             JContainer(
                 Space.EMPTY,
-                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1, pad_last=False) for i, n in
                  enumerate(node.names)],
                 Markers.EMPTY
             )

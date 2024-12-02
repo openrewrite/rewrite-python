@@ -22,6 +22,8 @@ class NormalizeFormatVisitor(PythonVisitor):
             cd = cd.with_leading_annotations(Space.format_first_prefix(cd.leading_annotations, Space.EMPTY))
             return cd
 
+        cd = _concatenate_prefix(cd, cd.padding.kind.prefix)
+        cd = cd.padding.with_kind(cd.padding.kind.with_prefix(Space.EMPTY))
         return cd
 
     def visit_method_declaration(self, md: MethodDeclaration, p: P) -> J:
