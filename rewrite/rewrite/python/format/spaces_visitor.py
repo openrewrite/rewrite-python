@@ -26,6 +26,12 @@ class SpacesVisitor(PythonVisitor):
     def visit_method_invocation(self, method_invocation: MethodInvocation, p: P) -> J:
         m: MethodInvocation = cast(MethodInvocation, super().visit_method_invocation(method_invocation, p))
 
+        # Handle space before parenthesis for method e.g. foo (..) <-> foo(..)
+        m = m.padding.arguments.with_before(
+            m.padding.arguments.with_before(
+                Space.SINGLE_SPACE if self._style.before_parentheses.method_call else Space.EMPTY)
+        )
+
         if not m.arguments or isinstance(m.arguments[0], Empty):
             # Handle within method call parenthesis with no arguments e.g. foo() <-> foo( )
             use_space = self._style.within.empty_method_call_parentheses
@@ -62,13 +68,6 @@ class SpacesVisitor(PythonVisitor):
                      for index, arg in enumerate(m.padding.arguments.padding.elements)]
                 )
             )
-
-        # Handle space before parenthesis for method e.g. foo (..) <-> foo(..)
-        m = m.padding.with_arguments(
-            m.padding.arguments.with_before(
-                Space.SINGLE_SPACE if self._style.before_parentheses.method_call else Space.EMPTY)
-        )
-
         return m
 
     def visit_array_access(self, array_access: ArrayAccess, p: P) -> J:
