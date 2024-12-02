@@ -114,3 +114,35 @@ def test_blank_lines_after_top_level_imports():
             from_visitor(BlankLinesVisitor(style))
         )
     )
+
+
+def test_local_imports():
+    style = IntelliJ.blank_lines()
+    style = style.with_minimum(
+        style.minimum.with_after_local_imports(1)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            class Foo:
+                import os
+                print('1')
+                import sys
+                print('2')
+            """,
+            """\
+            class Foo:
+                import os
+
+                print('1')
+                import sys
+
+                print('2')
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(BlankLinesVisitor(style))
+        )
+    )
