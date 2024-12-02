@@ -159,6 +159,7 @@ def test_spaces_after_comma_method_call():
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
 def test_spaces_around_assignment():
     style = IntelliJ.spaces()
     style = style.with_other(
@@ -180,6 +181,30 @@ def test_spaces_around_assignment():
             a = 1
             def foo(x):
                 x = 1
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
+def test_spaces_around_assignment():
+    style = IntelliJ.spaces()
+    style = style.with_other(
+        style.other.with_after_comma(True)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """
+            a+=1
+            a-= 1
+            a +=1
+            """,
+            """
+            a += 1
+            a -= 1
+            a += 1
             """
         ),
         spec=RecipeSpec()
