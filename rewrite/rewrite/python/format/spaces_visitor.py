@@ -1,7 +1,7 @@
 from typing import Optional, cast, TypeVar
 
 from rewrite import Tree
-from rewrite.java import J
+from rewrite.java import J, Assignment, JLeftPadded
 from rewrite.java import MethodInvocation, MethodDeclaration, Empty, ArrayAccess, Space
 from rewrite.python import PythonVisitor, SpacesStyle
 from rewrite.visitor import P
@@ -93,17 +93,41 @@ class SpacesVisitor(PythonVisitor):
 
         return j.with_prefix(Space.SINGLE_SPACE if space_before else Space.EMPTY)
 
+    def space_before_jleftpadded(self, j: JLeftPadded[J2], space_before) -> JLeftPadded[J2]:
+        space: Space = cast(Space, j.before)
+        if space.comments or '\\' in space.whitespace:
+            # don't touch whitespaces with comments or continuation characters
+            return j
+
+        if space_before and not_single_space(space.whitespace):
+            return j.with_before(space.with_whitespace(" "))
+        elif not space_before and only_spaces_and_not_empty(space.whitespace):
+            return j.with_before(space.with_whitespace(""))
+        return j
+
+    def contains_comments(self, space: Space) -> bool:
+        return space.comments is not None or '\\' in space.whitespace
+
     def space_after(self, j: J2, space_after: bool) -> J2:
         space: Space = cast(Space, j.after)
         if space.comments or '\\' in space.whitespace:
             # don't touch whitespaces with comments or continuation characters
             return j
-        #
+
         if space_after and not_single_space(space.whitespace):
             return j.with_after(space.with_whitespace(" "))
         elif not space_after and only_spaces_and_not_empty(space.whitespace):
             return j.with_after(space.with_whitespace(""))
         return j
+
+    def visit_assignment(self, assignment: Assignment, p: P) -> J:
+        a: Assignment = cast(Assignment, super().visit_assignment(assignment, p))
+        a = a.padding.with_assignment(
+            self.space_before_jleftpadded(a.padding.assignment, self._style.around_operators.assignment))
+        a = a.padding.with_assignment(
+            a.padding.assignment.with_element(
+            self.space_before(a.padding.assignment.element, self._style.around_operators.assignment)))
+        return a
 
 
 def update_space(s: Space, have_space: bool) -> Space:
