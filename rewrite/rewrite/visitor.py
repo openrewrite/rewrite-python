@@ -25,6 +25,11 @@ class Cursor:
     def get_message(self, key: str, default_value: O) -> O:
         return default_value if self.messages is None else cast(O, self.messages.get(key))
 
+    def put_message(self, key: str, value: object) -> None:
+        if self.messages is None:
+            object.__setattr__(self, 'messages', {})
+        self.messages[key] = value
+
     def parent_tree_cursor(self) -> Optional[Cursor]:
         c = self.parent
         while c is not None:

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Optional, TypeVar, cast
 
 from rewrite import Tree, P, Cursor
-from rewrite.java import J, Space, Statement, JRightPadded, Block, ClassDeclaration, MethodDeclaration
-from rewrite.python import PythonVisitor, BlankLinesStyle, CompilationUnit
+from rewrite.java import J, Space, Statement, JRightPadded, Block, ClassDeclaration, MethodDeclaration, Import
+from rewrite.python import PythonVisitor, BlankLinesStyle, CompilationUnit, MultiImport
 from rewrite.visitor import T
 
 J2 = TypeVar('J2', bound=J)
@@ -26,10 +26,21 @@ class BlankLinesVisitor(PythonVisitor):
 
         parent_cursor = self.cursor.parent_tree_cursor()
         top_level = isinstance(parent_cursor.value, CompilationUnit)
-        if top_level and statement != cast(CompilationUnit, parent_cursor.value).statements[0]:
-            statement = minimum_lines_for_tree(statement, self._style.minimum.around_top_level_classes_functions)
-        elif top_level:
-            statement = statement.with_prefix(statement.prefix.with_whitespace(''))
+        if top_level and isinstance(statement, (Import, MultiImport)):
+            parent_cursor.put_message('previous_import', True)
+            prev_import = False
+        else:
+            prev_import = top_level and parent_cursor.get_message('previous_import', False)
+            if prev_import:
+                parent_cursor.put_message('previous_import', False)
+
+        if top_level:
+            if statement == cast(CompilationUnit, parent_cursor.value).statements[0]:
+                statement = statement.with_prefix(statement.prefix.with_whitespace(''))
+            else:
+                min_lines = max(self._style.minimum.around_top_level_classes_functions if isinstance(statement, (ClassDeclaration, MethodDeclaration)) else 0,
+                                self._style.minimum.after_top_level_imports if prev_import else 0)
+                statement = minimum_lines_for_tree(statement, min_lines)
         else:
             in_block = isinstance(parent_cursor.value, Block)
             in_class = in_block and isinstance(parent_cursor.parent_tree_cursor().value, ClassDeclaration)

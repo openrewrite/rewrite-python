@@ -584,7 +584,7 @@ class ParserVisitor(ast.NodeVisitor):
             False,
             JContainer(
                 Space.EMPTY,
-                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1) for i, n in
+                [self.__pad_list_element(self.__convert(n), i == len(node.names) - 1, pad_last=False) for i, n in
                  enumerate(node.names)],
                 Markers.EMPTY
             )

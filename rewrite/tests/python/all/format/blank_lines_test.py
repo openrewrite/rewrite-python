@@ -83,3 +83,34 @@ def test_blank_lines_between_class_methods():
             from_visitor(BlankLinesVisitor(IntelliJ.blank_lines()))
         )
     )
+
+
+def test_blank_lines_after_top_level_imports():
+    style = IntelliJ.blank_lines()
+    style = style.with_minimum(
+        style.minimum.with_after_top_level_imports(3)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            import os
+            import sys
+            class Foo:
+                pass
+            """,
+            """\
+            import os
+            import sys
+
+
+
+            class Foo:
+                pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(BlankLinesVisitor(style))
+        )
+    )
