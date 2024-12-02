@@ -51,3 +51,35 @@ def test_blank_lines_between_top_level_declarations():
             from_visitor(BlankLinesVisitor(IntelliJ.blank_lines()))
         )
     )
+
+
+def test_blank_lines_between_class_methods():
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            class Foo:
+                def foo(self):
+                    pass
+                def bar(self):
+                    pass
+                class Nested:
+                    pass
+            """,
+            """\
+            class Foo:
+                def foo(self):
+                    pass
+
+                def bar(self):
+                    pass
+
+                class Nested:
+                    pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(BlankLinesVisitor(IntelliJ.blank_lines()))
+        )
+    )

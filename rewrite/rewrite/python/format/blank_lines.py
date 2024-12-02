@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional, TypeVar, cast
 
 from rewrite import Tree, P, Cursor
-from rewrite.java import J, Space, Statement, JRightPadded
+from rewrite.java import J, Space, Statement, JRightPadded, Block, ClassDeclaration, MethodDeclaration
 from rewrite.python import PythonVisitor, BlankLinesStyle, CompilationUnit
 from rewrite.visitor import T
 
@@ -30,6 +30,15 @@ class BlankLinesVisitor(PythonVisitor):
             statement = minimum_lines_for_tree(statement, self._style.minimum.around_top_level_classes_functions)
         elif top_level:
             statement = statement.with_prefix(statement.prefix.with_whitespace(''))
+        else:
+            in_block = isinstance(parent_cursor.value, Block)
+            in_class = in_block and isinstance(parent_cursor.parent_tree_cursor().value, ClassDeclaration)
+            if in_class:
+                is_first = cast(Block, parent_cursor.value).statements[0] is statement
+                if not is_first and isinstance(statement, MethodDeclaration):
+                    statement = minimum_lines_for_tree(statement, self._style.minimum._around_method)
+                elif not is_first and isinstance(statement, ClassDeclaration):
+                    statement = minimum_lines_for_tree(statement, self._style.minimum._around_class)
         return statement
 
     def post_visit(self, tree: T, p: P) -> Optional[T]:
