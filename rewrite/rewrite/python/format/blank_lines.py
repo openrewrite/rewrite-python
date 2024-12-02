@@ -52,6 +52,8 @@ class BlankLinesVisitor(PythonVisitor):
                     min_lines = max(min_lines, self._style.minimum.around_method)
                 elif not is_first and isinstance(statement, ClassDeclaration):
                     min_lines = max(min_lines, self._style.minimum.around_class)
+                elif is_first and isinstance(statement, MethodDeclaration):
+                    min_lines = max(min_lines, self._style.minimum.before_first_method)
             if prev_import:
                 min_lines = max(min_lines, self._style.minimum.after_local_imports)
             statement = minimum_lines_for_tree(statement, min_lines)

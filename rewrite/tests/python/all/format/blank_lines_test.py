@@ -146,3 +146,44 @@ def test_local_imports():
             from_visitor(BlankLinesVisitor(style))
         )
     )
+
+
+def test_before_first_method():
+    style = IntelliJ.blank_lines()
+    style = style.with_minimum(
+        style.minimum.with_before_first_method(2)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            class Foo:
+                def __init__(self):
+                    pass
+
+
+            class Bar:
+                x = 1
+                def __init__(self):
+                    pass
+            """,
+            """\
+            class Foo:
+
+
+                def __init__(self):
+                    pass
+
+
+            class Bar:
+                x = 1
+
+                def __init__(self):
+                    pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(BlankLinesVisitor(style))
+        )
+    )
