@@ -27,10 +27,8 @@ class SpacesVisitor(PythonVisitor):
         m: MethodInvocation = cast(MethodInvocation, super().visit_method_invocation(method_invocation, p))
 
         # Handle space before parenthesis for method e.g. foo (..) <-> foo(..)
-        m = m.padding.arguments.with_before(
-            m.padding.arguments.with_before(
-                Space.SINGLE_SPACE if self._style.before_parentheses.method_call else Space.EMPTY)
-        )
+        m = m.padding.with_arguments(m.padding.arguments.with_before(
+            Space.SINGLE_SPACE if self._style.before_parentheses.method_call else Space.EMPTY))
 
         if not m.arguments or isinstance(m.arguments[0], Empty):
             # Handle within method call parenthesis with no arguments e.g. foo() <-> foo( )
