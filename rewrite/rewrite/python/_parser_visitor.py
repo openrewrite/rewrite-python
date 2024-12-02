@@ -222,7 +222,7 @@ class ParserVisitor(ast.NodeVisitor):
         return self.visit_FunctionDef(node)
 
     def visit_ClassDef(self, node):
-        prefix = self.__whitespace() if node.decorator_list else Space.EMPTY
+        prefix = self.__whitespace()
         decorators = [self.__map_decorator(d) for d in node.decorator_list]
         kind_prefix = self.__source_before('class')
         name = self.__convert_name(node.name)
