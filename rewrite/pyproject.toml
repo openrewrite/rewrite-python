@@ -13,6 +13,9 @@ python = ">=3.9"
 pytest = "^8.3.2"
 more-itertools = "^10.4.0"
 
+[tool.pytest.ini_options]
+addopts = "--tb=short --color=yes"
+
 [tool.poetry.group.dev.dependencies]
 tox = "^4.18.0"
 openrewrite-remote = "*"
