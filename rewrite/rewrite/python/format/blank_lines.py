@@ -26,13 +26,14 @@ class BlankLinesVisitor(PythonVisitor):
 
         parent_cursor = self.cursor.parent_tree_cursor()
         top_level = isinstance(parent_cursor.value, CompilationUnit)
-        if top_level and isinstance(statement, (Import, MultiImport)):
-            parent_cursor.put_message('previous_import', True)
+
+        if isinstance(statement, (Import, MultiImport)):
+            parent_cursor.put_message('prev_import', True)
             prev_import = False
         else:
-            prev_import = top_level and parent_cursor.get_message('previous_import', False)
+            prev_import = parent_cursor.get_message('prev_import', False)
             if prev_import:
-                parent_cursor.put_message('previous_import', False)
+                parent_cursor.put_message('prev_import', False)
 
         if top_level:
             if statement == cast(CompilationUnit, parent_cursor.value).statements[0]:
@@ -44,12 +45,18 @@ class BlankLinesVisitor(PythonVisitor):
         else:
             in_block = isinstance(parent_cursor.value, Block)
             in_class = in_block and isinstance(parent_cursor.parent_tree_cursor().value, ClassDeclaration)
+            min_lines = 0
             if in_class:
                 is_first = cast(Block, parent_cursor.value).statements[0] is statement
                 if not is_first and isinstance(statement, MethodDeclaration):
-                    statement = minimum_lines_for_tree(statement, self._style.minimum._around_method)
+                    min_lines = max(min_lines, self._style.minimum.around_method)
                 elif not is_first and isinstance(statement, ClassDeclaration):
-                    statement = minimum_lines_for_tree(statement, self._style.minimum._around_class)
+                    min_lines = max(min_lines, self._style.minimum.around_class)
+                elif is_first and isinstance(statement, MethodDeclaration):
+                    min_lines = max(min_lines, self._style.minimum.before_first_method)
+            if prev_import:
+                min_lines = max(min_lines, self._style.minimum.after_local_imports)
+            statement = minimum_lines_for_tree(statement, min_lines)
         return statement
 
     def post_visit(self, tree: T, p: P) -> Optional[T]:
@@ -66,6 +73,8 @@ def minimum_lines_for_right_padded(tree: JRightPadded[J2], min_lines) -> JRightP
 
 
 def minimum_lines_for_tree(tree: J, min_lines) -> J:
+    if min_lines == 0:
+        return tree
     return tree.with_prefix(minimum_lines_for_space(tree.prefix, min_lines))
 
 
