@@ -66,6 +66,7 @@ class SpacesVisitor(PythonVisitor):
                      for index, arg in enumerate(m.padding.arguments.padding.elements)]
                 )
             )
+        # TODO: Handle type parameters, relevant for constructors in Python.
         return m
 
     def visit_array_access(self, array_access: ArrayAccess, p: P) -> J:
