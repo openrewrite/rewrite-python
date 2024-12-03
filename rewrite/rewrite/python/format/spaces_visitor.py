@@ -1,10 +1,10 @@
-from typing import Optional, cast, TypeVar
+from typing import Optional, cast, TypeVar, List
 
 import rewrite.java as j
 from rewrite import Tree
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space
-from rewrite.python import PythonVisitor, SpacesStyle, Binary
+from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
 from rewrite.visitor import P
 
 J2 = TypeVar('J2', bound=J)
@@ -106,6 +106,21 @@ class SpacesVisitor(PythonVisitor):
         operator: JLeftPadded = a.padding.operator
         a = a.padding.with_operator(
             operator.with_before(update_space(operator.before, self._style.around_operators.assignment)))
+        return a.with_assignment(self.space_before(a.assignment, self._style.around_operators.assignment))
+
+    def visit_chained_assignment(self, chained_assignment: ChainedAssignment, p: P) -> J:
+        """
+        Handle chained assignment e.g. a = b = 1 <-> a=b=1
+        """
+        a: ChainedAssignment = cast(ChainedAssignment, super().visit_chained_assignment(chained_assignment, p))
+        a = a.padding.with_variables(
+            [v.with_after(update_space(v.after, self._style.around_operators.assignment)) for v in a.padding.variables])
+
+        a = a.padding.with_variables(
+            [v.with_element(
+                self.space_before(v.element, self._style.around_operators.assignment if idx >= 1 else False)) for idx, v
+                in enumerate(a.padding.variables)])
+
         return a.with_assignment(self.space_before(a.assignment, self._style.around_operators.assignment))
 
     def visit_member_reference(self, member_reference: MemberReference, p: P) -> J:

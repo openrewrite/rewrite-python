@@ -164,8 +164,8 @@ def test_spaces_after_comma_method_call():
 
 def test_spaces_around_assignment():
     style = IntelliJ.spaces()
-    style = style.with_other(
-        style.other.with_after_comma(True)
+    style = style.with_around_operators(
+        style.around_operators.with_assignment(True)
     )
     rewrite_run(
         # language=python
@@ -183,6 +183,30 @@ def test_spaces_around_assignment():
             a = 1
             def foo(x):
                 x = 1
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
+def test_spaces_around_chained_assignment():
+    style = IntelliJ.spaces()
+    style = style.with_around_operators(
+        style.around_operators.with_assignment(True)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """
+            a =b= 1 +2
+            a=b=1 +2
+            a=b =1 +2
+            """,
+            """
+            a = b = 1 + 2
+            a = b = 1 + 2
+            a = b = 1 + 2
             """
         ),
         spec=RecipeSpec()
@@ -234,6 +258,7 @@ def test_spaces_member_reference():
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
+
 
 @pytest.mark.parametrize("binary_op", [
     "+", "-", "*", "/", "%", "<", ">", "<=", ">=", "==", "!=", "&", "|", "^", "<<", ">>"
@@ -300,6 +325,7 @@ def test_spaces_python_binary_operators_numbers(python_binary_op, left_space, ri
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
+
 
 @pytest.mark.parametrize('left_space', ['', ' '])
 @pytest.mark.parametrize('right_space', ['', ' '])
