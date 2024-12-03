@@ -188,7 +188,7 @@ public class PythonParser implements Parser {
 
         int port = 54322;
         if (!isServerRunning(port)) {
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", "-m", "rewrite.remote.server", Integer.toString(port));
+            ProcessBuilder processBuilder = new ProcessBuilder(executable, "-m", "rewrite.remote.server", Integer.toString(port));
             if (!pythonPath.isEmpty()) {
                 Map<String, String> environment = processBuilder.environment();
                 environment.compute("PYTHONPATH", (k, current) ->
