@@ -1,9 +1,10 @@
 from typing import Optional, cast, TypeVar
 
+import rewrite.java as j
 from rewrite import Tree
-from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation
-from rewrite.java import MethodInvocation, MethodDeclaration, Empty, ArrayAccess, Space
-from rewrite.python import PythonVisitor, SpacesStyle
+from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
+    MethodDeclaration, Empty, ArrayAccess, Space
+from rewrite.python import PythonVisitor, SpacesStyle, Binary
 from rewrite.visitor import P
 
 J2 = TypeVar('J2', bound=J)
@@ -107,6 +108,59 @@ class SpacesVisitor(PythonVisitor):
             operator.with_before(update_space(operator.before, self._style.around_operators.assignment)))
         return a.with_assignment(self.space_before(a.assignment, self._style.around_operators.assignment))
 
+    def visit_member_reference(self, member_reference: MemberReference, p: P) -> J:
+        m: MemberReference = cast(MemberReference, super().visit_member_reference(member_reference, p))
+
+        if m.padding.type_parameters is not None:
+            # TODO: Handle type parameters, relevant for constructors in Python.
+            raise NotImplementedError("Type parameters are not supported yet")
+
+        return m
+
+    def visit_binary(self, binary: j.Binary, p: P) -> J:
+        b: j.Binary = cast(j.Binary, super().visit_binary(binary, p))
+        op: j.Binary.Type = b.operator
+
+        # Additive operators, _self._style.around_operators.addition is True by default
+        if op in [j.Binary.Type.Addition, j.Binary.Type.Subtraction]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.additive)
+        elif op in [j.Binary.Type.Multiplication, j.Binary.Type.Division, j.Binary.Type.Modulo]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.multiplicative)
+        elif op in [j.Binary.Type.LessThan, j.Binary.Type.GreaterThan, j.Binary.Type.LessThanOrEqual,
+                    j.Binary.Type.GreaterThanOrEqual, j.Binary.Type.Equal, j.Binary.Type.NotEqual]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.relational)
+        elif op in [j.Binary.Type.BitAnd, j.Binary.Type.BitOr, j.Binary.Type.BitXor]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.bitwise)
+        elif op in [j.Binary.Type.LeftShift, j.Binary.Type.RightShift, j.Binary.Type.UnsignedRightShift]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.shift)
+        elif op in [j.Binary.Type.Or, j.Binary.Type.And]:
+            b = self._apply_binary_space_around(b, True)
+        else:
+            raise NotImplementedError(f"Operation {op} is not supported yet")
+
+        return b
+
+    def visit_python_binary(self, binary: Binary, p: P) -> J:
+        b: Binary = cast(Binary, super().visit_python_binary(binary, p))
+        op: Binary.Type = b.operator
+
+        if op == Binary.Type.In or op == Binary.Type.Is or op == Binary.Type.IsNot or op == Binary.Type.NotIn:
+            # TODO: Not sure what style options to use for these operators
+            b = self._apply_binary_space_around(b, True)
+        elif op == Binary.Type.FloorDivision or op == Binary.Type.MatrixMultiplication or op == Binary.Type.Power:
+            b = self._apply_binary_space_around(b, self._style.around_operators.multiplicative)
+        elif op == Binary.Type.StringConcatenation:
+            b = self._apply_binary_space_around(b, self._style.around_operators.additive)
+        return b
+
+    def _apply_binary_space_around(self, binary, use_space_around: bool):
+        operator = binary.padding.operator
+        binary = binary.padding.with_operator(
+            operator.with_before(update_space(operator.before, use_space_around))
+        )
+        binary = binary.with_right(self.space_before(binary.right, use_space_around))
+        return binary
+
     def space_before(self, j: J2, space_before: bool) -> J2:
         space: Space = cast(Space, j.prefix)
         if space.comments or '\\' in space.whitespace:
@@ -141,6 +195,7 @@ class SpacesVisitor(PythonVisitor):
         elif not space_after and only_spaces_and_not_empty(space.whitespace):
             return j.with_after(space.with_whitespace(""))
         return j
+
 
 def update_space(s: Space, have_space: bool) -> Space:
     if s.comments:
