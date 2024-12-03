@@ -1,8 +1,9 @@
 from __future__ import annotations
-import traceback
 
+import traceback
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import List, Protocol, ClassVar, cast, runtime_checkable, TYPE_CHECKING
+from typing import List, ClassVar, cast, TYPE_CHECKING
 from uuid import UUID
 
 if TYPE_CHECKING:
@@ -10,12 +11,13 @@ if TYPE_CHECKING:
 from .utils import random_id
 
 
-@runtime_checkable
-class Marker(Protocol):
+class Marker(ABC):
     @property
+    @abstractmethod
     def id(self) -> UUID:
         ...
 
+    @abstractmethod
     def with_id(self, id: UUID) -> Marker:
         ...
 

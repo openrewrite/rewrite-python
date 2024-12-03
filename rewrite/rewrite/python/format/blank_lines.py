@@ -41,7 +41,7 @@ class BlankLinesVisitor(PythonVisitor):
             else:
                 min_lines = max(self._style.minimum.around_top_level_classes_functions if isinstance(statement, (ClassDeclaration, MethodDeclaration)) else 0,
                                 self._style.minimum.after_top_level_imports if prev_import else 0)
-                statement = minimum_lines_for_tree(statement, min_lines)
+                statement = _adjusted_lines_for_tree(statement, min_lines, self._style.keep_maximum.in_declarations)
         else:
             in_block = isinstance(parent_cursor.value, Block)
             in_class = in_block and isinstance(parent_cursor.parent_tree_cursor().value, ClassDeclaration)
@@ -54,9 +54,16 @@ class BlankLinesVisitor(PythonVisitor):
                     min_lines = max(min_lines, self._style.minimum.around_class)
                 elif is_first and isinstance(statement, MethodDeclaration):
                     min_lines = max(min_lines, self._style.minimum.before_first_method)
+
+            # This seems to correspond to how IntelliJ interprets this configuration
+            max_lines = self._style.keep_maximum.in_declarations if \
+                isinstance(statement, (ClassDeclaration, MethodDeclaration)) else \
+                self._style.keep_maximum.in_code
+
             if prev_import:
                 min_lines = max(min_lines, self._style.minimum.after_local_imports)
-            statement = minimum_lines_for_tree(statement, min_lines)
+
+            statement = _adjusted_lines_for_tree(statement, min_lines, max_lines)
         return statement
 
     def post_visit(self, tree: T, p: P) -> Optional[T]:
@@ -68,39 +75,35 @@ class BlankLinesVisitor(PythonVisitor):
         return tree if self._stop else super().visit(tree, p, parent)
 
 
-def minimum_lines_for_right_padded(tree: JRightPadded[J2], min_lines) -> JRightPadded[J2]:
-    return tree.with_element(minimum_lines_for_tree(tree.element, min_lines))
+def _adjusted_lines_for_right_padded(tree: JRightPadded[J2], min_lines: int, max_lines: int) -> JRightPadded[J2]:
+    return tree.with_element(_adjusted_lines_for_tree(tree.element, min_lines, max_lines))
 
 
-def minimum_lines_for_tree(tree: J, min_lines) -> J:
-    if min_lines == 0:
-        return tree
-    return tree.with_prefix(minimum_lines_for_space(tree.prefix, min_lines))
+def _adjusted_lines_for_tree(tree: J, min_lines: int, max_lines: int) -> J:
+    return tree.with_prefix(_adjusted_lines_for_space(tree.prefix, min_lines, max_lines))
 
 
-def minimum_lines_for_space(prefix: Space, min_lines) -> Space:
-    if min_lines == 0:
-        return prefix
+def _adjusted_lines_for_space(prefix: Space, min_lines: int, max_lines: int) -> Space:
     if not prefix.comments or \
             '\n' in prefix.whitespace or \
             (prefix.comments[0].multiline and '\n' in prefix.comments[0].text):
-        return prefix.with_whitespace(minimum_lines_for_string(prefix.whitespace, min_lines))
+        return prefix.with_whitespace(_adjusted_lines_for_string(prefix.whitespace, min_lines, max_lines))
 
     # the first comment is a trailing comment on the previous line
-    c0 = prefix.comments[0].with_suffix(minimum_lines_for_string(prefix.comments[0].suffix, min_lines))
+    c0 = prefix.comments[0].with_suffix(_adjusted_lines_for_string(prefix.comments[0].suffix, min_lines, max_lines))
     return prefix if c0 is prefix.comments[0] else prefix.with_comments([c0] + prefix.comments[1:])
 
 
-def minimum_lines_for_string(whitespace, min_lines):
-    if min_lines == 0:
+def _adjusted_lines_for_string(whitespace, min_lines: int, max_lines: int):
+    existing_blank_lines = max(_count_line_breaks(whitespace) - 1, 0)
+    max_lines = max(min_lines, max_lines)
+    if min_lines <= existing_blank_lines <= max_lines:
         return whitespace
-
-    min_whitespace = whitespace
-    for _ in range(min_lines - get_new_line_count(whitespace) + 1):
-        min_whitespace = '\n' + min_whitespace
-
-    return min_whitespace
+    elif existing_blank_lines < min_lines:
+        return '\n' * (min_lines - existing_blank_lines) + whitespace
+    else:
+        return '\n' * max_lines + whitespace[whitespace.rfind('\n'):]
 
 
-def get_new_line_count(whitespace):
+def _count_line_breaks(whitespace):
     return whitespace.count('\n')

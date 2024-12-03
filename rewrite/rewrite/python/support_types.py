@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace, dataclass
 from enum import Enum, auto
-from typing import Protocol, TypeVar, runtime_checkable, Any, Optional, TYPE_CHECKING
+from typing import TypeVar, Any, Optional, TYPE_CHECKING
 
 from rewrite import TreeVisitor, Markers
 from rewrite.java.tree import J
@@ -14,8 +14,7 @@ if TYPE_CHECKING:
 P = TypeVar('P')
 
 
-@runtime_checkable
-class Py(J, Protocol):
+class Py(J):
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         from .visitor import PythonVisitor
         return self.accept_python(v.adapt(Py, PythonVisitor), p)

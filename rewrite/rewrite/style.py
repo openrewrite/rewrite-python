@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+from abc import ABC
 from dataclasses import dataclass, replace
-from typing import Protocol, TypeVar, Type, Iterable, Optional, Set, runtime_checkable
+from typing import TypeVar, Type, Iterable, Optional, Set
 from uuid import UUID
 
 from .markers import Marker
 from .utils import random_id
 
 
-@runtime_checkable
-class Style(Protocol):
+class Style(ABC):
     def merge(self, lower_precedence: Style) -> Style:
         return self
 

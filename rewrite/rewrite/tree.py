@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import os
 import threading
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Protocol, Optional, Any, TypeVar, runtime_checkable, cast, TYPE_CHECKING, Generic, ClassVar, \
-    Callable, Type
+from typing import Optional, Any, TypeVar, cast, TYPE_CHECKING, Generic, ClassVar, Callable, Type
 from uuid import UUID
 
 from .markers import Markers
@@ -19,22 +19,26 @@ if TYPE_CHECKING:
 P = TypeVar('P')
 
 
-@runtime_checkable
-class Tree(Protocol):
+class Tree(ABC):
     @property
+    @abstractmethod
     def id(self) -> UUID:
         ...
 
+    @abstractmethod
     def with_id(self, id: UUID) -> Tree:
         ...
 
     @property
+    @abstractmethod
     def markers(self) -> Markers:
         ...
 
+    @abstractmethod
     def with_markers(self, markers: Markers) -> Tree:
         ...
 
+    @abstractmethod
     def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
         ...
 
@@ -57,7 +61,7 @@ class Tree(Protocol):
         return hash(self.id)
 
 
-class PrinterFactory(Protocol):
+class PrinterFactory(ABC):
     _thread_local = threading.local()
 
     @classmethod
@@ -70,29 +74,34 @@ class PrinterFactory(Protocol):
     def set_current(self):
         PrinterFactory._thread_local.context = self
 
+    @abstractmethod
     def create_printer(self, cursor: Cursor) -> TreeVisitor[Any, PrintOutputCapture[P]]:
         ...
 
 
 S = TypeVar('S', bound=Style)
 
-@runtime_checkable
-class SourceFile(Tree, Protocol):
+class SourceFile(Tree):
     @property
+    @abstractmethod
     def charset_name(self) -> Optional[str]:
         ...
 
     @property
+    @abstractmethod
     def source_path(self) -> Path:
         ...
 
+    @abstractmethod
     def with_source_path(self, source_path: Path) -> SourceFile:
         ...
 
     @property
+    @abstractmethod
     def file_attributes(self) -> Optional[FileAttributes]:
         ...
 
+    @abstractmethod
     def with_file_attributes(self, file_attributes: Optional[FileAttributes]) -> SourceFile:
         ...
 
@@ -148,7 +157,7 @@ class Checksum:
 
 class PrintOutputCapture(Generic[P]):
     @dataclass
-    class MarkerPrinter(Protocol):
+    class MarkerPrinter(ABC):
         DEFAULT: ClassVar['PrintOutputCapture.MarkerPrinter'] = None
 
         def before_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:

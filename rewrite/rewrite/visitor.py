@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from abc import ABC
 from dataclasses import dataclass
-from typing import Protocol, TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar
+from typing import TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, Generic
 
 from .execution import RecipeRunException
 from .markers import Marker, Markers
@@ -56,7 +57,7 @@ class Cursor:
         return Cursor(self.parent.fork(), self.value) if self.parent else self
 
 
-class TreeVisitor(Protocol[T, P]):
+class TreeVisitor(ABC, Generic[T, P]):
     _visit_count: int = 0
     _cursor: Cursor = Cursor(None, "root")
     _after_visit: Optional[List[TreeVisitor[Any, P]]] = None

@@ -1,10 +1,10 @@
 name: receive-pr
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-    branches:
-      - main
+#  pull_request:
+#    types: [opened, synchronize]
+#    branches:
+#      - main
 
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.ref }}'

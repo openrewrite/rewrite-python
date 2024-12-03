@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+from abc import ABC
 from dataclasses import dataclass, replace
-from typing import Protocol
 
 from ..style import Style, NamedStyles
 
 
-class PythonStyle(Style, Protocol):
+class PythonStyle(Style):
     pass
 
 
