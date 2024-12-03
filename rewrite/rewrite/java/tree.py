@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import weakref
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
