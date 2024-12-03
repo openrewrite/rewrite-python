@@ -7,7 +7,7 @@ pytest.register_assert_rewrite("rewrite.test")
 from .execution import ExecutionContext, DelegatingExecutionContext, InMemoryExecutionContext, Recipe, RecipeRunException
 from .markers import *
 from .tree import Checksum, FileAttributes, SourceFile, Tree, PrintOutputCapture, PrinterFactory
-from .utils import random_id
+from .utils import random_id, map_list
 from .visitor import Cursor, TreeVisitor
 from .parser import *
 from .result import *
@@ -21,6 +21,7 @@ __all__ = [
     'PrintOutputCapture',
     'PrinterFactory',
     'random_id',
+    'map_list',
     'Cursor',
     'TreeVisitor',
     'ExecutionContext',
