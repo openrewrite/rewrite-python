@@ -54,6 +54,7 @@ public class PythonParser implements Parser {
     private final Collection<NamedStyles> styles;
     private final boolean logCompilationWarningsAndErrors;
     private final JavaTypeCache typeCache;
+    private final String executable;
     private final List<Path> pythonPath;
 
     private final @Nullable Path logFile;
@@ -269,7 +270,7 @@ public class PythonParser implements Parser {
         return new Builder(dir);
     }
 
-    private static boolean verifyRemotingInstallation(Path dir, @Nullable Path logFile) throws IOException, InterruptedException {
+    private static boolean verifyRemotingInstallation(Path dir, String executable, @Nullable Path logFile) throws IOException, InterruptedException {
         if (!Files.isDirectory(dir)) {
             Files.createDirectories(dir);
         }
@@ -277,7 +278,7 @@ public class PythonParser implements Parser {
         try (InputStream inputStream = requireNonNull(PythonParser.class.getClassLoader().getResourceAsStream("META-INF/python-requirements.txt"))) {
             List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().filter(l -> !l.isEmpty()).collect(Collectors.toList());
 
-            List<String> command = new ArrayList<>(Arrays.asList("python3", "-m", "pip", "install", "--target", dir.toString()));
+            List<String> command = new ArrayList<>(Arrays.asList(executable, "-m", "pip", "install", "--target", dir.toString()));
             command.addAll(packages);
 
             ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -293,6 +294,8 @@ public class PythonParser implements Parser {
     @SuppressWarnings("unused")
     public static class Builder extends Parser.Builder {
         private JavaTypeCache typeCache = new JavaTypeCache();
+
+        private String executable = "python3";
 
         @Nullable
         private Path installationDir;
@@ -312,6 +315,11 @@ public class PythonParser implements Parser {
         private Builder(Path installationDir) {
             super(Py.CompilationUnit.class);
             this.installationDir = installationDir;
+        }
+
+        public Builder executable(String executable) {
+            this.executable = executable;
+            return this;
         }
 
         public Builder logCompilationWarningsAndErrors(boolean logCompilationWarningsAndErrors) {
@@ -350,13 +358,13 @@ public class PythonParser implements Parser {
         public PythonParser build() {
             if (installationDir != null) {
                 try {
-                    if (verifyRemotingInstallation(installationDir, logFile) && !pythonPath.contains(installationDir)) {
+                    if (verifyRemotingInstallation(installationDir, executable, logFile) && !pythonPath.contains(installationDir)) {
                         pythonPath.add(installationDir);
                     }
                 } catch (IOException | InterruptedException ignore) {
                 }
             }
-            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, pythonPath, logFile, (int) parseTimeoutMs);
+            return new PythonParser(styles, logCompilationWarningsAndErrors, typeCache, executable, pythonPath, logFile, (int) parseTimeoutMs);
         }
 
         @Override
