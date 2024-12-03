@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import weakref
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, replace
 from enum import Enum, auto
-from functools import cached_property
-from typing import List, Optional, Protocol, TypeVar, Generic, ClassVar, Dict, runtime_checkable, Any, cast, \
-    TYPE_CHECKING, Iterable
+from typing import List, Optional, TypeVar, Generic, ClassVar, Dict, Any, TYPE_CHECKING, Iterable
 from uuid import UUID
 
-from rewrite import Tree, SourceFile, TreeVisitor
 from rewrite import Markers
+from rewrite import Tree, SourceFile, TreeVisitor
 
 if TYPE_CHECKING:
     from .visitor import JavaVisitor
@@ -17,12 +16,13 @@ if TYPE_CHECKING:
 P = TypeVar('P')
 
 
-@runtime_checkable
-class J(Tree, Protocol):
+class J(Tree):
     @property
+    @abstractmethod
     def prefix(self) -> Space:
         ...
 
+    @abstractmethod
     def with_prefix(self, prefix: Space) -> 'J':
         ...
 
@@ -39,8 +39,9 @@ class J(Tree, Protocol):
 
 
 @dataclass(frozen=True)
-class Comment(Protocol):
+class Comment(ABC):
     @property
+    @abstractmethod
     def multiline(self) -> bool:
         ...
 
@@ -288,47 +289,39 @@ Space.EMPTY = Space([], '')
 Space.SINGLE_SPACE = Space([], ' ')
 
 
-@runtime_checkable
-class JavaSourceFile(SourceFile, Protocol):
+class JavaSourceFile(SourceFile):
     pass
 
 
-@runtime_checkable
-class Expression(J, Protocol):
+class Expression(J):
     pass
 
 
-@runtime_checkable
-class Statement(J, Protocol):
+class Statement(J):
     pass
 
 
-@runtime_checkable
-class TypedTree(J, Protocol):
+class TypedTree(J):
     pass
 
 
-@runtime_checkable
-class NameTree(TypedTree, Protocol):
+class NameTree(TypedTree):
     pass
 
 
-@runtime_checkable
-class TypeTree(NameTree, Protocol):
+class TypeTree(NameTree):
     pass
 
 
-@runtime_checkable
-class Loop(Statement, Protocol):
+class Loop(Statement):
     pass
 
 
-@runtime_checkable
-class MethodCall(Expression, Protocol):
+class MethodCall(Expression):
     pass
 
 
-class JavaType(Protocol):
+class JavaType(ABC):
     class FullyQualified:
         pass
 

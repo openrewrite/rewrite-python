@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol, Any, ClassVar, TYPE_CHECKING, List, Optional
+from typing import Any, ClassVar, TYPE_CHECKING, List, Optional
 
 from .tree import SourceFile
 
@@ -11,13 +11,15 @@ if TYPE_CHECKING:
     from .visitor import TreeVisitor, Cursor
 
 
-class ExecutionContext(Protocol):
+class ExecutionContext(ABC):
     REQUIRE_PRINT_EQUALS_INPUT: ClassVar[str] = "org.openrewrite.requirePrintEqualsInput"
     CHARSET: ClassVar[str] = "org.openrewrite.parser.charset"
 
+    @abstractmethod
     def get_message(self, key: str, default_value=None) -> Any:
         ...
 
+    @abstractmethod
     def put_message(self, key: str, value: Any):
         ...
 

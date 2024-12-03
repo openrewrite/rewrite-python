@@ -3,7 +3,7 @@ from __future__ import annotations
 import weakref
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import List, Optional, Protocol, runtime_checkable, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from uuid import UUID
 from enum import Enum
 
@@ -726,6 +726,13 @@ class ExpressionStatement(Py, Expression, Statement):
     def with_prefix(self, prefix: Space) -> ExpressionStatement:
         return self.with_expression(self._expression.with_prefix(prefix))
 
+    @property
+    def markers(self) -> Markers:
+        return self._expression.markers
+
+    def with_markers(self, markers: Markers) -> ExpressionStatement:
+        return self.with_expression(self._expression.with_markers(markers))
+
     _expression: Expression
 
     @property
@@ -798,6 +805,13 @@ class StatementExpression(Py, Expression, Statement):
 
     def with_prefix(self, prefix: Space) -> StatementExpression:
         return self.with_statement(self._statement.with_prefix(prefix))
+
+    @property
+    def markers(self) -> Markers:
+        return self._statement.markers
+
+    def with_markers(self, markers: Markers) -> StatementExpression:
+        return self.with_statement(self._statement.with_markers(markers))
 
     _statement: Statement
 
