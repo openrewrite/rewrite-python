@@ -734,10 +734,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Expr(self, node):
-        return py.ExpressionStatement(
-            random_id(),
-            self.__convert(node.value)
-        )
+        return self.__convert(node.value)
 
     def visit_Yield(self, node):
         return py.StatementExpression(
@@ -1941,6 +1938,15 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert(self, node) -> Optional[J]:
         return self.__convert_internal(node, self.__convert)
 
+    def __convert_statement(self, node) -> Optional[J]:
+        converted = self.__convert_internal(node, self.__convert_statement)
+        if is_of_type(converted, Statement):
+            return converted
+        return py.ExpressionStatement(
+            random_id(),
+            converted
+        )
+
     def __convert_internal(self, node, recursion, mapping = None) -> Optional[J]:
         if not node or not isinstance(node, ast.expr) or isinstance(node, ast.GeneratorExp):
             return self.visit(cast(ast.AST, node)) if node else None
@@ -2065,7 +2071,7 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def __pad_statement(self, stmt: ast.stmt) -> JRightPadded[Statement]:
-        statement = self.__convert(stmt)
+        statement = self.__convert_statement(stmt)
         # use whitespace until end of line as padding; what follows will be the prefix of next element
         save_cursor = self._cursor
         padding = self.__whitespace('\n')

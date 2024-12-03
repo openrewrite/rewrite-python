@@ -187,3 +187,32 @@ def test_before_first_method():
             from_visitor(BlankLinesVisitor(style))
         )
     )
+
+
+def test_max_lines_in_code():
+    style = IntelliJ.blank_lines()
+    style = style.with_keep_maximum(
+        style.keep_maximum.with_in_code(1)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            def foo():
+                print('foo')
+
+
+                print('bar')
+            """,
+            """\
+            def foo():
+                print('foo')
+
+                print('bar')
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(BlankLinesVisitor(style))
+        )
+    )
