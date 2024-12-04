@@ -3,7 +3,7 @@ from typing import Optional, cast, List
 import rewrite.java as j
 from rewrite import Tree
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
-    MethodDeclaration, Empty, ArrayAccess, Space
+    MethodDeclaration, Empty, ArrayAccess, Space, If
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
 from rewrite.visitor import P
 
@@ -206,6 +206,28 @@ class SpacesVisitor(PythonVisitor):
         binary = binary.with_right(self.space_before(binary.right, use_space_around))
         return binary
 
+    def visit_if(self, if_stm: If, p: P) -> J:
+        if_: j.If = cast(If, super().visit_if(if_stm, p))
+
+        # Handle space before if condition e.g. if    True: <-> if True:
+        if_ = if_.with_if_condition(self.space_before(if_._if_condition, True))
+
+        # Handle space before if colon e.g. if True:    pass <-> if True: pass
+        if_ = if_.with_if_condition(
+            if_.if_condition.padding.with_tree(
+                SpacesVisitor.space_after(if_.if_condition.padding.tree, self._style.other.before_colon))
+        )
+
+        # TODO: Handle tree
+
+        return if_
+
+    def visit_else(self, else_: If.Else, p: P) -> J:
+        e: j.If.Else = cast(j.If.Else, super().visit_else(else_, p))
+        e = e.padding.with_body(self.space_before_right_padded_element(e.padding.body, False))
+
+        return e
+
     @staticmethod
     def space_before(j: J, space_before: bool) -> J:
         space: Space = cast(Space, j.prefix)
@@ -228,6 +250,10 @@ class SpacesVisitor(PythonVisitor):
             return container.with_before(container.before.with_whitespace(""))
         else:
             return container
+
+    @staticmethod
+    def space_before_right_padded_element(container: j.JRightPadded, space_before: bool) -> j.JRightPadded:
+        return container.with_element(SpacesVisitor.space_before(container.element, space_before))
 
     @staticmethod
     def space_last_comment_suffix(comments: List[j.Comment], space_suffix: bool) -> List[j.Comment]:
