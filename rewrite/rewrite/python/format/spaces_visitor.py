@@ -1,9 +1,9 @@
-from typing import Optional, cast, List
+from typing import Optional, cast, List, TypeVar
 
 import rewrite.java as j
-from rewrite import Tree
+from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
-    MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration
+    MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
 from rewrite.visitor import P
 
@@ -20,7 +20,7 @@ class SpacesVisitor(PythonVisitor):
         # Handle space before parentheses for class declaration e.g. class A () <-> class A()
         if c.padding.implements is not None:
             c = c.padding.with_implements(
-                self.space_before_container(c.padding.implements, self._style.before_parentheses.method_call)
+                space_before_container(c.padding.implements, self._style.before_parentheses.method_call)
             )
 
             param_size = len(c.padding.implements.elements)
@@ -29,14 +29,14 @@ class SpacesVisitor(PythonVisitor):
             # TODO: Refactor to remove duplicate code.
             def _process_argument(index, arg, args_size):
                 if index == 0:
-                    arg = arg.with_element(self.space_before(arg.element, use_space))
+                    arg = arg.with_element(space_before(arg.element, use_space))
                 else:
-                    arg = arg.with_element(self.space_before(arg.element, self._style.other.after_comma))
+                    arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
 
                 if index == args_size - 1:
-                    arg = self.space_after(arg, use_space)
+                    arg = space_after(arg, use_space)
                 else:
-                    arg = self.space_after(arg, self._style.other.before_comma)
+                    arg = space_after(arg, self._style.other.before_comma)
 
                 return arg
 
@@ -53,7 +53,7 @@ class SpacesVisitor(PythonVisitor):
         m: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(method_declaration, p))
 
         m = m.padding.with_parameters(
-            self.space_before_container(m.padding.parameters, self._style.before_parentheses.method_declaration)
+            space_before_container(m.padding.parameters, self._style.before_parentheses.method_declaration)
         )
 
         param_size = len(m.parameters)
@@ -62,18 +62,24 @@ class SpacesVisitor(PythonVisitor):
         def _process_argument(index, arg, args_size):
             # TODO: Fix Type hint handling
             # Handle space before type hint colon e.g. foo(a: int) <-> foo(a:int)
-            arg = arg.with_element(arg.element.with_type_expression(
-                self.space_before(arg.element.type_expression, False)))
+            if isinstance(arg.element, VariableDeclarations) and arg.element.type_expression:
+                vd = cast(VariableDeclarations, arg.element)
+                arg = arg.with_element(vd.with_type_expression(
+                    space_before(vd.type_expression, self._style.other.after_colon))
+                                       .padding.with_variables(
+                    list_map(lambda v: space_after_right_padded(v, self._style.other.before_colon),
+                             vd.padding.variables))
+                                       )
 
             if index == 0:
-                arg = arg.with_element(self.space_before(arg.element, use_space))
+                arg = arg.with_element(space_before(arg.element, use_space))
             else:
-                arg = arg.with_element(self.space_before(arg.element, self._style.other.after_comma))
+                arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
 
             if index == args_size - 1:
-                arg = self.space_after(arg, use_space)
+                arg = space_after(arg, use_space)
             else:
-                arg = self.space_after(arg, self._style.other.before_comma)
+                arg = space_after(arg, self._style.other.before_comma)
             return arg
 
         m = m.padding.with_parameters(
@@ -95,7 +101,7 @@ class SpacesVisitor(PythonVisitor):
 
     def visit_block(self, block: Block, p: P) -> J:
         b = cast(Block, super().visit_block(block, p))
-        b = self.space_before(b, self._style.other.before_colon)
+        b = space_before(b, self._style.other.before_colon)
         return b
 
     def visit_method_invocation(self, method_invocation: MethodInvocation, p: P) -> J:
@@ -110,7 +116,7 @@ class SpacesVisitor(PythonVisitor):
             use_space = self._style.within.empty_method_call_parentheses
             m = m.padding.with_arguments(
                 m.padding.arguments.padding.with_elements(
-                    [arg.with_element(self.space_before(arg.element, use_space)) for arg in
+                    [arg.with_element(space_before(arg.element, use_space)) for arg in
                      m.padding.arguments.padding.elements]
                 )
             )
@@ -124,14 +130,14 @@ class SpacesVisitor(PythonVisitor):
 
             def _process_argument(index, arg, args_size, use_space):
                 if index == 0:
-                    arg = arg.with_element(self.space_before(arg.element, use_space))
+                    arg = arg.with_element(space_before(arg.element, use_space))
                 else:
-                    arg = arg.with_element(self.space_before(arg.element, self._style.other.after_comma))
+                    arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
 
                 if index == args_size - 1:
-                    arg = self.space_after(arg, use_space)
+                    arg = space_after(arg, use_space)
                 else:
-                    arg = self.space_after(arg, self._style.other.before_comma)
+                    arg = space_after(arg, self._style.other.before_comma)
 
                 return arg
 
@@ -166,10 +172,10 @@ class SpacesVisitor(PythonVisitor):
         """
         a: Assignment = cast(Assignment, super().visit_assignment(assignment, p))
         a = a.padding.with_assignment(
-            self.space_before_jleftpadded(a.padding.assignment, self._style.around_operators.assignment))
+            space_before_left_padded(a.padding.assignment, self._style.around_operators.assignment))
         a = a.padding.with_assignment(
             a.padding.assignment.with_element(
-                self.space_before(a.padding.assignment.element, self._style.around_operators.assignment)))
+                space_before(a.padding.assignment.element, self._style.around_operators.assignment)))
         return a
 
     def visit_assignment_operation(self, assignment_operation: AssignmentOperation, p: P) -> J:
@@ -180,7 +186,7 @@ class SpacesVisitor(PythonVisitor):
         operator: JLeftPadded = a.padding.operator
         a = a.padding.with_operator(
             operator.with_before(update_space(operator.before, self._style.around_operators.assignment)))
-        return a.with_assignment(self.space_before(a.assignment, self._style.around_operators.assignment))
+        return a.with_assignment(space_before(a.assignment, self._style.around_operators.assignment))
 
     def visit_chained_assignment(self, chained_assignment: ChainedAssignment, p: P) -> J:
         """
@@ -192,10 +198,10 @@ class SpacesVisitor(PythonVisitor):
 
         a = a.padding.with_variables(
             [v.with_element(
-                self.space_before(v.element, self._style.around_operators.assignment if idx >= 1 else False)) for idx, v
+                space_before(v.element, self._style.around_operators.assignment if idx >= 1 else False)) for idx, v
                 in enumerate(a.padding.variables)])
 
-        return a.with_assignment(self.space_before(a.assignment, self._style.around_operators.assignment))
+        return a.with_assignment(space_before(a.assignment, self._style.around_operators.assignment))
 
     def visit_member_reference(self, member_reference: MemberReference, p: P) -> J:
         m: MemberReference = cast(MemberReference, super().visit_member_reference(member_reference, p))
@@ -247,95 +253,111 @@ class SpacesVisitor(PythonVisitor):
         binary = binary.padding.with_operator(
             operator.with_before(update_space(operator.before, use_space_around))
         )
-        binary = binary.with_right(self.space_before(binary.right, use_space_around))
+        binary = binary.with_right(space_before(binary.right, use_space_around))
         return binary
 
     def visit_if(self, if_stm: If, p: P) -> J:
         if_: j.If = cast(If, super().visit_if(if_stm, p))
 
         # Handle space before if condition e.g. if    True: <-> if True:
-        if_ = if_.with_if_condition(self.space_before(if_._if_condition, True))
+        if_ = if_.with_if_condition(space_before(if_._if_condition, True))
 
         # Handle space before if colon e.g. if True:    pass <-> if True: pass
         if_ = if_.with_if_condition(
             if_.if_condition.padding.with_tree(
-                SpacesVisitor.space_after(if_.if_condition.padding.tree, self._style.other.before_colon))
+                space_after(if_.if_condition.padding.tree, self._style.other.before_colon))
         )
         return if_
 
     def visit_else(self, else_: If.Else, p: P) -> J:
         e: j.If.Else = cast(j.If.Else, super().visit_else(else_, p))
-        e = e.padding.with_body(self.space_before_right_padded_element(e.padding.body, self._style.other.before_colon))
+        e = e.padding.with_body(space_before_right_padded_element(e.padding.body, self._style.other.before_colon))
 
         return e
 
-    @staticmethod
-    def space_before(j: J, space_before: bool) -> J:
-        space: Space = cast(Space, j.prefix)
-        if space.comments or '\\' in space.whitespace:
-            # don't touch whitespaces with comments or continuation characters
-            return j
 
-        return j.with_prefix(Space.SINGLE_SPACE if space_before else Space.EMPTY)
+J2 = TypeVar('J2', bound=j.J)
 
-    @staticmethod
-    def space_before_container(container: j.JContainer, space_before: bool) -> j.JContainer:
-        if container.before.comments:
-            # Perform the space rule for the suffix of the last comment only. Same as IntelliJ.
-            comments: List[j.Comment] = SpacesVisitor.space_last_comment_suffix(container.before.comments, space_before)
-            return container.with_before(container.before.with_comments(comments))
 
-        if space_before and not_single_space(container.before.whitespace):
-            return container.with_before(container.before.with_whitespace(" "))
-        elif not space_before and only_spaces_and_not_empty(container.before.whitespace):
-            return container.with_before(container.before.with_whitespace(""))
-        else:
-            return container
-
-    @staticmethod
-    def space_before_right_padded_element(container: j.JRightPadded, space_before: bool) -> j.JRightPadded:
-        return container.with_element(SpacesVisitor.space_before(container.element, space_before))
-
-    @staticmethod
-    def space_last_comment_suffix(comments: List[j.Comment], space_suffix: bool) -> List[j.Comment]:
-        return [SpacesVisitor.space_suffix(comment, space_suffix) if i == len(comments) - 1 else comment for i, comment
-                in
-                enumerate(comments)]
-
-    @staticmethod
-    def space_suffix(comment: j.Comment, space_suffix: bool) -> j.Comment:
-        if space_suffix and not_single_space(comment.suffix):
-            return comment.with_suffix(" ")
-        elif not space_suffix and only_spaces_and_not_empty(comment.suffix):
-            return comment.with_suffix("")
-        else:
-            return comment
-
-    @staticmethod
-    def space_before_jleftpadded(j: JLeftPadded[J], space_before) -> JLeftPadded[J]:
-        space: Space = cast(Space, j.before)
-        if space.comments or '\\' in space.whitespace:
-            # don't touch whitespaces with comments or continuation characters
-            return j
-
-        if space_before and not_single_space(space.whitespace):
-            return j.with_before(space.with_whitespace(" "))
-        elif not space_before and only_spaces_and_not_empty(space.whitespace):
-            return j.with_before(space.with_whitespace(""))
+def space_before(j: J2, add_space: bool) -> J2:
+    space: Space = cast(Space, j.prefix)
+    if space.comments or '\\' in space.whitespace:
+        # don't touch whitespaces with comments or continuation characters
         return j
 
-    @staticmethod
-    def space_after(j: J, space_after: bool) -> J:
-        space: Space = cast(Space, j.after)
-        if space.comments or '\\' in space.whitespace:
-            # don't touch whitespaces with comments or continuation characters
-            return j
+    return j.with_prefix(Space.SINGLE_SPACE if add_space else Space.EMPTY)
 
-        if space_after and not_single_space(space.whitespace):
-            return j.with_after(space.with_whitespace(" "))
-        elif not space_after and only_spaces_and_not_empty(space.whitespace):
-            return j.with_after(space.with_whitespace(""))
+
+def space_before_container(container: j.JContainer, add_space: bool) -> j.JContainer:
+    if container.before.comments:
+        # Perform the space rule for the suffix of the last comment only. Same as IntelliJ.
+        comments: List[j.Comment] = space_last_comment_suffix(container.before.comments, add_space)
+        return container.with_before(container.before.with_comments(comments))
+
+    if add_space and not_single_space(container.before.whitespace):
+        return container.with_before(container.before.with_whitespace(" "))
+    elif not add_space and only_spaces_and_not_empty(container.before.whitespace):
+        return container.with_before(container.before.with_whitespace(""))
+    else:
+        return container
+
+
+def space_before_right_padded_element(container: j.JRightPadded, add_space: bool) -> j.JRightPadded:
+    return container.with_element(space_before(container.element, add_space))
+
+
+def space_last_comment_suffix(comments: List[j.Comment], add_space: bool) -> List[j.Comment]:
+    return [space_suffix(comment, add_space) if i == len(comments) - 1 else comment for i, comment
+            in
+            enumerate(comments)]
+
+
+def space_suffix(comment: j.Comment, add_space: bool) -> j.Comment:
+    if add_space and not_single_space(comment.suffix):
+        return comment.with_suffix(" ")
+    elif not add_space and only_spaces_and_not_empty(comment.suffix):
+        return comment.with_suffix("")
+    else:
+        return comment
+
+
+def space_before_left_padded(j: JLeftPadded[J2], add_space) -> JLeftPadded[J2]:
+    space: Space = cast(Space, j.before)
+    if space.comments or '\\' in space.whitespace:
+        # don't touch whitespaces with comments or continuation characters
         return j
+
+    if add_space and not_single_space(space.whitespace):
+        return j.with_before(space.with_whitespace(" "))
+    elif not add_space and only_spaces_and_not_empty(space.whitespace):
+        return j.with_before(space.with_whitespace(""))
+    return j
+
+
+def space_after(j: J2, add_space: bool) -> J2:
+    space: Space = cast(Space, j.after)
+    if space.comments or '\\' in space.whitespace:
+        # don't touch whitespaces with comments or continuation characters
+        return j
+
+    if add_space and not_single_space(space.whitespace):
+        return j.with_after(space.with_whitespace(" "))
+    elif not add_space and only_spaces_and_not_empty(space.whitespace):
+        return j.with_after(space.with_whitespace(""))
+    return j
+
+
+def space_after_right_padded(right: JRightPadded[J2], add_space: bool) -> JRightPadded[J2]:
+    space: Space = right.after
+    if space.comments or '\\' in space.whitespace:
+        # don't touch whitespaces with comments or continuation characters
+        return right
+
+    if add_space and not_single_space(space.whitespace):
+        return right.with_after(space.with_whitespace(" "))
+    elif not add_space and only_spaces_and_not_empty(space.whitespace):
+        return right.with_after(space.with_whitespace(""))
+    return right
 
 
 def update_space(s: Space, have_space: bool) -> Space:
