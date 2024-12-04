@@ -707,7 +707,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         variable_declarations = variable_declarations.with_modifiers(list_map(lambda v: self.visit_and_cast(v, Modifier, p), variable_declarations.modifiers))
         variable_declarations = variable_declarations.with_type_expression(self.visit_and_cast(variable_declarations.type_expression, TypeTree, p))
         variable_declarations = variable_declarations.with_varargs(self.visit_space(variable_declarations.varargs, Space.Location.VARARGS, p))
-        variable_declarations = variable_declarations.with_dimensions_before_name([el.with_before(self.visit_space(el.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(el.element, Space.Location.DIMENSION, p)) for el in variable_declarations.dimensions_before_name])
+        variable_declarations = variable_declarations.with_dimensions_before_name(list_map(lambda v: v.with_before(self.visit_space(v.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(v.element, Space.Location.DIMENSION, p)), variable_declarations.dimensions_before_name))
         variable_declarations = variable_declarations.padding.with_variables(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.NAMED_VARIABLE, p), variable_declarations.padding.variables))
         return variable_declarations
 
@@ -715,7 +715,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         named_variable = named_variable.with_prefix(self.visit_space(named_variable.prefix, Space.Location.VARIABLE_PREFIX, p))
         named_variable = named_variable.with_markers(self.visit_markers(named_variable.markers, p))
         named_variable = named_variable.with_name(self.visit_and_cast(named_variable.name, Identifier, p))
-        named_variable = named_variable.with_dimensions_after_name([el.with_before(self.visit_space(el.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(el.element, Space.Location.DIMENSION, p)) for el in named_variable.dimensions_after_name])
+        named_variable = named_variable.with_dimensions_after_name(list_map(lambda v: v.with_before(self.visit_space(v.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(v.element, Space.Location.DIMENSION, p)), named_variable.dimensions_after_name))
         named_variable = named_variable.padding.with_initializer(self.visit_left_padded(named_variable.padding.initializer, JLeftPadded.Location.VARIABLE_INITIALIZER, p))
         return named_variable
 
