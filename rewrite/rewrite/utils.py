@@ -13,23 +13,21 @@ FnType = Union[Callable[[T], Union[T, None]], Callable[[T, int], Union[T, None]]
 
 def list_map(fn: FnType, lst: List[T]) -> List[T]:
     changed = False
-    mapped_lst = []
+    mapped_lst = None
 
-    if len(inspect.signature(fn).parameters) == 1:
-        for original in lst:
-            new = fn(original)
-            if new is not None:
-                mapped_lst.append(new)
-                changed |= new is not original
-            else:
-                changed = True
-    else:
-        for index, original in enumerate(lst):
-            new = fn(original, index)
-            if new is not None:
-                mapped_lst.append(new)
-                changed |= new is not original
-            else:
-                changed = True
+    with_index = len(inspect.signature(fn).parameters) == 2
+    for index, original in enumerate(lst):
+        new = fn(original, index) if with_index else fn(original)
+        if new is None:
+            if mapped_lst is None:
+                mapped_lst = lst[:index]
+            changed = True
+        elif new is not original:
+            if mapped_lst is None:
+                mapped_lst = lst[:index]
+            mapped_lst.append(new)
+            changed = True
+        elif mapped_lst is not None:
+            mapped_lst.append(original)
 
     return mapped_lst if changed else lst
