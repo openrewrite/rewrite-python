@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast, Optional, TypeVar
+from typing import cast, Optional, TypeVar, List
 
 from rewrite import Tree, P, Cursor, map_list
 from rewrite.java import MethodDeclaration, J, Space, ClassDeclaration
@@ -73,7 +73,7 @@ def _concatenate_prefix(j: J, prefix: Space) -> J2:
             c = c.with_suffix(c.suffix.replace('\n', '\n' + shift))
         return c
 
-    comments = j.prefix.comments + map_list(prefix.comments, modify_comment)
+    comments = j.prefix.comments + map_list(modify_comment, cast(List[PyComment], prefix.comments))
 
     new_prefix = j.prefix
     new_prefix = new_prefix.with_whitespace(new_prefix.whitespace + prefix.whitespace)

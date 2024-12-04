@@ -23,7 +23,7 @@ class NormalizeTabsOrSpacesVisitor(PythonVisitor):
             return space
 
         s = space.with_whitespace(self.normalize_after_first_newline(space.whitespace))
-        return s.with_comments(map_list(cast(List[PyComment], s.comments), self.process_comment))
+        return s.with_comments(map_list(self.process_comment, cast(List[PyComment], s.comments)))
 
     def process_comment(self, comment: PyComment) -> PyComment:
         return comment.with_suffix(self.normalize_after_first_newline(comment.suffix))
