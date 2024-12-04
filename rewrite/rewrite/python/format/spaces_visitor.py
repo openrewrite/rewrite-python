@@ -217,14 +217,11 @@ class SpacesVisitor(PythonVisitor):
             if_.if_condition.padding.with_tree(
                 SpacesVisitor.space_after(if_.if_condition.padding.tree, self._style.other.before_colon))
         )
-
-        # TODO: Handle tree
-
         return if_
 
     def visit_else(self, else_: If.Else, p: P) -> J:
         e: j.If.Else = cast(j.If.Else, super().visit_else(else_, p))
-        e = e.padding.with_body(self.space_before_right_padded_element(e.padding.body, False))
+        e = e.padding.with_body(self.space_before_right_padded_element(e.padding.body, self._style.other.before_colon))
 
         return e
 
