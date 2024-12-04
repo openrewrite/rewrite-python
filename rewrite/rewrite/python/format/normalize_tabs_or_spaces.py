@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import cast, Optional, TypeVar, List
 
-from rewrite import Tree, P, Cursor, map_list
+from rewrite import Tree, P, Cursor, list_map
 from rewrite.java import J, Space
 from rewrite.python import PythonVisitor, PyComment, TabsAndIndentsStyle
 from rewrite.visitor import T
@@ -23,7 +23,7 @@ class NormalizeTabsOrSpacesVisitor(PythonVisitor):
             return space
 
         s = space.with_whitespace(self.normalize_after_first_newline(space.whitespace))
-        return s.with_comments(map_list(self.process_comment, cast(List[PyComment], s.comments)))
+        return s.with_comments(list_map(self.process_comment, cast(List[PyComment], s.comments)))
 
     def process_comment(self, comment: PyComment) -> PyComment:
         return comment.with_suffix(self.normalize_after_first_newline(comment.suffix))

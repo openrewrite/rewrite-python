@@ -7,7 +7,7 @@ def random_id() -> UUID:
 
 T = TypeVar('T')
 
-def map_list(fn: Callable[[T], Union[T, None]], lst: List[T]) -> List[T]:
+def list_map(fn: Callable[[T], Union[T, None]], lst: List[T]) -> List[T]:
     changed = False
     mapped_lst = []
     for original in lst:
