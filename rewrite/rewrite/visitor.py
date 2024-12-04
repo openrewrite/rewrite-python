@@ -7,6 +7,7 @@ from typing import TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, Gen
 from .execution import RecipeRunException
 from .markers import Marker, Markers
 from .tree import SourceFile, Tree
+from .utils import list_map
 
 O = TypeVar('O')
 T = TypeVar('T', bound='Tree')
@@ -141,7 +142,7 @@ class TreeVisitor(ABC, Generic[T, P]):
             return Markers.EMPTY
         elif len(markers.markers) == 0:
             return markers
-        return markers.with_markers([self.visit_marker(m, p) for m in markers.markers])
+        return markers.with_markers(list_map(lambda m: self.visit_marker(m, p), markers.markers))
 
     def visit_marker(self, marker: Marker, p: P) -> Marker:
         return marker
