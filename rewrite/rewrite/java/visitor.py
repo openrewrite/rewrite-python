@@ -1,7 +1,7 @@
 from typing import cast, TypeVar, Union
 
-from rewrite import SourceFile, TreeVisitor
-from .extensions import *
+from rewrite import SourceFile, TreeVisitor, list_map
+from . import extensions
 from .support_types import *
 from .tree import *
 
@@ -23,7 +23,7 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_expression
         annotated_type = cast(AnnotatedType, temp_expression)
         annotated_type = annotated_type.with_markers(self.visit_markers(annotated_type.markers, p))
-        annotated_type = annotated_type.with_annotations([self.visit_and_cast(v, Annotation, p) for v in annotated_type.annotations])
+        annotated_type = annotated_type.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), annotated_type.annotations))
         annotated_type = annotated_type.with_type_expression(self.visit_and_cast(annotated_type.type_expression, TypeTree, p))
         return annotated_type
 
@@ -57,7 +57,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         array_type = cast(ArrayType, temp_expression)
         array_type = array_type.with_markers(self.visit_markers(array_type.markers, p))
         array_type = array_type.with_element_type(self.visit_and_cast(array_type.element_type, TypeTree, p))
-        array_type = array_type.with_annotations([self.visit_and_cast(v, Annotation, p) for v in array_type.annotations])
+        array_type = array_type.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), array_type.annotations))
         array_type = array_type.with_dimension(self.visit_left_padded(array_type.dimension, JLeftPadded.Location.ARRAY_TYPE_DIMENSION, p))
         return array_type
 
@@ -123,7 +123,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         block = cast(Block, temp_statement)
         block = block.with_markers(self.visit_markers(block.markers, p))
         block = block.padding.with_static(self.visit_right_padded(block.padding.static, JRightPadded.Location.STATIC_INIT, p))
-        block = block.padding.with_statements([self.visit_right_padded(v, JRightPadded.Location.BLOCK_STATEMENT, p) for v in block.padding.statements])
+        block = block.padding.with_statements(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.BLOCK_STATEMENT, p), block.padding.statements))
         block = block.with_end(self.visit_space(block.end, Space.Location.BLOCK_END, p))
         return block
 
@@ -156,8 +156,8 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_statement
         class_declaration = cast(ClassDeclaration, temp_statement)
         class_declaration = class_declaration.with_markers(self.visit_markers(class_declaration.markers, p))
-        class_declaration = class_declaration.with_leading_annotations([self.visit_and_cast(v, Annotation, p) for v in class_declaration.leading_annotations])
-        class_declaration = class_declaration.with_modifiers([self.visit_and_cast(v, Modifier, p) for v in class_declaration.modifiers])
+        class_declaration = class_declaration.with_leading_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), class_declaration.leading_annotations))
+        class_declaration = class_declaration.with_modifiers(list_map(lambda v: self.visit_and_cast(v, Modifier, p), class_declaration.modifiers))
         class_declaration = class_declaration.padding.with_kind(self.visit_and_cast(class_declaration.padding.kind, ClassDeclaration.Kind, p))
         class_declaration = class_declaration.with_name(self.visit_and_cast(class_declaration.name, Identifier, p))
         class_declaration = class_declaration.padding.with_type_parameters(self.visit_container(class_declaration.padding.type_parameters, JContainer.Location.TYPE_PARAMETERS, p))
@@ -171,15 +171,15 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_class_declaration_kind(self, kind: ClassDeclaration.Kind, p: P) -> J:
         kind = kind.with_prefix(self.visit_space(kind.prefix, Space.Location.CLASS_KIND, p))
         kind = kind.with_markers(self.visit_markers(kind.markers, p))
-        kind = kind.with_annotations([self.visit_and_cast(v, Annotation, p) for v in kind.annotations])
+        kind = kind.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), kind.annotations))
         return kind
 
     def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:
         compilation_unit = compilation_unit.with_prefix(self.visit_space(compilation_unit.prefix, Space.Location.COMPILATION_UNIT_PREFIX, p))
         compilation_unit = compilation_unit.with_markers(self.visit_markers(compilation_unit.markers, p))
         compilation_unit = compilation_unit.padding.with_package_declaration(self.visit_right_padded(compilation_unit.padding.package_declaration, JRightPadded.Location.PACKAGE, p))
-        compilation_unit = compilation_unit.padding.with_imports([self.visit_right_padded(v, JRightPadded.Location.IMPORT, p) for v in compilation_unit.padding.imports])
-        compilation_unit = compilation_unit.with_classes([self.visit_and_cast(v, ClassDeclaration, p) for v in compilation_unit.classes])
+        compilation_unit = compilation_unit.padding.with_imports(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.IMPORT, p), compilation_unit.padding.imports))
+        compilation_unit = compilation_unit.with_classes(list_map(lambda v: self.visit_and_cast(v, ClassDeclaration, p), compilation_unit.classes))
         compilation_unit = compilation_unit.with_eof(self.visit_space(compilation_unit.eof, Space.Location.COMPILATION_UNIT_EOF, p))
         return compilation_unit
 
@@ -220,7 +220,7 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_enum_value(self, enum_value: EnumValue, p: P) -> J:
         enum_value = enum_value.with_prefix(self.visit_space(enum_value.prefix, Space.Location.ENUM_VALUE_PREFIX, p))
         enum_value = enum_value.with_markers(self.visit_markers(enum_value.markers, p))
-        enum_value = enum_value.with_annotations([self.visit_and_cast(v, Annotation, p) for v in enum_value.annotations])
+        enum_value = enum_value.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), enum_value.annotations))
         enum_value = enum_value.with_name(self.visit_and_cast(enum_value.name, Identifier, p))
         enum_value = enum_value.with_initializer(self.visit_and_cast(enum_value.initializer, NewClass, p))
         return enum_value
@@ -232,7 +232,7 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_statement
         enum_value_set = cast(EnumValueSet, temp_statement)
         enum_value_set = enum_value_set.with_markers(self.visit_markers(enum_value_set.markers, p))
-        enum_value_set = enum_value_set.padding.with_enums([self.visit_right_padded(v, JRightPadded.Location.ENUM_VALUE, p) for v in enum_value_set.padding.enums])
+        enum_value_set = enum_value_set.padding.with_enums(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.ENUM_VALUE, p), enum_value_set.padding.enums))
         return enum_value_set
 
     def visit_field_access(self, field_access: FieldAccess, p: P) -> J:
@@ -282,9 +282,9 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_for_control(self, control: ForLoop.Control, p: P) -> J:
         control = control.with_prefix(self.visit_space(control.prefix, Space.Location.FOR_CONTROL_PREFIX, p))
         control = control.with_markers(self.visit_markers(control.markers, p))
-        control = control.padding.with_init([self.visit_right_padded(v, JRightPadded.Location.FOR_INIT, p) for v in control.padding.init])
+        control = control.padding.with_init(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.FOR_INIT, p), control.padding.init))
         control = control.padding.with_condition(self.visit_right_padded(control.padding.condition, JRightPadded.Location.FOR_CONDITION, p))
-        control = control.padding.with_update([self.visit_right_padded(v, JRightPadded.Location.FOR_UPDATE, p) for v in control.padding.update])
+        control = control.padding.with_update(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.FOR_UPDATE, p), control.padding.update))
         return control
 
     def visit_parenthesized_type_tree(self, parenthesized_type_tree: ParenthesizedTypeTree, p: P) -> J:
@@ -294,7 +294,7 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_expression
         parenthesized_type_tree = cast(ParenthesizedTypeTree, temp_expression)
         parenthesized_type_tree = parenthesized_type_tree.with_markers(self.visit_markers(parenthesized_type_tree.markers, p))
-        parenthesized_type_tree = parenthesized_type_tree.with_annotations([self.visit_and_cast(v, Annotation, p) for v in parenthesized_type_tree.annotations])
+        parenthesized_type_tree = parenthesized_type_tree.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), parenthesized_type_tree.annotations))
         parenthesized_type_tree = parenthesized_type_tree.with_parenthesized_type(self.visit_and_cast(parenthesized_type_tree.parenthesized_type, Parentheses[TypeTree], p))
         return parenthesized_type_tree
 
@@ -305,7 +305,7 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_expression
         identifier = cast(Identifier, temp_expression)
         identifier = identifier.with_markers(self.visit_markers(identifier.markers, p))
-        identifier = identifier.with_annotations([self.visit_and_cast(v, Annotation, p) for v in identifier.annotations])
+        identifier = identifier.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), identifier.annotations))
         return identifier
 
     def visit_if(self, if_: If, p: P) -> J:
@@ -390,7 +390,7 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_lambda_parameters(self, parameters: Lambda.Parameters, p: P) -> J:
         parameters = parameters.with_prefix(self.visit_space(parameters.prefix, Space.Location.LAMBDA_PARAMETERS_PREFIX, p))
         parameters = parameters.with_markers(self.visit_markers(parameters.markers, p))
-        parameters = parameters.padding.with_parameters([self.visit_right_padded(v, JRightPadded.Location.LAMBDA_PARAM, p) for v in parameters.padding.parameters])
+        parameters = parameters.padding.with_parameters(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.LAMBDA_PARAM, p), parameters.padding.parameters))
         return parameters
 
     def visit_literal(self, literal: Literal, p: P) -> J:
@@ -421,11 +421,11 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_statement
         method_declaration = cast(MethodDeclaration, temp_statement)
         method_declaration = method_declaration.with_markers(self.visit_markers(method_declaration.markers, p))
-        method_declaration = method_declaration.with_leading_annotations([self.visit_and_cast(v, Annotation, p) for v in method_declaration.leading_annotations])
-        method_declaration = method_declaration.with_modifiers([self.visit_and_cast(v, Modifier, p) for v in method_declaration.modifiers])
+        method_declaration = method_declaration.with_leading_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), method_declaration.leading_annotations))
+        method_declaration = method_declaration.with_modifiers(list_map(lambda v: self.visit_and_cast(v, Modifier, p), method_declaration.modifiers))
         method_declaration = method_declaration.annotations.with_type_parameters(self.visit_and_cast(method_declaration.annotations.type_parameters, TypeParameters, p))
         method_declaration = method_declaration.with_return_type_expression(self.visit_and_cast(method_declaration.return_type_expression, TypeTree, p))
-        method_declaration = method_declaration.annotations.with_name(method_declaration.annotations.name.with_annotations([self.visit_and_cast(v, Annotation, p) for v in method_declaration.annotations.name.annotations]).with_identifier(self.visit_and_cast(method_declaration.annotations.name.identifier, Identifier, p)))
+        method_declaration = method_declaration.annotations.with_name(method_declaration.annotations.name.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), method_declaration.annotations.name.annotations)).with_identifier(self.visit_and_cast(method_declaration.annotations.name.identifier, Identifier, p)))
         method_declaration = method_declaration.padding.with_parameters(self.visit_container(method_declaration.padding.parameters, JContainer.Location.METHOD_DECLARATION_PARAMETERS, p))
         method_declaration = method_declaration.padding.with_throws(self.visit_container(method_declaration.padding.throws, JContainer.Location.THROWS, p))
         method_declaration = method_declaration.with_body(self.visit_and_cast(method_declaration.body, Block, p))
@@ -452,13 +452,13 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_modifier(self, modifier: Modifier, p: P) -> J:
         modifier = modifier.with_prefix(self.visit_space(modifier.prefix, Space.Location.MODIFIER_PREFIX, p))
         modifier = modifier.with_markers(self.visit_markers(modifier.markers, p))
-        modifier = modifier.with_annotations([self.visit_and_cast(v, Annotation, p) for v in modifier.annotations])
+        modifier = modifier.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), modifier.annotations))
         return modifier
 
     def visit_multi_catch(self, multi_catch: MultiCatch, p: P) -> J:
         multi_catch = multi_catch.with_prefix(self.visit_space(multi_catch.prefix, Space.Location.MULTI_CATCH_PREFIX, p))
         multi_catch = multi_catch.with_markers(self.visit_markers(multi_catch.markers, p))
-        multi_catch = multi_catch.padding.with_alternatives([self.visit_right_padded(v, JRightPadded.Location.CATCH_ALTERNATIVE, p) for v in multi_catch.padding.alternatives])
+        multi_catch = multi_catch.padding.with_alternatives(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.CATCH_ALTERNATIVE, p), multi_catch.padding.alternatives))
         return multi_catch
 
     def visit_new_array(self, new_array: NewArray, p: P) -> J:
@@ -469,7 +469,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         new_array = cast(NewArray, temp_expression)
         new_array = new_array.with_markers(self.visit_markers(new_array.markers, p))
         new_array = new_array.with_type_expression(self.visit_and_cast(new_array.type_expression, TypeTree, p))
-        new_array = new_array.with_dimensions([self.visit_and_cast(v, ArrayDimension, p) for v in new_array.dimensions])
+        new_array = new_array.with_dimensions(list_map(lambda v: self.visit_and_cast(v, ArrayDimension, p), new_array.dimensions))
         new_array = new_array.padding.with_initializer(self.visit_container(new_array.padding.initializer, JContainer.Location.NEW_ARRAY_INITIALIZER, p))
         return new_array
 
@@ -504,7 +504,7 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_expression
         nullable_type = cast(NullableType, temp_expression)
         nullable_type = nullable_type.with_markers(self.visit_markers(nullable_type.markers, p))
-        nullable_type = nullable_type.with_annotations([self.visit_and_cast(v, Annotation, p) for v in nullable_type.annotations])
+        nullable_type = nullable_type.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), nullable_type.annotations))
         nullable_type = nullable_type.padding.with_type_tree(self.visit_right_padded(nullable_type.padding.type_tree, JRightPadded.Location.NULLABLE, p))
         return nullable_type
 
@@ -516,7 +516,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         package = cast(Package, temp_statement)
         package = package.with_markers(self.visit_markers(package.markers, p))
         package = package.with_expression(self.visit_and_cast(package.expression, Expression, p))
-        package = package.with_annotations([self.visit_and_cast(v, Annotation, p) for v in package.annotations])
+        package = package.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), package.annotations))
         return package
 
     def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
@@ -637,7 +637,7 @@ class JavaVisitor(TreeVisitor[J, P]):
         try_ = try_.with_markers(self.visit_markers(try_.markers, p))
         try_ = try_.padding.with_resources(self.visit_container(try_.padding.resources, JContainer.Location.TRY_RESOURCES, p))
         try_ = try_.with_body(self.visit_and_cast(try_.body, Block, p))
-        try_ = try_.with_catches([self.visit_and_cast(v, Try.Catch, p) for v in try_.catches])
+        try_ = try_.with_catches(list_map(lambda v: self.visit_and_cast(v, Try.Catch, p), try_.catches))
         try_ = try_.padding.with_finally(self.visit_left_padded(try_.padding.finally_, JLeftPadded.Location.TRY_FINALLY, p))
         return try_
 
@@ -668,8 +668,8 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_type_parameter(self, type_parameter: TypeParameter, p: P) -> J:
         type_parameter = type_parameter.with_prefix(self.visit_space(type_parameter.prefix, Space.Location.TYPE_PARAMETERS_PREFIX, p))
         type_parameter = type_parameter.with_markers(self.visit_markers(type_parameter.markers, p))
-        type_parameter = type_parameter.with_annotations([self.visit_and_cast(v, Annotation, p) for v in type_parameter.annotations])
-        type_parameter = type_parameter.with_modifiers([self.visit_and_cast(v, Modifier, p) for v in type_parameter.modifiers])
+        type_parameter = type_parameter.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), type_parameter.annotations))
+        type_parameter = type_parameter.with_modifiers(list_map(lambda v: self.visit_and_cast(v, Modifier, p), type_parameter.modifiers))
         type_parameter = type_parameter.with_name(self.visit_and_cast(type_parameter.name, Expression, p))
         type_parameter = type_parameter.padding.with_bounds(self.visit_container(type_parameter.padding.bounds, JContainer.Location.TYPE_BOUNDS, p))
         return type_parameter
@@ -677,8 +677,8 @@ class JavaVisitor(TreeVisitor[J, P]):
     def visit_type_parameters(self, type_parameters: TypeParameters, p: P) -> J:
         type_parameters = type_parameters.with_prefix(self.visit_space(type_parameters.prefix, Space.Location.TYPE_PARAMETERS_PREFIX, p))
         type_parameters = type_parameters.with_markers(self.visit_markers(type_parameters.markers, p))
-        type_parameters = type_parameters.with_annotations([self.visit_and_cast(v, Annotation, p) for v in type_parameters.annotations])
-        type_parameters = type_parameters.padding.with_type_parameters([self.visit_right_padded(v, JRightPadded.Location.TYPE_PARAMETER, p) for v in type_parameters.padding.type_parameters])
+        type_parameters = type_parameters.with_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), type_parameters.annotations))
+        type_parameters = type_parameters.padding.with_type_parameters(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.TYPE_PARAMETER, p), type_parameters.padding.type_parameters))
         return type_parameters
 
     def visit_unary(self, unary: Unary, p: P) -> J:
@@ -703,19 +703,19 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_statement
         variable_declarations = cast(VariableDeclarations, temp_statement)
         variable_declarations = variable_declarations.with_markers(self.visit_markers(variable_declarations.markers, p))
-        variable_declarations = variable_declarations.with_leading_annotations([self.visit_and_cast(v, Annotation, p) for v in variable_declarations.leading_annotations])
-        variable_declarations = variable_declarations.with_modifiers([self.visit_and_cast(v, Modifier, p) for v in variable_declarations.modifiers])
+        variable_declarations = variable_declarations.with_leading_annotations(list_map(lambda v: self.visit_and_cast(v, Annotation, p), variable_declarations.leading_annotations))
+        variable_declarations = variable_declarations.with_modifiers(list_map(lambda v: self.visit_and_cast(v, Modifier, p), variable_declarations.modifiers))
         variable_declarations = variable_declarations.with_type_expression(self.visit_and_cast(variable_declarations.type_expression, TypeTree, p))
         variable_declarations = variable_declarations.with_varargs(self.visit_space(variable_declarations.varargs, Space.Location.VARARGS, p))
-        variable_declarations = variable_declarations.with_dimensions_before_name([el.with_before(self.visit_space(el.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(el.element, Space.Location.DIMENSION, p)) for el in variable_declarations.dimensions_before_name])
-        variable_declarations = variable_declarations.padding.with_variables([self.visit_right_padded(v, JRightPadded.Location.NAMED_VARIABLE, p) for v in variable_declarations.padding.variables])
+        variable_declarations = variable_declarations.with_dimensions_before_name(list_map(lambda v: v.with_before(self.visit_space(v.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(v.element, Space.Location.DIMENSION, p)), variable_declarations.dimensions_before_name))
+        variable_declarations = variable_declarations.padding.with_variables(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.NAMED_VARIABLE, p), variable_declarations.padding.variables))
         return variable_declarations
 
     def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
         named_variable = named_variable.with_prefix(self.visit_space(named_variable.prefix, Space.Location.VARIABLE_PREFIX, p))
         named_variable = named_variable.with_markers(self.visit_markers(named_variable.markers, p))
         named_variable = named_variable.with_name(self.visit_and_cast(named_variable.name, Identifier, p))
-        named_variable = named_variable.with_dimensions_after_name([el.with_before(self.visit_space(el.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(el.element, Space.Location.DIMENSION, p)) for el in named_variable.dimensions_after_name])
+        named_variable = named_variable.with_dimensions_after_name(list_map(lambda v: v.with_before(self.visit_space(v.before, Space.Location.DIMENSION_PREFIX, p)).with_element(self.visit_space(v.element, Space.Location.DIMENSION, p)), named_variable.dimensions_after_name))
         named_variable = named_variable.padding.with_initializer(self.visit_left_padded(named_variable.padding.initializer, JLeftPadded.Location.VARIABLE_INITIALIZER, p))
         return named_variable
 

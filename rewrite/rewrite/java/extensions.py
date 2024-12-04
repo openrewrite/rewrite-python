@@ -2,6 +2,7 @@ from dataclasses import replace
 from typing import Optional, TypeVar, TYPE_CHECKING
 
 from .support_types import J, JRightPadded, JLeftPadded, JContainer, Space
+from .. import list_map
 from ..visitor import Cursor
 from ..tree import Tree
 
@@ -19,7 +20,7 @@ def visit_container(v: 'JavaVisitor', container: Optional[JContainer[J2]], loc: 
 
     v.cursor = Cursor(v.cursor, container)
     before = v.visit_space(container.before, loc.before_location, p)
-    js = [v.visit_right_padded(el, loc.element_location, p) for el in container.padding.elements]
+    js = list_map(lambda el: v.visit_right_padded(el, loc.element_location, p), container.padding.elements)
     v.cursor = v.cursor.parent
 
     return container if js is container.padding.elements and before is container.before else JContainer(before, js, container.markers)

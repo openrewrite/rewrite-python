@@ -8,5 +8,6 @@ __all__ = [
     'AutoFormat',
     'BlankLinesVisitor',
     'NormalizeFormatVisitor',
+    'NormalizeTabsOrSpacesVisitor',
     'SpacesVisitor',
 ]

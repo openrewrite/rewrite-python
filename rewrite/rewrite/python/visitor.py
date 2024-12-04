@@ -1,7 +1,7 @@
 from typing import cast, TypeVar, Union
 
-from rewrite import SourceFile, TreeVisitor
-from .extensions import *
+from rewrite import SourceFile, TreeVisitor, list_map
+from . import extensions
 from .support_types import *
 from .tree import *
 from rewrite.java import JavaVisitor
@@ -51,7 +51,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_statement
         chained_assignment = cast(ChainedAssignment, temp_statement)
         chained_assignment = chained_assignment.with_markers(self.visit_markers(chained_assignment.markers, p))
-        chained_assignment = chained_assignment.padding.with_variables([self.visit_right_padded(v, PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, p) for v in chained_assignment.padding.variables])
+        chained_assignment = chained_assignment.padding.with_variables(list_map(lambda v: self.visit_right_padded(v, PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, p), chained_assignment.padding.variables))
         chained_assignment = chained_assignment.with_assignment(self.visit_and_cast(chained_assignment.assignment, Expression, p))
         return chained_assignment
 
@@ -92,8 +92,8 @@ class PythonVisitor(JavaVisitor[P]):
     def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:
         compilation_unit = compilation_unit.with_prefix(self.visit_space(compilation_unit.prefix, Space.Location.COMPILATION_UNIT_PREFIX, p))
         compilation_unit = compilation_unit.with_markers(self.visit_markers(compilation_unit.markers, p))
-        compilation_unit = compilation_unit.padding.with_imports([self.visit_right_padded(v, JRightPadded.Location.IMPORT, p) for v in compilation_unit.padding.imports])
-        compilation_unit = compilation_unit.padding.with_statements([self.visit_right_padded(v, PyRightPadded.Location.COMPILATION_UNIT_STATEMENTS, p) for v in compilation_unit.padding.statements])
+        compilation_unit = compilation_unit.padding.with_imports(list_map(lambda v: self.visit_right_padded(v, JRightPadded.Location.IMPORT, p), compilation_unit.padding.imports))
+        compilation_unit = compilation_unit.padding.with_statements(list_map(lambda v: self.visit_right_padded(v, PyRightPadded.Location.COMPILATION_UNIT_STATEMENTS, p), compilation_unit.padding.statements))
         compilation_unit = compilation_unit.with_eof(self.visit_space(compilation_unit.eof, Space.Location.COMPILATION_UNIT_EOF, p))
         return compilation_unit
 
@@ -180,7 +180,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_expression
         formatted_string = cast(FormattedString, temp_expression)
         formatted_string = formatted_string.with_markers(self.visit_markers(formatted_string.markers, p))
-        formatted_string = formatted_string.with_parts([self.visit_and_cast(v, Expression, p) for v in formatted_string.parts])
+        formatted_string = formatted_string.with_parts(list_map(lambda v: self.visit_and_cast(v, Expression, p), formatted_string.parts))
         return formatted_string
 
     def visit_formatted_string_value(self, value: FormattedString.Value, p: P) -> J:
@@ -223,7 +223,7 @@ class PythonVisitor(JavaVisitor[P]):
         comprehension_expression = cast(ComprehensionExpression, temp_expression)
         comprehension_expression = comprehension_expression.with_markers(self.visit_markers(comprehension_expression.markers, p))
         comprehension_expression = comprehension_expression.with_result(self.visit_and_cast(comprehension_expression.result, Expression, p))
-        comprehension_expression = comprehension_expression.with_clauses([self.visit_and_cast(v, ComprehensionExpression.Clause, p) for v in comprehension_expression.clauses])
+        comprehension_expression = comprehension_expression.with_clauses(list_map(lambda v: self.visit_and_cast(v, ComprehensionExpression.Clause, p), comprehension_expression.clauses))
         comprehension_expression = comprehension_expression.with_suffix(self.visit_space(comprehension_expression.suffix, PySpace.Location.COMPREHENSION_EXPRESSION_SUFFIX, p))
         return comprehension_expression
 
@@ -239,7 +239,7 @@ class PythonVisitor(JavaVisitor[P]):
         clause = clause.padding.with_async(self.visit_right_padded(clause.padding.async_, PyRightPadded.Location.COMPREHENSION_EXPRESSION_CLAUSE_ASYNC, p))
         clause = clause.with_iterator_variable(self.visit_and_cast(clause.iterator_variable, Expression, p))
         clause = clause.padding.with_iterated_list(self.visit_left_padded(clause.padding.iterated_list, PyLeftPadded.Location.COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST, p))
-        clause = clause.with_conditions([self.visit_and_cast(v, ComprehensionExpression.Condition, p) for v in clause.conditions])
+        clause = clause.with_conditions(list_map(lambda v: self.visit_and_cast(v, ComprehensionExpression.Condition, p), clause.conditions))
         return clause
 
     def visit_type_alias(self, type_alias: TypeAlias, p: P) -> J:
@@ -270,7 +270,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_expression
         union_type = cast(UnionType, temp_expression)
         union_type = union_type.with_markers(self.visit_markers(union_type.markers, p))
-        union_type = union_type.padding.with_types([self.visit_right_padded(v, PyRightPadded.Location.UNION_TYPE_TYPES, p) for v in union_type.padding.types])
+        union_type = union_type.padding.with_types(list_map(lambda v: self.visit_right_padded(v, PyRightPadded.Location.UNION_TYPE_TYPES, p), union_type.padding.types))
         return union_type
 
     def visit_variable_scope(self, variable_scope: VariableScope, p: P) -> J:
@@ -280,7 +280,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_statement
         variable_scope = cast(VariableScope, temp_statement)
         variable_scope = variable_scope.with_markers(self.visit_markers(variable_scope.markers, p))
-        variable_scope = variable_scope.padding.with_names([self.visit_right_padded(v, PyRightPadded.Location.VARIABLE_SCOPE_NAMES, p) for v in variable_scope.padding.names])
+        variable_scope = variable_scope.padding.with_names(list_map(lambda v: self.visit_right_padded(v, PyRightPadded.Location.VARIABLE_SCOPE_NAMES, p), variable_scope.padding.names))
         return variable_scope
 
     def visit_del(self, del_: Del, p: P) -> J:
@@ -290,7 +290,7 @@ class PythonVisitor(JavaVisitor[P]):
             return temp_statement
         del_ = cast(Del, temp_statement)
         del_ = del_.with_markers(self.visit_markers(del_.markers, p))
-        del_ = del_.padding.with_targets([self.visit_right_padded(v, PyRightPadded.Location.DEL_TARGETS, p) for v in del_.padding.targets])
+        del_ = del_.padding.with_targets(list_map(lambda v: self.visit_right_padded(v, PyRightPadded.Location.DEL_TARGETS, p), del_.padding.targets))
         return del_
 
     def visit_special_parameter(self, special_parameter: SpecialParameter, p: P) -> J:
