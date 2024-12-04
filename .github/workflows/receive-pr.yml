@@ -1,6 +1,9 @@
 name: receive-pr
 
-#on:
+on:
+  pull_request:
+    types: []
+
 #  pull_request:
 #    types: [opened, synchronize]
 #    branches:
