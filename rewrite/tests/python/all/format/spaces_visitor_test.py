@@ -219,6 +219,7 @@ def test_spaces_after_comma_within_method_declaration_keyword_arg():
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
 def test_spaces_after_within_method_declaration_type_hints():
     style = IntelliJ.spaces()
 
@@ -226,15 +227,15 @@ def test_spaces_after_within_method_declaration_type_hints():
         # language=python
         python(
             """
-            def x(a : int   , b : int = 2):
+            def x(a :   int   , b : int = 2):
                 pass
             def y(a :int   , b : int = 2):
                 pass
             """,
             """
-            def x(a : int, b : int = 2):
+            def x(a: int, b: int = 2):
                 pass
-            def y(a : int, b : int = 2):
+            def y(a: int, b: int = 2):
                 pass
             """
         ),
@@ -321,7 +322,7 @@ def test_spaces_around_chained_assignment():
     )
 
 
-def test_spaces_around_assignment():
+def test_spaces_around_assignment_op():
     style = IntelliJ.spaces()
     rewrite_run(
         # language=python
@@ -451,6 +452,7 @@ def test_spaces_python_binary_operators_string(left_space, right_space):
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
 def test_if_statement():
     style = IntelliJ.spaces()
     rewrite_run(
@@ -469,6 +471,7 @@ def test_if_statement():
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
 def test_if_statement_multiple_conditions():
     style = IntelliJ.spaces()
     rewrite_run(
@@ -486,6 +489,7 @@ def test_if_statement_multiple_conditions():
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
+
 
 def test_if_else_statement():
     style = IntelliJ.spaces()

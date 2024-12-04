@@ -3,7 +3,7 @@ from typing import Optional, cast, List
 import rewrite.java as j
 from rewrite import Tree
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
-    MethodDeclaration, Empty, ArrayAccess, Space, If, Block
+    MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
 from rewrite.visitor import P
 
@@ -13,6 +13,41 @@ class SpacesVisitor(PythonVisitor):
         self._style = style
         self._before_parentheses = style.before_parentheses
         self._stop_after = stop_after
+
+    def visit_class_declaration(self, class_declaration: ClassDeclaration, p: P) -> J:
+        c = cast(ClassDeclaration, super().visit_class_declaration(class_declaration, p))
+
+        # Handle space before parentheses for class declaration e.g. class A () <-> class A()
+        if c.padding.implements is not None:
+            c = c.padding.with_implements(
+                self.space_before_container(c.padding.implements, self._style.before_parentheses.method_call)
+            )
+
+            param_size = len(c.padding.implements.elements)
+            use_space = self._style.within.method_call_parentheses
+
+            # TODO: Refactor to remove duplicate code.
+            def _process_argument(index, arg, args_size):
+                if index == 0:
+                    arg = arg.with_element(self.space_before(arg.element, use_space))
+                else:
+                    arg = arg.with_element(self.space_before(arg.element, self._style.other.after_comma))
+
+                if index == args_size - 1:
+                    arg = self.space_after(arg, use_space)
+                else:
+                    arg = self.space_after(arg, self._style.other.before_comma)
+
+                return arg
+
+            c = c.padding.with_implements(
+                c.padding.implements.padding.with_elements(
+                    [_process_argument(index, arg, param_size)
+                     for index, arg in enumerate(c.padding.implements.padding.elements)]
+                )
+            )
+
+        return c
 
     def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
         m: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(method_declaration, p))
@@ -25,7 +60,11 @@ class SpacesVisitor(PythonVisitor):
         use_space = self._style.within.method_call_parentheses
 
         def _process_argument(index, arg, args_size):
-            # TODO: Type expressions are not yet modified
+            # TODO: Fix Type hint handling
+            # Handle space before type hint colon e.g. foo(a: int) <-> foo(a:int)
+            arg = arg.with_element(arg.element.with_type_expression(
+                self.space_before(arg.element.type_expression, False)))
+
             if index == 0:
                 arg = arg.with_element(self.space_before(arg.element, use_space))
             else:
