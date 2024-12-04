@@ -167,6 +167,27 @@ def test_spaces_after_comma_within_method_declaration_positional_args():
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
+def test_spaces_method_declaration_positional_colon():
+    style = IntelliJ.spaces()
+
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def a(a,b)   : # cool
+                pass
+            """,
+            """
+            def a(a, b): # cool
+                pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
 def test_spaces_after_comma_within_method_declaration_keyword_arg():
     style = IntelliJ.spaces()
 

@@ -3,7 +3,7 @@ from typing import Optional, cast, List
 import rewrite.java as j
 from rewrite import Tree
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
-    MethodDeclaration, Empty, ArrayAccess, Space, If
+    MethodDeclaration, Empty, ArrayAccess, Space, If, Block
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
 from rewrite.visitor import P
 
@@ -53,6 +53,11 @@ class SpacesVisitor(PythonVisitor):
                 Space.SINGLE_SPACE if self._before_parentheses.method_declaration else Space.EMPTY
             )
         )
+
+    def visit_block(self, block: Block, p: P) -> J:
+        b = cast(Block, super().visit_block(block, p))
+        b = self.space_before(b, self._style.other.before_colon)
+        return b
 
     def visit_method_invocation(self, method_invocation: MethodInvocation, p: P) -> J:
         m: MethodInvocation = cast(MethodInvocation, super().visit_method_invocation(method_invocation, p))
