@@ -2,6 +2,8 @@ from typing import Optional, cast, TypeVar
 
 from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
+from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
+from .. import TabsAndIndentsStyle
 from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
@@ -25,6 +27,10 @@ class AutoFormatVisitor(PythonVisitor):
         tree = NormalizeFormatVisitor(self._stop_after).visit(tree, p, self._cursor.fork())
         tree = BlankLinesVisitor(cu.get_style(BlankLinesStyle) or IntelliJ.blank_lines(), self._stop_after).visit(tree, p, self._cursor.fork())
         tree = SpacesVisitor(cu.get_style(SpacesStyle) or IntelliJ.spaces(), self._stop_after).visit(tree, p, self._cursor.fork())
+        tree = NormalizeTabsOrSpacesVisitor(
+            cu.get_style(TabsAndIndentsStyle) or IntelliJ.tabs_and_indents(),
+            self._stop_after
+        ).visit(tree, p, self._cursor.fork())
         return tree
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import cast, Optional, TypeVar
 
-from rewrite import Tree, P, Cursor
+from rewrite import Tree, P, Cursor, map_list
 from rewrite.java import MethodDeclaration, J, Space, ClassDeclaration
 from rewrite.python import PythonVisitor, PyComment
 from rewrite.visitor import T
@@ -65,7 +65,7 @@ def _common_margin(s1, s2):
 def _concatenate_prefix(j: J, prefix: Space) -> J2:
     shift = _common_margin(None, j.prefix.whitespace)
 
-    def modify_comment(c: PyComment):
+    def modify_comment(c: PyComment) -> PyComment:
         if len(shift) == 0:
             return c
         c = c.with_text(c.text.replace('\n', '\n' + shift))
@@ -73,11 +73,11 @@ def _concatenate_prefix(j: J, prefix: Space) -> J2:
             c = c.with_suffix(c.suffix.replace('\n', '\n' + shift))
         return c
 
-    comments = j.prefix.comments + \
-               [modify_comment(cast(PyComment, comment)) for comment in prefix.comments]
+    comments = j.prefix.comments + map_list(prefix.comments, modify_comment)
 
     new_prefix = j.prefix
     new_prefix = new_prefix.with_whitespace(new_prefix.whitespace + prefix.whitespace)
-    new_prefix = new_prefix.with_comments(comments)
+    if comments:
+        new_prefix = new_prefix.with_comments(comments)
 
     return j.with_prefix(new_prefix)
