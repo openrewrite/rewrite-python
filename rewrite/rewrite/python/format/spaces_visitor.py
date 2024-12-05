@@ -4,7 +4,8 @@ import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded
-from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment
+from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
+    ForLoop, DictLiteral
 from rewrite.visitor import P
 
 
@@ -211,11 +212,18 @@ class SpacesVisitor(PythonVisitor):
 
         return m
 
+    def _apply_binary_space_around(self, binary, use_space_around: bool):
+        operator = binary.padding.operator
+        binary = binary.padding.with_operator(
+            operator.with_before(update_space(operator.before, use_space_around))
+        )
+        return binary.with_right(space_before(binary.right, use_space_around))
+
     def visit_binary(self, binary: j.Binary, p: P) -> J:
         b: j.Binary = cast(j.Binary, super().visit_binary(binary, p))
         op: j.Binary.Type = b.operator
 
-        # Additive operators, _self._style.around_operators.addition is True by default
+        # Handle space around all binary operators e.g. 1 +   1 <-> 1 + 1 or 1+1 depending on style
         if op in [j.Binary.Type.Addition, j.Binary.Type.Subtraction]:
             b = self._apply_binary_space_around(b, self._style.around_operators.additive)
         elif op in [j.Binary.Type.Multiplication, j.Binary.Type.Division, j.Binary.Type.Modulo]:
@@ -247,14 +255,6 @@ class SpacesVisitor(PythonVisitor):
             b = self._apply_binary_space_around(b, self._style.around_operators.additive)
         return b
 
-    def _apply_binary_space_around(self, binary, use_space_around: bool):
-        operator = binary.padding.operator
-        binary = binary.padding.with_operator(
-            operator.with_before(update_space(operator.before, use_space_around))
-        )
-        binary = binary.with_right(space_before(binary.right, use_space_around))
-        return binary
-
     def visit_if(self, if_stm: If, p: P) -> J:
         if_: j.If = cast(If, super().visit_if(if_stm, p))
 
@@ -273,6 +273,67 @@ class SpacesVisitor(PythonVisitor):
         e = e.padding.with_body(space_before_right_padded_element(e.padding.body, self._style.other.before_colon))
 
         return e
+
+    def visit_slice(self, slice: Slice, p: P) -> J:
+        s: Slice = cast(Slice, super().visit_slice(slice, p))
+        use_space = self._style.within.brackets
+
+        if s.padding.start is not None:
+            s = s.padding.with_start(space_before_right_padded_element(s.padding.start, use_space))
+            s = s.padding.with_start(space_after_right_padded(s.padding.start, use_space))
+        if s.padding.stop is not None:
+            # TODO: Check if "before" is correct, in PyCharm it is not supported but we could still support it.
+            s = s.padding.with_stop(space_before_right_padded_element(s.padding.stop, use_space))
+            s = s.padding.with_stop(space_after_right_padded(s.padding.stop, use_space))
+
+            if s.padding.step is not None:
+                # TODO: Check if "before" is correct, in PyCharm it is not supported but we could still support it.
+                s = s.padding.with_step(space_before_right_padded_element(s.padding.step, use_space))
+                s = s.padding.with_step(space_after_right_padded(s.padding.step, use_space))
+        return s
+
+    def visit_python_for_loop(self, for_loop: ForLoop, p: P) -> J:
+        fl = cast(ForLoop, super().visit_python_for_loop(for_loop, p))
+
+        # Set single space before loop target e.g. for    i in...: <-> for i in ...:
+        fl = fl.with_target(space_before(fl.target, True))
+
+        # Set single space before loop iterable, and in keyword e.g. for i in    []: <-> for i in []:
+        fl = fl.padding.with_iterable(space_before_left_padded(fl.padding.iterable, True))
+        fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
+
+        return fl
+
+    def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
+        cl = cast(CollectionLiteral, super().visit_collection_literal(collection_literal, p))
+
+        # TODO: Refactor to remove duplicate code.
+        def _process_element(index, arg, args_size, use_space):
+            if index == 0:
+                arg = arg.with_element(space_before(arg.element, use_space))
+            else:
+                arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
+
+            if index == args_size - 1:
+                arg = space_after(arg, use_space)
+            else:
+                arg = space_after(arg, self._style.other.before_comma)
+
+            return arg
+
+        cl = cl.padding.with_elements(
+            cl.padding.elements.padding.with_elements(
+                list_map(
+                    lambda arg, idx: _process_element(idx, arg,
+                                                      args_size=len(cl.padding.elements.padding.elements),
+                                                      use_space=self._style.within.brackets),
+                    cl.padding.elements.padding.elements)))
+
+        return cl
+
+    def visit_dict_literal(self, dict_literal: DictLiteral, p: P) -> J:
+        dl = cast(DictLiteral, super().visit_dict_literal(dict_literal, p))
+        return dl
 
 
 J2 = TypeVar('J2', bound=j.J)
