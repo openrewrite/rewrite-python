@@ -84,8 +84,8 @@ class SpacesVisitor(PythonVisitor):
 
         m = m.padding.with_parameters(
             m.padding.parameters.padding.with_elements(
-                [_process_argument(index, arg, param_size)
-                 for index, arg in enumerate(m.padding.parameters.padding.elements)]
+                list_map(lambda arg, idx: _process_argument(idx, arg, param_size),
+                         m.padding.parameters.padding.elements)
             )
         )
 
@@ -143,10 +143,9 @@ class SpacesVisitor(PythonVisitor):
 
             m = m.padding.with_arguments(
                 m.padding.arguments.padding.with_elements(
-                    [_process_argument(index, arg, args_size, use_space)
-                     for index, arg in enumerate(m.padding.arguments.padding.elements)]
-                )
-            )
+                    list_map(lambda arg, idx: _process_argument(idx, arg, args_size, use_space),
+                             m.padding.arguments.padding.elements)))
+
         # TODO: Handle type parameters, relevant for constructors in Python.
         return m
 
