@@ -3,9 +3,10 @@ from typing import Optional, cast, List, TypeVar
 import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
-    MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded
+    MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
+    Import
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue, TypeHint
+    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport
 from rewrite.visitor import P
 
 
@@ -359,6 +360,25 @@ class SpacesVisitor(PythonVisitor):
             )
         )
         return dl
+
+    def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
+        mi: MultiImport = cast(MultiImport, super().visit_multi_import(multi_import, p))
+
+        mi = mi.padding.with_names(
+            mi.padding.names.with_elements(
+                list_map(lambda x, idx: space_before(x, False if idx == 0 else self._style.other.after_comma),
+                         mi.padding.names.elements)
+            )
+        )
+        return mi
+
+    def visit_import(self, import_: Import, p: P) -> J:
+        imp: Import = cast(Import, super().visit_import(import_, p))
+        # Always use single space before and after alias 'as' keyword e.g. import foo  as  bar <-> import foo as bar
+        if imp.padding.alias:
+            imp = imp.with_alias(space_before(imp.alias, True))
+        # TODO: Handle space before 'as' keyword / after import
+        return imp
 
     def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
         th: TypeHint = cast(TypeHint, super().visit_type_hint(type_hint, p))
