@@ -86,14 +86,14 @@ def test_spaces_member_reference():
             class A:
                 def __init__(self):
                     self.a= 1
-            inst : A = A()
+            inst: A = A()
             inst.a =1
                 """,
             """
             class A:
                 def __init__(self):
                     self.a = 1
-            inst : A = A()
+            inst: A = A()
             inst.a = 1
             """
         ),

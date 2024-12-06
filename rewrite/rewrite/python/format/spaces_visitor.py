@@ -5,7 +5,7 @@ from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue
+    ForLoop, DictLiteral, KeyValue, TypeHint
 from rewrite.visitor import P
 
 
@@ -358,10 +358,12 @@ class SpacesVisitor(PythonVisitor):
                          dl.padding.elements.padding.elements)
             )
         )
-
-        # TODO: Currently multi line alignment is not supported
-
         return dl
+
+    def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
+        th: TypeHint = cast(TypeHint, super().visit_type_hint(type_hint, p))
+        th = space_before(th, self._style.other.before_colon)
+        return th.with_type_tree(space_before(th.type_tree, self._style.other.after_colon))
 
 
 J2 = TypeVar('J2', bound=j.J)
