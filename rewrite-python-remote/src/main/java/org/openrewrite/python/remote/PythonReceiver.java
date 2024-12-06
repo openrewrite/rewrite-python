@@ -41,6 +41,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Value
 public class PythonReceiver implements Receiver<Py> {
@@ -1149,30 +1150,144 @@ public class PythonReceiver implements Receiver<Py> {
 
     private static class Factory implements ReceiverFactory {
 
+        private final ClassValue<Function<ReceiverContext, Object>> factories = new ClassValue<Function<ReceiverContext, Object>>() {
+            @Override
+            protected Function<ReceiverContext, Object> computeValue(Class type) {
+                if (type == Py.Async.class) return Factory::createPyAsync;
+                if (type == Py.Await.class) return Factory::createPyAwait;
+                if (type == Py.Binary.class) return Factory::createPyBinary;
+                if (type == Py.ChainedAssignment.class) return Factory::createPyChainedAssignment;
+                if (type == Py.ExceptionType.class) return Factory::createPyExceptionType;
+                if (type == Py.ForLoop.class) return Factory::createPyForLoop;
+                if (type == Py.LiteralType.class) return Factory::createPyLiteralType;
+                if (type == Py.TypeHint.class) return Factory::createPyTypeHint;
+                if (type == Py.CompilationUnit.class) return Factory::createPyCompilationUnit;
+                if (type == Py.ExpressionStatement.class) return Factory::createPyExpressionStatement;
+                if (type == Py.ExpressionTypeTree.class) return Factory::createPyExpressionTypeTree;
+                if (type == Py.StatementExpression.class) return Factory::createPyStatementExpression;
+                if (type == Py.MultiImport.class) return Factory::createPyMultiImport;
+                if (type == Py.KeyValue.class) return Factory::createPyKeyValue;
+                if (type == Py.DictLiteral.class) return Factory::createPyDictLiteral;
+                if (type == Py.CollectionLiteral.class) return Factory::createPyCollectionLiteral;
+                if (type == Py.FormattedString.class) return Factory::createPyFormattedString;
+                if (type == Py.FormattedString.Value.class) return Factory::createPyFormattedStringValue;
+                if (type == Py.Pass.class) return Factory::createPyPass;
+                if (type == Py.TrailingElseWrapper.class) return Factory::createPyTrailingElseWrapper;
+                if (type == Py.ComprehensionExpression.class) return Factory::createPyComprehensionExpression;
+                if (type == Py.ComprehensionExpression.Condition.class) return Factory::createPyComprehensionExpressionCondition;
+                if (type == Py.ComprehensionExpression.Clause.class) return Factory::createPyComprehensionExpressionClause;
+                if (type == Py.TypeAlias.class) return Factory::createPyTypeAlias;
+                if (type == Py.YieldFrom.class) return Factory::createPyYieldFrom;
+                if (type == Py.UnionType.class) return Factory::createPyUnionType;
+                if (type == Py.VariableScope.class) return Factory::createPyVariableScope;
+                if (type == Py.Del.class) return Factory::createPyDel;
+                if (type == Py.SpecialParameter.class) return Factory::createPySpecialParameter;
+                if (type == Py.Star.class) return Factory::createPyStar;
+                if (type == Py.NamedArgument.class) return Factory::createPyNamedArgument;
+                if (type == Py.TypeHintedExpression.class) return Factory::createPyTypeHintedExpression;
+                if (type == Py.ErrorFrom.class) return Factory::createPyErrorFrom;
+                if (type == Py.MatchCase.class) return Factory::createPyMatchCase;
+                if (type == Py.MatchCase.Pattern.class) return Factory::createPyMatchCasePattern;
+                if (type == Py.Slice.class) return Factory::createPySlice;
+                if (type == J.AnnotatedType.class) return Factory::createJAnnotatedType;
+                if (type == J.Annotation.class) return Factory::createJAnnotation;
+                if (type == J.ArrayAccess.class) return Factory::createJArrayAccess;
+                if (type == J.ArrayType.class) return Factory::createJArrayType;
+                if (type == J.Assert.class) return Factory::createJAssert;
+                if (type == J.Assignment.class) return Factory::createJAssignment;
+                if (type == J.AssignmentOperation.class) return Factory::createJAssignmentOperation;
+                if (type == J.Binary.class) return Factory::createJBinary;
+                if (type == J.Block.class) return Factory::createJBlock;
+                if (type == J.Break.class) return Factory::createJBreak;
+                if (type == J.Case.class) return Factory::createJCase;
+                if (type == J.ClassDeclaration.class) return Factory::createJClassDeclaration;
+                if (type == J.ClassDeclaration.Kind.class) return Factory::createJClassDeclarationKind;
+                if (type == J.Continue.class) return Factory::createJContinue;
+                if (type == J.DoWhileLoop.class) return Factory::createJDoWhileLoop;
+                if (type == J.Empty.class) return Factory::createJEmpty;
+                if (type == J.EnumValue.class) return Factory::createJEnumValue;
+                if (type == J.EnumValueSet.class) return Factory::createJEnumValueSet;
+                if (type == J.FieldAccess.class) return Factory::createJFieldAccess;
+                if (type == J.ForEachLoop.class) return Factory::createJForEachLoop;
+                if (type == J.ForEachLoop.Control.class) return Factory::createJForEachLoopControl;
+                if (type == J.ForLoop.class) return Factory::createJForLoop;
+                if (type == J.ForLoop.Control.class) return Factory::createJForLoopControl;
+                if (type == J.ParenthesizedTypeTree.class) return Factory::createJParenthesizedTypeTree;
+                if (type == J.Identifier.class) return Factory::createJIdentifier;
+                if (type == J.If.class) return Factory::createJIf;
+                if (type == J.If.Else.class) return Factory::createJIfElse;
+                if (type == J.Import.class) return Factory::createJImport;
+                if (type == J.InstanceOf.class) return Factory::createJInstanceOf;
+                if (type == J.IntersectionType.class) return Factory::createJIntersectionType;
+                if (type == J.Label.class) return Factory::createJLabel;
+                if (type == J.Lambda.class) return Factory::createJLambda;
+                if (type == J.Lambda.Parameters.class) return Factory::createJLambdaParameters;
+                if (type == J.Literal.class) return Factory::createJLiteral;
+                if (type == J.MemberReference.class) return Factory::createJMemberReference;
+                if (type == J.MethodDeclaration.class) return Factory::createJMethodDeclaration;
+                if (type == J.MethodInvocation.class) return Factory::createJMethodInvocation;
+                if (type == J.Modifier.class) return Factory::createJModifier;
+                if (type == J.MultiCatch.class) return Factory::createJMultiCatch;
+                if (type == J.NewArray.class) return Factory::createJNewArray;
+                if (type == J.ArrayDimension.class) return Factory::createJArrayDimension;
+                if (type == J.NewClass.class) return Factory::createJNewClass;
+                if (type == J.NullableType.class) return Factory::createJNullableType;
+                if (type == J.Package.class) return Factory::createJPackage;
+                if (type == J.ParameterizedType.class) return Factory::createJParameterizedType;
+                if (type == J.Parentheses.class) return Factory::createJParentheses;
+                if (type == J.ControlParentheses.class) return Factory::createJControlParentheses;
+                if (type == J.Primitive.class) return Factory::createJPrimitive;
+                if (type == J.Return.class) return Factory::createJReturn;
+                if (type == J.Switch.class) return Factory::createJSwitch;
+                if (type == J.SwitchExpression.class) return Factory::createJSwitchExpression;
+                if (type == J.Synchronized.class) return Factory::createJSynchronized;
+                if (type == J.Ternary.class) return Factory::createJTernary;
+                if (type == J.Throw.class) return Factory::createJThrow;
+                if (type == J.Try.class) return Factory::createJTry;
+                if (type == J.Try.Resource.class) return Factory::createJTryResource;
+                if (type == J.Try.Catch.class) return Factory::createJTryCatch;
+                if (type == J.TypeCast.class) return Factory::createJTypeCast;
+                if (type == J.TypeParameter.class) return Factory::createJTypeParameter;
+                if (type == J.TypeParameters.class) return Factory::createJTypeParameters;
+                if (type == J.Unary.class) return Factory::createJUnary;
+                if (type == J.VariableDeclarations.class) return Factory::createJVariableDeclarations;
+                if (type == J.VariableDeclarations.NamedVariable.class) return Factory::createJVariableDeclarationsNamedVariable;
+                if (type == J.WhileLoop.class) return Factory::createJWhileLoop;
+                if (type == J.Wildcard.class) return Factory::createJWildcard;
+                if (type == J.Yield.class) return Factory::createJYield;
+                if (type == J.Unknown.class) return Factory::createJUnknown;
+                if (type == J.Unknown.Source.class) return Factory::createJUnknownSource;
+                throw new IllegalArgumentException("Unknown type: " + type);
+            }
+        };
+
         @Override
         @SuppressWarnings("unchecked")
         public <T> T create(Class<T> type, ReceiverContext ctx) {
-            if (type == Py.Async.class) {
-                return (T) new Py.Async(
+            return (T) factories.get(type).apply(ctx);
+        }
+
+        private static Py.Async createPyAsync(ReceiverContext ctx) {
+            return new Py.Async(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Await.class) {
-                return (T) new Py.Await(
+        private static Py.Await createPyAwait(ReceiverContext ctx) {
+            return new Py.Await(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Binary.class) {
-                return (T) new Py.Binary(
+        private static Py.Binary createPyBinary(ReceiverContext ctx) {
+            return new Py.Binary(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1181,64 +1296,64 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ChainedAssignment.class) {
-                return (T) new Py.ChainedAssignment(
+        private static Py.ChainedAssignment createPyChainedAssignment(ReceiverContext ctx) {
+            return new Py.ChainedAssignment(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ExceptionType.class) {
-                return (T) new Py.ExceptionType(
+        private static Py.ExceptionType createPyExceptionType(ReceiverContext ctx) {
+            return new Py.ExceptionType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveValue(null, JavaType.class),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ForLoop.class) {
-                return (T) new Py.ForLoop(
+        private static Py.ForLoop createPyForLoop(ReceiverContext ctx) {
+            return new Py.ForLoop(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.LiteralType.class) {
-                return (T) new Py.LiteralType(
+        private static Py.LiteralType createPyLiteralType(ReceiverContext ctx) {
+            return new Py.LiteralType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.TypeHint.class) {
-                return (T) new Py.TypeHint(
+        private static Py.TypeHint createPyTypeHint(ReceiverContext ctx) {
+            return new Py.TypeHint(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.CompilationUnit.class) {
-                return (T) new Py.CompilationUnit(
+        private static Py.CompilationUnit createPyCompilationUnit(ReceiverContext ctx) {
+            return new Py.CompilationUnit(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1250,87 +1365,87 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ExpressionStatement.class) {
-                return (T) new Py.ExpressionStatement(
+        private static Py.ExpressionStatement createPyExpressionStatement(ReceiverContext ctx) {
+            return new Py.ExpressionStatement(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ExpressionTypeTree.class) {
-                return (T) new Py.ExpressionTypeTree(
+        private static Py.ExpressionTypeTree createPyExpressionTypeTree(ReceiverContext ctx) {
+            return new Py.ExpressionTypeTree(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.StatementExpression.class) {
-                return (T) new Py.StatementExpression(
+        private static Py.StatementExpression createPyStatementExpression(ReceiverContext ctx) {
+            return new Py.StatementExpression(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.MultiImport.class) {
-                return (T) new Py.MultiImport(
+        private static Py.MultiImport createPyMultiImport(ReceiverContext ctx) {
+            return new Py.MultiImport(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer)
-                );
-            }
+            );
+        }
 
-            if (type == Py.KeyValue.class) {
-                return (T) new Py.KeyValue(
+        private static Py.KeyValue createPyKeyValue(ReceiverContext ctx) {
+            return new Py.KeyValue(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.DictLiteral.class) {
-                return (T) new Py.DictLiteral(
+        private static Py.DictLiteral createPyDictLiteral(ReceiverContext ctx) {
+            return new Py.DictLiteral(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.CollectionLiteral.class) {
-                return (T) new Py.CollectionLiteral(
+        private static Py.CollectionLiteral createPyCollectionLiteral(ReceiverContext ctx) {
+            return new Py.CollectionLiteral(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, Py.CollectionLiteral.Kind.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.FormattedString.class) {
-                return (T) new Py.FormattedString(
+        private static Py.FormattedString createPyFormattedString(ReceiverContext ctx) {
+            return new Py.FormattedString(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, String.class),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.FormattedString.Value.class) {
-                return (T) new Py.FormattedString.Value(
+        private static Py.FormattedString.Value createPyFormattedStringValue(ReceiverContext ctx) {
+            return new Py.FormattedString.Value(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1338,29 +1453,29 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNode(null, rightPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveValue(null, Py.FormattedString.Value.Conversion.class),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Pass.class) {
-                return (T) new Py.Pass(
+        private static Py.Pass createPyPass(ReceiverContext ctx) {
+            return new Py.Pass(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers)
-                );
-            }
+            );
+        }
 
-            if (type == Py.TrailingElseWrapper.class) {
-                return (T) new Py.TrailingElseWrapper(
+        private static Py.TrailingElseWrapper createPyTrailingElseWrapper(ReceiverContext ctx) {
+            return new Py.TrailingElseWrapper(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ComprehensionExpression.class) {
-                return (T) new Py.ComprehensionExpression(
+        private static Py.ComprehensionExpression createPyComprehensionExpression(ReceiverContext ctx) {
+            return new Py.ComprehensionExpression(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1369,20 +1484,20 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ComprehensionExpression.Condition.class) {
-                return (T) new Py.ComprehensionExpression.Condition(
+        private static Py.ComprehensionExpression.Condition createPyComprehensionExpressionCondition(ReceiverContext ctx) {
+            return new Py.ComprehensionExpression.Condition(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ComprehensionExpression.Clause.class) {
-                return (T) new Py.ComprehensionExpression.Clause(
+        private static Py.ComprehensionExpression.Clause createPyComprehensionExpressionClause(ReceiverContext ctx) {
+            return new Py.ComprehensionExpression.Clause(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1390,180 +1505,180 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveNodes(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.TypeAlias.class) {
-                return (T) new Py.TypeAlias(
+        private static Py.TypeAlias createPyTypeAlias(ReceiverContext ctx) {
+            return new Py.TypeAlias(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.YieldFrom.class) {
-                return (T) new Py.YieldFrom(
+        private static Py.YieldFrom createPyYieldFrom(ReceiverContext ctx) {
+            return new Py.YieldFrom(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.UnionType.class) {
-                return (T) new Py.UnionType(
+        private static Py.UnionType createPyUnionType(ReceiverContext ctx) {
+            return new Py.UnionType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.VariableScope.class) {
-                return (T) new Py.VariableScope(
+        private static Py.VariableScope createPyVariableScope(ReceiverContext ctx) {
+            return new Py.VariableScope(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, Py.VariableScope.Kind.class),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Del.class) {
-                return (T) new Py.Del(
+        private static Py.Del createPyDel(ReceiverContext ctx) {
+            return new Py.Del(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == Py.SpecialParameter.class) {
-                return (T) new Py.SpecialParameter(
+        private static Py.SpecialParameter createPySpecialParameter(ReceiverContext ctx) {
+            return new Py.SpecialParameter(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, Py.SpecialParameter.Kind.class),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Star.class) {
-                return (T) new Py.Star(
+        private static Py.Star createPyStar(ReceiverContext ctx) {
+            return new Py.Star(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, Py.Star.Kind.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.NamedArgument.class) {
-                return (T) new Py.NamedArgument(
+        private static Py.NamedArgument createPyNamedArgument(ReceiverContext ctx) {
+            return new Py.NamedArgument(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.TypeHintedExpression.class) {
-                return (T) new Py.TypeHintedExpression(
+        private static Py.TypeHintedExpression createPyTypeHintedExpression(ReceiverContext ctx) {
+            return new Py.TypeHintedExpression(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.ErrorFrom.class) {
-                return (T) new Py.ErrorFrom(
+        private static Py.ErrorFrom createPyErrorFrom(ReceiverContext ctx) {
+            return new Py.ErrorFrom(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.MatchCase.class) {
-                return (T) new Py.MatchCase(
+        private static Py.MatchCase createPyMatchCase(ReceiverContext ctx) {
+            return new Py.MatchCase(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.MatchCase.Pattern.class) {
-                return (T) new Py.MatchCase.Pattern(
+        private static Py.MatchCase.Pattern createPyMatchCasePattern(ReceiverContext ctx) {
+            return new Py.MatchCase.Pattern(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, Py.MatchCase.Pattern.Kind.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == Py.Slice.class) {
-                return (T) new Py.Slice(
+        private static Py.Slice createPySlice(ReceiverContext ctx) {
+            return new Py.Slice(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.AnnotatedType.class) {
-                return (T) new J.AnnotatedType(
+        private static J.AnnotatedType createJAnnotatedType(ReceiverContext ctx) {
+            return new J.AnnotatedType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Annotation.class) {
-                return (T) new J.Annotation(
+        private static J.Annotation createJAnnotation(ReceiverContext ctx) {
+            return new J.Annotation(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer)
-                );
-            }
+            );
+        }
 
-            if (type == J.ArrayAccess.class) {
-                return (T) new J.ArrayAccess(
+        private static J.ArrayAccess createJArrayAccess(ReceiverContext ctx) {
+            return new J.ArrayAccess(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.ArrayType.class) {
-                return (T) new J.ArrayType(
+        private static J.ArrayType createJArrayType(ReceiverContext ctx) {
+            return new J.ArrayType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1571,32 +1686,32 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNodes(null, ctx::receiveTree),
                     ctx.receiveNode(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Assert.class) {
-                return (T) new J.Assert(
+        private static J.Assert createJAssert(ReceiverContext ctx) {
+            return new J.Assert(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Assignment.class) {
-                return (T) new J.Assignment(
+        private static J.Assignment createJAssignment(ReceiverContext ctx) {
+            return new J.Assignment(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.AssignmentOperation.class) {
-                return (T) new J.AssignmentOperation(
+        private static J.AssignmentOperation createJAssignmentOperation(ReceiverContext ctx) {
+            return new J.AssignmentOperation(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1604,11 +1719,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.AssignmentOperation.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Binary.class) {
-                return (T) new J.Binary(
+        private static J.Binary createJBinary(ReceiverContext ctx) {
+            return new J.Binary(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1616,31 +1731,31 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Binary.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Block.class) {
-                return (T) new J.Block(
+        private static J.Block createJBlock(ReceiverContext ctx) {
+            return new J.Block(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, rightPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace)
-                );
-            }
+            );
+        }
 
-            if (type == J.Break.class) {
-                return (T) new J.Break(
+        private static J.Break createJBreak(ReceiverContext ctx) {
+            return new J.Break(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Case.class) {
-                return (T) new J.Case(
+        private static J.Case createJCase(ReceiverContext ctx) {
+            return new J.Case(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1648,11 +1763,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ClassDeclaration.class) {
-                return (T) new J.ClassDeclaration(
+        private static J.ClassDeclaration createJClassDeclaration(ReceiverContext ctx) {
+            return new J.ClassDeclaration(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1667,131 +1782,131 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.FullyQualified.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.ClassDeclaration.Kind.class) {
-                return (T) new J.ClassDeclaration.Kind(
+        private static J.ClassDeclaration.Kind createJClassDeclarationKind(ReceiverContext ctx) {
+            return new J.ClassDeclaration.Kind(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullValue(null, J.ClassDeclaration.Kind.Type.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Continue.class) {
-                return (T) new J.Continue(
+        private static J.Continue createJContinue(ReceiverContext ctx) {
+            return new J.Continue(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.DoWhileLoop.class) {
-                return (T) new J.DoWhileLoop(
+        private static J.DoWhileLoop createJDoWhileLoop(ReceiverContext ctx) {
+            return new J.DoWhileLoop(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Empty.class) {
-                return (T) new J.Empty(
+        private static J.Empty createJEmpty(ReceiverContext ctx) {
+            return new J.Empty(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers)
-                );
-            }
+            );
+        }
 
-            if (type == J.EnumValue.class) {
-                return (T) new J.EnumValue(
+        private static J.EnumValue createJEnumValue(ReceiverContext ctx) {
+            return new J.EnumValue(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.EnumValueSet.class) {
-                return (T) new J.EnumValueSet(
+        private static J.EnumValueSet createJEnumValueSet(ReceiverContext ctx) {
+            return new J.EnumValueSet(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullValue(null, boolean.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.FieldAccess.class) {
-                return (T) new J.FieldAccess(
+        private static J.FieldAccess createJFieldAccess(ReceiverContext ctx) {
+            return new J.FieldAccess(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.ForEachLoop.class) {
-                return (T) new J.ForEachLoop(
+        private static J.ForEachLoop createJForEachLoop(ReceiverContext ctx) {
+            return new J.ForEachLoop(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ForEachLoop.Control.class) {
-                return (T) new J.ForEachLoop.Control(
+        private static J.ForEachLoop.Control createJForEachLoopControl(ReceiverContext ctx) {
+            return new J.ForEachLoop.Control(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ForLoop.class) {
-                return (T) new J.ForLoop(
+        private static J.ForLoop createJForLoop(ReceiverContext ctx) {
+            return new J.ForLoop(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ForLoop.Control.class) {
-                return (T) new J.ForLoop.Control(
+        private static J.ForLoop.Control createJForLoopControl(ReceiverContext ctx) {
+            return new J.ForLoop.Control(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ParenthesizedTypeTree.class) {
-                return (T) new J.ParenthesizedTypeTree(
+        private static J.ParenthesizedTypeTree createJParenthesizedTypeTree(ReceiverContext ctx) {
+            return new J.ParenthesizedTypeTree(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Identifier.class) {
-                return (T) new J.Identifier(
+        private static J.Identifier createJIdentifier(ReceiverContext ctx) {
+            return new J.Identifier(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1799,42 +1914,42 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, String.class),
                     ctx.receiveValue(null, JavaType.class),
                     ctx.receiveValue(null, JavaType.Variable.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.If.class) {
-                return (T) new J.If(
+        private static J.If createJIf(ReceiverContext ctx) {
+            return new J.If(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.If.Else.class) {
-                return (T) new J.If.Else(
+        private static J.If.Else createJIfElse(ReceiverContext ctx) {
+            return new J.If.Else(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Import.class) {
-                return (T) new J.Import(
+        private static J.Import createJImport(ReceiverContext ctx) {
+            return new J.Import(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, leftPaddedValueReceiver(java.lang.Boolean.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.InstanceOf.class) {
-                return (T) new J.InstanceOf(
+        private static J.InstanceOf createJInstanceOf(ReceiverContext ctx) {
+            return new J.InstanceOf(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1842,30 +1957,30 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.IntersectionType.class) {
-                return (T) new J.IntersectionType(
+        private static J.IntersectionType createJIntersectionType(ReceiverContext ctx) {
+            return new J.IntersectionType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer)
-                );
-            }
+            );
+        }
 
-            if (type == J.Label.class) {
-                return (T) new J.Label(
+        private static J.Label createJLabel(ReceiverContext ctx) {
+            return new J.Label(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Lambda.class) {
-                return (T) new J.Lambda(
+        private static J.Lambda createJLambda(ReceiverContext ctx) {
+            return new J.Lambda(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1873,21 +1988,21 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Lambda.Parameters.class) {
-                return (T) new J.Lambda.Parameters(
+        private static J.Lambda.Parameters createJLambdaParameters(ReceiverContext ctx) {
+            return new J.Lambda.Parameters(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Literal.class) {
-                return (T) new J.Literal(
+        private static J.Literal createJLiteral(ReceiverContext ctx) {
+            return new J.Literal(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1895,11 +2010,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveValue(null, String.class),
                     ctx.receiveValues(null, J.Literal.UnicodeEscape.class),
                     ctx.receiveValue(null, JavaType.Primitive.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.MemberReference.class) {
-                return (T) new J.MemberReference(
+        private static J.MemberReference createJMemberReference(ReceiverContext ctx) {
+            return new J.MemberReference(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1909,11 +2024,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveValue(null, JavaType.class),
                     ctx.receiveValue(null, JavaType.Method.class),
                     ctx.receiveValue(null, JavaType.Variable.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.MethodDeclaration.class) {
-                return (T) new J.MethodDeclaration(
+        private static J.MethodDeclaration createJMethodDeclaration(ReceiverContext ctx) {
+            return new J.MethodDeclaration(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1927,11 +2042,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.Method.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.MethodInvocation.class) {
-                return (T) new J.MethodInvocation(
+        private static J.MethodInvocation createJMethodInvocation(ReceiverContext ctx) {
+            return new J.MethodInvocation(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1940,31 +2055,31 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.Method.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Modifier.class) {
-                return (T) new J.Modifier(
+        private static J.Modifier createJModifier(ReceiverContext ctx) {
+            return new J.Modifier(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveValue(null, String.class),
                     ctx.receiveNonNullValue(null, J.Modifier.Type.class),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.MultiCatch.class) {
-                return (T) new J.MultiCatch(
+        private static J.MultiCatch createJMultiCatch(ReceiverContext ctx) {
+            return new J.MultiCatch(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.NewArray.class) {
-                return (T) new J.NewArray(
+        private static J.NewArray createJNewArray(ReceiverContext ctx) {
+            return new J.NewArray(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1972,20 +2087,20 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.ArrayDimension.class) {
-                return (T) new J.ArrayDimension(
+        private static J.ArrayDimension createJArrayDimension(ReceiverContext ctx) {
+            return new J.ArrayDimension(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.NewClass.class) {
-                return (T) new J.NewClass(
+        private static J.NewClass createJNewClass(ReceiverContext ctx) {
+            return new J.NewClass(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -1995,108 +2110,108 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.Method.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.NullableType.class) {
-                return (T) new J.NullableType(
+        private static J.NullableType createJNullableType(ReceiverContext ctx) {
+            return new J.NullableType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Package.class) {
-                return (T) new J.Package(
+        private static J.Package createJPackage(ReceiverContext ctx) {
+            return new J.Package(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ParameterizedType.class) {
-                return (T) new J.ParameterizedType(
+        private static J.ParameterizedType createJParameterizedType(ReceiverContext ctx) {
+            return new J.ParameterizedType(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Parentheses.class) {
-                return (T) new J.Parentheses(
+        private static J.Parentheses createJParentheses(ReceiverContext ctx) {
+            return new J.Parentheses(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.ControlParentheses.class) {
-                return (T) new J.ControlParentheses(
+        private static J.ControlParentheses createJControlParentheses(ReceiverContext ctx) {
+            return new J.ControlParentheses(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Primitive.class) {
-                return (T) new J.Primitive(
+        private static J.Primitive createJPrimitive(ReceiverContext ctx) {
+            return new J.Primitive(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveValue(null, JavaType.Primitive.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Return.class) {
-                return (T) new J.Return(
+        private static J.Return createJReturn(ReceiverContext ctx) {
+            return new J.Return(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Switch.class) {
-                return (T) new J.Switch(
+        private static J.Switch createJSwitch(ReceiverContext ctx) {
+            return new J.Switch(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.SwitchExpression.class) {
-                return (T) new J.SwitchExpression(
+        private static J.SwitchExpression createJSwitchExpression(ReceiverContext ctx) {
+            return new J.SwitchExpression(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Synchronized.class) {
-                return (T) new J.Synchronized(
+        private static J.Synchronized createJSynchronized(ReceiverContext ctx) {
+            return new J.Synchronized(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Ternary.class) {
-                return (T) new J.Ternary(
+        private static J.Ternary createJTernary(ReceiverContext ctx) {
+            return new J.Ternary(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -2104,20 +2219,20 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Throw.class) {
-                return (T) new J.Throw(
+        private static J.Throw createJThrow(ReceiverContext ctx) {
+            return new J.Throw(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Try.class) {
-                return (T) new J.Try(
+        private static J.Try createJTry(ReceiverContext ctx) {
+            return new J.Try(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -2125,41 +2240,41 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Try.Resource.class) {
-                return (T) new J.Try.Resource(
+        private static J.Try.Resource createJTryResource(ReceiverContext ctx) {
+            return new J.Try.Resource(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullValue(null, boolean.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.Try.Catch.class) {
-                return (T) new J.Try.Catch(
+        private static J.Try.Catch createJTryCatch(ReceiverContext ctx) {
+            return new J.Try.Catch(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.TypeCast.class) {
-                return (T) new J.TypeCast(
+        private static J.TypeCast createJTypeCast(ReceiverContext ctx) {
+            return new J.TypeCast(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.TypeParameter.class) {
-                return (T) new J.TypeParameter(
+        private static J.TypeParameter createJTypeParameter(ReceiverContext ctx) {
+            return new J.TypeParameter(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -2167,32 +2282,32 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer)
-                );
-            }
+            );
+        }
 
-            if (type == J.TypeParameters.class) {
-                return (T) new J.TypeParameters(
+        private static J.TypeParameters createJTypeParameters(ReceiverContext ctx) {
+            return new J.TypeParameters(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Unary.class) {
-                return (T) new J.Unary(
+        private static J.Unary createJUnary(ReceiverContext ctx) {
+            return new J.Unary(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Unary.Type.class)),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveValue(null, JavaType.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.VariableDeclarations.class) {
-                return (T) new J.VariableDeclarations(
+        private static J.VariableDeclarations createJVariableDeclarations(ReceiverContext ctx) {
+            return new J.VariableDeclarations(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -2202,11 +2317,11 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveNonNullNodes(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.VariableDeclarations.NamedVariable.class) {
-                return (T) new J.VariableDeclarations.NamedVariable(
+        private static J.VariableDeclarations.NamedVariable createJVariableDeclarationsNamedVariable(ReceiverContext ctx) {
+            return new J.VariableDeclarations.NamedVariable(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
@@ -2214,59 +2329,57 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
                     ctx.receiveNode(null, PythonReceiver::receiveLeftPaddedTree),
                     ctx.receiveValue(null, JavaType.Variable.class)
-                );
-            }
+            );
+        }
 
-            if (type == J.WhileLoop.class) {
-                return (T) new J.WhileLoop(
+        private static J.WhileLoop createJWhileLoop(ReceiverContext ctx) {
+            return new J.WhileLoop(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Wildcard.class) {
-                return (T) new J.Wildcard(
+        private static J.Wildcard createJWildcard(ReceiverContext ctx) {
+            return new J.Wildcard(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNode(null, leftPaddedValueReceiver(org.openrewrite.java.tree.J.Wildcard.Bound.class)),
                     ctx.receiveNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Yield.class) {
-                return (T) new J.Yield(
+        private static J.Yield createJYield(ReceiverContext ctx) {
+            return new J.Yield(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, boolean.class),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Unknown.class) {
-                return (T) new J.Unknown(
+        private static J.Unknown createJUnknown(ReceiverContext ctx) {
+            return new J.Unknown(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree)
-                );
-            }
+            );
+        }
 
-            if (type == J.Unknown.Source.class) {
-                return (T) new J.Unknown.Source(
+        private static J.Unknown.Source createJUnknownSource(ReceiverContext ctx) {
+            return new J.Unknown.Source(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullValue(null, String.class)
-                );
-            }
-
-            throw new IllegalArgumentException("Unknown type: " + type);
+            );
         }
+
     }
 
     private static J.ClassDeclaration.Kind receiveClassDeclarationKind(J.ClassDeclaration.@Nullable Kind kind, @Nullable Class<?> type, ReceiverContext ctx) {
