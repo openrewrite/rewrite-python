@@ -364,20 +364,26 @@ class SpacesVisitor(PythonVisitor):
     def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
         mi: MultiImport = cast(MultiImport, super().visit_multi_import(multi_import, p))
 
+        _space_on_first_import = lambda idx: mi.padding.from_ is None if idx == 0 else self._style.other.after_comma
+
         mi = mi.padding.with_names(
             mi.padding.names.with_elements(
-                list_map(lambda x, idx: space_before(x, False if idx == 0 else self._style.other.after_comma),
+                list_map(lambda x, idx: space_before(x, _space_on_first_import(idx)),
                          mi.padding.names.elements)
             )
         )
-        return mi
+        _names = mi.padding.names
+        _names = _names.padding.with_elements(
+            list_map(lambda x: space_after(x, self._style.other.before_comma), _names.padding.elements)
+        )
+        return mi.padding.with_names(_names)
 
     def visit_import(self, import_: Import, p: P) -> J:
         imp: Import = cast(Import, super().visit_import(import_, p))
         # Always use single space before and after alias 'as' keyword e.g. import foo  as  bar <-> import foo as bar
         if imp.padding.alias:
             imp = imp.with_alias(space_before(imp.alias, True))
-        # TODO: Handle space before 'as' keyword / after import
+            imp = imp.padding.with_alias(space_before_left_padded(imp.padding.alias, True))
         return imp
 
     def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
