@@ -5,7 +5,7 @@ from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral
+    ForLoop, DictLiteral, KeyValue
 from rewrite.visitor import P
 
 
@@ -333,6 +333,34 @@ class SpacesVisitor(PythonVisitor):
 
     def visit_dict_literal(self, dict_literal: DictLiteral, p: P) -> J:
         dl = cast(DictLiteral, super().visit_dict_literal(dict_literal, p))
+
+        def _process_kv_pair(c: JRightPadded[KeyValue], idx: int, arg_size) -> JRightPadded[KeyValue]:
+            # Handle both space before and after each comma in key-value pair  and space before/after braces in
+            # first argument e.g. {1: 2  ,   3: 4} <-> {1: 2, 3: 4}
+            if idx == 0 or idx == arg_size - 1:
+                before_comma_style = self._style.other.before_comma if idx == 0 else self._style.within.braces
+                after_comma_style = self._style.within.braces if idx == 0 else self._style.other.after_comma
+                c = space_after_right_padded(c, before_comma_style)
+                c = space_before_right_padded_element(c, after_comma_style)
+            else:
+                c = space_after_right_padded(c, self._style.other.before_comma)
+                c = space_before_right_padded_element(c, self._style.other.after_comma)
+
+            # Handle space before and after colon in key-value pair e.g. {1 :   2} <-> {1: 2}
+            kv = cast(KeyValue, c.element)
+            kv = kv.with_value(space_before(kv.value, self._style.other.after_colon))
+            kv = kv.padding.with_key(space_after_right_padded(kv.padding.key, self._style.other.before_colon))
+            return c.with_element(kv)
+
+        dl = dl.padding.with_elements(
+            dl.padding.elements.padding.with_elements(
+                list_map(lambda x, idx: _process_kv_pair(x, idx, len(dl.padding.elements.padding.elements)),
+                         dl.padding.elements.padding.elements)
+            )
+        )
+
+        # TODO: Currently multi line alignment is not supported
+
         return dl
 
 
