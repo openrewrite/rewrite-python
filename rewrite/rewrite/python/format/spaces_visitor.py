@@ -44,11 +44,8 @@ class SpacesVisitor(PythonVisitor):
 
             c = c.padding.with_implements(
                 c.padding.implements.padding.with_elements(
-                    [_process_argument(index, arg, param_size)
-                     for index, arg in enumerate(c.padding.implements.padding.elements)]
-                )
-            )
-
+                    list_map(lambda arg, index: _process_argument(index, arg, param_size),
+                             c.padding.implements.padding.elements)))
         return c
 
     def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
@@ -118,8 +115,8 @@ class SpacesVisitor(PythonVisitor):
             use_space = self._style.within.empty_method_call_parentheses
             m = m.padding.with_arguments(
                 m.padding.arguments.padding.with_elements(
-                    [arg.with_element(space_before(arg.element, use_space)) for arg in
-                     m.padding.arguments.padding.elements]
+                    list_map(lambda arg: arg.with_element(space_before(arg.element, use_space)),
+                             m.padding.arguments.padding.elements)
                 )
             )
         else:
@@ -302,7 +299,6 @@ class SpacesVisitor(PythonVisitor):
         # Set single space before loop iterable, and in keyword e.g. for i in    []: <-> for i in []:
         fl = fl.padding.with_iterable(space_before_left_padded(fl.padding.iterable, True))
         fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
-
         return fl
 
     def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
