@@ -1,13 +1,14 @@
-from typing import Optional, cast, TypeVar
+from typing import Optional
 
 from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
+from .spaces_visitor import SpacesVisitor
 from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
 from .. import TabsAndIndentsStyle
 from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
-from ...java import JavaSourceFile, MethodDeclaration, J, Space
+from ...java import JavaSourceFile
 from ...visitor import P, T
 
 
@@ -32,29 +33,3 @@ class AutoFormatVisitor(PythonVisitor):
             self._stop_after
         ).visit(tree, p, self._cursor.fork())
         return tree
-
-
-J2 = TypeVar('J2', bound=J)
-
-
-class SpacesVisitor(PythonVisitor):
-    def __init__(self, style: SpacesStyle, stop_after: Tree = None):
-        self._style = style
-        self._before_parentheses = style.before_parentheses
-        self._stop_after = stop_after
-
-    def visit_method_declaration(self, md: MethodDeclaration, p: P) -> J:
-        md: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(md, p))
-        return md.padding.with_parameters(
-            md.padding.parameters.with_before(
-                Space.SINGLE_SPACE if self._before_parentheses.method_declaration else Space.EMPTY
-            )
-        )
-
-    def space_before(self, j: J2, space_before: bool) -> J2:
-        space: Space = cast(Space, j.prefix)
-        if space.comments or '\\' in space.whitespace:
-            # don't touch whitespaces with comments or continuation characters
-            return j
-
-        return j.with_prefix(Space.SINGLE_SPACE if space_before else Space.EMPTY)

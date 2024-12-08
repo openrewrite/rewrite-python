@@ -19,7 +19,7 @@ remoting_context.connect(s)
 RemotePrinterFactory(remoting_context.client).set_current()
 remoting_context.client.reset()
 
-parser = PythonParser()
+parser = PythonParser(None)
 res = parser.parse_inputs([ParserInput(pathlib.Path(path), None, False, lambda: open(path, 'r', newline='', encoding='utf-8'))], relative_to=None, ctx=InMemoryExecutionContext())
 for r in res:
     if isinstance(r, ParseError):

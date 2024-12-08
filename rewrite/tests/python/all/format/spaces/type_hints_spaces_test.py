@@ -2,23 +2,22 @@ from rewrite.python import IntelliJ, SpacesVisitor
 from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
 
-def test_before_parentheses_method_declaration():
+def test_type_hint():
     style = IntelliJ.spaces()
-    style = style.with_before_parentheses(
-        style.before_parentheses.with_method_declaration(False)
-    )
     rewrite_run(
         # language=python
         python(
             """
-            class Foo:
-                def getter  (self, row):
-                    pass
+            a : int = 1
+            a    :    int = 1
+            a: int = 1
+            a   :int = 1
             """,
             """
-            class Foo:
-                def getter(self, row):
-                    pass
+            a: int = 1
+            a: int = 1
+            a: int = 1
+            a: int = 1
             """
         ),
         spec=RecipeSpec()
