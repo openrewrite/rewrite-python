@@ -192,12 +192,11 @@ class SpacesVisitor(PythonVisitor):
         """
         a: ChainedAssignment = cast(ChainedAssignment, super().visit_chained_assignment(chained_assignment, p))
         a = a.padding.with_variables(
-            [v.with_after(update_space(v.after, self._style.around_operators.assignment)) for v in a.padding.variables])
+            list_map(lambda v: v.with_after(update_space(v.after, self._style.around_operators.assignment)), a.padding.variables))
 
         a = a.padding.with_variables(
-            [v.with_element(
-                space_before(v.element, self._style.around_operators.assignment if idx >= 1 else False)) for idx, v
-                in enumerate(a.padding.variables)])
+            list_map(lambda v, idx: v.with_element(
+                space_before(v.element, self._style.around_operators.assignment if idx >= 1 else False)), a.padding.variables))
 
         return a.with_assignment(space_before(a.assignment, self._style.around_operators.assignment))
 
@@ -237,7 +236,6 @@ class SpacesVisitor(PythonVisitor):
             b = self._apply_binary_space_around(b, True)
         else:
             raise NotImplementedError(f"Operation {op} is not supported yet")
-
         return b
 
     def visit_python_binary(self, binary: Binary, p: P) -> J:
