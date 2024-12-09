@@ -93,7 +93,7 @@ class InMemoryLargeSourceSet(LargeSourceSet):
         return self if not changed else InMemoryLargeSourceSet(mapped, deleted, self._initial_state or self)
 
     def get_changeset(self) -> List[Result]:
-        source_file_by_id = {sf.id: sf for sf in self._initial_state._sources}
+        source_file_by_id = {sf.id: sf for sf in (self._initial_state or self)._sources}
         changes = []
         for source in self._sources:
             original = source_file_by_id.get(source.id)
