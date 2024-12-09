@@ -311,6 +311,7 @@ class SpacesVisitor(PythonVisitor):
 
             if index == args_size - 1:
                 arg = space_after(arg, use_space)
+                arg = arg.with_markers(arg.markers.compute_by_type(j.TrailingComma, self._remap_trailing_comma_space))
             else:
                 arg = space_after(arg, self._style.other.before_comma)
 
@@ -340,12 +341,17 @@ class SpacesVisitor(PythonVisitor):
             else:
                 c = space_after_right_padded(c, self._style.other.before_comma)
                 c = space_before_right_padded_element(c, self._style.other.after_comma)
-
             # Handle space before and after colon in key-value pair e.g. {1 :   2} <-> {1: 2}
             kv = cast(KeyValue, c.element)
             kv = kv.with_value(space_before(kv.value, self._style.other.after_colon))
             kv = kv.padding.with_key(space_after_right_padded(kv.padding.key, self._style.other.before_colon))
-            return c.with_element(kv)
+            c = c.with_element(kv)
+
+            # Handle trailing comma space for last argument e.g. {1: 2, 3: 4, } <-> {1: 2, 3: 4,}
+            if idx == arg_size - 1:
+                c = c.with_markers(c.markers.compute_by_type(j.TrailingComma, self._remap_trailing_comma_space))
+
+            return c
 
         dl = dl.padding.with_elements(
             dl.padding.elements.padding.with_elements(
@@ -384,6 +390,9 @@ class SpacesVisitor(PythonVisitor):
         th: TypeHint = cast(TypeHint, super().visit_type_hint(type_hint, p))
         th = space_before(th, self._style.other.before_colon)
         return th.with_type_tree(space_before(th.type_tree, self._style.other.after_colon))
+
+    def _remap_trailing_comma_space(self, tc: j.TrailingComma) -> j.TrailingComma:
+        return tc.with_suffix(update_space(tc.suffix, self._style.other.after_comma))
 
 
 J2 = TypeVar('J2', bound=j.J)

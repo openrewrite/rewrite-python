@@ -3,7 +3,7 @@ from __future__ import annotations
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import List, ClassVar, cast, TYPE_CHECKING
+from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type
 from uuid import UUID
 
 if TYPE_CHECKING:
@@ -29,6 +29,8 @@ class Marker(ABC):
     def __hash__(self) -> int:
         return hash(self.id)
 
+
+M = TypeVar('M', bound=Marker)
 
 @dataclass(frozen=True, eq=False)
 class Markers:
@@ -58,6 +60,31 @@ class Markers:
 
     def find_all(self, type: type):
         return [m for m in self.markers if isinstance(m, type)]
+
+    def compute_if(self, condition: Callable[[Marker], bool], remap_fn: Callable[[Marker], Marker]) -> Markers:
+        """
+        Replace all markers that satisfy the condition with the result of the remapping function.
+
+        :param condition: predicate to check if the marker should be remapped
+        :param remap_fn: function to remap the marker
+        :return: new Markers instance with the updated markers, or the same instance if no markers were updated
+        """
+        updated_markers = []
+        for marker in self.markers:
+            if condition(marker):
+                updated_markers.append(remap_fn(marker))
+
+        return Markers(self.id, updated_markers) if updated_markers else self
+
+    def compute_by_type(self, cls: Type[M], remap_fn: Callable[[M], Marker]) -> Markers:
+        """
+        Replace all markers of the given type with the result of the function.
+
+        :param cls: type of the markers to remap
+        :param remap_fn: function to remap the marker
+        :return: new Markers instance with the updated markers, or the same instance if no markers were updated
+        """
+        return self.compute_if(lambda m: isinstance(m, cls), remap_fn)
 
     EMPTY: ClassVar[Markers]
 
