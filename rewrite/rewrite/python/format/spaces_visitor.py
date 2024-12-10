@@ -331,10 +331,13 @@ class SpacesVisitor(PythonVisitor):
         dl = cast(DictLiteral, super().visit_dict_literal(dict_literal, p))
 
         def _process_kv_pair(c: JRightPadded[KeyValue], idx: int, arg_size) -> JRightPadded[KeyValue]:
-            # Handle both space before and after each comma in key-value pair  and space before/after braces in
+            # Handle both space before and after each comma in key-value pair and space before/after braces in
             # first argument e.g. {1: 2  ,   3: 4} <-> {1: 2, 3: 4}
             if idx == 0 or idx == arg_size - 1:
-                before_comma_style = self._style.other.before_comma if idx == 0 else self._style.within.braces
+                if idx == 0:
+                    before_comma_style = self._style.other.before_comma
+                else:
+                    before_comma_style = self._style.within.braces and c.markers.find_first(j.TrailingComma) is None
                 after_comma_style = self._style.within.braces if idx == 0 else self._style.other.after_comma
                 c = space_after_right_padded(c, before_comma_style)
                 c = space_before_right_padded_element(c, after_comma_style)
