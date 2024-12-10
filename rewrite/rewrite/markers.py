@@ -3,12 +3,12 @@ from __future__ import annotations
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import List, ClassVar, cast, TYPE_CHECKING, Optional
+from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type, Optional
 from uuid import UUID
 
 if TYPE_CHECKING:
     from .parser import Parser
-from .utils import random_id
+from .utils import random_id, list_map
 
 
 class Marker(ABC):
@@ -30,6 +30,8 @@ class Marker(ABC):
         return hash(self.id)
 
 
+M = TypeVar('M', bound=Marker)
+
 @dataclass(frozen=True, eq=False)
 class Markers:
     _id: UUID
@@ -50,14 +52,24 @@ class Markers:
     def with_markers(self, markers: List[Marker]) -> Markers:
         return self if markers is self._markers else Markers(self._id, markers)
 
-    def find_first(self, type: type) -> Optional[Marker]:
+    def find_first(self, cls: Type[M]) -> Optional[M]:
         for marker in self.markers:
-            if isinstance(marker, type):
+            if isinstance(marker, cls):
                 return marker
         return None
 
-    def find_all(self, type: type) -> List[Marker]:
-        return [m for m in self.markers if isinstance(m, type)]
+    def find_all(self, cls: Type[M]) -> List[M]:
+        return [m for m in self.markers if isinstance(m, cls)]
+
+    def compute_by_type(self, cls: Type[M], remap_fn: Callable[[M], Marker]) -> Markers:
+        """
+        Replace all markers of the given type with the result of the function.
+
+        :param cls: type of the markers to remap
+        :param remap_fn: function to remap the marker
+        :return: new Markers instance with the updated markers, or the same instance if no markers were updated
+        """
+        return self.with_markers(list_map(lambda m: remap_fn(m) if isinstance(m, cls) else m, self.markers))
 
     EMPTY: ClassVar[Markers]
 
