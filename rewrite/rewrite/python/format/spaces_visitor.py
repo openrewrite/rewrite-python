@@ -6,7 +6,7 @@ from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, Member
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
     Import
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport
+    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, UnionType, ExpressionTypeTree
 from rewrite.visitor import P
 
 
@@ -392,7 +392,14 @@ class SpacesVisitor(PythonVisitor):
     def visit_type_hint(self, type_hint: TypeHint, p: P) -> J:
         th: TypeHint = cast(TypeHint, super().visit_type_hint(type_hint, p))
         th = space_before(th, self._style.other.before_colon)
-        return th.with_type_tree(space_before(th.type_tree, self._style.other.after_colon))
+        th = th.with_type_tree(space_before(th.type_tree, self._style.other.after_colon))
+        return th
+
+    def visit_expression_type_tree(self, expression_type_tree: ExpressionTypeTree, p: P) -> J:
+        ett = cast(ExpressionTypeTree, super().visit_expression_type_tree(expression_type_tree, p))
+        # Can always be set to false as the collection literal will handle the space before the brackets
+        ett = space_before(ett, False)
+        return ett
 
     def _remap_trailing_comma_space(self, tc: j.TrailingComma) -> j.TrailingComma:
         return tc.with_suffix(update_space(tc.suffix, self._style.other.after_comma))
