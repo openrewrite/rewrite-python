@@ -3,7 +3,7 @@ from __future__ import annotations
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type
+from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type, Optional
 from uuid import UUID
 
 if TYPE_CHECKING:
@@ -52,13 +52,13 @@ class Markers:
     def with_markers(self, markers: List[Marker]) -> Markers:
         return self if markers is self._markers else Markers(self._id, markers)
 
-    def find_first(self, cls: Type[M]):
+    def find_first(self, cls: Type[M]) -> Optional[M]:
         for marker in self.markers:
             if isinstance(marker, cls):
                 return marker
         return None
 
-    def find_all(self, cls: Type[M]):
+    def find_all(self, cls: Type[M]) -> List[M]:
         return [m for m in self.markers if isinstance(m, cls)]
 
     def compute_if(self, condition: Callable[[Marker], bool], remap_fn: Callable[[Marker], Marker]) -> Markers:
@@ -101,7 +101,7 @@ class Markers:
         return hash(self.id)
 
     @classmethod
-    def build(cls, id, markers) -> Markers:
+    def build(cls, id: UUID, markers: List[Marker]) -> Markers:
         return Markers(id, markers)
 
 

@@ -4,7 +4,7 @@ import weakref
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, replace
 from enum import Enum, auto
-from typing import List, Optional, TypeVar, Generic, ClassVar, Dict, Any, TYPE_CHECKING, Iterable
+from typing import List, Optional, TypeVar, Generic, ClassVar, Dict, Any, TYPE_CHECKING, Iterable, cast
 from uuid import UUID
 
 from rewrite import Markers
@@ -123,13 +123,13 @@ class Space:
     def format_first_prefix(cls, trees: List[J2], prefix: Space) -> List[J2]:
         if trees and next(iter(trees)).prefix != prefix:
             formatted_trees = list(trees)
-            formatted_trees[0] = formatted_trees[0].with_prefix(prefix)
+            formatted_trees[0] = cast(J2, formatted_trees[0].with_prefix(prefix))
             return formatted_trees
         return trees
 
 
-    EMPTY: ClassVar[Space] = None
-    SINGLE_SPACE: ClassVar[Space] = None
+    EMPTY: ClassVar[Space]
+    SINGLE_SPACE: ClassVar[Space]
 
     class Location(Enum):
         ANY = auto()
@@ -343,6 +343,7 @@ class JavaType(ABC):
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
+J3 = TypeVar('J3', bound=J)
 
 
 @dataclass(frozen=True)
@@ -514,23 +515,23 @@ class JLeftPadded(Generic[T]):
 
 
 @dataclass(frozen=True)
-class JContainer(Generic[T]):
+class JContainer(Generic[J2]):
     _before: Space
 
     @property
     def before(self) -> Space:
         return self._before
 
-    def with_before(self, before: Space) -> JContainer[T]:
+    def with_before(self, before: Space) -> JContainer[J2]:
         return self if before is self._before else replace(self, _before=before)
 
-    _elements: List[JRightPadded[T]]
+    _elements: List[JRightPadded[J2]]
 
     @property
-    def elements(self) -> List[T]:
+    def elements(self) -> List[J2]:
         return JRightPadded.get_elements(self._elements)
 
-    def with_elements(self, elements: List[T]) -> JContainer[T]:
+    def with_elements(self, elements: List[J2]) -> JContainer[J2]:
         return self.padding.with_elements(JRightPadded.with_elements(self._elements, elements))
 
     _markers: Markers
@@ -539,25 +540,25 @@ class JContainer(Generic[T]):
     def markers(self) -> Markers:
         return self._markers
 
-    def with_markers(self, markers: Markers) -> JContainer[T]:
+    def with_markers(self, markers: Markers) -> JContainer[J2]:
         return self if markers is self._markers else replace(self, _markers=markers)
 
     @dataclass
-    class PaddingHelper:
-        _t: JContainer[T]
+    class PaddingHelper(Generic[J3]):
+        _t: JContainer[J3]
 
         @property
-        def elements(self) -> List[JRightPadded[T]]:
+        def elements(self) -> List[JRightPadded[J3]]:
             return self._t._elements
 
-        def with_elements(self, elements: List[JRightPadded[T]]) -> JContainer[T]:
+        def with_elements(self, elements: List[JRightPadded[J3]]) -> JContainer[J3]:
             return self._t if self._t._elements is elements else JContainer(self._t._before, elements, self._t._markers)
 
-    _padding: weakref.ReferenceType[JContainer.PaddingHelper] = None
+    _padding: Optional[weakref.ReferenceType[JContainer.PaddingHelper[J2]]] = None
 
     @property
-    def padding(self) -> JContainer.PaddingHelper:
-        p: JContainer.PaddingHelper
+    def padding(self) -> JContainer.PaddingHelper[J2]:
+        p: Optional[JContainer.PaddingHelper[J2]]
         if self._padding is None:
             p = JContainer.PaddingHelper(self)
             object.__setattr__(self, '_padding', weakref.ref(p))
@@ -575,16 +576,16 @@ class JContainer(Generic[T]):
         if elements is None or elements == []:
             return None
         if before is None:
-            return JContainer(Space.EMPTY, elements, Markers.EMPTY)
+            return JContainer(Space.EMPTY, JRightPadded.with_elements([], elements), Markers.EMPTY)
         return before.padding.with_elements(JRightPadded.with_elements(before._elements, elements))
 
-    _EMPTY = None
+    _EMPTY: Optional[JContainer[J]] = None
 
     @classmethod
-    def empty(cls) -> JContainer[T]:
+    def empty(cls) -> JContainer[J2]:
         if cls._EMPTY is None:
             cls._EMPTY = JContainer(Space.EMPTY, [], Markers.EMPTY)
-        return cls._EMPTY
+        return cls._EMPTY  # type: ignore
 
     class Location(Enum):
         ANNOTATION_ARGUMENTS = (Space.Location.ANNOTATION_ARGUMENTS, JRightPadded.Location.ANNOTATION_ARGUMENT)

@@ -11,7 +11,7 @@ T = TypeVar('T')
 # Define a type that allows both single and two-argument callables
 FnType = Union[Callable[[T], Union[T, None]], Callable[[T, int], Union[T, None]]]
 
-def list_map(fn: FnType, lst: List[T]) -> List[T]:
+def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
     changed = False
     mapped_lst = None
 
