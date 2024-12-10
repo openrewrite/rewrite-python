@@ -2085,7 +2085,7 @@ class ParserVisitor(ast.NodeVisitor):
         return JRightPadded(statement, padding, markers)
 
     def __pad_list_element(self, element: J2, last: bool = False, pad_last: bool = True, delim: str = ',',
-                           end_delim: str = None) -> JRightPadded[J2]:
+                           end_delim: Optional[str] = None) -> JRightPadded[J2]:
         save_cursor = self._cursor
         padding = self.__whitespace() if pad_last or not last else Space.EMPTY
         markers = Markers.EMPTY
