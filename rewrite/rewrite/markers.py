@@ -8,7 +8,7 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from .parser import Parser
-from .utils import random_id
+from .utils import random_id, list_map
 
 
 class Marker(ABC):
@@ -61,25 +61,6 @@ class Markers:
     def find_all(self, cls: Type[M]) -> List[M]:
         return [m for m in self.markers if isinstance(m, cls)]
 
-    def compute_if(self, condition: Callable[[Marker], bool], remap_fn: Callable[[Marker], Marker]) -> Markers:
-        """
-        Replace all markers that satisfy the condition with the result of the remapping function.
-
-        :param condition: predicate to check if the marker should be remapped
-        :param remap_fn: function to remap the marker
-        :return: new Markers instance with the updated markers, or the same instance if no markers were updated
-        """
-        updated_markers = []
-        updated = False
-        for marker in self.markers:
-            if condition(marker):
-                updated_markers.append(remap_fn(marker))
-                updated = True
-            else:
-                updated_markers.append(marker)
-
-        return Markers(self.id, updated_markers) if updated else self
-
     def compute_by_type(self, cls: Type[M], remap_fn: Callable[[M], Marker]) -> Markers:
         """
         Replace all markers of the given type with the result of the function.
@@ -88,7 +69,7 @@ class Markers:
         :param remap_fn: function to remap the marker
         :return: new Markers instance with the updated markers, or the same instance if no markers were updated
         """
-        return self.compute_if(lambda m: isinstance(m, cls), remap_fn)
+        return self.with_markers(list_map(lambda m: remap_fn(m) if  isinstance(m, cls) else m, self.markers))
 
     EMPTY: ClassVar[Markers]
 
