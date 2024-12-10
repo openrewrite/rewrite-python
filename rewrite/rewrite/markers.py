@@ -52,14 +52,14 @@ class Markers:
     def with_markers(self, markers: List[Marker]) -> Markers:
         return self if markers is self._markers else Markers(self._id, markers)
 
-    def find_first(self, type: type):
+    def find_first(self, cls: Type[M]):
         for marker in self.markers:
-            if isinstance(marker, type):
+            if isinstance(marker, cls):
                 return marker
         return None
 
-    def find_all(self, type: type):
-        return [m for m in self.markers if isinstance(m, type)]
+    def find_all(self, cls: Type[M]):
+        return [m for m in self.markers if isinstance(m, cls)]
 
     def compute_if(self, condition: Callable[[Marker], bool], remap_fn: Callable[[Marker], Marker]) -> Markers:
         """
@@ -70,11 +70,15 @@ class Markers:
         :return: new Markers instance with the updated markers, or the same instance if no markers were updated
         """
         updated_markers = []
+        updated = False
         for marker in self.markers:
             if condition(marker):
                 updated_markers.append(remap_fn(marker))
+                updated = True
+            else:
+                updated_markers.append(marker)
 
-        return Markers(self.id, updated_markers) if updated_markers else self
+        return Markers(self.id, updated_markers) if updated else self
 
     def compute_by_type(self, cls: Type[M], remap_fn: Callable[[M], Marker]) -> Markers:
         """

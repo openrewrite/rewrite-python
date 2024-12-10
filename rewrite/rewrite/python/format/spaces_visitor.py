@@ -426,9 +426,7 @@ def space_before_right_padded_element(container: j.JRightPadded, add_space: bool
 
 
 def space_last_comment_suffix(comments: List[j.Comment], add_space: bool) -> List[j.Comment]:
-    return [space_suffix(comment, add_space) if i == len(comments) - 1 else comment for i, comment
-            in
-            enumerate(comments)]
+    return list_map(lambda c, i: space_suffix(c, add_space) if i == len(comments) - 1 else c, comments)
 
 
 def space_suffix(comment: j.Comment, add_space: bool) -> j.Comment:
