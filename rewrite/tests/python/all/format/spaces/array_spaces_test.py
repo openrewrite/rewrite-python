@@ -32,7 +32,7 @@ def test_spaces_within_array_declaration_brackets():
     )
 
 
-def test_spaces_within_array_declaration_brackets_trailing_comma():
+def test_spaces_within_array_declaration_brackets_trailing_comma_without_space_in_brackets():
     style = IntelliJ.spaces()
     style = style.with_within(
         style.within.with_brackets(False)
@@ -45,6 +45,25 @@ def test_spaces_within_array_declaration_brackets_trailing_comma():
             """,
             """\
             a = [1, 2, 3, ]
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+def test_spaces_within_array_declaration_brackets_trailing_comma_with_space_in_brackets():
+    style = IntelliJ.spaces()
+    style = style.with_within(
+        style.within.with_brackets(True)
+    )
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            a =     [1, 2, 3   ,   ]
+            """,
+            """\
+            a = [ 1, 2, 3, ]
             """
         ),
         spec=RecipeSpec()

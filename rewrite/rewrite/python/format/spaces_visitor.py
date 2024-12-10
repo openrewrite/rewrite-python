@@ -6,7 +6,7 @@ from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, Member
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
     Import
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, UnionType, ExpressionTypeTree
+    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree
 from rewrite.visitor import P
 
 
@@ -310,19 +310,26 @@ class SpacesVisitor(PythonVisitor):
                 arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
 
             if index == args_size - 1:
-                arg = space_after(arg, use_space)
+                arg = space_after(arg, use_space and arg.markers.find_first(j.TrailingComma) is None)
                 arg = arg.with_markers(arg.markers.compute_by_type(j.TrailingComma, self._remap_trailing_comma_space))
             else:
                 arg = space_after(arg, self._style.other.before_comma)
 
             return arg
 
+        if cl.kind == CollectionLiteral.Kind.SET:
+            _space_style = self._style.within.braces
+        elif cl.kind == CollectionLiteral.Kind.LIST:
+            _space_style = self._style.within.brackets
+        elif cl.kind == CollectionLiteral.Kind.TUPLE:
+            _space_style = self._style.within.brackets if self.cursor.first_enclosing(ExpressionTypeTree) else False
+
         cl = cl.padding.with_elements(
             cl.padding.elements.padding.with_elements(
                 list_map(
                     lambda arg, idx: _process_element(idx, arg,
                                                       args_size=len(cl.padding.elements.padding.elements),
-                                                      use_space=self._style.within.brackets),
+                                                      use_space=_space_style),
                     cl.padding.elements.padding.elements)))
 
         return cl
