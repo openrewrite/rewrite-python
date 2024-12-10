@@ -69,7 +69,7 @@ class Markers:
         :param remap_fn: function to remap the marker
         :return: new Markers instance with the updated markers, or the same instance if no markers were updated
         """
-        return self.with_markers(list_map(lambda m: remap_fn(m) if  isinstance(m, cls) else m, self.markers))
+        return self.with_markers(list_map(lambda m: remap_fn(m) if isinstance(m, cls) else m, self.markers))
 
     EMPTY: ClassVar[Markers]
 
