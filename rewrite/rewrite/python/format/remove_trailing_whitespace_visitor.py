@@ -2,9 +2,10 @@ from typing import Optional, cast, Union
 
 import rewrite.java as j
 import rewrite.python as p
+from rewrite import Tree
 from rewrite.java import Space, J
 from rewrite.python import PythonVisitor, CompilationUnit, PySpace
-from rewrite.visitor import P
+from rewrite.visitor import P, Cursor, T
 
 
 class RemoveTrailingWhitespaceVisitor(PythonVisitor):
@@ -34,3 +35,11 @@ class RemoveTrailingWhitespaceVisitor(PythonVisitor):
             ws = [c for i, c in enumerate(s.whitespace) if i >= last_newline or c in {',', '\r', '\n'}]
             s = s.with_whitespace(''.join(ws))
         return s
+
+    def post_visit(self, tree: T, p: P) -> Optional[T]:
+        if self._stop_after and tree == self._stop_after:
+            self._stop = True
+        return tree
+
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
+        return tree if self._stop else super().visit(tree, p, parent)
