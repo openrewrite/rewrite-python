@@ -11,6 +11,7 @@ from rewrite.visitor import P, Cursor, T
 class RemoveTrailingWhitespaceVisitor(PythonVisitor):
     def __init__(self, stop_after: Optional[p.Tree] = None):
         self._stop_after = stop_after
+        self._stop = False
 
     def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:
         if not compilation_unit.prefix.comments:
