@@ -6,7 +6,7 @@ from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, Member
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
     Import
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree
+    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression
 from rewrite.visitor import P
 
 
@@ -408,6 +408,39 @@ class SpacesVisitor(PythonVisitor):
         ett = space_before(ett, False)
         return ett
 
+    def visit_comprehension_expression(self, comprehension_expression: ComprehensionExpression, p: P) -> J:
+        ce = cast(ComprehensionExpression, super().visit_comprehension_expression(comprehension_expression, p))
+
+        # Handle space before result this will depend on the style setting for the comprehension type.
+        match ce.kind:
+            case ComprehensionExpression.Kind.LIST | ComprehensionExpression.Kind.GENERATOR:
+                ce = ce.with_result(space_before(ce.result, self._style.within.brackets))
+                ce = ce.with_suffix(update_space(ce.suffix, self._style.within.brackets))
+            case ComprehensionExpression.Kind.SET | ComprehensionExpression.Kind.DICT:
+                ce = ce.with_result(space_before(ce.result, self._style.within.braces))
+                ce = ce.with_suffix(update_space(ce.suffix, self._style.within.braces))
+
+        return ce
+
+    def visit_comprehension_condition(self, condition: ComprehensionExpression.Condition, p: P) -> J:
+        cond = cast(ComprehensionExpression.Condition, super().visit_comprehension_condition(condition, p))
+        # Set single space before and after comprehension 'if' keyword.
+        cond = space_before(cond, True)
+        cond = cond.with_expression(space_before(cond.expression, True))
+        return cond
+
+    def visit_comprehension_clause(self, clause: ComprehensionExpression.Clause, p: P) -> J:
+        cc = cast(ComprehensionExpression.Clause, super().visit_comprehension_clause(clause, p))
+
+        # Ensure single space before 'for' keyword
+        cc = space_before(cc, True)
+
+        # Space around iterator variable and after 'in' keyword e.g. for  i  in  range(10) <-> ...for i in range(10)
+        cc = cc.padding.with_iterated_list(space_before_left_padded(cc.padding.iterated_list, True))
+        cc = cc.with_iterator_variable(space_before(cc.iterator_variable, True))
+        cc = cc.padding.with_iterated_list(space_before_left_padded_element(cc.padding.iterated_list, True))
+        return cc
+
     def _remap_trailing_comma_space(self, tc: j.TrailingComma) -> j.TrailingComma:
         return tc.with_suffix(update_space(tc.suffix, self._style.other.after_comma))
 
@@ -437,6 +470,9 @@ def space_before_container(container: j.JContainer, add_space: bool) -> j.JConta
     else:
         return container
 
+
+def space_before_left_padded_element(container: j.JLeftPadded, add_space: bool) -> j.JLeftPadded:
+    return container.with_element(space_before(container.element, add_space))
 
 def space_before_right_padded_element(container: j.JRightPadded, add_space: bool) -> j.JRightPadded:
     return container.with_element(space_before(container.element, add_space))
