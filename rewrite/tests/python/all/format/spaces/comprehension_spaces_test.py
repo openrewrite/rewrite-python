@@ -28,6 +28,24 @@ def test_spaces_with_list_comprehension(within_brackets):
     )
 
 
+def test_spaces_with_generator_comprehension():
+    style = IntelliJ.spaces()
+
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            a =  (  i*2 for   i   in  range(0, 10))
+            """,
+            f"""\
+            a = (i * 2 for i in range(0, 10))
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
 @pytest.mark.parametrize("within_brackets", [False, True])
 def test_spaces_with_list_comprehension_with_condition(within_brackets):
     style = IntelliJ.spaces()

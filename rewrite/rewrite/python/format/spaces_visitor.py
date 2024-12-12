@@ -412,9 +412,12 @@ class SpacesVisitor(PythonVisitor):
         ce = cast(ComprehensionExpression, super().visit_comprehension_expression(comprehension_expression, p))
 
         # Handle space before result this will depend on the style setting for the comprehension type.
-        if ce.kind in (ComprehensionExpression.Kind.LIST, ComprehensionExpression.Kind.GENERATOR):
+        if ce.kind == ComprehensionExpression.Kind.LIST:
             ce = ce.with_result(space_before(ce.result, self._style.within.brackets))
             ce = ce.with_suffix(update_space(ce.suffix, self._style.within.brackets))
+        elif ce.kind == ComprehensionExpression.Kind.GENERATOR:
+            ce = ce.with_result(space_before(ce.result, False))
+            ce = ce.with_suffix(update_space(ce.suffix, False))
         elif ce.kind in (ComprehensionExpression.Kind.SET, ComprehensionExpression.Kind.DICT):
             ce = ce.with_result(space_before(ce.result, self._style.within.braces))
             ce = ce.with_suffix(update_space(ce.suffix, self._style.within.braces))
