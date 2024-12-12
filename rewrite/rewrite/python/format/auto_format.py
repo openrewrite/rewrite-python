@@ -2,6 +2,7 @@ from typing import Optional
 
 from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
+from .normalize_line_breaks_visitor import NormalizeLineBreaksVisitor
 from .spaces_visitor import SpacesVisitor
 from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
 from .. import TabsAndIndentsStyle

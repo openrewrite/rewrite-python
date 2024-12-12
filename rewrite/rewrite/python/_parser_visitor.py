@@ -2158,6 +2158,14 @@ class ParserVisitor(ast.NodeVisitor):
         whitespace = []
         comments = []
         source_len = len(source)
+
+        def _determine_suffix_linebreak(str, default_lb='\n'):
+            if str.endswith('\r\n'):
+                return '\r\n'
+            if str.endswith('\n'):
+                return '\n'
+            return default_lb
+
         while offset < source_len:
             char = source[offset]
             if stop is not None and char == stop:
@@ -2166,16 +2174,26 @@ class ParserVisitor(ast.NodeVisitor):
                 whitespace.append(char)
             elif char == '#':
                 if comments:
-                    comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+                    comments[-1] = comments[-1].with_suffix(
+                        _determine_suffix_linebreak(comments[-1].suffix) + ''.join(whitespace))
                 else:
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
                 offset += 1
-                while offset < source_len and source[offset] != '\n':
+
+                found_clrf_linebreak = False
+                while offset < source_len:
+                    if source[offset] == '\n':
+                        break
+                    if offset + 1 < source_len and source[offset:offset + 2] == '\r\n':
+                        found_clrf_linebreak = True
+                        offset += 1
+                        break
                     comment.append(source[offset])
                     offset += 1
-                comments.append(PyComment(''.join(comment), '\n' if offset < source_len else '',
+                _lb = '\r\n' if found_clrf_linebreak else '\n'
+                comments.append(PyComment(''.join(comment), _lb if offset < source_len else '',
                                           False, Markers.EMPTY))
             else:
                 break
@@ -2185,7 +2203,8 @@ class ParserVisitor(ast.NodeVisitor):
         if not comments:
             prefix = ''.join(whitespace)
         elif whitespace:
-            comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+            comments[-1] = comments[-1].with_suffix(
+                _determine_suffix_linebreak(comments[-1].suffix) + ''.join(whitespace))
         return Space(comments, prefix), offset
 
     def __position_of_next(self, until_delim: str, stop: str = None) -> int:

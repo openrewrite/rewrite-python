@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, TypeVar, Union
 
-from rewrite import Tree, P, Cursor
+from rewrite import Tree, P, Cursor, list_map
 from rewrite.java import J, Space, Comment, TextComment
 from rewrite.python import PythonVisitor, PySpace, GeneralFormatStyle, PyComment
 from rewrite.visitor import T
@@ -33,7 +33,7 @@ class NormalizeLineBreaksVisitor(PythonVisitor):
 
             return comment.with_suffix(_normalize_new_lines(comment.suffix, self._style.use_crlf_new_lines))
 
-        return s.with_comments([process_comment(comment) for comment in s.comments])
+        return s.with_comments(list_map(process_comment, s.comments))
 
     def post_visit(self, tree: T, _: object) -> Optional[T]:
         if self._stop_after and tree == self._stop_after:
