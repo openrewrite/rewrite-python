@@ -2149,11 +2149,11 @@ class ParserVisitor(ast.NodeVisitor):
             self._cursor += len(tok)
         return tok
 
-    def __whitespace(self, stop: str = None) -> Space:
+    def __whitespace(self, stop: Optional[str] = None) -> Space:
         space, self._cursor = self.__format(self._source, self._cursor, stop)
         return space
 
-    def __format(self, source: str, offset: int, stop: str = None) -> Tuple[Space, int]:
+    def __format(self, source: str, offset: int, stop: Optional[str] = None) -> Tuple[Space, int]:
         prefix = None
         whitespace = []
         comments = []
