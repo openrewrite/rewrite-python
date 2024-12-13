@@ -27,8 +27,14 @@ __all__ = [
     'ExecutionContext',
     'DelegatingExecutionContext',
     'InMemoryExecutionContext',
+
+    # Markers
     'Marker',
     'Markers',
+    'SearchResult',
+    'UnknownJavaMarker',
+
+    # Execution
     'Recipe',
     'RecipeRunException',
     'Parser',
