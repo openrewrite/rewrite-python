@@ -2,8 +2,8 @@ from typing import Optional, cast, Union
 
 import rewrite.java as j
 import rewrite.python as p
-from rewrite import Tree
-from rewrite.java import Space, J
+from rewrite import Tree, Marker
+from rewrite.java import Space, J, TrailingComma
 from rewrite.python import PythonVisitor, CompilationUnit, PySpace
 from rewrite.visitor import P, Cursor, T
 
@@ -27,10 +27,18 @@ class RemoveTrailingWhitespaceVisitor(PythonVisitor):
     def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
                     p: P) -> Space:
         s = cast(Space, super().visit_space(space, loc, p))
-
         if not s or not s.whitespace:
             return s
+        return self._normalize_whitespace(s)
 
+    def visit_marker(self, marker: Marker, p: P) -> Marker:
+        m = cast(Marker, super().visit_marker(marker, p))
+        if isinstance(m, TrailingComma):
+            return m.with_suffix(self._normalize_whitespace(m.suffix))
+        return m
+
+    @staticmethod
+    def _normalize_whitespace(s):
         last_newline = s.whitespace.rfind('\n')
         if last_newline > 0:
             ws = [c for i, c in enumerate(s.whitespace) if i >= last_newline or c in {'\r', '\n'}]
