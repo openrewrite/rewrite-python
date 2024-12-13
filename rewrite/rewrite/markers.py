@@ -3,7 +3,7 @@ from __future__ import annotations
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
-from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type, Optional
+from typing import List, ClassVar, cast, TYPE_CHECKING, Callable, TypeVar, Type, Optional, Dict, Any
 from uuid import UUID
 
 if TYPE_CHECKING:
@@ -87,6 +87,48 @@ class Markers:
 
 
 Markers.EMPTY = Markers(random_id(), [])
+
+
+@dataclass(frozen=True, eq=False)
+class SearchResult(Marker):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> SearchResult:
+        return self if id is self._id else replace(self, _id=id)
+
+    _description: Optional[str]
+
+    @property
+    def description(self) -> Optional[str]:
+        return self._description
+
+    def with_description(self, description: Optional[str]) -> SearchResult:
+        return self if description is self._description else replace(self, _description=description)
+
+
+@dataclass(frozen=True, eq=False)
+class UnknownJavaMarker(Marker):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> UnknownJavaMarker:
+        return self if id is self._id else replace(self, _id=id)
+
+    _data: Dict[str, Any]
+
+    @property
+    def data(self) -> Dict[str, Any]:
+        return self._data
+
+    def with_data(self, data: Dict[str, Any]) -> UnknownJavaMarker:
+        return self if data is self._data else replace(self, _data=data)
 
 
 @dataclass(frozen=True, eq=False)
