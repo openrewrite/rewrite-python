@@ -32,6 +32,7 @@ __all__ = [
     'Marker',
     'Markers',
     'SearchResult',
+    'UnknownJavaMarker',
 
     # Execution
     'Recipe',
