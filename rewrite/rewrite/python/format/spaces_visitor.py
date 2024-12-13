@@ -438,8 +438,12 @@ class SpacesVisitor(PythonVisitor):
         cc = space_before(cc, True)
 
         # Space around iterator variable and after 'in' keyword e.g. for  i  in  range(10) <-> ...for i in range(10)
+
+        # Single before 'in' keyword e.g. ..i   in...  <-> ...i in...
         cc = cc.padding.with_iterated_list(space_before_left_padded(cc.padding.iterated_list, True))
+        # Single space before 'iterator' variable (or after for keyword) e.g. ...for   i <-> ...for i
         cc = cc.with_iterator_variable(space_before(cc.iterator_variable, True))
+        # Ensure single space after 'in' keyword e.g. ...in   range(10) <-> ...in range(10)
         cc = cc.padding.with_iterated_list(space_before_left_padded_element(cc.padding.iterated_list, True))
         return cc
 
