@@ -289,7 +289,7 @@ Space.EMPTY = Space([], '')
 Space.SINGLE_SPACE = Space([], ' ')
 
 
-class JavaSourceFile(SourceFile):
+class JavaSourceFile(J, SourceFile):
     pass
 
 
