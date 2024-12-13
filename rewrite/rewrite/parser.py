@@ -143,6 +143,9 @@ class ParseError(SourceFile):
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture]:
         return PrinterFactory.current().create_printer(cursor)
 
+    def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
+        return isinstance(v, ParseErrorVisitor)
+
     def accept(self, v: TreeVisitor[Any, P], p: P) -> Optional[Any]:
         return cast(ParseErrorVisitor, v).visit_parse_error(self, p)
 
