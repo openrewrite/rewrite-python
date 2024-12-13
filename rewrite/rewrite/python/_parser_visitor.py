@@ -12,9 +12,10 @@ from more_itertools import peekable
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
-    NameTree, OmitParentheses, Expression, TypeTree, TypedTree
+    NameTree, OmitParentheses, Expression, TypeTree, TypedTree, Comment
 from rewrite.java import tree as j
-from . import tree as py, PyComment
+from . import tree as py
+from .support_types import PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
 
 T = TypeVar('T')
@@ -2156,7 +2157,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __format(self, source: str, offset: int, stop: Optional[str] = None) -> Tuple[Space, int]:
         prefix = None
         whitespace = []
-        comments = []
+        comments: List[Comment] = []
         source_len = len(source)
         while offset < source_len:
             char = source[offset]
@@ -2172,23 +2173,27 @@ class ParserVisitor(ast.NodeVisitor):
                 whitespace = []
                 comment = []
                 offset += 1
-                while offset < source_len and source[offset] != '\n':
+                while offset < source_len and source[offset] not in ['\r', '\n']:
                     comment.append(source[offset])
                     offset += 1
-                comments.append(PyComment(''.join(comment), '\n' if offset < source_len else '',
+                comments.append(PyComment(''.join(comment), '',
                                           False, Markers.EMPTY))
+                continue
             else:
                 break
             if offset < source_len:
                 offset += 1
 
+        if not whitespace and not comments:
+            return Space.EMPTY, offset
+
         if not comments:
             prefix = ''.join(whitespace)
         elif whitespace:
-            comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+            comments[-1] = comments[-1].with_suffix(''.join(whitespace))
         return Space(comments, prefix), offset
 
-    def __position_of_next(self, until_delim: str, stop: str = None) -> int:
+    def __position_of_next(self, until_delim: str, stop: Optional[str] = None) -> int:
         in_single_line_comment = False
 
         delim_index = self._cursor
@@ -2261,7 +2266,7 @@ class ParserVisitor(ast.NodeVisitor):
                     format,
                     format,
                     None,
-                    self.__map_type(node.values[0]),
+                    JavaType.Primitive()
                 ), next(tokens), 0)
             else:
                 delimiter = ''
