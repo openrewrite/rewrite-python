@@ -33,7 +33,7 @@ class RemoveTrailingWhitespaceVisitor(PythonVisitor):
 
         last_newline = s.whitespace.rfind('\n')
         if last_newline > 0:
-            ws = [c for i, c in enumerate(s.whitespace) if i >= last_newline or c in {',', '\r', '\n'}]
+            ws = [c for i, c in enumerate(s.whitespace) if i >= last_newline or c in {'\r', '\n'}]
             s = s.with_whitespace(''.join(ws))
         return s
 
