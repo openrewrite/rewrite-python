@@ -12,9 +12,10 @@ from more_itertools import peekable
 
 from rewrite import random_id, Markers
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
-    NameTree, OmitParentheses, Expression, TypeTree, TypedTree
+    NameTree, OmitParentheses, Expression, TypeTree, TypedTree, Comment
 from rewrite.java import tree as j
-from . import tree as py, PyComment
+from . import tree as py
+from .support_types import PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
 
 T = TypeVar('T')
@@ -2156,16 +2157,8 @@ class ParserVisitor(ast.NodeVisitor):
     def __format(self, source: str, offset: int, stop: Optional[str] = None) -> Tuple[Space, int]:
         prefix = None
         whitespace = []
-        comments = []
+        comments: List[Comment] = []
         source_len = len(source)
-
-        def _determine_suffix_linebreak(str, default_lb='\n'):
-            if str.endswith('\r\n'):
-                return '\r\n'
-            if str.endswith('\n'):
-                return '\n'
-            return default_lb
-
         while offset < source_len:
             char = source[offset]
             if stop is not None and char == stop:
@@ -2174,40 +2167,33 @@ class ParserVisitor(ast.NodeVisitor):
                 whitespace.append(char)
             elif char == '#':
                 if comments:
-                    comments[-1] = comments[-1].with_suffix(
-                        _determine_suffix_linebreak(comments[-1].suffix) + ''.join(whitespace))
+                    comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
                 else:
                     prefix = ''.join(whitespace)
                 whitespace = []
                 comment = []
                 offset += 1
-
-                found_clrf_linebreak = False
-                while offset < source_len:
-                    if source[offset] == '\n':
-                        break
-                    if offset + 1 < source_len and source[offset:offset + 2] == '\r\n':
-                        found_clrf_linebreak = True
-                        offset += 1
-                        break
+                while offset < source_len and source[offset] not in ['\r', '\n']:
                     comment.append(source[offset])
                     offset += 1
-                _lb = '\r\n' if found_clrf_linebreak else '\n'
-                comments.append(PyComment(''.join(comment), _lb if offset < source_len else '',
+                comments.append(PyComment(''.join(comment), '',
                                           False, Markers.EMPTY))
+                continue
             else:
                 break
             if offset < source_len:
                 offset += 1
 
+        if not whitespace and not comments:
+            return Space.EMPTY, offset
+
         if not comments:
             prefix = ''.join(whitespace)
         elif whitespace:
-            comments[-1] = comments[-1].with_suffix(
-                _determine_suffix_linebreak(comments[-1].suffix) + ''.join(whitespace))
+            comments[-1] = comments[-1].with_suffix(''.join(whitespace))
         return Space(comments, prefix), offset
 
-    def __position_of_next(self, until_delim: str, stop: str = None) -> int:
+    def __position_of_next(self, until_delim: str, stop: Optional[str] = None) -> int:
         in_single_line_comment = False
 
         delim_index = self._cursor
@@ -2280,7 +2266,7 @@ class ParserVisitor(ast.NodeVisitor):
                     format,
                     format,
                     None,
-                    self.__map_type(node.values[0]),
+                    JavaType.Primitive()
                 ), next(tokens), 0)
             else:
                 delimiter = ''
