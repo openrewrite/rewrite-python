@@ -27,8 +27,13 @@ __all__ = [
     'ExecutionContext',
     'DelegatingExecutionContext',
     'InMemoryExecutionContext',
+
+    # Markers
     'Marker',
     'Markers',
+    'SearchResult',
+
+    # Execution
     'Recipe',
     'RecipeRunException',
     'Parser',

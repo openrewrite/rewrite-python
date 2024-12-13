@@ -90,6 +90,27 @@ Markers.EMPTY = Markers(random_id(), [])
 
 
 @dataclass(frozen=True, eq=False)
+class SearchResult(Marker):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> SearchResult:
+        return self if id is self._id else replace(self, _id=id)
+
+    _description: Optional[str]
+
+    @property
+    def description(self) -> Optional[str]:
+        return self._description
+
+    def with_description(self, description: Optional[str]) -> SearchResult:
+        return self if description is self._description else replace(self, _description=description)
+
+
+@dataclass(frozen=True, eq=False)
 class ParseExceptionResult(Marker):
     @classmethod
     def build(cls, parser: 'Parser', exception: Exception) -> ParseExceptionResult:
