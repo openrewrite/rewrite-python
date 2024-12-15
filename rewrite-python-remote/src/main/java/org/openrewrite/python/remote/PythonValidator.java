@@ -372,7 +372,7 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
     public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDeclaration, P p) {
         ListUtils.map(classDeclaration.getLeadingAnnotations(), el -> visitAndValidateNonNull(el, J.Annotation.class, p));
         ListUtils.map(classDeclaration.getModifiers(), el -> visitAndValidateNonNull(el, J.Modifier.class, p));
-        visit(classDeclaration.getPadding().getKind(), p);
+        visitAndValidate(classDeclaration.getPadding().getKind().getAnnotations(), J.Annotation.class, p);
         visitAndValidateNonNull(classDeclaration.getName(), J.Identifier.class, p);
         visitAndValidate(classDeclaration.getTypeParameters(), J.TypeParameter.class, p);
         visitAndValidate(classDeclaration.getPrimaryConstructor(), Statement.class, p);

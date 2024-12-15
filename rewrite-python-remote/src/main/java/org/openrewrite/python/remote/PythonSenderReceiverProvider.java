@@ -24,6 +24,11 @@ import org.openrewrite.remote.Validator;
 
 @AutoService(SenderReceiverProvider.class)
 public class PythonSenderReceiverProvider implements SenderReceiverProvider<Py> {
+
+    static {
+        Python.register();
+    }
+
     @Override
     public Class<Py> getType() {
         return Py.class;
