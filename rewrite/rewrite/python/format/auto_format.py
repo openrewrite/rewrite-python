@@ -3,9 +3,9 @@ from typing import Optional
 from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
 from .normalize_line_breaks_visitor import NormalizeLineBreaksVisitor
-from .spaces_visitor import SpacesVisitor
 from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
-from .. import TabsAndIndentsStyle
+from .spaces_visitor import SpacesVisitor
+from .. import TabsAndIndentsStyle, GeneralFormatStyle
 from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
@@ -33,4 +33,6 @@ class AutoFormatVisitor(PythonVisitor):
             cu.get_style(TabsAndIndentsStyle) or IntelliJ.tabs_and_indents(),
             self._stop_after
         ).visit(tree, p, self._cursor.fork())
+        tree = NormalizeLineBreaksVisitor(cu.get_style(GeneralFormatStyle) or GeneralFormatStyle(False),
+                                          self._stop_after).visit(tree, p, self._cursor.fork())
         return tree
