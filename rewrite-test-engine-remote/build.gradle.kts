@@ -7,11 +7,8 @@ application {
     mainClass = "org.openrewrite.remote.java.RemotingServer"
 }
 
-val latest = if (project.hasProperty("releasing")) {
-    "latest.release"
-} else {
-    "latest.integration"
-}
+val latest = if (project.hasProperty("releasing")) "latest.release" else "latest.integration"
+
 dependencies {
 
     // The bom version can also be set to a specific version

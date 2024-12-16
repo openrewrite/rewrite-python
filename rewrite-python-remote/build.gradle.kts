@@ -2,11 +2,7 @@ plugins {
     id("org.openrewrite.build.language-library")
 }
 
-val latest = if (project.hasProperty("releasing")) {
-    "latest.release"
-} else {
-    "latest.integration"
-}
+val latest = if (project.hasProperty("releasing")) "latest.release" else "latest.integration"
 
 tasks.compileJava {
     options.release = 8

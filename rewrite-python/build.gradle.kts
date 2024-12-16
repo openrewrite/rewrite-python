@@ -2,11 +2,7 @@ plugins {
     id("org.openrewrite.build.language-library")
 }
 
-val latest = if (project.hasProperty("releasing")) {
-    "latest.release"
-} else {
-    "latest.integration"
-}
+val latest = if (project.hasProperty("releasing")) "latest.release" else "latest.integration"
 
 tasks.compileJava {
     options.release = 8
@@ -20,7 +16,7 @@ tasks.withType<Test> {
 
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
-    implementation("org.openrewrite:rewrite-remote-java:latest.integration") {
+    implementation("org.openrewrite:rewrite-remote-java:$latest") {
         exclude(group = "org.openrewrite", module = "rewrite-python")
     }
 
