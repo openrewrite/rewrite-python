@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass, replace
 
 from ..style import Style, NamedStyles
@@ -448,6 +447,19 @@ class BlankLinesStyle(PythonStyle):
 
     def with_minimum(self, minimum: Minimum) -> BlankLinesStyle:
         return self if minimum is self._minimum else replace(self, _minimum=minimum)
+
+
+@dataclass(frozen=True)
+class GeneralFormatStyle(PythonStyle):
+    _use_crlf_new_lines: bool
+
+    @property
+    def use_crlf_new_lines(self) -> bool:
+        return self._use_crlf_new_lines
+
+    def with_use_crlf_new_lines(self, use_crlf_new_lines: bool) -> GeneralFormatStyle:
+        return self if use_crlf_new_lines is self._use_crlf_new_lines else replace(self,
+                                                                                   _use_crlf_new_lines=use_crlf_new_lines)
 
 
 class IntelliJ(NamedStyles):
