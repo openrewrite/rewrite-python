@@ -14,6 +14,10 @@ class TestNormalizeLineBreaksVisitor(unittest.TestCase):
             "    # some comment\r\n"
             "    def test(self):\r\n"
             "        print()\r\n"
+            "        a = [\r\n"
+            "              1,\r\n"
+            "              2,\r\n"
+            "            ]\r\n"
             "\r\n"
         )
         # language=python
@@ -22,6 +26,10 @@ class TestNormalizeLineBreaksVisitor(unittest.TestCase):
             "    # some comment\n"
             "    def test(self):\n"
             "        print()\n"
+            "        a = [\n"
+            "              1,\n"
+            "              2,\n"
+            "            ]\n"
             "\n"
         )
 

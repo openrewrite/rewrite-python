@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union, cast
 
-from rewrite import Tree, P, Cursor, list_map
-from rewrite.java import J, Space, Comment, TextComment
+from rewrite import Tree, P, Cursor, list_map, Marker
+from rewrite.java import J, Space, Comment, TextComment, TrailingComma
 from rewrite.python import PythonVisitor, PySpace, GeneralFormatStyle, PyComment
 from rewrite.visitor import T
 
@@ -42,6 +42,12 @@ class NormalizeLineBreaksVisitor(PythonVisitor):
 
     def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
         return tree if self._stop else super().visit(tree, p, parent)
+
+    def visit_marker(self, marker: Marker, p: P) -> Marker:
+        m = cast(Marker, super().visit_marker(marker, p))
+        if isinstance(m, TrailingComma):
+            return m.with_suffix(self.visit_space(m.suffix, None, p))
+        return m
 
 
 STR = TypeVar('STR', bound=Optional[str])
