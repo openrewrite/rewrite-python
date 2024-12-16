@@ -579,7 +579,7 @@ public class PythonReceiver implements Receiver<Py> {
             classDeclaration = classDeclaration.withPrefix(ctx.receiveNonNullNode(classDeclaration.getPrefix(), PythonReceiver::receiveSpace));
             classDeclaration = classDeclaration.withMarkers(ctx.receiveNonNullNode(classDeclaration.getMarkers(), ctx::receiveMarkers));
             classDeclaration = classDeclaration.withLeadingAnnotations(ctx.receiveNonNullNodes(classDeclaration.getLeadingAnnotations(), ctx::receiveTree));
-            classDeclaration = classDeclaration.withModifiers(ctx.receiveNonNullNodes(classDeclaration.getModifiers(), PythonReceiver::receiveModifier));
+            classDeclaration = classDeclaration.withModifiers(ctx.receiveNonNullNodes(classDeclaration.getModifiers(), ctx::receiveTree));
             classDeclaration = classDeclaration.getPadding().withKind(ctx.receiveNonNullNode(classDeclaration.getPadding().getKind(), PythonReceiver::receiveClassDeclarationKind));
             classDeclaration = classDeclaration.withName(ctx.receiveNonNullNode(classDeclaration.getName(), ctx::receiveTree));
             classDeclaration = classDeclaration.getPadding().withTypeParameters(ctx.receiveNode(classDeclaration.getPadding().getTypeParameters(), PythonReceiver::receiveContainer));
@@ -820,7 +820,7 @@ public class PythonReceiver implements Receiver<Py> {
             methodDeclaration = methodDeclaration.withPrefix(ctx.receiveNonNullNode(methodDeclaration.getPrefix(), PythonReceiver::receiveSpace));
             methodDeclaration = methodDeclaration.withMarkers(ctx.receiveNonNullNode(methodDeclaration.getMarkers(), ctx::receiveMarkers));
             methodDeclaration = methodDeclaration.withLeadingAnnotations(ctx.receiveNonNullNodes(methodDeclaration.getLeadingAnnotations(), ctx::receiveTree));
-            methodDeclaration = methodDeclaration.withModifiers(ctx.receiveNonNullNodes(methodDeclaration.getModifiers(), PythonReceiver::receiveModifier));
+            methodDeclaration = methodDeclaration.withModifiers(ctx.receiveNonNullNodes(methodDeclaration.getModifiers(), ctx::receiveTree));
             methodDeclaration = methodDeclaration.getAnnotations().withTypeParameters(ctx.receiveNode(methodDeclaration.getAnnotations().getTypeParameters(), PythonReceiver::receiveMethodTypeParameters));
             methodDeclaration = methodDeclaration.withReturnTypeExpression(ctx.receiveNode(methodDeclaration.getReturnTypeExpression(), ctx::receiveTree));
             methodDeclaration = methodDeclaration.getAnnotations().withName(ctx.receiveNonNullNode(methodDeclaration.getAnnotations().getName(), PythonReceiver::receiveMethodIdentifierWithAnnotations));
@@ -843,6 +843,17 @@ public class PythonReceiver implements Receiver<Py> {
             methodInvocation = methodInvocation.getPadding().withArguments(ctx.receiveNonNullNode(methodInvocation.getPadding().getArguments(), PythonReceiver::receiveContainer));
             methodInvocation = methodInvocation.withMethodType(ctx.receiveValue(methodInvocation.getMethodType(), JavaType.Method.class));
             return methodInvocation;
+        }
+
+        @Override
+        public J.Modifier visitModifier(J.Modifier modifier, ReceiverContext ctx) {
+            modifier = modifier.withId(ctx.receiveNonNullValue(modifier.getId(), UUID.class));
+            modifier = modifier.withPrefix(ctx.receiveNonNullNode(modifier.getPrefix(), PythonReceiver::receiveSpace));
+            modifier = modifier.withMarkers(ctx.receiveNonNullNode(modifier.getMarkers(), ctx::receiveMarkers));
+            modifier = modifier.withKeyword(ctx.receiveValue(modifier.getKeyword(), String.class));
+            modifier = modifier.withType(ctx.receiveNonNullValue(modifier.getType(), J.Modifier.Type.class));
+            modifier = modifier.withAnnotations(ctx.receiveNonNullNodes(modifier.getAnnotations(), ctx::receiveTree));
+            return modifier;
         }
 
         @Override
@@ -1055,7 +1066,7 @@ public class PythonReceiver implements Receiver<Py> {
             typeParameter = typeParameter.withPrefix(ctx.receiveNonNullNode(typeParameter.getPrefix(), PythonReceiver::receiveSpace));
             typeParameter = typeParameter.withMarkers(ctx.receiveNonNullNode(typeParameter.getMarkers(), ctx::receiveMarkers));
             typeParameter = typeParameter.withAnnotations(ctx.receiveNonNullNodes(typeParameter.getAnnotations(), ctx::receiveTree));
-            typeParameter = typeParameter.withModifiers(ctx.receiveNonNullNodes(typeParameter.getModifiers(), PythonReceiver::receiveModifier));
+            typeParameter = typeParameter.withModifiers(ctx.receiveNonNullNodes(typeParameter.getModifiers(), ctx::receiveTree));
             typeParameter = typeParameter.withName(ctx.receiveNonNullNode(typeParameter.getName(), ctx::receiveTree));
             typeParameter = typeParameter.getPadding().withBounds(ctx.receiveNode(typeParameter.getPadding().getBounds(), PythonReceiver::receiveContainer));
             return typeParameter;
@@ -1078,7 +1089,7 @@ public class PythonReceiver implements Receiver<Py> {
             variableDeclarations = variableDeclarations.withPrefix(ctx.receiveNonNullNode(variableDeclarations.getPrefix(), PythonReceiver::receiveSpace));
             variableDeclarations = variableDeclarations.withMarkers(ctx.receiveNonNullNode(variableDeclarations.getMarkers(), ctx::receiveMarkers));
             variableDeclarations = variableDeclarations.withLeadingAnnotations(ctx.receiveNonNullNodes(variableDeclarations.getLeadingAnnotations(), ctx::receiveTree));
-            variableDeclarations = variableDeclarations.withModifiers(ctx.receiveNonNullNodes(variableDeclarations.getModifiers(), PythonReceiver::receiveModifier));
+            variableDeclarations = variableDeclarations.withModifiers(ctx.receiveNonNullNodes(variableDeclarations.getModifiers(), ctx::receiveTree));
             variableDeclarations = variableDeclarations.withTypeExpression(ctx.receiveNode(variableDeclarations.getTypeExpression(), ctx::receiveTree));
             variableDeclarations = variableDeclarations.withVarargs(ctx.receiveNode(variableDeclarations.getVarargs(), PythonReceiver::receiveSpace));
             variableDeclarations = variableDeclarations.withDimensionsBeforeName(ctx.receiveNonNullNodes(variableDeclarations.getDimensionsBeforeName(), leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)));
@@ -1772,7 +1783,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
-                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
+                    ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveClassDeclarationKind),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer),
@@ -2033,7 +2044,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
-                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
+                    ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveMethodTypeParameters),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveMethodIdentifierWithAnnotations),
@@ -2279,7 +2290,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
-                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
+                    ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveContainer)
             );
@@ -2312,7 +2323,7 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNodes(null, ctx::receiveTree),
-                    ctx.receiveNonNullNodes(null, PythonReceiver::receiveModifier),
+                    ctx.receiveNonNullNodes(null, ctx::receiveTree),
                     ctx.receiveNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNodes(null, leftPaddedNodeReceiver(org.openrewrite.java.tree.Space.class)),
@@ -2431,27 +2442,6 @@ public class PythonReceiver implements Receiver<Py> {
             );
         }
         return identifierWithAnnotations;
-    }
-
-    private static J.Modifier receiveModifier(J.@Nullable Modifier modifier, @Nullable Class<?> type, ReceiverContext ctx) {
-        if (modifier != null) {
-            modifier = modifier.withId(ctx.receiveNonNullValue(modifier.getId(), UUID.class));
-            modifier = modifier.withPrefix(ctx.receiveNonNullNode(modifier.getPrefix(), PythonReceiver::receiveSpace));
-            modifier = modifier.withMarkers(ctx.receiveNonNullNode(modifier.getMarkers(), ctx::receiveMarkers));
-            modifier = modifier.withKeyword(ctx.receiveValue(modifier.getKeyword(), String.class));
-            modifier = modifier.withType(ctx.receiveNonNullValue(modifier.getType(), J.Modifier.Type.class));
-            modifier = modifier.withAnnotations(ctx.receiveNonNullNodes(modifier.getAnnotations(), ctx::receiveTree));
-        } else {
-            modifier = new J.Modifier(
-                ctx.receiveNonNullValue(null, UUID.class),
-                ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
-                ctx.receiveNonNullNode(null, ctx::receiveMarkers),
-                ctx.receiveValue(null, String.class),
-                ctx.receiveNonNullValue(null, J.Modifier.Type.class),
-                ctx.receiveNonNullNodes(null, ctx::receiveTree)
-            );
-        }
-        return modifier;
     }
 
     private static J.TypeParameters receiveMethodTypeParameters(J.@Nullable TypeParameters typeParameters, @Nullable Class<?> type, ReceiverContext ctx) {

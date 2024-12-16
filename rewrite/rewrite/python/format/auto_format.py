@@ -4,6 +4,7 @@ from .blank_lines import BlankLinesVisitor
 from .normalize_format import NormalizeFormatVisitor
 from .normalize_line_breaks_visitor import NormalizeLineBreaksVisitor
 from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
+from .remove_trailing_whitespace_visitor import RemoveTrailingWhitespaceVisitor
 from .spaces_visitor import SpacesVisitor
 from .. import TabsAndIndentsStyle, GeneralFormatStyle
 from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
@@ -35,4 +36,5 @@ class AutoFormatVisitor(PythonVisitor):
         ).visit(tree, p, self._cursor.fork())
         tree = NormalizeLineBreaksVisitor(cu.get_style(GeneralFormatStyle) or GeneralFormatStyle(False),
                                           self._stop_after).visit(tree, p, self._cursor.fork())
+        tree = RemoveTrailingWhitespaceVisitor(self._stop_after).visit(tree, self._cursor.fork())
         return tree
