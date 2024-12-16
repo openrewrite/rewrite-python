@@ -549,6 +549,12 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
     }
 
     @Override
+    public J.Modifier visitModifier(J.Modifier modifier, P p) {
+        ListUtils.map(modifier.getAnnotations(), el -> visitAndValidateNonNull(el, J.Annotation.class, p));
+        return modifier;
+    }
+
+    @Override
     public J.MultiCatch visitMultiCatch(J.MultiCatch multiCatch, P p) {
         ListUtils.map(multiCatch.getAlternatives(), el -> visitAndValidateNonNull(el, NameTree.class, p));
         return multiCatch;
