@@ -15,8 +15,8 @@ from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType,
     NameTree, OmitParentheses, Expression, TypeTree, TypedTree, Comment
 from rewrite.java import tree as j
 from . import tree as py
-from .support_types import PyComment
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
+from .support_types import PyComment
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
@@ -2167,7 +2167,7 @@ class ParserVisitor(ast.NodeVisitor):
                 whitespace.append(char)
             elif char == '#':
                 if comments:
-                    comments[-1] = comments[-1].with_suffix('\n' + ''.join(whitespace))
+                    comments[-1] = comments[-1].with_suffix(''.join(whitespace))
                 else:
                     prefix = ''.join(whitespace)
                 whitespace = []
