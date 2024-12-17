@@ -44,14 +44,25 @@ jobs:
         with:
           python-version-file: "rewrite/.python-version"
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
       - name: build-java
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
 
-      - name: build-python
+      - name: Install dependencies
         run: |
-          echo "Building project in rewrite"
-          cd "rewrite"
-          uv sync --all-extras --dev
+          cd rewrite
+          uv python install
+          uv sync --all-extras
+
+      - name: Run tests
+        run: |
+          poe test
+
+      - name: Run build
+        run: |
+          uv build
 
       - name: publish-snapshots
         if: github.event_name != 'pull_request'
