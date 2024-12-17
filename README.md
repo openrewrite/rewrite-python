@@ -18,20 +18,20 @@ In the setup described here it is at the time of writing important that the GitH
    mkdir -p ~/git/moderneinc && gh repo clone moderneinc/rewrite-remote ~/git/moderneinc/rewrite-remote
    mkdir -p ~/git/openrewrite && gh repo clone openrewrite/rewrite-python ~/git/openrewrite/rewrite-python
    ```
-2. Make sure Python 3.8 and Poetry are installed
+2. Make sure Python 3.12 and Uv are installed
    ```shell
-   brew install python@3.8
-   brew install poetry
+   brew install uv
+   uv install python
    ```
 3. Create a Python virtual environment (here we are going to use `~/.venv` but any directory works) and activate it
    ```shell
-   python3.8 -m venv ~/.venv
+   un sync --all-extras
    source ~/.venv/bin/activate
    ```
-4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Poetry
+4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Uv
    ```shell
    cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote-test
-   poetry install
+   uv build
    ```
 5. Open `~/git/openrewrite/rewrite-python/rewrite` in IDEA (or PyCharm)
    ```shell
