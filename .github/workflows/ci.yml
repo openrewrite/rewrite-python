@@ -48,8 +48,8 @@ jobs:
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
 
       - name: Install dependencies
+        working-directory: rewrite
         run: |
-          cd rewrite
           uv python install
           uv sync --all-extras
 
@@ -58,6 +58,7 @@ jobs:
 #          poe test
 
       - name: Run build
+        working-directory: rewrite
         run: |
           uv build
 
