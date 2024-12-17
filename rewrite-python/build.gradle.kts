@@ -43,7 +43,7 @@ tasks.register("prepareOutputDir") {
 tasks.register<Exec>("exportPythonRequirements") {
     dependsOn("prepareOutputDir")
     workingDir = pythonProjectDir
-    commandLine("sh", "-c", "uv export --no-header --frozen --no-hashes --no-emit-project --no-dev --no-emit-package openrewrite_remote -o ${requirementsFile.get().asFile.absolutePath}")
+    commandLine("sh", "-c", "uv export --no-header --frozen --no-hashes --no-emit-project --no-dev --no-emit-package openrewrite-remote -o ${requirementsFile.get().asFile.absolutePath}")
     standardOutput = System.out
     errorOutput = System.err
 }
