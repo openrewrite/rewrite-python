@@ -89,8 +89,8 @@ class RecipeSpec:
 
 
 def rewrite_run(*source_specs: Iterable[SourceSpec], spec: RecipeSpec = None):
-    from rewrite.remote import RemotingContext, RemotePrinterFactory
-    from rewrite.remote.server import register_remoting_factories
+    from rewrite_remote import RemotingContext, RemotePrinterFactory
+    from rewrite_remote.server import register_remoting_factories
     remoting_context = RemotingContext()
     register_remoting_factories()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

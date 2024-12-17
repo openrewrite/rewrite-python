@@ -8,7 +8,7 @@ from rewrite.python.support_types import *
 from rewrite.python.visitor import PythonVisitor
 from rewrite.java import *
 
-from rewrite.remote import Receiver, ReceiverContext, T, ReceiverFactory
+from rewrite_remote import Receiver, ReceiverContext, T, ReceiverFactory
 from . import extensions
 
 class PythonReceiver(Receiver):

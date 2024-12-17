@@ -4,7 +4,7 @@ from operator import attrgetter
 from typing import Optional, TypeVar, cast
 
 from rewrite import Tree, TreeVisitor, Markers, Marker, Cursor
-from rewrite.remote import Sender, SenderContext
+from rewrite_remote import Sender, SenderContext
 from rewrite.python import *
 from rewrite.java import *
 from rewrite.python.support_types import *
