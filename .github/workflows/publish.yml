@@ -40,10 +40,10 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
       - name: publish-candidate
         if: contains(github.ref, '-rc.')
@@ -78,15 +78,18 @@ jobs:
           echo "Extracted version: $version"
           echo "::set-output name=VERSION::$version"
 
-      - name: Set project version with Poetry
+      - name: Set project version
         working-directory: rewrite
-        run: poetry version ${{ steps.extract_version.outputs.VERSION }}
+        run: |
+          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version ${{ steps.extract_version.outputs.VERSION }}
 
       - name: publish-python
         working-directory: rewrite
         if: (!contains(github.ref, '-rc.'))
         run: |
-          poetry install --no-interaction --no-ansi
-          poetry build
-          poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+          rm -rf .venv
+          uv python install
+          uv sync --all-extras
+          uv build
+          uv publish --token ${{ secrets.PYPI_TOKEN }}
           git restore --staged --worktree . && git clean -fd
