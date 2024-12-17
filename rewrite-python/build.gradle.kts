@@ -40,19 +40,18 @@ tasks.register("prepareOutputDir") {
     }
 }
 
-tasks.register<Exec>("exportPoetryRequirements") {
+tasks.register<Exec>("exportPythonRequirements") {
     dependsOn("prepareOutputDir")
     workingDir = pythonProjectDir
-    commandLine("sh", "-c", "uv export --no-header --frozen --no-hashes --no-dev -o ${requirementsFile.get().asFile.absolutePath}")
+    commandLine("sh", "-c", "uv export --no-header --frozen --no-hashes --no-emit-project --no-dev --no-emit-package openrewrite_remote -o ${requirementsFile.get().asFile.absolutePath}")
     standardOutput = System.out
     errorOutput = System.err
 }
 
 tasks.register("appendOpenRewriteRequirements") {
-    dependsOn("exportPoetryRequirements")
+    dependsOn("exportPythonRequirements")
     doLast {
         val file = requirementsFile.get().asFile
-        file.appendText("cbor2\n")
         file.appendText("openrewrite${generatePipVersionConstraint(project.version.toString(), false)}\n")
         file.appendText("openrewrite-remote${generatePipVersionConstraint(getDirectDependencyVersion("org.openrewrite:rewrite-remote-java"), true)}\n")
     }
