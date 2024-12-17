@@ -44,9 +44,6 @@ jobs:
         with:
           python-version-file: "rewrite/.python-version"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
       - name: build-java
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
 
