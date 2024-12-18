@@ -38,7 +38,7 @@ In the setup described here it is at the time of writing important that the GitH
    idea ~/git/openrewrite/rewrite-python/rewrite
    ```
 6. Make sure that the Python plugin is installed and also that the interpreter from the created venv is configured and used
-7. Create a new run configuration which runs the Python module `rewrite.remote.server` (typically in debug mode)
+7. Create a new run configuration which runs the Python module `rewrite_remote.server` (typically in debug mode)
 8. Now open `~/git/openrewrite/rewrite-python` in a second IDEA workspace and run the JUnit tests from there
 
 ### Resources

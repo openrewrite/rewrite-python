@@ -8,8 +8,8 @@ from rewrite.python import PythonParser
 
 path = sys.argv[1] if len(sys.argv) > 1 else '/Users/knut/git/moderneinc/moderne-cli/working-set/face-alignment/examples/detect_landmarks_in_image.py'
 
-from rewrite.remote import RemotingContext, RemotePrinterFactory
-from rewrite.remote.server import register_remoting_factories
+from rewrite_remote import RemotingContext, RemotePrinterFactory
+from rewrite_remote.server import register_remoting_factories
 
 remoting_context = RemotingContext()
 register_remoting_factories()
