@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass, replace
-from typing import TypeVar, Type, Iterable, Optional, Set
+from typing import TypeVar, Type, Iterable, Optional, Set, cast
 from uuid import UUID
 
 from .markers import Marker
@@ -39,19 +39,19 @@ class NamedStyles(Marker):
 
     @classmethod
     def merge(cls, style_type: Type[S], named_styles: Iterable[NamedStyles]) -> Optional[S]:
-        merged = None
+        merged: Optional[S] = None
         for named_style in named_styles:
             styles = named_style._styles
             if styles is not None:
                 for style in styles:
                     if isinstance(style, style_type):
                         style = style.apply_defaults()
-                        if merged is None:
-                            merged = style
+                        if not merged:
+                            merged = cast(S, style)
                         else:
-                            merged = merged.merge(style)
+                            merged = cast(S, merged.merge(style))
         return merged
 
     @classmethod
-    def build(cls, *styles: Style, name: str = "Default", display_name: str = "Default", description: Optional[str] = None):
+    def build(cls, *styles: Style, name: str = "Default", display_name: str = "Default", description: Optional[str] = None) -> NamedStyles:
         return NamedStyles(random_id(), name, display_name, description, set(), styles)

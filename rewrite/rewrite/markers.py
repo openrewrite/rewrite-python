@@ -135,8 +135,9 @@ class UnknownJavaMarker(Marker):
 class ParseExceptionResult(Marker):
     @classmethod
     def build(cls, parser: 'Parser', exception: Exception) -> ParseExceptionResult:
-        return cls(random_id(), type(parser).__name__, type(exception).__name__,
-                   ''.join(traceback.format_exception(exception)))
+        exc_type, exc_value, exc_tb = type(exception), exception, exception.__traceback__
+        return cls(random_id(), type(parser).__name__, exc_type.__name__,
+                   ''.join(traceback.format_exception(exc_type, exc_value, exc_tb)))
 
     _id: UUID
 

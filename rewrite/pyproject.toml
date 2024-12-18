@@ -7,9 +7,23 @@ name = "openrewrite"
 description = "OpenRewrite is a mass automated refactoring engine."
 version = "0.0.0" # Updated dynamically during release
 authors = [{ name = "Moderne Inc.", email = "support@moderne.io" }]
-license = { text = "Moderne, Inc. Commercial License" }
-dependencies = ["pytest>=8.3.4", "more-itertools>=10.4.0", "openrewrite-remote"]
+license = { file = "LICENSE.md" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+]
 requires-python = ">=3.12, <4"
+dependencies = [
+    "pytest>=8.3.4",
+    "more-itertools>=10.4.0",
+    "openrewrite-remote"
+]
+
+[project.urls]
+Homepage = "https://github.com/openrewrite/rewrite-python/rewrite"
+Repository = "https://github.com/openrewrite/rewrite-python.git"
+Issues = "https://github.com/openrewrite/rewrite-python/issues"
 
 [tool.setuptools.packages.find]
 include = ["rewrite"]
