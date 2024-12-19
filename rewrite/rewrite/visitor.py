@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, Generic
+from typing import TypeVar, Optional, Dict, List, Any, cast, Type, ClassVar, Generic, Generator
 
 from .execution import RecipeRunException
 from .markers import Marker, Markers
@@ -32,13 +32,13 @@ class Cursor:
             object.__setattr__(self, 'messages', {})
         self.messages[key] = value  # type: ignore
 
-    def parent_tree_cursor(self) -> Optional[Cursor]:
+    def parent_tree_cursor(self) -> Cursor:
         c = self.parent
         while c is not None:
-            if isinstance(c.value, Tree):
+            if isinstance(c.value, Tree) or c.value == Cursor.ROOT_VALUE:
                 return c
             c = c.parent
-        return None
+        raise ValueError("Expected to find parent tree cursor for " + str(self))
 
     def first_enclosing_or_throw(self, type: Type[P]) -> P:
         result = self.first_enclosing(type)
@@ -56,6 +56,30 @@ class Cursor:
 
     def fork(self) -> Cursor:
         return Cursor(self.parent.fork(), self.value) if self.parent else self
+
+    def get_path(self) -> Generator[Any]:
+        c = self
+        while c is not None:
+            yield c.value
+            c = c.parent
+
+    def get_path_as_cursors(self) -> Generator[Cursor]:
+        c = self
+        while c is not None:
+            yield c
+            c = c.parent
+
+    def get_nearest_message(self, key: str) -> Optional[object]:
+        for c in self.get_path_as_cursors():
+            if c.messages is not None and key in c.messages:
+                return c.messages[key]
+        return None
+
+    @property
+    def parent_or_throw(self) -> Cursor:
+        if self.parent is None:
+            raise ValueError("Cursor is expected to have a parent:", self)
+        return self.parent
 
 
 class TreeVisitor(ABC, Generic[T, P]):
