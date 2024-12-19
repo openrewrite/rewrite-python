@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, replace
 from pathlib import Path
 from time import time_ns
-from typing import Iterable, Optional, Callable, TypeVar, Any, cast
+from typing import Iterable, Optional, Callable, TypeVar, Any, cast, IO
 from uuid import UUID
 
 from .utils import random_id
@@ -34,10 +34,10 @@ class ParserInput:
     def synthetic(self) -> bool:
         return self._synthetic
 
-    _source: Callable[[], io.IOBase]
+    _source: Callable[[], IO[Any]]
 
     @property
-    def source(self) -> Callable[[], io.IOBase]:
+    def source(self) -> Callable[[], IO[Any]]:
         return self._source
 
 
