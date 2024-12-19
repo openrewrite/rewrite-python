@@ -1,8 +1,9 @@
 name: receive-pr
 
 on:
-  pull_request:
-    types: []
+#  pull_request:
+#    types: []
+  workflow_dispatch:
 
 #  pull_request:
 #    types: [opened, synchronize]

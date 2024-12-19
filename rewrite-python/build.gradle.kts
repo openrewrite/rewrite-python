@@ -2,11 +2,7 @@ plugins {
     id("org.openrewrite.build.language-library")
 }
 
-val latest = if (project.hasProperty("releasing")) {
-    "latest.release"
-} else {
-    "latest.integration"
-}
+val latest = if (project.hasProperty("releasing")) "latest.release" else "latest.integration"
 
 tasks.compileJava {
     options.release = 8
@@ -20,7 +16,7 @@ tasks.withType<Test> {
 
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
-    implementation("org.openrewrite:rewrite-remote-java:latest.integration") {
+    implementation("org.openrewrite:rewrite-remote-java:$latest") {
         exclude(group = "org.openrewrite", module = "rewrite-python")
     }
 
@@ -34,7 +30,7 @@ dependencies {
     testImplementation("org.junit-pioneer:junit-pioneer:latest.release")
 }
 
-val poetryProjectDir = file("../rewrite")
+val pythonProjectDir = file("../rewrite")
 val outputDir = layout.buildDirectory.dir("resources/main/META-INF")
 val requirementsFile = outputDir.map { it.file("python-requirements.txt") }
 
@@ -44,19 +40,18 @@ tasks.register("prepareOutputDir") {
     }
 }
 
-tasks.register<Exec>("exportPoetryRequirements") {
+tasks.register<Exec>("exportPythonRequirements") {
     dependsOn("prepareOutputDir")
-    workingDir = poetryProjectDir
-    commandLine("sh", "-c", "poetry export --without-hashes -o ${requirementsFile.get().asFile.absolutePath}")
+    workingDir = pythonProjectDir
+    commandLine("sh", "-c", "uv export --no-header --frozen --no-hashes --no-emit-project --no-dev --no-emit-package openrewrite-remote -o ${requirementsFile.get().asFile.absolutePath}")
     standardOutput = System.out
     errorOutput = System.err
 }
 
 tasks.register("appendOpenRewriteRequirements") {
-    dependsOn("exportPoetryRequirements")
+    dependsOn("exportPythonRequirements")
     doLast {
         val file = requirementsFile.get().asFile
-        file.appendText("cbor2\n")
         file.appendText("openrewrite${generatePipVersionConstraint(project.version.toString(), false)}\n")
         file.appendText("openrewrite-remote${generatePipVersionConstraint(getDirectDependencyVersion("org.openrewrite:rewrite-remote-java"), true)}\n")
     }

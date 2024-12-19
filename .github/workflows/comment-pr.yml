@@ -5,7 +5,7 @@ on:
   workflow_run:
     workflows: ["receive-pr"]
     types:
-      - completed
+#      - completed
 
 # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
 # Since this pull request has write permissions on the target repo, we should **NOT** execute any untrusted code.

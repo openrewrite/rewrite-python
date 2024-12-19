@@ -36,32 +36,30 @@ jobs:
       - name: check-java
         run: java --version
 
-      - name: Install Python
+      - name: Install Uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.1
-          plugins: poetry-plugin-export
+          python-version-file: "rewrite/.python-version"
 
       - name: build-java
         run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
 
-      - name: build-python
+      - name: Install dependencies
+        working-directory: rewrite
         run: |
-          for directory in rewrite/rewrite-*/; do
-            if [ -f "$directory/pyproject.toml" ]; then
-              echo "Building project in $directory"
-              cd "$directory"
-              poetry install --no-interaction --no-ansi
-              poetry build
-              poetry run pytest
-              cd - > /dev/null
-            fi
-          done
+          uv sync --all-extras
+
+#      - name: Run tests
+#        run: |
+#          poe test
+
+      - name: Run build
+        working-directory: rewrite
+        run: |
+          uv build
 
       - name: publish-snapshots
         if: github.event_name != 'pull_request'

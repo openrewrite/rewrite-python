@@ -30,7 +30,7 @@ class Cursor:
     def put_message(self, key: str, value: object) -> None:
         if self.messages is None:
             object.__setattr__(self, 'messages', {})
-        self.messages[key] = value
+        self.messages[key] = value  # type: ignore
 
     def parent_tree_cursor(self) -> Optional[Cursor]:
         c = self.parent
@@ -46,10 +46,10 @@ class Cursor:
             raise ValueError(f"Expected to find enclosing {T.__name__}")
         return result
 
-    def first_enclosing(self, type: Type[P]) -> P:
-        c = self
+    def first_enclosing(self, type_: Type[P]) -> Optional[P]:
+        c: Optional[Cursor] = self
         while c is not None:
-            if isinstance(c.value, type):
+            if isinstance(c.value, type_):
                 return c.value
             c = c.parent
         return None
@@ -149,9 +149,9 @@ class TreeVisitor(ABC, Generic[T, P]):
 
     def adapt(self, tree_type, visitor_type: Type[TV]) -> TV:
         # FIXME implement the visitor adapting
-        return self
+        return cast(TV, self)
 
 
-class NoopVisitor(TreeVisitor):
+class NoopVisitor(TreeVisitor[Tree, P]):
     def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
-        return tree
+        return cast(T, tree) if tree else tree

@@ -9,7 +9,7 @@ from uuid import UUID
 from .utils import random_id
 from .result import Result
 from .tree import SourceFile, Tree, PrintOutputCapture, PrinterFactory, FileAttributes, Checksum
-from .execution import ExecutionContext
+from .execution import ExecutionContext, InMemoryExecutionContext
 from .visitor import TreeVisitor, Cursor
 from .markers import Markers, ParseExceptionResult
 
@@ -48,7 +48,7 @@ P = TypeVar('P')
 @dataclass(frozen=True, eq=False)
 class ParseError(SourceFile):
     @classmethod
-    def build(cls, parser: 'Parser', input: ParserInput, relative_to: Path, ctx: ExecutionContext, exception: Exception,
+    def build(cls, parser: 'Parser', input: ParserInput, relative_to: Optional[Path], ctx: ExecutionContext, exception: Exception,
               erroneous: Optional[SourceFile] = None) -> 'ParseError':
         return cls(random_id(),
                    Markers(random_id(), [ParseExceptionResult.build(parser, exception)]),
@@ -140,7 +140,7 @@ class ParseError(SourceFile):
     def with_erroneous(self, erroneous: Optional[SourceFile]) -> 'ParseError':
         return self if erroneous is self._erroneous else replace(self, _erroneous=erroneous)
 
-    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture]:
+    def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
         return PrinterFactory.current().create_printer(cursor)
 
     def is_acceptable(self, v: TreeVisitor[Any, P], p: P) -> bool:
@@ -178,7 +178,7 @@ class Parser(ABC):
         return self.parse_inputs(inputs, relative_to, ctx)
 
     def parse_strings(self, *sources: str) -> Iterable[SourceFile]:
-        return self.__parse_strings_with_context(ExecutionContext(), *sources)
+        return self.__parse_strings_with_context(InMemoryExecutionContext(), *sources)
 
     def __parse_strings_with_context(self, ctx: ExecutionContext, *sources: str) -> Iterable[SourceFile]:
         inputs = [ParserInput(self.source_path_from_source_text(Path(str(time_ns())), source),
@@ -197,7 +197,7 @@ class Parser(ABC):
         return self
 
     def get_charset(self, ctx: ExecutionContext) -> str:
-        return ctx.get_message(ExecutionContext.CHARSET, 'utf-8')
+        return cast(str, ctx.get_message(ExecutionContext.CHARSET, 'utf-8'))
 
 
 class ParserBuilder(ABC):

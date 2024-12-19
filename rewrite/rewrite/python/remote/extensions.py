@@ -4,7 +4,7 @@ from typing import Optional, Type, Callable, TypeVar
 
 from rewrite.java import *
 from rewrite.python.tree import PyComment
-from rewrite.remote import SenderContext, ReceiverContext
+from rewrite_remote import SenderContext, ReceiverContext
 
 T = TypeVar('T')
 

@@ -7,7 +7,7 @@ from rewrite.java import *
 from rewrite.java.support_types import *
 from rewrite.java.visitor import JavaVisitor
 
-from rewrite.remote import Receiver, ReceiverContext, T, ReceiverFactory
+from rewrite_remote import Receiver, ReceiverContext, T, ReceiverFactory
 from . import extensions
 
 class JavaReceiver(Receiver):

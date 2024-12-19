@@ -3,7 +3,7 @@ from operator import attrgetter
 from typing import Type, Callable, TypeVar, Optional
 
 from rewrite.java import *
-from rewrite.remote import SenderContext, ReceiverContext
+from rewrite_remote import SenderContext, ReceiverContext
 
 T = TypeVar('T')
 
