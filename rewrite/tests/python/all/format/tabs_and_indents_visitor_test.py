@@ -3,7 +3,7 @@ from rewrite.python.format import TabsAndIndentsVisitor
 from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
 
-def test_if_statement():
+def test_if_else_statement():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
         # language=python
@@ -21,6 +21,34 @@ def test_if_statement():
                     return "Positive"
                 else:
                     return "Non-positive"
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_if_elif_else_statement():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def check_value(x):
+             if x > 0:
+              return "Positive"
+             elif x < 0:
+              return "Negative"
+             else:
+              return "Null"
+            """,
+            """
+            def check_value(x):
+                if x > 0:
+                    return "Positive"
+                elif x < 0:
+                    return "Negative"
+                else:
+                    return "Null"
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))

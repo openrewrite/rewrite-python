@@ -152,15 +152,10 @@ class Space:
         in `whitespace`. If no newline is present, returns `whitespace` as-is.
         If the last newline is at the end, returns an empty string.
         """
-        # TODO: CAn be refactored probably to single line whitespace[whitespace.rfind('\n') + 1:]
-        if whitespace is None:
+        if not whitespace:
             return ""
         last_newline = whitespace.rfind('\n')
-        if last_newline >= 0:
-            return whitespace[last_newline + 1:]
-        elif last_newline == len(whitespace) - 1:
-            return ""
-        return whitespace
+        return whitespace if last_newline == -1 else whitespace[last_newline + 1:]
 
     EMPTY: ClassVar[Space]
     SINGLE_SPACE: ClassVar[Space]

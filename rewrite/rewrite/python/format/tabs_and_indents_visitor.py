@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from typing import TypeVar
+import sys
+from enum import Enum, auto
+from typing import TypeVar, Optional, Union, cast, List
 
-from rewrite import Tree
-from rewrite.java import J
-from rewrite.python import PythonVisitor, TabsAndIndentsStyle
+from rewrite import Tree, Cursor, list_map
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, EnumValueSet, Case, WhileLoop, \
+    Block, If, ForLoop, ForEachLoop, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration, Empty, \
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda
+from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
+    CollectionLiteral
+from rewrite.visitor import P, T
 
 J2 = TypeVar('J2', bound=J)
 
@@ -15,3 +21,320 @@ class TabsAndIndentsVisitor(PythonVisitor):
         self._stop_after = stop_after
         self._style = style
         self._stop = False
+
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
+        if parent is not None:
+            self._cursor = parent
+            if tree is None:
+                return cast(Optional[T], self.default_value(None, p))
+
+            for c in parent.get_path_as_cursors() if parent is not None else []:
+                v = c.value
+                print("V", v)
+                space = None
+                if isinstance(v, J):
+                    space = v.prefix
+                elif isinstance(v, JRightPadded):
+                    space = v.after
+                elif isinstance(v, JLeftPadded):
+                    space = v.before
+                elif isinstance(v, JContainer):
+                    space = v.before
+
+                if space is not None and '\n' in space.last_whitespace:
+                    indent = self.find_indent(space)
+                    print("Indent: ", indent)
+                    if indent != 0:
+                        c.put_message("last_indent", indent)
+
+            # TODO CHeck if this is 100% percent corrent
+            for v in parent.get_path() if parent is not None else []:
+                if isinstance(v, J):
+                    self.pre_visit(v, p)
+                    break
+        return super().visit(tree, p)
+
+    def pre_visit(self, tree: T, p: P) -> Optional[T]:
+        if isinstance(tree, (
+                JavaSourceFile, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration)):
+            self.cursor.put_message("indent_type", self.IndentType.ALIGN)
+        elif isinstance(tree,
+                        (Block, If, If.Else, ForLoop, ForEachLoop, WhileLoop, Case, EnumValueSet, DictLiteral,
+                         CollectionLiteral)):
+            # NOTE: Added DictLiteral here
+            self.cursor.put_message("indent_type", self.IndentType.INDENT)
+        else:
+            self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT)
+
+        return tree
+
+    def post_visit(self, tree: T, p: P) -> Optional[T]:
+        if self._stop_after and tree == self._stop_after:
+            self._stop = True
+        return tree
+
+    def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
+                    p: P) -> Space:
+        if space is None:
+            return space  # pyright: ignore [reportReturnType]
+
+        self._cursor.put_message("last_location", loc)
+        parent = self._cursor.parent
+
+        indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
+        indent_type = self.cursor.parent.get_nearest_message("indent_type") or self.IndentType.ALIGN
+
+        if not space.comments and '\n' not in space.last_whitespace or parent is None:
+            return space
+
+        cursor_value = self._cursor.value
+
+        # Block spaces are always aligned to their parent
+        # The second condition ensure init blocks are ignored.
+        align_block_prefix_to_parent = loc is Space.Location.BLOCK_PREFIX and '\n' in space.whitespace and \
+                                       (isinstance(cursor_value, Block) and not isinstance(
+                                           self.cursor.parent_tree_cursor().value, Block))
+
+        align_block_to_parent = loc in (
+            Space.Location.BLOCK_END,
+            Space.Location.NEW_ARRAY_INITIALIZER_SUFFIX,
+            Space.Location.CATCH_PREFIX,
+            Space.Location.TRY_FINALLY,
+            Space.Location.ELSE_PREFIX,
+        )
+
+        if (loc == Space.Location.EXTENDS and "\n" in space.whitespace) or \
+                Space.Location.EXTENDS == self.cursor.parent.get_message("last_location", None):
+            indent_type = self.IndentType.CONTINUATION_INDENT
+
+        if align_block_prefix_to_parent or align_block_to_parent:
+            indent_type = self.IndentType.ALIGN
+
+        if indent_type == self.IndentType.INDENT:
+            indent += self._style.indent_size
+        elif indent_type == self.IndentType.CONTINUATION_INDENT:
+            indent += self._style.continuation_indent
+
+        s: Space = self._indent_to(space, indent, loc)
+        if isinstance(cursor_value, J) and not isinstance(cursor_value, EnumValueSet):
+            self.cursor.put_message("last_indent", indent)
+        elif loc == Space.Location.METHOD_SELECT_SUFFIX:
+            raise NotImplementedError("Method select suffix not implemented")
+
+        return s
+
+    # NOTE: INCOMPLETE
+    def visit_right_padded(self, right: Optional[JRightPadded[T]],
+                           loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[
+        JRightPadded[T]]:
+
+        if right is None:
+            return None
+
+        self.cursor = Cursor(self._cursor, right)
+
+        indent: int = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
+
+        t: T = right.element
+        after = right.after
+        # TODO: Check if the visit_and_cast is really required here
+
+        if isinstance(t, J):
+            elem = t
+            if '\n' in right.after.last_whitespace or '\n' in elem.prefix.last_whitespace:
+                if loc in (JRightPadded.Location.FOR_CONDITION,
+                           JRightPadded.Location.FOR_UPDATE):
+                    raise ValueError("This case should not be possible, should be safe for removal...")
+                elif loc in (JRightPadded.Location.METHOD_DECLARATION_PARAMETER,
+                             JRightPadded.Location.RECORD_STATE_VECTOR):
+                    if isinstance(elem, Empty):
+                        # NOTE: DONE
+                        elem = elem.with_prefix(self._indent_to(elem.prefix, indent, loc.after_location))
+                        after = right.after
+                    else:
+                        container: JContainer[J] = cast(JContainer[J], self.cursor.parent_or_throw.value)
+                        elements: List[J] = container.elements
+                        last_arg: J = elements[-1]
+
+                        # TODO: style.MethodDeclarationParameters doesn't exist for Python
+                        # but should be self._style.method_declaration_parameters.align_when_multiple
+                        elem = self.visit_and_cast(elem, J, p)
+                        after = self._indent_to(right.after,
+                                                indent if t is last_arg else self._style.continuation_indent,
+                                                loc.after_location)
+
+                elif loc == JRightPadded.Location.METHOD_INVOCATION_ARGUMENT:
+                    # NOTE: DONE
+                    elem, after = self._visit_method_invocation_argument_j_type(elem, right, indent, loc, p)
+                elif loc in (JRightPadded.Location.NEW_CLASS_ARGUMENTS,
+                             JRightPadded.Location.ARRAY_INDEX,
+                             JRightPadded.Location.PARENTHESES,
+                             JRightPadded.Location.TYPE_PARAMETER):
+                    # NOTE: DONE
+                    elem = self.visit_and_cast(elem, J, p)
+                    after = self._indent_to(right.after, indent, loc.after_location)
+                elif loc == JRightPadded.Location.ANNOTATION_ARGUMENT:
+                    raise NotImplementedError("Annotation argument not implemented")
+                else:
+                    # NOTE: DONE
+                    elem = self.visit_and_cast(elem, J, p)
+                    after = self.visit_space(right.after, loc.after_location, p)
+            else:
+                # NOTE: Done
+                if loc in (JRightPadded.Location.NEW_CLASS_ARGUMENTS, JRightPadded.Location.METHOD_INVOCATION_ARGUMENT):
+                    any_other_arg_on_own_line = False
+                    if "\n" not in elem.prefix.last_whitespace:
+                        # NOTE: Done
+                        args: JContainer[J] = cast(JContainer[J], self.cursor.parent.value)
+                        for arg in args.padding.elements:
+                            if arg == self.cursor.value:
+                                continue
+                            if "\n" in arg.element.prefix.last_whitespace:
+                                any_other_arg_on_own_line = True
+                                break
+                        if not any_other_arg_on_own_line:
+                            elem = self.visit_and_cast(elem, J, p)
+                            after = self._indent_to(right.after, indent, loc.after_location)
+
+                    if not any_other_arg_on_own_line:
+                        # NOTE: Done
+                        if not isinstance(elem, Binary):
+                            # TODO SHould be able to merge
+                            if not isinstance(elem, MethodInvocation):
+                                self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
+                            elif "\n" in elem.prefix.last_whitespace:
+                                self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
+                            else:
+                                method_invocation = elem
+                                select = method_invocation.select
+                                if isinstance(select, (FieldAccess, Identifier, MethodInvocation)):
+                                    self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
+
+                        elem = self.visit_and_cast(elem, J, p)
+                        after = self.visit_space(right.after, loc.after_location, p)
+                else:
+                    # NOTE: DONE
+                    elem = self.visit_and_cast(elem, J, p)
+                    after = self.visit_space(right.after, loc.after_location, p)
+
+            t = cast(T, elem)
+        else:
+            after = self.visit_space(right.after, loc.after_location, p)
+
+        self.cursor = self.cursor.parent
+        return right.with_after(after).with_element(t)
+
+    # NOTE: INCOMPLETE
+    def visit_container(self, container: Optional[JContainer[J2]],
+                        loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
+        self._cursor = Cursor(self._cursor, container)
+        if container is None:
+            return container
+
+        indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
+        if '\n' in container.before.last_whitespace:
+            if loc in (JContainer.Location.TYPE_PARAMETERS,
+                       JContainer.Location.IMPLEMENTS,
+                       JContainer.Location.THROWS,
+                       JContainer.Location.NEW_CLASS_ARGUMENTS):
+                before = self._indent_to(container.before, indent + self._style.continuation_indent,
+                                         loc.before_location)
+                self.cursor.put_message("indent_type", self.IndentType.ALIGN)
+                self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
+            else:
+                before = self.visit_space(container.before, loc.before_location, p)
+            js = list_map(lambda t: self.visit_right_padded(t, loc.element_location, p), container.padding.elements)
+        else:
+            if loc in (JContainer.Location.TYPE_PARAMETERS,
+                       JContainer.Location.IMPLEMENTS,
+                       JContainer.Location.THROWS,
+                       JContainer.Location.NEW_CLASS_ARGUMENTS,
+                       JContainer.Location.METHOD_INVOCATION_ARGUMENTS):
+                self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT)
+                before = self.visit_space(container.before, loc.before_location, p)
+            else:
+                before = self.visit_space(container.before, loc.before_location, p)
+            js = list_map(lambda t: self.visit_right_padded(t, loc.element_location, p), container.padding.elements)
+
+        self._cursor = self._cursor.parent
+
+        if container.padding.elements is js and container.before is before:
+            return container
+        return JContainer(before, js, container.markers)
+
+    # NOTE: INCOMPLETE, Comments not supported
+    def _indent_to(self, space: Space, column: int, space_location: Space.Location) -> Space:
+        s = space
+        whitespace = s.whitespace
+
+        if space_location == Space.Location.COMPILATION_UNIT_PREFIX and whitespace:
+            s = s.with_whitespace("")
+        elif not s.comments and "\n" not in s.last_whitespace:
+            return s
+
+        if not s.comments:
+            indent = self.find_indent(s)
+            if indent != column:
+                shift = column - indent
+                s = s.with_whitespace(self._indent(whitespace, shift))
+        else:
+            raise NotImplementedError("Comments not supported")
+
+        return s
+
+    def _indent(self, whitespace: str, shift: int):
+        return self._shift(whitespace, shift)
+
+    def _shift(self, text: str, shift: int) -> str:
+        tab_indent = self._style.tab_size
+        if not self._style.use_tab_character:
+            tab_indent = sys.maxsize
+
+        if shift > 0:
+            text += '\t' * (shift // tab_indent)
+            text += ' ' * (shift % tab_indent)
+        else:
+            if self._style.use_tab_character:
+                len_text = len(text) + (shift // tab_indent)
+            else:
+                len_text = len(text) + shift
+            if len_text >= 0:
+                text = text[:len_text]
+
+        return text
+
+    def find_indent(self, space: Space) -> int:
+        return self._get_length_of_whitespace(space.indent)
+
+    def _get_length_of_whitespace(self, whitespace: Optional[str]) -> int:
+        if whitespace is None:
+            return 0
+        length = 0
+        for c in whitespace:
+            length += self._style.tab_size if c == '\t' else 1
+            if c in ('\n', '\r'):
+                length = 0
+        return length
+
+    def _visit_method_invocation_argument_j_type(self, elem: J, right, indent, loc, p) -> tuple[J, Space]:
+        if "\n" not in elem.prefix.last_whitespace and isinstance(elem, Lambda):
+            body = elem.body
+            if not isinstance(body, Binary):
+                if "\n" not in body.prefix.last_whitespace:
+                    self.cursor.parent_or_throw.put_message("last_indent", indent + self._style.continuation_indent)
+
+        elem = self.visit_and_cast(elem, J, p)
+        after = self._indent_to(right.after, indent, loc.after_location)
+        if after.comments or "\n" in after.last_whitespace:
+            parent = self.cursor.parent_tree_cursor()
+            grandparent = parent.parent_tree_cursor()
+            # propagate indentation up in the method chain hierarchy
+            if isinstance(grandparent.value, MethodInvocation) and grandparent.value.select == parent.value:
+                grandparent.put_message("last_indent", indent)
+                grandparent.put_message("chained_indent", indent)
+        return elem, after
+
+    class IndentType(Enum):
+        ALIGN = auto()
+        INDENT = auto()
+        CONTINUATION_INDENT = auto()
