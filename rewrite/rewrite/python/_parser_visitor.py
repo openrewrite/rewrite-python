@@ -2266,7 +2266,7 @@ class ParserVisitor(ast.NodeVisitor):
                     format,
                     format,
                     None,
-                    JavaType.Primitive()
+                    JavaType.Primitive.String
                 ), next(tokens), 0)
             else:
                 delimiter = ''
@@ -2295,7 +2295,7 @@ class ParserVisitor(ast.NodeVisitor):
                     s,
                     s,
                     None,
-                    JavaType.Primitive(),
+                    JavaType.Primitive.String
                 ))
                 if cast(ast.Constant, value).value == s:
                     value_idx += 1
