@@ -406,7 +406,7 @@ dev = [
 
 [[package]]
 name = "openrewrite-remote"
-version = "0.13.3"
+version = "0.13.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cbor2" },
@@ -415,9 +415,9 @@ dependencies = [
     { name = "pypi-simple" },
     { name = "toml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/cd/cc2584ee17213513cb194e4e72585d7b30d16a877c2f81fa8537af93a2a0/openrewrite_remote-0.13.3.tar.gz", hash = "sha256:bed545fc5e9ff5f2db30c5f3f99ed8f4920b17ff4a9c040125f1b4e9e4734042", size = 25109 }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/17/b2df0a1271b5f0890a321d3fa146c7952a82d4d82be24a212cddf0ad6519/openrewrite_remote-0.13.4.tar.gz", hash = "sha256:935bf5ef42fab89b4bd1781c6be832bd0e49c0520c662729ca72b81a5cb3eebb", size = 25102 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/e9/f0a5287ee24b68d51055f639e051c3345d2b6c1be987681fcd89ea567239/openrewrite_remote-0.13.3-py3-none-any.whl", hash = "sha256:e8b350cc3df89785bc79815ae93e547c2e78fb8720d8fb7aad0f028173ea69c5", size = 31098 },
+    { url = "https://files.pythonhosted.org/packages/c5/fc/e0a5ae9bea5e4fee000d46d368c5c525a2c95ffcb12d172bc084d8300b23/openrewrite_remote-0.13.4-py3-none-any.whl", hash = "sha256:527eab6ad8ae37d7d9b628991437562667b2790253c512112ff513fcb6da60cb", size = 31088 },
 ]
 
 [[package]]
