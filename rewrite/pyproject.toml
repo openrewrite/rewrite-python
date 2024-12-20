@@ -27,7 +27,7 @@ Repository = "https://github.com/openrewrite/rewrite-python.git"
 Issues = "https://github.com/openrewrite/rewrite-python/issues"
 
 [tool.setuptools.packages.find]
-include = ["rewrite"]
+include = ["rewrite", "rewrite.*"]
 exclude = []
 
 [dependency-groups]
