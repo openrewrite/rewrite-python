@@ -8,6 +8,8 @@ from uuid import UUID
 
 if TYPE_CHECKING:
     from .parser import Parser
+    from .visitor import Cursor
+
 from .utils import random_id, list_map
 
 
@@ -21,6 +23,9 @@ class Marker(ABC):
     def with_id(self, id: UUID) -> Marker:
         ...
 
+    def print(self, cursor: 'Cursor', comment_wrapper: Callable[[str], str], verbose: bool) -> str:
+        return ''
+
     def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
             return self.id == cast(Marker, other).id
@@ -31,6 +36,7 @@ class Marker(ABC):
 
 
 M = TypeVar('M', bound=Marker)
+
 
 @dataclass(frozen=True, eq=False)
 class Markers:

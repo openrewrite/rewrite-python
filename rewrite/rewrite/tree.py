@@ -14,6 +14,8 @@ from .style import NamedStyles, Style
 
 if TYPE_CHECKING:
     from rewrite import TreeVisitor, ExecutionContext
+    from .markers import Marker
+    from .parser import ParserInput
     from .visitor import Cursor
 
 P = TypeVar('P')
@@ -158,7 +160,7 @@ class Checksum:
 class PrintOutputCapture(Generic[P]):
     @dataclass
     class MarkerPrinter(ABC):
-        DEFAULT: ClassVar['PrintOutputCapture.MarkerPrinter'] = None
+        DEFAULT: ClassVar['PrintOutputCapture.MarkerPrinter'] = None  # type: ignore
 
         def before_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
             return ""
@@ -169,7 +171,7 @@ class PrintOutputCapture(Generic[P]):
         def after_syntax(self, marker: 'Marker', cursor: 'Cursor', comment_wrapper: Callable[[str], str]) -> str:
             return ""
 
-    def __init__(self, p: P, marker_printer: 'PrintOutputCapture.MarkerPrinter' = None):
+    def __init__(self, p: P, marker_printer: Optional['PrintOutputCapture.MarkerPrinter'] = None):
         self._context = p
         self._marker_printer = marker_printer or PrintOutputCapture.MarkerPrinter.DEFAULT
         self._out = []
@@ -177,17 +179,17 @@ class PrintOutputCapture(Generic[P]):
     def get_out(self) -> str:
         return ''.join(self._out)
 
-    def append(self, text: str = None) -> 'PrintOutputCapture':
+    def append(self, text: Optional[str] = None) -> 'PrintOutputCapture[P]':
         if text and len(text) > 0:
             self._out.append(text)
         return self
 
-    def append_char(self, c: str) -> 'PrintOutputCapture':
+    def append_char(self, c: str) -> 'PrintOutputCapture[P]':
         if len(c) == 1:
             self._out.append(c)
         return self
 
-    def clone(self) -> 'PrintOutputCapture':
+    def clone(self) -> 'PrintOutputCapture[P]':
         return PrintOutputCapture(self._context, self._marker_printer)
 
 
