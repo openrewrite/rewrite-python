@@ -3,6 +3,29 @@ from rewrite.python.format import TabsAndIndentsVisitor
 from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
 
+def test_multi_assignment():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def assign_values():
+             a, b = 1, 2
+             x, y, z = 3, 4, 5
+             return a, b, x, y, z
+            """,
+            """
+            def assign_values():
+                a, b = 1, 2
+                x, y, z = 3, 4, 5
+                return a, b, x, y, z
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+        # spec = RecipeSpec().with_recipes(from_visitor(AutoFormatVisitor()))
+    )
+
+
 def test_if_else_statement():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
@@ -21,6 +44,81 @@ def test_if_else_statement():
                     return "Positive"
                 else:
                     return "Non-positive"
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_if_else_statement_no_else_with_extra_statements():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def check_value(x):
+             if x > 0:
+              a = 1 + x
+              return "Positive"
+             a = -1 + x
+             return "Non-positive"
+            """,
+            """
+            def check_value(x):
+                if x > 0:
+                    a = 1 + x
+                    return "Positive"
+                a = -1 + x
+                return "Non-positive"
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_if_else_statement_no_else_multi_return_values():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            def check_value(x):
+              if x > 0:
+                a = 1 + x
+                return a, "Positive"
+              return a
+            """,
+            """\
+            def check_value(x):
+                if x > 0:
+                    a = 1 + x
+                    return a, "Positive"
+                return a
+            """
+        ),
+        # spec=RecipeSpec().with_recipes(from_visitor(AutoFormatVisitor()))
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_if_else_statement_no_else_multi_return_values_as_tuple():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            def check_value(x):
+              if x > 0:
+                a = 1 + x
+                return (a, "Positive")
+              return a
+            """,
+            """\
+            def check_value(x):
+                if x > 0:
+                    a = 1 + x
+                    return (a, "Positive")
+                return a
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -185,7 +283,7 @@ def test_with_statement():
     )
 
 
-def test_try_statement():
+def test_try_statement_basic():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
         # language=python
@@ -193,16 +291,46 @@ def test_try_statement():
             """
             def divide(a, b):
              try:
-              return a / b
+              c = a / b
              except ZeroDivisionError:
               return None
+             return c
             """,
             """
             def divide(a, b):
                 try:
-                    return a / b
+                    c = a / b
                 except ZeroDivisionError:
                     return None
+                return c
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_try_statement_with_multi_return():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def divide(a, b):
+             try:
+              c = a / b
+              if c > 42: return a, c
+             except ZeroDivisionError:
+              return None
+             return a, b
+            """,
+            """
+            def divide(a, b):
+                try:
+                    c = a / b
+                    if c > 42: return a, c
+                except ZeroDivisionError:
+                    return None
+                return a, b
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -234,7 +362,7 @@ def test_multiline_list():
         # language=python
         python(
             """\
-            my_list = [
+            my_list = [ #cool
               1,
                  2,
                     3,
@@ -242,12 +370,12 @@ def test_multiline_list():
             ]
             """,
             """\
-            my_list = [
+            my_list = [ #cool
                 1,
                 2,
                 3,
                 4
-            ]
+                ]
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -279,11 +407,6 @@ def test_multiline_call_with_positional_args_no_align_multiline():
         )
     )
 
-
-def long_function_name(var_one, var_two,
-                       var_three,
-                       var_four):
-    print(var_one)
 
 def test_multiline_call_with_positional_args_and_no_arg_first_line():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
@@ -363,16 +486,6 @@ def test_multiline_list_inside_function():
     )
 
 
-def create_list():
-    my_list = [
-        1,
-        2,
-        3,
-        4
-    ]
-    return my_list
-
-
 def test_basic_dictionary():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
@@ -445,6 +558,45 @@ def test_list_comprehension():
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
+
+
+def test_comment_alignment():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            '''
+                # Informative comment 1
+            def my_function(a, b):
+              # Informative comment 2
+
+              # Informative comment 3
+              if a > b:
+                # cool
+                a = b + 1
+                # cool
+
+              return None # Informative comment 4
+              # Informative comment 5
+            ''',
+            '''
+            # Informative comment 1
+            def my_function(a, b):
+                # Informative comment 2
+
+                # Informative comment 3
+                if a > b:
+                    # cool
+                    a = b + 1
+                    # cool
+
+                return None # Informative comment 4
+                # Informative comment 5
+            '''
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+    return None
 
 
 def test_docstring_alignment():
