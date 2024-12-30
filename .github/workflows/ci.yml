@@ -44,9 +44,6 @@ jobs:
         with:
           python-version-file: "rewrite/.python-version"
 
-      - name: build-java
-        run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
-
       - name: Install dependencies
         working-directory: rewrite
         run: |
@@ -56,10 +53,14 @@ jobs:
 #        run: |
 #          poe test
 
-      - name: Run build
+      - name: build-python
         working-directory: rewrite
         run: |
           uv build
+          uv pip install -e .
+
+      - name: build-java
+        run: ./gradlew ${{ env.GRADLE_SWITCHES }} build
 
       - name: publish-snapshots
         if: github.event_name != 'pull_request'
