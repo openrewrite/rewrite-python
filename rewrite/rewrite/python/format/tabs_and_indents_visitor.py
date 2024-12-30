@@ -7,7 +7,7 @@ from typing import TypeVar, Optional, Union, cast, List
 from rewrite import Tree, Cursor, list_map
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, EnumValueSet, Case, WhileLoop, \
     Block, If, ForLoop, ForEachLoop, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral
 from rewrite.visitor import P, T
@@ -30,7 +30,6 @@ class TabsAndIndentsVisitor(PythonVisitor):
 
             for c in parent.get_path_as_cursors() if parent is not None else []:
                 v = c.value
-                print("V", v)
                 space = None
                 if isinstance(v, J):
                     space = v.prefix
@@ -43,7 +42,6 @@ class TabsAndIndentsVisitor(PythonVisitor):
 
                 if space is not None and '\n' in space.last_whitespace:
                     indent = self.find_indent(space)
-                    print("Indent: ", indent)
                     if indent != 0:
                         c.put_message("last_indent", indent)
 
@@ -61,7 +59,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
         elif isinstance(tree,
                         (Block, If, If.Else, ForLoop, ForEachLoop, WhileLoop, Case, EnumValueSet, DictLiteral,
                          CollectionLiteral)):
-            # NOTE: Added DictLiteral here
+            # NOTE: Added CollectionLiteral, DictLiteral here
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
         else:
             self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT)
@@ -91,12 +89,12 @@ class TabsAndIndentsVisitor(PythonVisitor):
 
         # Block spaces are always aligned to their parent
         # The second condition ensure init blocks are ignored.
+        # TODO: Secon condition might be removed since it's not relevant for Python
         align_block_prefix_to_parent = loc is Space.Location.BLOCK_PREFIX and '\n' in space.whitespace and \
                                        (isinstance(cursor_value, Block) and not isinstance(
                                            self.cursor.parent_tree_cursor().value, Block))
 
         align_block_to_parent = loc in (
-            Space.Location.BLOCK_END,
             Space.Location.NEW_ARRAY_INITIALIZER_SUFFIX,
             Space.Location.CATCH_PREFIX,
             Space.Location.TRY_FINALLY,
@@ -122,6 +120,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
             raise NotImplementedError("Method select suffix not implemented")
 
         return s
+
 
     # NOTE: INCOMPLETE
     def visit_right_padded(self, right: Optional[JRightPadded[T]],
@@ -199,10 +198,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
                     if not any_other_arg_on_own_line:
                         # NOTE: Done
                         if not isinstance(elem, Binary):
-                            # TODO SHould be able to merge
-                            if not isinstance(elem, MethodInvocation):
-                                self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
-                            elif "\n" in elem.prefix.last_whitespace:
+                            if not isinstance(elem, MethodInvocation) or "\n" in elem.prefix.last_whitespace:
                                 self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
                             else:
                                 method_invocation = elem
@@ -278,12 +274,73 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 shift = column - indent
                 s = s.with_whitespace(self._indent(whitespace, shift))
         else:
-            raise NotImplementedError("Comments not supported")
+            def whitespace_indent(text: str) -> str:
+                # TODO: Placeholder function, taken from java openrewrite.StringUtils
+                indent = []
+                for c in text:
+                    if c == '\n' or c == '\r':
+                        return ''.join(indent)
+                    elif c.isspace():
+                        indent.append(c)
+                    else:
+                        return ''.join(indent)
+                return ''.join(indent)
 
+            # TODO: This is the java version, however the python version is probably different
+            has_file_leading_comment = space.comments and (
+                    (space_location == Space.Location.COMPILATION_UNIT_PREFIX) or (
+                        space_location == Space.Location.BLOCK_END) or
+                    (space_location == Space.Location.CLASS_DECLARATION_PREFIX and space.comments[0].multiline)
+            )
+
+            final_column = column + self._style.indent_size if space_location == Space.Location.BLOCK_END else column
+            last_indent: str = space.whitespace[space.whitespace.rfind('\n') + 1:]
+            indent = self._get_length_of_whitespace(whitespace_indent(last_indent))
+
+            if indent != final_column:
+                if (has_file_leading_comment or ("\n" in whitespace)) and (
+                        # Do not shift single-line comments at column 0.
+                        not (s.comments and isinstance(s.comments[0], TextComment) and
+                             not s.comments[0].multiline and self._get_length_of_whitespace(s.whitespace) == 0)):
+                    shift = final_column - indent
+                    s = s.with_whitespace(whitespace[:whitespace.rfind('\n') + 1] + self._indent(last_indent, shift))
+
+                final_space = s
+                last_comment_pos = len(s.comments) - 1
+
+                def _process_comment(i: int, c: Comment) -> Comment:
+                    if isinstance(c, TextComment) and not c.multiline:
+                        # Do not shift single line comments at col 0.
+                        if i != last_comment_pos and self._get_length_of_whitespace(c.suffix) == 0:
+                            return c
+
+                    prior_suffix = space.whitespace if i == 0 else final_space.comments[i - 1].suffix
+
+                    if space_location == Space.Location.BLOCK_END and i != len(final_space.comments) - 1:
+                        to_column = column + self._style.indent_size
+                    else:
+                        to_column = column
+
+                    new_c = c
+                    if "\n" in prior_suffix or has_file_leading_comment:
+                        new_c = self._indent_comment(c, prior_suffix, to_column)
+
+                    if '\n' in new_c.suffix:
+                        suffix_indent = self._get_length_of_whitespace(new_c.suffix)
+                        shift = to_column - suffix_indent
+                        new_c = new_c.with_suffix(self._indent(new_c.suffix, shift))
+
+                    return new_c
+
+                s = s.with_comments(list_map(lambda i, c: _process_comment(c, i), s.comments))
         return s
 
     def _indent(self, whitespace: str, shift: int):
         return self._shift(whitespace, shift)
+
+    def _indent_comment(self, comment: Comment, prior_suffix: str, to_column: int) -> Comment:
+        # TODO: Handle multiline here.
+        return comment
 
     def _shift(self, text: str, shift: int) -> str:
         tab_indent = self._style.tab_size
