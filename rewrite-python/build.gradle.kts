@@ -8,12 +8,6 @@ tasks.compileJava {
     options.release = 8
 }
 
-// disable all tests temporarily
-tasks.withType<Test> {
-    // This disables all test tasks
-    isEnabled = false
-}
-
 dependencies {
     compileOnly("org.openrewrite:rewrite-test")
     implementation("org.openrewrite:rewrite-remote-java:$latest") {
@@ -33,6 +27,11 @@ dependencies {
 val pythonProjectDir = file("../rewrite")
 val outputDir = layout.buildDirectory.dir("resources/main/META-INF")
 val requirementsFile = outputDir.map { it.file("python-requirements.txt") }
+
+tasks.test {
+    maxParallelForks = 1
+    environment("PATH", "${pythonProjectDir.resolve(".venv/bin").absolutePath}${File.pathSeparator}${System.getenv("PATH")}")
+}
 
 tasks.register("prepareOutputDir") {
     doLast {
