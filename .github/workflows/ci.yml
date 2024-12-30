@@ -37,7 +37,7 @@ jobs:
         run: java --version
 
       - name: Install Uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v5
 
       - name: "Set up Python"
         uses: actions/setup-python@v5
