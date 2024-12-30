@@ -28,6 +28,10 @@ val pythonProjectDir = file("../rewrite")
 val outputDir = layout.buildDirectory.dir("resources/main/META-INF")
 val requirementsFile = outputDir.map { it.file("python-requirements.txt") }
 
+tasks.test {
+    environment("PATH", "${pythonProjectDir.resolve(".venv/bin").absolutePath}:${System.getenv("PATH")}")
+}
+
 tasks.register("prepareOutputDir") {
     doLast {
         outputDir.get().asFile.mkdirs()
