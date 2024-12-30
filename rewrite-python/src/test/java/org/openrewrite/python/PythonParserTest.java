@@ -33,7 +33,7 @@ class PythonParserTest implements RewriteTest {
             print(sys.path)
             """,
             spec -> spec.afterRecipe(cu -> {
-                assertThat(cu).isNotInstanceOf(Py.CompilationUnit.class);
+                assertThat(cu).isInstanceOf(Py.CompilationUnit.class);
             })
           )
         );
