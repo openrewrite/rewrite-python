@@ -127,7 +127,6 @@ class Space:
             return formatted_trees
         return trees
 
-
     EMPTY: ClassVar[Space]
     SINGLE_SPACE: ClassVar[Space]
 
@@ -323,21 +322,52 @@ class MethodCall(Expression):
 
 class JavaType(ABC):
     class FullyQualified:
+        class Kind(Enum):
+            Class = 0
+            Enum = 1
+            Interface = 2
+            Annotation = 3
+            Record = 4
+
+    class Unknown(FullyQualified):
         pass
 
-    class Class:
+    class Class(FullyQualified):
         pass
 
-    class Parameterized:
+    class ShallowClass(Class):
         pass
 
-    class Primitive:
+    class Parameterized(FullyQualified):
         pass
+
+    class GenericTypeVariable:
+        class Variance(Enum):
+            Invariant = 0
+            Covariant = 1
+            Contravariant = 2
+
+    class Primitive(Enum):
+        Boolean = 0
+        Byte = 1
+        Char = 2
+        Double = 3
+        Float = 4
+        Int = 5
+        Long = 6
+        Short = 7
+        Void = 8
+        String = 9
+        None_ = 10
+        Null = 11
 
     class Method:
         pass
 
     class Variable:
+        pass
+
+    class Array:
         pass
 
 
