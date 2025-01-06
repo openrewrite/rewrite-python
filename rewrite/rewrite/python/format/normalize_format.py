@@ -16,7 +16,7 @@ class NormalizeFormatVisitor(PythonVisitor):
         self._stop = False
 
     def visit_class_declaration(self, cd: ClassDeclaration, p: P) -> J:
-        cd: ClassDeclaration = cast(ClassDeclaration, super().visit_class_declaration(cd, p))
+        cd = cast(ClassDeclaration, super().visit_class_declaration(cd, p))
         if cd.leading_annotations:
             cd = _concatenate_prefix(cd, Space.first_prefix(cd.leading_annotations))
             cd = cd.with_leading_annotations(Space.format_first_prefix(cd.leading_annotations, Space.EMPTY))
@@ -27,7 +27,7 @@ class NormalizeFormatVisitor(PythonVisitor):
         return cd
 
     def visit_method_declaration(self, md: MethodDeclaration, p: P) -> J:
-        md: MethodDeclaration = cast(MethodDeclaration, super().visit_method_declaration(md, p))
+        md = cast(MethodDeclaration, super().visit_method_declaration(md, p))
         if md.leading_annotations:
             md = _concatenate_prefix(md, Space.first_prefix(md.leading_annotations))
             md = md.with_leading_annotations(Space.format_first_prefix(md.leading_annotations, Space.EMPTY))

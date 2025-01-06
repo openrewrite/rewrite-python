@@ -10,7 +10,7 @@ from typing import Optional, TypeVar, cast, Callable, List, Tuple, Dict, Type, S
 
 from more_itertools import peekable
 
-from rewrite import random_id, Markers
+from rewrite import random_id, Markers, list_map_last
 from rewrite.java import Space, JRightPadded, JContainer, JLeftPadded, JavaType, J, Statement, Semicolon, TrailingComma, \
     NameTree, OmitParentheses, Expression, TypeTree, TypedTree, Comment
 from rewrite.java import tree as j
@@ -1835,6 +1835,15 @@ class ParserVisitor(ast.NodeVisitor):
         elif maybe_parens and len(self._parentheses_stack) > 0 and self._parentheses_stack[-1][3] == node:
             elements = self._parentheses_stack.pop()
         else:
+            if elements.padding.elements:
+                # remove the last element's right padding so that if becomes the prefix of the next LST element
+                padding = elements.padding.elements[-1].after
+                padding_len = len(padding.whitespace) if padding.whitespace else 0
+                for c in padding.comments:
+                    padding_len += len(c.text) + 1 + len(c.suffix)
+                unpadded_last = elements.padding.elements[-1].with_after(Space.EMPTY)
+                elements = elements.padding.with_elements(list_map_last(lambda last: unpadded_last, elements.padding.elements))
+                self._cursor -= padding_len
             omit_parens = True
 
         return py.CollectionLiteral(
@@ -1904,7 +1913,7 @@ class ParserVisitor(ast.NodeVisitor):
                     None
                 )
         elif isinstance(node, ast.Subscript):
-            slices = [node.slice]
+            slices = node.slice.elts if isinstance(node.slice, ast.Tuple) and node.slice.elts else [node.slice]
             return j.ParameterizedType(
                 random_id(),
                 self.__whitespace(),

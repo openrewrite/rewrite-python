@@ -17,7 +17,7 @@ def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
 
     with_index = len(inspect.signature(fn).parameters) == 2
     for index, original in enumerate(lst):
-        new = fn(original, index) if with_index else fn(original)
+        new = fn(original, index) if with_index else fn(original)  # type: ignore
         if new is None:
             if mapped_lst is None:
                 mapped_lst = lst[:index]
@@ -30,4 +30,17 @@ def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
         elif mapped_lst is not None:
             mapped_lst.append(original)
 
-    return mapped_lst if changed else lst
+    return mapped_lst if changed else lst  # type: ignore
+
+
+def list_map_last(fn: Callable[[T], Union[T, None]], lst: List[T]) -> List[T]:
+    if not lst:
+        return lst
+    last = lst[-1]
+    new_last = fn(last)
+    if new_last is not last:
+        if new_last is None:
+            return lst[:-1]
+        else:
+            return lst[:-1] + [new_last]
+    return lst
