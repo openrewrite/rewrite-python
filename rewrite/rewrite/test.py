@@ -132,6 +132,11 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         assert after_printed == after
                     else:
                         assert after_printed == source_spec.before
+        else:
+            for before_source in spec_by_source_file.keys():
+                source_spec = spec_by_source_file[before_source]
+                if source_spec.after_recipe is not None:
+                    source_spec.after_recipe(before_source)
 
     except Exception:
         raise
