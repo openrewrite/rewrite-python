@@ -4,14 +4,14 @@ import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
-    Import
+    Import, ParameterizedType
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
     ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression
 from rewrite.visitor import P
 
 
 class SpacesVisitor(PythonVisitor):
-    def __init__(self, style: SpacesStyle, stop_after: Tree = None):
+    def __init__(self, style: SpacesStyle, stop_after: Optional[Tree] = None):
         self._style = style
         self._before_parentheses = style.before_parentheses
         self._stop_after = stop_after
@@ -42,10 +42,11 @@ class SpacesVisitor(PythonVisitor):
 
                 return arg
 
-            c = c.padding.with_implements(
-                c.padding.implements.padding.with_elements(
-                    list_map(lambda arg, index: _process_argument(index, arg, param_size),
-                             c.padding.implements.padding.elements)))
+            if c.implements:
+                c = c.padding.with_implements(
+                    c.padding.implements.padding.with_elements(
+                        list_map(lambda arg, index: _process_argument(index, arg, param_size),
+                                 c.padding.implements.padding.elements)))
         return c
 
     def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
@@ -299,6 +300,36 @@ class SpacesVisitor(PythonVisitor):
         fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
         return fl
 
+    def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
+        pt = cast(ParameterizedType, super().visit_parameterized_type(parameterized_type, p))
+
+        def _process_element(index, arg, last, use_space):
+            if index == 0:
+                arg = arg.with_element(space_before(arg.element, use_space))
+            else:
+                arg = arg.with_element(space_before(arg.element, self._style.other.after_comma))
+
+            if last:
+                arg = space_after(arg, use_space and arg.markers.find_first(j.TrailingComma) is None)
+                arg = arg.with_markers(arg.markers.compute_by_type(j.TrailingComma, self._remap_trailing_comma_space))
+            else:
+                arg = space_after(arg, self._style.other.before_comma)
+
+            return arg
+
+        pt = pt.padding.with_type_parameters(
+            pt.padding.type_parameters.padding.with_elements(
+                list_map(
+                    lambda arg, idx: _process_element(idx, arg,
+                                                      last=idx == len(pt.padding.type_parameters.padding.elements) - 1,
+                                                      use_space=self._style.within.brackets),
+                    pt.padding.type_parameters.padding.elements
+                )
+            )
+        )
+
+        return pt
+
     def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
         cl = cast(CollectionLiteral, super().visit_collection_literal(collection_literal, p))
 
@@ -475,11 +506,11 @@ def space_before_container(container: j.JContainer, add_space: bool) -> j.JConta
         return container
 
 
-def space_before_left_padded_element(container: j.JLeftPadded, add_space: bool) -> j.JLeftPadded:
-    return container.with_element(space_before(container.element, add_space))
+def space_before_left_padded_element(left: j.JLeftPadded, add_space: bool) -> j.JLeftPadded:
+    return left.with_element(space_before(left.element, add_space))
 
-def space_before_right_padded_element(container: j.JRightPadded, add_space: bool) -> j.JRightPadded:
-    return container.with_element(space_before(container.element, add_space))
+def space_before_right_padded_element(right: j.JRightPadded, add_space: bool) -> j.JRightPadded:
+    return right.with_element(space_before(right.element, add_space))
 
 
 def space_last_comment_suffix(comments: List[j.Comment], add_space: bool) -> List[j.Comment]:

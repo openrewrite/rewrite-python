@@ -25,6 +25,7 @@ __all__ = [
     # AST types
     'Async',
     'Await',
+    'Binary',
     'ChainedAssignment',
     'CollectionLiteral',
     'CompilationUnit',

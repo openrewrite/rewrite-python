@@ -18,7 +18,6 @@ package org.openrewrite.python.tree;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junitpioneer.jupiter.ExpectedToFail;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
@@ -68,7 +67,6 @@ class NewArrayTest implements RewriteTest {
         );
     }
 
-    @ExpectedToFail("Requires revisions to mapExpressionsAsRightPadded")
     @Test
     void trailingComma() {
         rewriteRun(
@@ -83,7 +81,6 @@ class NewArrayTest implements RewriteTest {
         );
     }
 
-    @ExpectedToFail("Requires revisions to mapExpressionsAsRightPadded")
     @Test
     void trailingComments() {
         rewriteRun(

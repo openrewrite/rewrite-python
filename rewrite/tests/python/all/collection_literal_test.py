@@ -1,5 +1,9 @@
+from typing import cast
+
 import pytest
 
+from rewrite.java import MethodDeclaration, Return
+from rewrite.python import CollectionLiteral, CompilationUnit
 from rewrite.test import rewrite_run, python
 
 
@@ -7,6 +11,27 @@ def test_empty_tuple():
     # language=python
     rewrite_run(python("t = ( )"))
 
+
+def test_implicit_tuple():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            def f():
+                return 1, 2 # comment
+
+            def g():
+                pass
+            """,
+            after_recipe=_assert_no_padding
+        )
+    )
+
+def _assert_no_padding(cu: CompilationUnit) -> None:
+    ret = cast(Return, cast(MethodDeclaration, cu.statements[0]).body.statements[0])  # type: ignore
+    lit = cast(CollectionLiteral, ret.expression)
+    right_padded = lit.padding.elements.padding.elements[-1]
+    assert right_padded.after.whitespace == ''
 
 def test_single_element_tuple():
     # language=python
