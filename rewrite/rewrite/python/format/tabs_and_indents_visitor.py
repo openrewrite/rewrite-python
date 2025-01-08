@@ -147,7 +147,6 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 elif loc in (JRightPadded.Location.METHOD_DECLARATION_PARAMETER,
                              JRightPadded.Location.RECORD_STATE_VECTOR):
                     if isinstance(elem, Empty):
-                        # NOTE: DONE
                         elem = elem.with_prefix(self._indent_to(elem.prefix, indent, loc.after_location))
                         after = right.after
                     else:
@@ -163,16 +162,21 @@ class TabsAndIndentsVisitor(PythonVisitor):
                                                 loc.after_location)
 
                 elif loc == JRightPadded.Location.METHOD_INVOCATION_ARGUMENT:
-                    # NOTE: DONE
                     elem, after = self._visit_method_invocation_argument_j_type(elem, right, indent, loc, p)
                 elif loc in (JRightPadded.Location.NEW_CLASS_ARGUMENTS,
                              JRightPadded.Location.ARRAY_INDEX,
                              JRightPadded.Location.PARENTHESES,
-                             JRightPadded.Location.TYPE_PARAMETER,
-                             PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT):
-                    # NOTE: DONE
+                             JRightPadded.Location.TYPE_PARAMETER):
                     elem = self.visit_and_cast(elem, J, p)
                     after = self._indent_to(right.after, indent, loc.after_location)
+                elif loc in (
+                PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT, PyRightPadded.Location.DICT_LITERAL_ELEMENT):
+                    elem = self.visit_and_cast(elem, J, p)
+                    args = cast(JContainer[J], self.cursor.parent_or_throw.value)
+                    # TODO: Maybe need to handle trailing comma?
+                    if args.padding.elements[-1] is right:
+                        self.cursor.parent_or_throw.put_message("indent_type", self.IndentType.ALIGN)
+                    after = self.visit_space(right.after, loc.after_location, p)
                 elif loc == JRightPadded.Location.ANNOTATION_ARGUMENT:
                     raise NotImplementedError("Annotation argument not implemented")
                 else:

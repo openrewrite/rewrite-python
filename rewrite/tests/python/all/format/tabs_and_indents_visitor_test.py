@@ -375,7 +375,7 @@ def test_multiline_list():
                 2,
                 3,
                 4
-                ]
+            ]
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -485,6 +485,35 @@ def test_multiline_list_inside_function():
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
 
+def test_multiline_list_inside_function_with_trailing_comma():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def create_list():
+              my_list = [
+                1,
+                     2,
+                 3,
+                4,
+                ]
+              return my_list
+            """,
+            """
+            def create_list():
+                my_list = [
+                    1,
+                    2,
+                    3,
+                    4,
+                ]
+                return my_list
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
 
 def test_basic_dictionary():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
@@ -509,6 +538,36 @@ def test_basic_dictionary():
 
 
 def test_nested_dictionary():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            config = {
+            "section": {
+             "key1": "value1",
+             "key2": [10, 20,
+             30]
+            },
+             "another_section": {"nested_key": "val"}
+            }
+            """,
+            """
+            config = {
+                "section": {
+                    "key1": "value1",
+                    "key2": [10, 20,
+                             30]
+                },
+                "another_section": {"nested_key": "val"}
+            }
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_nested_dictionary_with_trailing_commas():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     rewrite_run(
         # language=python
@@ -545,15 +604,13 @@ def test_list_comprehension():
         python(
             """
             def even_numbers(n):
-             return [ x for x in range(n)
+             return [x for x in range(n)
              if x % 2 == 0]
             """,
             """
             def even_numbers(n):
-                return [
-                    x for x in range(n)
-                    if x % 2 == 0
-                ]
+                return [x for x in range(n)
+                        if x % 2 == 0]
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
