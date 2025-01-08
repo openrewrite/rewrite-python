@@ -168,7 +168,8 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 elif loc in (JRightPadded.Location.NEW_CLASS_ARGUMENTS,
                              JRightPadded.Location.ARRAY_INDEX,
                              JRightPadded.Location.PARENTHESES,
-                             JRightPadded.Location.TYPE_PARAMETER):
+                             JRightPadded.Location.TYPE_PARAMETER,
+                             PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT):
                     # NOTE: DONE
                     elem = self.visit_and_cast(elem, J, p)
                     after = self._indent_to(right.after, indent, loc.after_location)
@@ -223,9 +224,9 @@ class TabsAndIndentsVisitor(PythonVisitor):
     # NOTE: INCOMPLETE
     def visit_container(self, container: Optional[JContainer[J2]],
                         loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
-        self._cursor = Cursor(self._cursor, container)
         if container is None:
             return container
+        self._cursor = Cursor(self._cursor, container)
 
         indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
         if '\n' in container.before.last_whitespace:
