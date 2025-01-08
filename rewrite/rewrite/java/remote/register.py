@@ -85,8 +85,7 @@ def deserialize_java_class(type_: str, decoder: CBORDecoder, context: Deserializ
         elif key == 'flagsBitMap':
             setattr(cls, '_flags_bit_map', decoder.decode())
         elif key == 'fullyQualifiedName':
-            name = decoder.decode()
-            setattr(cls, '_fully_qualified_name', name)
+            setattr(cls, '_fully_qualified_name', decoder.decode())
         elif key == 'kind':
             setattr(cls, '_kind', context.deserialize(JavaType.FullyQualified.Kind, decoder))
         elif key == 'typeParameters':
@@ -103,6 +102,8 @@ def deserialize_java_class(type_: str, decoder: CBORDecoder, context: Deserializ
             setattr(cls, '_members', context.deserialize(List[JavaType.Variable], decoder))
         elif key == 'methods':
             setattr(cls, '_methods', context.deserialize(List[JavaType.Method], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return cls
 
 
@@ -131,6 +132,8 @@ def deserialize_java_method(_: str, decoder: CBORDecoder, context: Deserializati
             setattr(method, '_default_value', context.deserialize(List[str], decoder))
         elif key == 'declaredFormalTypeNames':
             setattr(method, '_declared_formal_type_names', context.deserialize(List[str], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return method
 
 
@@ -149,6 +152,8 @@ def deserialize_java_variable(_: str, decoder: CBORDecoder, context: Deserializa
             setattr(variable, '_type', context.deserialize(JavaType, decoder))
         elif key == 'annotations':
             setattr(variable, '_annotations', context.deserialize(List[JavaType.FullyQualified], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return variable
 
 
@@ -161,6 +166,8 @@ def deserialize_java_array(_: str, decoder: CBORDecoder, context: Deserializatio
             setattr(array, '_elem_type', context.deserialize(JavaType, decoder))
         elif key == 'annotations':
             setattr(array, '_annotations', context.deserialize(List[JavaType.FullyQualified], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return array
 
 
@@ -174,6 +181,8 @@ def deserialize_java_parameterized(_: str, decoder: CBORDecoder,
             setattr(param, '_type', context.deserialize(JavaType.FullyQualified, decoder))
         elif key == 'typeParameters':
             setattr(param, '_type_parameters', context.deserialize(List[JavaType], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return param
 
 
@@ -189,6 +198,8 @@ def deserialize_java_generic_type_variable(_: str, decoder: CBORDecoder,
             setattr(type_variable, '_variance', context.deserialize(JavaType.GenericTypeVariable.Variance, decoder))
         elif key == 'bounds':
             setattr(type_variable, '_bounds', context.deserialize(List[JavaType], decoder))
+        else:
+            raise ValueError(f"Unexpected key: {key}")
     return type_variable
 
 
