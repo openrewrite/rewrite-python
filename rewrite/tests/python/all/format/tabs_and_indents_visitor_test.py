@@ -682,18 +682,13 @@ def test_docstring_alignment():
     )
 
 
-def test_method_select_suffix():
+def test_method_select_suffix_already_correct():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     rewrite_run(
         # language=python
         python(
             """
-            x = ("foo"
-                .startswith("f"))
-            """,
-            """
-            x = ("foo"
-                 .startswith("f"))
+            x = ("foo".startswith("f"))
             """),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
@@ -712,13 +707,18 @@ def test_method_select_suffix_new_line_already_correct():
     )
 
 
-def test_method_select_suffix_already_correct():
+def test_method_select_suffix():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     rewrite_run(
         # language=python
         python(
             """
-            x = ("foo".startswith("f"))
+            x = ("foo"
+                .startswith("f"))
+            """,
+            """
+            x = ("foo"
+                 .startswith("f"))
             """),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
