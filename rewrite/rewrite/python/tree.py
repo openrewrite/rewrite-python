@@ -860,7 +860,7 @@ class MultiImport(Py, Statement):
 
     @property
     def from_(self) -> Optional[NameTree]:
-        return self._from.element
+        return self._from.element if self._from else None
 
     def with_from(self, from_: Optional[NameTree]) -> MultiImport:
         return self.padding.with_from(JRightPadded.with_element(self._from, from_))
@@ -1273,7 +1273,7 @@ class FormattedString(Py, Expression, TypedTree):
 
         @property
         def debug(self) -> Optional[bool]:
-            return self._debug.element
+            return self._debug.element if self._debug else None
 
         def with_debug(self, debug: Optional[bool]) -> FormattedString.Value:
             return self.padding.with_debug(JRightPadded.with_element(self._debug, debug))
@@ -1604,7 +1604,7 @@ class ComprehensionExpression(Py, Expression):
 
         @property
         def async_(self) -> Optional[bool]:
-            return self._async.element
+            return self._async.element if self._async else None
 
         def with_async(self, async_: Optional[bool]) -> ComprehensionExpression.Clause:
             return self.padding.with_async(JRightPadded.with_element(self._async, async_))
@@ -2448,7 +2448,7 @@ class MatchCase(Py, Expression):
 
     @property
     def guard(self) -> Optional[Expression]:
-        return self._guard.element
+        return self._guard.element if self._guard else None
 
     def with_guard(self, guard: Optional[Expression]) -> MatchCase:
         return self.padding.with_guard(JLeftPadded.with_element(self._guard, guard))
@@ -2631,7 +2631,7 @@ class Slice(Py, Expression, TypedTree):
 
     @property
     def start(self) -> Optional[Expression]:
-        return self._start.element
+        return self._start.element if self._start else None
 
     def with_start(self, start: Optional[Expression]) -> Slice:
         return self.padding.with_start(JRightPadded.with_element(self._start, start))
@@ -2640,7 +2640,7 @@ class Slice(Py, Expression, TypedTree):
 
     @property
     def stop(self) -> Optional[Expression]:
-        return self._stop.element
+        return self._stop.element if self._stop else None
 
     def with_stop(self, stop: Optional[Expression]) -> Slice:
         return self.padding.with_stop(JRightPadded.with_element(self._stop, stop))
@@ -2649,7 +2649,7 @@ class Slice(Py, Expression, TypedTree):
 
     @property
     def step(self) -> Optional[Expression]:
-        return self._step.element
+        return self._step.element if self._step else None
 
     def with_step(self, step: Optional[Expression]) -> Slice:
         return self.padding.with_step(JRightPadded.with_element(self._step, step))

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * -------------------THIS FILE IS AUTO GENERATED--------------------------
  * Changes to this file may cause incorrect behavior and will be lost if
@@ -1165,6 +1166,15 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(source, J.Unknown.Source::getMarkers, ctx::sendMarkers);
             ctx.sendValue(source, J.Unknown.Source::getText);
             return source;
+        }
+
+        @Override
+        public J.Erroneous visitErroneous(J.Erroneous erroneous, SenderContext ctx) {
+            ctx.sendValue(erroneous, J.Erroneous::getId);
+            ctx.sendNode(erroneous, J.Erroneous::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(erroneous, J.Erroneous::getMarkers, ctx::sendMarkers);
+            ctx.sendValue(erroneous, J.Erroneous::getText);
+            return erroneous;
         }
 
     }

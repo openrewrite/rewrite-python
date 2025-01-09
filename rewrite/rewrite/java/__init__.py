@@ -48,6 +48,7 @@ __all__ = [
     'Empty',
     'EnumValue',
     'EnumValueSet',
+    'Erroneous',
     'FieldAccess',
     'ForEachLoop',
     'ForLoop',

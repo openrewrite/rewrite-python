@@ -770,6 +770,19 @@ class JavaVisitor(TreeVisitor[J, P]):
         source = source.with_markers(self.visit_markers(source.markers, p))
         return source
 
+    def visit_erroneous(self, erroneous: Erroneous, p: P) -> J:
+        erroneous = erroneous.with_prefix(self.visit_space(erroneous.prefix, Space.Location.ERRONEOUS_PREFIX, p))
+        temp_statement = cast(Statement, self.visit_statement(erroneous, p))
+        if not isinstance(temp_statement, Erroneous):
+            return temp_statement
+        erroneous = cast(Erroneous, temp_statement)
+        temp_expression = cast(Expression, self.visit_expression(erroneous, p))
+        if not isinstance(temp_expression, Erroneous):
+            return temp_expression
+        erroneous = cast(Erroneous, temp_expression)
+        erroneous = erroneous.with_markers(self.visit_markers(erroneous.markers, p))
+        return erroneous
+
     def visit_container(self, container: Optional[JContainer[J2]], loc: JContainer.Location, p: P) -> JContainer[J2]:
         return extensions.visit_container(self, container, loc, p)
 

@@ -832,7 +832,7 @@ class Case(Statement):
 
     @property
     def body(self) -> Optional[J]:
-        return self._body.element
+        return self._body.element if self._body else None
 
     def with_body(self, body: Optional[J]) -> Case:
         return self.padding.with_body(JRightPadded.with_element(self._body, body))
@@ -969,7 +969,7 @@ class ClassDeclaration(Statement, TypedTree):
 
     @property
     def extends(self) -> Optional[TypeTree]:
-        return self._extends.element
+        return self._extends.element if self._extends else None
 
     def with_extends(self, extends: Optional[TypeTree]) -> ClassDeclaration:
         return self.padding.with_extends(JLeftPadded.with_element(self._extends, extends))
@@ -1213,7 +1213,7 @@ class CompilationUnit(JavaSourceFile, SourceFile):
 
     @property
     def package_declaration(self) -> Optional[Package]:
-        return self._package_declaration.element
+        return self._package_declaration.element if self._package_declaration else None
 
     def with_package_declaration(self, package_declaration: Optional[Package]) -> CompilationUnit:
         return self.padding.with_package_declaration(JRightPadded.with_element(self._package_declaration, package_declaration))
@@ -2340,7 +2340,7 @@ class Import(Statement):
 
     @property
     def alias(self) -> Optional[Identifier]:
-        return self._alias.element
+        return self._alias.element if self._alias else None
 
     def with_alias(self, alias: Optional[Identifier]) -> Import:
         return self.padding.with_alias(JLeftPadded.with_element(self._alias, alias))
@@ -3081,7 +3081,7 @@ class MethodDeclaration(Statement, TypedTree):
 
     @property
     def default_value(self) -> Optional[Expression]:
-        return self._default_value.element
+        return self._default_value.element if self._default_value else None
 
     def with_default_value(self, default_value: Optional[Expression]) -> MethodDeclaration:
         return self.padding.with_default_value(JLeftPadded.with_element(self._default_value, default_value))
@@ -3262,7 +3262,7 @@ class MethodInvocation(Statement, TypedTree, MethodCall):
 
     @property
     def select(self) -> Optional[Expression]:
-        return self._select.element
+        return self._select.element if self._select else None
 
     def with_select(self, select: Optional[Expression]) -> MethodInvocation:
         return self.padding.with_select(JRightPadded.with_element(self._select, select))
@@ -3695,7 +3695,7 @@ class NewClass(Statement, TypedTree, MethodCall):
 
     @property
     def enclosing(self) -> Optional[Expression]:
-        return self._enclosing.element
+        return self._enclosing.element if self._enclosing else None
 
     def with_enclosing(self, enclosing: Optional[Expression]) -> NewClass:
         return self.padding.with_enclosing(JRightPadded.with_element(self._enclosing, enclosing))
@@ -4575,7 +4575,7 @@ class Try(Statement):
 
     @property
     def finally_(self) -> Optional[Block]:
-        return self._finally.element
+        return self._finally.element if self._finally else None
 
     def with_finally(self, finally_: Optional[Block]) -> Try:
         return self.padding.with_finally(JLeftPadded.with_element(self._finally, finally_))
@@ -5177,7 +5177,7 @@ class VariableDeclarations(Statement, TypedTree):
 
         @property
         def initializer(self) -> Optional[Expression]:
-            return self._initializer.element
+            return self._initializer.element if self._initializer else None
 
         def with_initializer(self, initializer: Optional[Expression]) -> VariableDeclarations.NamedVariable:
             return self.padding.with_initializer(JLeftPadded.with_element(self._initializer, initializer))
@@ -5363,7 +5363,7 @@ class Wildcard(Expression, TypeTree):
 
     @property
     def bound(self) -> Optional[Bound]:
-        return self._bound.element
+        return self._bound.element if self._bound else None
 
     def with_bound(self, bound: Optional[Bound]) -> Wildcard:
         return self.padding.with_bound(JLeftPadded.with_element(self._bound, bound))
@@ -5545,3 +5545,45 @@ class Unknown(Statement, Expression, TypeTree):
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_unknown(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class Erroneous(Statement, Expression):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> Erroneous:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> Erroneous:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> Erroneous:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _text: str
+
+    @property
+    def text(self) -> str:
+        return self._text
+
+    def with_text(self, text: str) -> Erroneous:
+        return self if text is self._text else replace(self, _text=text)
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_erroneous(self, p)
