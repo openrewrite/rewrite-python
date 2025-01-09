@@ -557,7 +557,7 @@ def test_nested_dictionary():
                 "section": {
                     "key1": "value1",
                     "key2": [10, 20,
-                             30]
+                        30]
                 },
                 "another_section": {"nested_key": "val"}
             }
@@ -587,7 +587,7 @@ def test_nested_dictionary_with_trailing_commas():
                 "section": {
                     "key1": "value1",
                     "key2": [10, 20,
-                             30],
+                        30],
                 },
                 "another_section": {"nested_key": "val"}
             }
@@ -645,10 +645,10 @@ def test_comment_alignment():
                 if a > b:
                     # cool
                     a = b + 1
-                    # cool
+                # cool
 
                 return None # Informative comment 4
-                # Informative comment 5
+            # Informative comment 5
             '''
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))

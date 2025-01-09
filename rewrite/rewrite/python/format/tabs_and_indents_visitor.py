@@ -7,7 +7,7 @@ from typing import TypeVar, Optional, Union, cast, List
 from rewrite import Tree, Cursor, list_map
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, EnumValueSet, Case, WhileLoop, \
     Block, If, ForLoop, ForEachLoop, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral
 from rewrite.visitor import P, T
@@ -15,18 +15,18 @@ from rewrite.visitor import P, T
 J2 = TypeVar('J2', bound=J)
 
 
-class TabsAndIndentsVisitor(PythonVisitor):
+class TabsAndIndentsVisitor(PythonVisitor[P]):
 
-    def __init__(self, style: TabsAndIndentsStyle, stop_after: Tree = None):
+    def __init__(self, style: TabsAndIndentsStyle, stop_after: Optional[Tree] = None):
         self._stop_after = stop_after
         self._style = style
         self._stop = False
 
-    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[J]:
         if parent is not None:
             self._cursor = parent
             if tree is None:
-                return cast(Optional[T], self.default_value(None, p))
+                return cast(Optional[J], self.default_value(None, p))
 
             for c in parent.get_path_as_cursors() if parent is not None else []:
                 v = c.value
@@ -74,13 +74,13 @@ class TabsAndIndentsVisitor(PythonVisitor):
     def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
                     p: P) -> Space:
         if space is None:
-            return space  # pyright: ignore [reportReturnType]
+            return space  # type: ignore
 
         self._cursor.put_message("last_location", loc)
         parent = self._cursor.parent
 
         indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
-        indent_type = self.cursor.parent.get_nearest_message("indent_type") or self.IndentType.ALIGN
+        indent_type = self.cursor.parent_or_throw.get_nearest_message("indent_type") or self.IndentType.ALIGN
 
         if not space.comments and '\n' not in space.last_whitespace or parent is None:
             return space
@@ -89,7 +89,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
 
         # Block spaces are always aligned to their parent
         # The second condition ensure init blocks are ignored.
-        # TODO: Secon condition might be removed since it's not relevant for Python
+        # TODO: Second condition might be removed since it's not relevant for Python
         align_block_prefix_to_parent = loc is Space.Location.BLOCK_PREFIX and '\n' in space.whitespace and \
                                        (isinstance(cursor_value, Block) and not isinstance(
                                            self.cursor.parent_tree_cursor().value, Block))
@@ -102,7 +102,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
         )
 
         if (loc == Space.Location.EXTENDS and "\n" in space.whitespace) or \
-                Space.Location.EXTENDS == self.cursor.parent.get_message("last_location", None):
+                Space.Location.EXTENDS == self.cursor.parent_or_throw.get_message("last_location", None):
             indent_type = self.IndentType.CONTINUATION_INDENT
 
         if align_block_prefix_to_parent or align_block_to_parent:
@@ -140,6 +140,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
 
         if isinstance(t, J):
             elem = t
+            trailing_comma = right.markers.find_first(TrailingComma)
             if '\n' in right.after.last_whitespace or '\n' in elem.prefix.last_whitespace:
                 if loc in (JRightPadded.Location.FOR_CONDITION,
                            JRightPadded.Location.FOR_UPDATE):
@@ -169,27 +170,26 @@ class TabsAndIndentsVisitor(PythonVisitor):
                              JRightPadded.Location.TYPE_PARAMETER):
                     elem = self.visit_and_cast(elem, J, p)
                     after = self._indent_to(right.after, indent, loc.after_location)
-                elif loc in (
-                PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT, PyRightPadded.Location.DICT_LITERAL_ELEMENT):
+                elif loc in (PyRightPadded.Location.COLLECTION_LITERAL_ELEMENT, PyRightPadded.Location.DICT_LITERAL_ELEMENT):
                     elem = self.visit_and_cast(elem, J, p)
                     args = cast(JContainer[J], self.cursor.parent_or_throw.value)
-                    # TODO: Maybe need to handle trailing comma?
-                    if args.padding.elements[-1] is right:
+                    if not trailing_comma and args.padding.elements[-1] is right:
                         self.cursor.parent_or_throw.put_message("indent_type", self.IndentType.ALIGN)
                     after = self.visit_space(right.after, loc.after_location, p)
+                    if trailing_comma:
+                        self.cursor.parent_or_throw.put_message("indent_type", self.IndentType.ALIGN)
+                        trailing_comma = trailing_comma.with_suffix(self.visit_space(trailing_comma.suffix, loc.after_location, p))
+                        right = right.with_markers(right.markers.compute_by_type(TrailingComma, lambda t: trailing_comma))
                 elif loc == JRightPadded.Location.ANNOTATION_ARGUMENT:
                     raise NotImplementedError("Annotation argument not implemented")
                 else:
-                    # NOTE: DONE
                     elem = self.visit_and_cast(elem, J, p)
                     after = self.visit_space(right.after, loc.after_location, p)
             else:
-                # NOTE: Done
                 if loc in (JRightPadded.Location.NEW_CLASS_ARGUMENTS, JRightPadded.Location.METHOD_INVOCATION_ARGUMENT):
                     any_other_arg_on_own_line = False
                     if "\n" not in elem.prefix.last_whitespace:
-                        # NOTE: Done
-                        args: JContainer[J] = cast(JContainer[J], self.cursor.parent.value)
+                        args = cast(JContainer[J], self.cursor.parent_or_throw.value)
                         for arg in args.padding.elements:
                             if arg == self.cursor.value:
                                 continue
@@ -201,7 +201,6 @@ class TabsAndIndentsVisitor(PythonVisitor):
                             after = self._indent_to(right.after, indent, loc.after_location)
 
                     if not any_other_arg_on_own_line:
-                        # NOTE: Done
                         if not isinstance(elem, Binary):
                             if not isinstance(elem, MethodInvocation) or "\n" in elem.prefix.last_whitespace:
                                 self.cursor.put_message("last_indent", indent + self._style.continuation_indent)
@@ -214,7 +213,6 @@ class TabsAndIndentsVisitor(PythonVisitor):
                         elem = self.visit_and_cast(elem, J, p)
                         after = self.visit_space(right.after, loc.after_location, p)
                 else:
-                    # NOTE: DONE
                     elem = self.visit_and_cast(elem, J, p)
                     after = self.visit_space(right.after, loc.after_location, p)
 
@@ -222,14 +220,15 @@ class TabsAndIndentsVisitor(PythonVisitor):
         else:
             after = self.visit_space(right.after, loc.after_location, p)
 
-        self.cursor = self.cursor.parent
+        self.cursor = self.cursor.parent  # type: ignore
         return right.with_after(after).with_element(t)
 
     # NOTE: INCOMPLETE
     def visit_container(self, container: Optional[JContainer[J2]],
                         loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if container is None:
-            return container
+            return container  # type: ignore
+
         self._cursor = Cursor(self._cursor, container)
 
         indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
@@ -257,14 +256,14 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 before = self.visit_space(container.before, loc.before_location, p)
             js = list_map(lambda t: self.visit_right_padded(t, loc.element_location, p), container.padding.elements)
 
-        self._cursor = self._cursor.parent
+        self._cursor = self._cursor.parent  # type: ignore
 
         if container.padding.elements is js and container.before is before:
             return container
         return JContainer(before, js, container.markers)
 
     # NOTE: INCOMPLETE, Comments not supported
-    def _indent_to(self, space: Space, column: int, space_location: Space.Location) -> Space:
+    def _indent_to(self, space: Space, column: int, space_location: Union[PySpace.Location, Space.Location]) -> Space:
         s = space
         whitespace = s.whitespace
 
@@ -281,7 +280,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
         else:
             def whitespace_indent(text: str) -> str:
                 # TODO: Placeholder function, taken from java openrewrite.StringUtils
-                indent = []
+                indent: List[str] = []
                 for c in text:
                     if c == '\n' or c == '\r':
                         return ''.join(indent)
@@ -340,7 +339,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 s = s.with_comments(list_map(lambda i, c: _process_comment(c, i), s.comments))
         return s
 
-    def _indent(self, whitespace: str, shift: int):
+    def _indent(self, whitespace: str, shift: int) -> str:
         return self._shift(whitespace, shift)
 
     def _indent_comment(self, comment: Comment, prior_suffix: str, to_column: int) -> Comment:
@@ -378,7 +377,7 @@ class TabsAndIndentsVisitor(PythonVisitor):
                 length = 0
         return length
 
-    def _visit_method_invocation_argument_j_type(self, elem: J, right, indent, loc, p) -> tuple[J, Space]:
+    def _visit_method_invocation_argument_j_type(self, elem: J, right: JRightPadded[T], indent: int, loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> tuple[J, Space]:
         if "\n" not in elem.prefix.last_whitespace and isinstance(elem, Lambda):
             body = elem.body
             if not isinstance(body, Binary):
