@@ -106,8 +106,8 @@ class Space:
     _whitespace: Optional[str]
 
     @property
-    def whitespace(self) -> Optional[str]:
-        return self._whitespace
+    def whitespace(self) -> str:
+        return self._whitespace if self._whitespace is not None else ""
 
     def with_whitespace(self, whitespace: Optional[str]) -> Space:
         return self if whitespace is self._whitespace else replace(self, _whitespace=whitespace)
@@ -126,6 +126,36 @@ class Space:
             formatted_trees[0] = cast(J2, formatted_trees[0].with_prefix(prefix))
             return formatted_trees
         return trees
+
+    @property
+    def indent(self) -> str:
+        """
+        The indentation after the last newline of either the last comment's suffix
+        or the global whitespace if no comments exist.
+        """
+        return self._get_whitespace_indent(self.last_whitespace)
+
+    @property
+    def last_whitespace(self) -> str:
+        """
+        The raw suffix from the last comment if it exists, otherwise the global
+        whitespace (or empty string if whitespace is None).
+        """
+        if self._comments:
+            return self._comments[-1].suffix
+        return self._whitespace if self._whitespace is not None else ""
+
+    @staticmethod
+    def _get_whitespace_indent(whitespace: Optional[str]) -> str:
+        """
+        A helper method that extracts everything after the last newline character
+        in `whitespace`. If no newline is present, returns `whitespace` as-is.
+        If the last newline is at the end, returns an empty string.
+        """
+        if not whitespace:
+            return ""
+        last_newline = whitespace.rfind('\n')
+        return whitespace if last_newline == -1 else whitespace[last_newline + 1:]
 
     EMPTY: ClassVar[Space]
     SINGLE_SPACE: ClassVar[Space]
