@@ -5,11 +5,11 @@ from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
 from rewrite import Tree, Cursor, list_map
-from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, EnumValueSet, Case, WhileLoop, \
-    Block, If, ForLoop, ForEachLoop, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration, Empty, \
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Case, WhileLoop, \
+    Block, If, Label, ArrayDimension, ClassDeclaration, Empty, \
     Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
-    CollectionLiteral
+    CollectionLiteral, ForLoop
 from rewrite.visitor import P, T
 
 J2 = TypeVar('J2', bound=J)
@@ -28,7 +28,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             if tree is None:
                 return cast(Optional[J], self.default_value(None, p))
 
-            for c in parent.get_path_as_cursors() if parent is not None else []:
+            for c in parent.get_path_as_cursors():
                 v = c.value
                 space = None
                 if isinstance(v, J):
@@ -45,20 +45,18 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                     if indent != 0:
                         c.put_message("last_indent", indent)
 
-            # TODO CHeck if this is 100% percent corrent
-            for v in parent.get_path() if parent is not None else []:
-                if isinstance(v, J):
-                    self.pre_visit(v, p)
+            for next_parent in parent.get_path():
+                if isinstance(next_parent, J):
+                    self.pre_visit(next_parent, p)
                     break
+
         return super().visit(tree, p)
 
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
-        if isinstance(tree, (
-                JavaSourceFile, Package, Import, Label, DoWhileLoop, ArrayDimension, ClassDeclaration)):
+        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration)):
             self.cursor.put_message("indent_type", self.IndentType.ALIGN)
         elif isinstance(tree,
-                        (Block, If, If.Else, ForLoop, ForEachLoop, WhileLoop, Case, EnumValueSet, DictLiteral,
-                         CollectionLiteral)):
+                        (Block, If, If.Else, ForLoop, WhileLoop, Case, DictLiteral, CollectionLiteral)):
             # NOTE: Added CollectionLiteral, DictLiteral here
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
         else:
@@ -80,7 +78,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         parent = self._cursor.parent
 
         if loc == Space.Location.METHOD_SELECT_SUFFIX:
-            chained_indent = self.cursor.parent_tree_cursor().get_message("chained_indent", None)
+            chained_indent = cast(int, self.cursor.parent_tree_cursor().get_message("chained_indent", None))
             if chained_indent is not None:
                 self.cursor.parent_tree_cursor().put_message("last_indent", chained_indent)
                 return self._indent_to(space, chained_indent, loc)
@@ -120,7 +118,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             indent += self._style.continuation_indent
 
         s: Space = self._indent_to(space, indent, loc)
-        if isinstance(cursor_value, J) and not isinstance(cursor_value, EnumValueSet):
+        if isinstance(cursor_value, J):
             self.cursor.put_message("last_indent", indent)
         elif loc == Space.Location.METHOD_SELECT_SUFFIX:
             self.cursor.parent_tree_cursor().put_message("last_indent", indent)
@@ -128,7 +126,6 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         return s
 
 
-    # NOTE: INCOMPLETE
     def visit_right_padded(self, right: Optional[JRightPadded[T]],
                            loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[
         JRightPadded[T]]:
@@ -229,7 +226,6 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         self.cursor = self.cursor.parent  # type: ignore
         return right.with_after(after).with_element(t)
 
-    # NOTE: INCOMPLETE
     def visit_container(self, container: Optional[JContainer[J2]],
                         loc: Union[PyContainer.Location, JContainer.Location], p: P) -> JContainer[J2]:
         if container is None:
@@ -268,8 +264,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             return container
         return JContainer(before, js, container.markers)
 
-    # NOTE: INCOMPLETE, Comments not supported
-    def _indent_to(self, space: Space, column: int, space_location: Union[PySpace.Location, Space.Location]) -> Space:
+    def _indent_to(self, space: Space, column: int, space_location: Optional[Union[PySpace.Location, Space.Location]]) -> Space:
         s = space
         whitespace = s.whitespace
 
@@ -333,7 +328,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
                     new_c = c
                     if "\n" in prior_suffix or has_file_leading_comment:
-                        new_c = self._indent_comment(c, prior_suffix, to_column)
+                        new_c = c
 
                     if '\n' in new_c.suffix:
                         suffix_indent = self._get_length_of_whitespace(new_c.suffix)
@@ -347,10 +342,6 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
     def _indent(self, whitespace: str, shift: int) -> str:
         return self._shift(whitespace, shift)
-
-    def _indent_comment(self, comment: Comment, prior_suffix: str, to_column: int) -> Comment:
-        # TODO: Handle multiline here.
-        return comment
 
     def _shift(self, text: str, shift: int) -> str:
         tab_indent = self._style.tab_size

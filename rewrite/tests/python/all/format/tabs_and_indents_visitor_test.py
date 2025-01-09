@@ -672,7 +672,7 @@ def test_comment_alignment_if_and_return():
                 if a > b:
                     # cool
                     a = b + 1
-                    # cool
+                # cool
                 return None
             '''
         ),
