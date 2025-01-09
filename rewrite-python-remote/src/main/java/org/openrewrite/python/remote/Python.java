@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * -------------------THIS FILE IS AUTO GENERATED--------------------------
  * Changes to this file may cause incorrect behavior and will be lost if
@@ -22,10 +23,14 @@
 package org.openrewrite.python.remote;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.openrewrite.python.tree.Py;
-import org.openrewrite.remote.model.LstModel;
-import org.openrewrite.remote.model.LstProperty;
-import org.openrewrite.remote.model.LstType;
+import org.jspecify.annotations.Nullable;
+import org.openrewrite.*;
+import org.openrewrite.remote.model.*;
+import org.openrewrite.tree.*;
+import org.openrewrite.java.tree.*;
+import org.openrewrite.python.tree.*;
+
+import java.util.List;
 
 public class Python implements LstModel {
 

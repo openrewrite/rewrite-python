@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * -------------------THIS FILE IS AUTO GENERATED--------------------------
  * Changes to this file may cause incorrect behavior and will be lost if
@@ -1156,6 +1157,15 @@ public class PythonReceiver implements Receiver<Py> {
             return source;
         }
 
+        @Override
+        public J.Erroneous visitErroneous(J.Erroneous erroneous, ReceiverContext ctx) {
+            erroneous = erroneous.withId(ctx.receiveNonNullValue(erroneous.getId(), UUID.class));
+            erroneous = erroneous.withPrefix(ctx.receiveNonNullNode(erroneous.getPrefix(), PythonReceiver::receiveSpace));
+            erroneous = erroneous.withMarkers(ctx.receiveNonNullNode(erroneous.getMarkers(), ctx::receiveMarkers));
+            erroneous = erroneous.withText(ctx.receiveNonNullValue(erroneous.getText(), String.class));
+            return erroneous;
+        }
+
     }
 
     private static class Factory implements ReceiverFactory {
@@ -1267,6 +1277,7 @@ public class PythonReceiver implements Receiver<Py> {
                 if (type == J.Yield.class) return Factory::createJYield;
                 if (type == J.Unknown.class) return Factory::createJUnknown;
                 if (type == J.Unknown.Source.class) return Factory::createJUnknownSource;
+                if (type == J.Erroneous.class) return Factory::createJErroneous;
                 throw new IllegalArgumentException("Unknown type: " + type);
             }
         };
@@ -2383,6 +2394,15 @@ public class PythonReceiver implements Receiver<Py> {
 
         private static J.Unknown.Source createJUnknownSource(ReceiverContext ctx) {
             return new J.Unknown.Source(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullValue(null, String.class)
+            );
+        }
+
+        private static J.Erroneous createJErroneous(ReceiverContext ctx) {
+            return new J.Erroneous(
                     ctx.receiveNonNullValue(null, UUID.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),

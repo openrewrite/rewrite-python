@@ -644,6 +644,13 @@ class JavaReceiver(Receiver):
             source = source.with_text(ctx.receive_value(source.text, str))
             return source
 
+        def visit_erroneous(self, erroneous: Erroneous, ctx: ReceiverContext) -> J:
+            erroneous = erroneous.with_id(ctx.receive_value(erroneous.id, UUID))
+            erroneous = erroneous.with_prefix(ctx.receive_node(erroneous.prefix, JavaReceiver.receive_space))
+            erroneous = erroneous.with_markers(ctx.receive_node(erroneous.markers, ctx.receive_markers))
+            erroneous = erroneous.with_text(ctx.receive_value(erroneous.text, str))
+            return erroneous
+
     # noinspection PyTypeChecker
     class Factory(ReceiverFactory):
         def create(self, type: str, ctx: ReceiverContext) -> Tree:
@@ -1323,6 +1330,14 @@ class JavaReceiver(Receiver):
 
             if type in ["rewrite.java.tree.Unknown.Source", "org.openrewrite.java.tree.J$Unknown$Source"]:
                 return Unknown.Source(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, JavaReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_value(None, str)
+                )
+
+            if type in ["rewrite.java.tree.Erroneous", "org.openrewrite.java.tree.J$Erroneous"]:
+                return Erroneous(
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, JavaReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),

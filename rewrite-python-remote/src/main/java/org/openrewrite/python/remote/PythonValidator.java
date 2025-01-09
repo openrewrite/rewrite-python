@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * -------------------THIS FILE IS AUTO GENERATED--------------------------
  * Changes to this file may cause incorrect behavior and will be lost if
@@ -749,6 +750,11 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
     @Override
     public J.Unknown.Source visitUnknownSource(J.Unknown.Source source, P p) {
         return source;
+    }
+
+    @Override
+    public J.Erroneous visitErroneous(J.Erroneous erroneous, P p) {
+        return erroneous;
     }
 
 }

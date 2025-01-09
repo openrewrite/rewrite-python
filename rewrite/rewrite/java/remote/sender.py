@@ -642,6 +642,13 @@ class JavaSender(Sender):
             ctx.send_value(source, attrgetter('_text'))
             return source
 
+        def visit_erroneous(self, erroneous: Erroneous, ctx: SenderContext) -> J:
+            ctx.send_value(erroneous, attrgetter('_id'))
+            ctx.send_node(erroneous, attrgetter('_prefix'), JavaSender.send_space)
+            ctx.send_node(erroneous, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_value(erroneous, attrgetter('_text'))
+            return erroneous
+
     @classmethod
     def send_container(cls, container: JContainer[T], ctx: SenderContext):
         extensions.send_container(container, ctx)
