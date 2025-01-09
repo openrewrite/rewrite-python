@@ -23,12 +23,12 @@ dependencies {
     compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
     annotationProcessor("com.google.auto.service:auto-service:1.1.1")
 
-    implementation("org.openrewrite:rewrite-remote:$latest") {
+    implementation("org.openrewrite:rewrite-remote:0.5.5") {
         exclude(group = "org.openrewrite", module = "rewrite-python")
     }
     implementation(project(":rewrite-python"))
 
-    implementation(platform("org.openrewrite:rewrite-bom:$latest"))
+    implementation(platform("org.openrewrite:rewrite-bom:8.41.1"))
     implementation("org.openrewrite:rewrite-core")
     implementation("org.openrewrite:rewrite-java")
 

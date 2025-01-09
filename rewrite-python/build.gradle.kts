@@ -24,7 +24,7 @@ dependencies {
         exclude(group = "org.openrewrite", module = "rewrite-python")
     }
 
-    implementation(platform("org.openrewrite:rewrite-bom:$latest"))
+    implementation(platform("org.openrewrite:rewrite-bom:8.41.1"))
     implementation("org.openrewrite:rewrite-core")
     implementation("org.openrewrite:rewrite-java")
     // FIXME: temporary until we've decided how to best integrate into CLI
