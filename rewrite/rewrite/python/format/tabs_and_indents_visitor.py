@@ -79,6 +79,12 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         self._cursor.put_message("last_location", loc)
         parent = self._cursor.parent
 
+        if loc == Space.Location.METHOD_SELECT_SUFFIX:
+            chained_indent = self.cursor.parent_tree_cursor().get_message("chained_indent", None)
+            if chained_indent is not None:
+                self.cursor.parent_tree_cursor().put_message("last_indent", chained_indent)
+                return self._indent_to(space, chained_indent, loc)
+
         indent = cast(int, self.cursor.get_nearest_message("last_indent")) or 0
         indent_type = self.cursor.parent_or_throw.get_nearest_message("indent_type") or self.IndentType.ALIGN
 
@@ -117,7 +123,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         if isinstance(cursor_value, J) and not isinstance(cursor_value, EnumValueSet):
             self.cursor.put_message("last_indent", indent)
         elif loc == Space.Location.METHOD_SELECT_SUFFIX:
-            raise NotImplementedError("Method select suffix not implemented")
+            self.cursor.parent_tree_cursor().put_message("last_indent", indent)
 
         return s
 
