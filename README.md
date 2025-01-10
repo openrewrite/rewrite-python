@@ -56,7 +56,7 @@ In the setup described here it is at the time of writing important that the GitH
    ```
 3. Create a Python virtual environment (here we are going to use `~/.venv` but any directory works) and activate it
    ```shell
-   un sync --all-extras
+   uv sync --all-extras
    source ~/.venv/bin/activate
    ```
 4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Uv
