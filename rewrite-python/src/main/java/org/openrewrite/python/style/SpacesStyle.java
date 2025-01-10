@@ -17,14 +17,13 @@ package org.openrewrite.python.style;
 
 import lombok.Value;
 import lombok.With;
-
-import java.util.UUID;
+import org.openrewrite.style.Style;
+import org.openrewrite.style.StyleHelper;
 
 @Value
 @With
 public class SpacesStyle implements PythonStyle {
 
-    UUID id;
     BeforeParentheses beforeParentheses;
     AroundOperators aroundOperators;
     Within within;
@@ -77,8 +76,8 @@ public class SpacesStyle implements PythonStyle {
         Boolean afterHash;
     }
 
-//    @Override
-//    public Style applyDefaults() {
-//        return StyleHelper.merge(IntelliJ.spaces(), this);
-//    }
+    @Override
+    public Style applyDefaults() {
+        return StyleHelper.merge(IntelliJ.spaces(), this);
+    }
 }

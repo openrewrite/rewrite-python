@@ -7,9 +7,9 @@ from typing import TypeVar, Optional, Union, cast, List
 from rewrite import Tree, Cursor, list_map
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Case, WhileLoop, \
     Block, If, Label, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, NewArray
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
-    CollectionLiteral, ForLoop
+    CollectionLiteral, ForLoop, ExpressionStatement, CompilationUnit, OtherStyle, IntelliJ, ComprehensionExpression
 from rewrite.visitor import P, T
 
 J2 = TypeVar('J2', bound=J)
@@ -17,9 +17,10 @@ J2 = TypeVar('J2', bound=J)
 
 class TabsAndIndentsVisitor(PythonVisitor[P]):
 
-    def __init__(self, style: TabsAndIndentsStyle, stop_after: Optional[Tree] = None):
+    def __init__(self, style: TabsAndIndentsStyle, other: OtherStyle = IntelliJ.other(), stop_after: Optional[Tree] = None):
         self._stop_after = stop_after
         self._style = style
+        self._other = other
         self._stop = False
 
     def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[J]:
@@ -53,14 +54,15 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         return super().visit(tree, p)
 
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
-        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration)):
+        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration, ExpressionStatement)):
             self.cursor.put_message("indent_type", self.IndentType.ALIGN)
-        elif isinstance(tree,
-                        (Block, If, If.Else, ForLoop, WhileLoop, Case, DictLiteral, CollectionLiteral)):
-            # NOTE: Added CollectionLiteral, DictLiteral here
+        elif isinstance(tree, Block):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
-        else:
-            self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT)
+        elif isinstance(tree, (DictLiteral, CollectionLiteral, NewArray, ComprehensionExpression)):
+            self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT
+            if self._other.use_continuation_indent.collections_and_comprehensions else self.IndentType.INDENT)
+        elif isinstance(tree, Expression):
+            self.cursor.put_message("indent_type", self.IndentType.INDENT)
 
         return tree
 
@@ -238,7 +240,8 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             if loc in (JContainer.Location.TYPE_PARAMETERS,
                        JContainer.Location.IMPLEMENTS,
                        JContainer.Location.THROWS,
-                       JContainer.Location.NEW_CLASS_ARGUMENTS):
+                       JContainer.Location.NEW_CLASS_ARGUMENTS,
+                       JContainer.Location.METHOD_DECLARATION_PARAMETERS):
                 before = self._indent_to(container.before, indent + self._style.continuation_indent,
                                          loc.before_location)
                 self.cursor.put_message("indent_type", self.IndentType.ALIGN)
@@ -247,15 +250,11 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 before = self.visit_space(container.before, loc.before_location, p)
             js = list_map(lambda t: self.visit_right_padded(t, loc.element_location, p), container.padding.elements)
         else:
-            if loc in (JContainer.Location.TYPE_PARAMETERS,
-                       JContainer.Location.IMPLEMENTS,
-                       JContainer.Location.THROWS,
-                       JContainer.Location.NEW_CLASS_ARGUMENTS,
-                       JContainer.Location.METHOD_INVOCATION_ARGUMENTS):
-                self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT)
-                before = self.visit_space(container.before, loc.before_location, p)
-            else:
-                before = self.visit_space(container.before, loc.before_location, p)
+            if loc == JContainer.Location.METHOD_DECLARATION_PARAMETERS:
+                self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT if self._other.use_continuation_indent.method_declaration_parameters else self.IndentType.INDENT)
+            elif loc == JContainer.Location.METHOD_INVOCATION_ARGUMENTS:
+                self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT if self._other.use_continuation_indent.method_call_arguments else self.IndentType.INDENT)
+            before = self.visit_space(container.before, loc.before_location, p)
             js = list_map(lambda t: self.visit_right_padded(t, loc.element_location, p), container.padding.elements)
 
         self._cursor = self._cursor.parent  # type: ignore

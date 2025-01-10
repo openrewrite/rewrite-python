@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+from .. import random_id
 from ..style import Style, NamedStyles
 
 
@@ -450,19 +451,68 @@ class BlankLinesStyle(PythonStyle):
 
 
 @dataclass(frozen=True)
-class GeneralFormatStyle(PythonStyle):
-    _use_crlf_new_lines: bool
+class OtherStyle(PythonStyle):
+    @dataclass(frozen=True)
+    class UseContinuationIndent:
+        _method_call_arguments: bool
+
+        @property
+        def method_call_arguments(self) -> bool:
+            return self._method_call_arguments
+
+        def with_method_call_arguments(self, method_call_arguments: bool) -> OtherStyle.UseContinuationIndent:
+            return self if method_call_arguments is self._method_call_arguments else replace(self, _method_call_arguments=method_call_arguments)
+
+        _method_declaration_parameters: bool
+
+        @property
+        def method_declaration_parameters(self) -> bool:
+            return self._method_declaration_parameters
+
+        def with_method_declaration_parameters(self, method_declaration_parameters: bool) -> OtherStyle.UseContinuationIndent:
+            return self if method_declaration_parameters is self._method_declaration_parameters else replace(self, _method_declaration_parameters=method_declaration_parameters)
+
+        _collections_and_comprehensions: bool
+
+        @property
+        def collections_and_comprehensions(self) -> bool:
+            return self._collections_and_comprehensions
+
+        def with_collections_and_comprehensions(self, collections_and_comprehensions: bool) -> OtherStyle.UseContinuationIndent:
+            return self if collections_and_comprehensions is self._collections_and_comprehensions else replace(self, _collections_and_comprehensions=collections_and_comprehensions)
+
+    _use_continuation_indent: UseContinuationIndent
 
     @property
-    def use_crlf_new_lines(self) -> bool:
-        return self._use_crlf_new_lines
+    def use_continuation_indent(self) -> UseContinuationIndent:
+        return self._use_continuation_indent
 
-    def with_use_crlf_new_lines(self, use_crlf_new_lines: bool) -> GeneralFormatStyle:
-        return self if use_crlf_new_lines is self._use_crlf_new_lines else replace(self,
-                                                                                   _use_crlf_new_lines=use_crlf_new_lines)
+    def with_use_continuation_indent(self, use_continuation_indent: UseContinuationIndent) -> OtherStyle:
+        return self if use_continuation_indent is self._use_continuation_indent else replace(self, _use_continuation_indent=use_continuation_indent)
 
 
 class IntelliJ(NamedStyles):
+
+    def __init__(self):
+        super().__init__(
+            _id=random_id(),
+            _name='org.openrewrite.python.style.IntelliJ',
+            _display_name='IntelliJ IDEA',
+            _description='IntelliJ IDEA default Python style.',
+            _tags={},
+            _styles=(
+                IntelliJ.spaces(),
+                IntelliJ.wrapping_and_braces(),
+                IntelliJ.tabs_and_indents(),
+                IntelliJ.blank_lines(),
+                IntelliJ.other(),
+            )
+        )
+
+    @classmethod
+    def defaults(cls) -> IntelliJ:
+        return IntelliJ()
+
     @classmethod
     def spaces(cls) -> SpacesStyle:
         return SpacesStyle(
@@ -531,5 +581,15 @@ class IntelliJ(NamedStyles):
                 _around_top_level_classes_functions=2,
                 _after_local_imports=0,
                 _before_first_method=0,
+            )
+        )
+
+    @classmethod
+    def other(cls) -> OtherStyle:
+        return OtherStyle(
+            OtherStyle.UseContinuationIndent(
+                _method_call_arguments=False,
+                _method_declaration_parameters=True,
+                _collections_and_comprehensions=False,
             )
         )

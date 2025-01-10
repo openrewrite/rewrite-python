@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Optional, TypeVar, Union, cast
 
-from rewrite import Tree, P, Cursor, list_map, Marker
+from rewrite import Tree, P, Cursor, list_map, Marker, GeneralFormatStyle
 from rewrite.java import J, Space, Comment, TextComment, TrailingComma
-from rewrite.python import PythonVisitor, PySpace, GeneralFormatStyle, PyComment
+from rewrite.python import PythonVisitor, PySpace, PyComment
 from rewrite.visitor import T
 
 J2 = TypeVar('J2', bound=J)
 
 
 class NormalizeLineBreaksVisitor(PythonVisitor):
-    def __init__(self, style: GeneralFormatStyle, stop_after: Tree = None):
+    def __init__(self, style: GeneralFormatStyle, stop_after: Optional[Tree] = None):
         self._stop_after = stop_after
         self._stop = False
         self._style = style
