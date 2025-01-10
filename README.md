@@ -62,7 +62,7 @@ In the setup described here it is at the time of writing important that the GitH
    ```
 4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Uv
    ```shell
-   cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote-test
+   cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote
    uv build
    ```
 5. Open `~/git/openrewrite/rewrite-python/rewrite` in IDEA (or PyCharm)
