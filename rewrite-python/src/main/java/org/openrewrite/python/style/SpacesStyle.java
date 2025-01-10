@@ -20,13 +20,10 @@ import lombok.With;
 import org.openrewrite.style.Style;
 import org.openrewrite.style.StyleHelper;
 
-import java.util.UUID;
-
 @Value
 @With
 public class SpacesStyle implements PythonStyle {
 
-    UUID id;
     BeforeParentheses beforeParentheses;
     AroundOperators aroundOperators;
     Within within;

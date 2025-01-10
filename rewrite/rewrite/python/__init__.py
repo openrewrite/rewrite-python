@@ -63,6 +63,7 @@ __all__ = [
     'TabsAndIndentsStyle',
     'WrappingAndBracesStyle',
     'BlankLinesStyle',
+    'OtherStyle',
     'IntelliJ',
 
     # Formatter

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  * <p>
  * Licensed under the Moderne Source Available License (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,11 @@ public class IntelliJ extends NamedStyles {
         super(randomId(),
                 "org.openrewrite.python.style.IntelliJ",
                 "IntelliJ IDEA",
-                "IntelliJ IDEA default Python style",
+                "IntelliJ IDEA default Python style.",
                 Collections.emptySet(),
                 Arrays.asList(
                         spaces(),
+                        wrappingAndBraces(),
                         tabsAndIndents(),
                         blankLines(),
                         other()
@@ -46,7 +47,7 @@ public class IntelliJ extends NamedStyles {
     }
 
     public static SpacesStyle spaces() {
-        return new SpacesStyle(null,
+        return new SpacesStyle(
                 new SpacesStyle.BeforeParentheses(
                         false, // methodCall
                         false, // methodDeclaration
@@ -85,8 +86,12 @@ public class IntelliJ extends NamedStyles {
         );
     }
 
+    public static WrappingAndBracesStyle wrappingAndBraces() {
+        return new WrappingAndBracesStyle();
+    }
+
     public static TabsAndIndentsStyle tabsAndIndents() {
-        return new TabsAndIndentsStyle(null,
+        return new TabsAndIndentsStyle(
                 false, // useTabCharacter
                 4,     // tabSize
                 4,     // indentSize
@@ -96,7 +101,7 @@ public class IntelliJ extends NamedStyles {
     }
 
     public static BlankLinesStyle blankLines() {
-        return new BlankLinesStyle(null,
+        return new BlankLinesStyle(
                 new BlankLinesStyle.KeepMaximum(
                         1, // inDeclarations
                         1  // inCode
@@ -113,7 +118,7 @@ public class IntelliJ extends NamedStyles {
     }
 
     public static OtherStyle other() {
-        return new OtherStyle(null,
+        return new OtherStyle(
                 new OtherStyle.UseContinuationIndent(
                         false, // methodCallArguments
                         true,  // methodDeclarationParameters

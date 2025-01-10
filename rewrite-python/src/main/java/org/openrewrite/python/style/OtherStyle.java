@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the original author or authors.
+ * Copyright 2025 the original author or authors.
  * <p>
  * Licensed under the Moderne Source Available License (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,10 @@ import lombok.With;
 import org.openrewrite.style.Style;
 import org.openrewrite.style.StyleHelper;
 
-import java.util.UUID;
-
 @Value
 @With
 public class OtherStyle implements PythonStyle {
-    UUID id;
+
     UseContinuationIndent useContinuationIndent;
 
     @Value
