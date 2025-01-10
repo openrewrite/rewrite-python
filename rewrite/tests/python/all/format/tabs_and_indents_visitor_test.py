@@ -210,7 +210,7 @@ def test_for_statement_with_list_comprehension_multiline():
             """
             def even_numbers(lst):
                 return [x for x
-                        in lst if x % 2 == 0]
+                    in lst if x % 2 == 0]
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -450,8 +450,8 @@ def test_multiline_call_with_args_without_multiline_align():
             """,
             """
             result = long_function_name(10, 'foo',
-                    another_arg=42,
-                    final_arg="bar")
+                another_arg=42,
+                final_arg="bar")
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -612,7 +612,7 @@ def test_list_comprehension():
             """
             def even_numbers(n):
                 return [x for x in range(n)
-                        if x % 2 == 0]
+                    if x % 2 == 0]
             """
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
@@ -714,6 +714,18 @@ def test_method_select_suffix_already_correct():
         python(
             """
             x = ("foo".startswith("f"))
+            """),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_top_level_string():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            'foo'
             """),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
