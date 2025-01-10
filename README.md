@@ -54,10 +54,11 @@ In the setup described here it is at the time of writing important that the GitH
    brew install uv
    uv python install
    ```
-3. Create a Python virtual environment (here we are going to use `~/.venv` but any directory works) and activate it
+3. Create a Python virtual environment and activate it
    ```shell
+   cd ~/git/openrewrite/rewrite-python/rewrite
    uv sync --all-extras
-   source ~/.venv/bin/activate
+   source ./.venv/bin/activate
    ```
 4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Uv
    ```shell
