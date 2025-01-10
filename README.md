@@ -1,7 +1,11 @@
 <p align="center">
-  <a href="https://docs.openrewrite.org/">
-      <img src="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss.png" alt="OpenRewrite">
-    </a>
+  <a href="https://docs.openrewrite.org">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-light.svg">
+      <img alt="OpenRewrite Logo" src="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-light.svg" width='600px'>
+    </picture>
+  </a>
 </p>
 
 <div align="center">
