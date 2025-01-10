@@ -17,6 +17,8 @@ package org.openrewrite.python.style;
 
 import lombok.Value;
 import lombok.With;
+import org.openrewrite.style.Style;
+import org.openrewrite.style.StyleHelper;
 
 import java.util.UUID;
 
@@ -77,8 +79,8 @@ public class SpacesStyle implements PythonStyle {
         Boolean afterHash;
     }
 
-//    @Override
-//    public Style applyDefaults() {
-//        return StyleHelper.merge(IntelliJ.spaces(), this);
-//    }
+    @Override
+    public Style applyDefaults() {
+        return StyleHelper.merge(IntelliJ.spaces(), this);
+    }
 }
