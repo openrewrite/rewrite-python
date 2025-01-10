@@ -1,6 +1,6 @@
 import unittest
 
-from rewrite.python import GeneralFormatStyle
+from rewrite import GeneralFormatStyle
 from rewrite.python.format.normalize_line_breaks_visitor import NormalizeLineBreaksVisitor
 from rewrite.test import from_visitor, RecipeSpec, rewrite_run, python
 
