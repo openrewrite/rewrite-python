@@ -52,7 +52,7 @@ In the setup described here it is at the time of writing important that the GitH
 2. Make sure Python 3.12 and Uv are installed
    ```shell
    brew install uv
-   uv install python
+   uv python install
    ```
 3. Create a Python virtual environment (here we are going to use `~/.venv` but any directory works) and activate it
    ```shell
