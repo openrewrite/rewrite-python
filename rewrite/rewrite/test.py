@@ -113,6 +113,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'  # type: ignore
+                    remoting_context.reset()
                     remoting_context.client.reset()
                     assert source_file.print_all() == source_spec.before
 
