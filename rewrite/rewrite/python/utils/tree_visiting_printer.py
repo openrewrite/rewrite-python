@@ -1,9 +1,9 @@
-from typing import Optional, Union
+from typing import Optional
 
 from rewrite import Cursor
 from rewrite import Tree
 from rewrite.java import Space, Literal, Identifier, JRightPadded, JLeftPadded, Modifier
-from rewrite.python import PythonVisitor, PySpace
+from rewrite.python import PythonVisitor
 from rewrite.visitor import T, P
 
 
@@ -42,10 +42,6 @@ class TreeVisitingPrinter(PythonVisitor):
         self._lines += [[depth, tree]]
         self._last_cursor_stack = _current_stack + [tree]
         return super().visit(tree, p, parent)  # pyright: ignore [reportReturnType]
-
-    def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
-                    p: P) -> Space:
-        return super().visit_space(space, loc, p)
 
     def _print_tree(self) -> str:
         output = ""
