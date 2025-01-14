@@ -1,9 +1,9 @@
-from typing import Optional, Union
+from typing import Optional
 
 from rewrite import Cursor
 from rewrite import Tree
 from rewrite.java import Space, Literal, Identifier, JRightPadded, JLeftPadded, Modifier
-from rewrite.python import PythonVisitor, PySpace
+from rewrite.python import PythonVisitor
 from rewrite.visitor import T, P
 
 
@@ -42,11 +42,6 @@ class TreeVisitingPrinter(PythonVisitor):
         self._lines += [[depth, tree]]
         self._last_cursor_stack = _current_stack + [tree]
         return super().visit(tree, p, parent)  # pyright: ignore [reportReturnType]
-
-    def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
-                    p: P) -> Space:
-        print("Loc", loc, "el,", self._print_element(self.cursor.parent.value))
-        return super().visit_space(space, loc, p)
 
     def _print_tree(self) -> str:
         output = ""
@@ -109,8 +104,7 @@ class TreeVisitingPrinter(PythonVisitor):
     def print_tree_all(tree: "Tree") -> str:
         visitor = TreeVisitingPrinter()
         visitor.visit(tree, None, None)
-        print(visitor._print_tree())
-        return ""
+        return visitor._print_tree()
 
     def find_diff_pos(self, cursor_stack, last_cursor_stack):
         diff_pos = -1
