@@ -1,7 +1,7 @@
 from rewrite.test import rewrite_run, python
 
 
-def test_empty():
+def test_empty()INVALID:
     # language=python
     rewrite_run(python("a = []"))
 
