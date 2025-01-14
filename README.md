@@ -1,7 +1,11 @@
 <p align="center">
-  <a href="https://docs.openrewrite.org/">
-      <img src="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss.png" alt="OpenRewrite">
-    </a>
+  <a href="https://docs.openrewrite.org">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-light.svg">
+      <img alt="OpenRewrite Logo" src="https://github.com/openrewrite/rewrite/raw/main/doc/logo-oss-light.svg" width='600px'>
+    </picture>
+  </a>
 </p>
 
 <div align="center">
@@ -52,16 +56,18 @@ In the setup described here it is at the time of writing important that the GitH
 2. Make sure Python 3.12 and Uv are installed
    ```shell
    brew install uv
-   uv install python
+   cd ~/git/openrewrite/rewrite-python/rewrite
+   uv python install
    ```
-3. Create a Python virtual environment (here we are going to use `~/.venv` but any directory works) and activate it
+3. Create a Python virtual environment and activate it
    ```shell
-   un sync --all-extras
-   source ~/.venv/bin/activate
+   cd ~/git/openrewrite/rewrite-python/rewrite
+   uv sync --all-extras
+   source ./.venv/bin/activate
    ```
 4. Switch to `moderneinc/rewrite-remote/python` and install all dependencies using Uv
    ```shell
-   cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote-test
+   cd ~/git/moderneinc/rewrite-remote/python/rewrite-remote
    uv build
    ```
 5. Open `~/git/openrewrite/rewrite-python/rewrite` in IDEA (or PyCharm)

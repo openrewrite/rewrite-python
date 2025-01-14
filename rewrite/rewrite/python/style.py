@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+from .. import random_id
 from ..style import Style, NamedStyles
 
 
@@ -450,19 +451,6 @@ class BlankLinesStyle(PythonStyle):
 
 
 @dataclass(frozen=True)
-class GeneralFormatStyle(PythonStyle):
-    _use_crlf_new_lines: bool
-
-    @property
-    def use_crlf_new_lines(self) -> bool:
-        return self._use_crlf_new_lines
-
-    def with_use_crlf_new_lines(self, use_crlf_new_lines: bool) -> GeneralFormatStyle:
-        return self if use_crlf_new_lines is self._use_crlf_new_lines else replace(self,
-                                                                                   _use_crlf_new_lines=use_crlf_new_lines)
-
-
-@dataclass(frozen=True)
 class OtherStyle(PythonStyle):
     @dataclass(frozen=True)
     class UseContinuationIndent:
@@ -504,6 +492,27 @@ class OtherStyle(PythonStyle):
 
 
 class IntelliJ(NamedStyles):
+
+    def __init__(self):
+        super().__init__(
+            _id=random_id(),
+            _name='org.openrewrite.python.style.IntelliJ',
+            _display_name='IntelliJ IDEA',
+            _description='IntelliJ IDEA default Python style.',
+            _tags={},
+            _styles=(
+                IntelliJ.spaces(),
+                IntelliJ.wrapping_and_braces(),
+                IntelliJ.tabs_and_indents(),
+                IntelliJ.blank_lines(),
+                IntelliJ.other(),
+            )
+        )
+
+    @classmethod
+    def defaults(cls) -> IntelliJ:
+        return IntelliJ()
+
     @classmethod
     def spaces(cls) -> SpacesStyle:
         return SpacesStyle(

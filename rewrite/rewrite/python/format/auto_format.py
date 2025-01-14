@@ -7,11 +7,12 @@ from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
 from .remove_trailing_whitespace_visitor import RemoveTrailingWhitespaceVisitor
 from .spaces_visitor import SpacesVisitor
 from .tabs_and_indents_visitor import TabsAndIndentsVisitor
-from .. import TabsAndIndentsStyle, GeneralFormatStyle, WrappingAndBracesStyle, OtherStyle
+from .. import TabsAndIndentsStyle, OtherStyle
 from ..style import BlankLinesStyle, SpacesStyle, IntelliJ
 from ..visitor import PythonVisitor
 from ... import Recipe, Tree, Cursor
 from ...java import JavaSourceFile
+from ...style import GeneralFormatStyle
 from ...visitor import P, T
 
 

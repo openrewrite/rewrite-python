@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Optional, TypeVar, Union, cast
 
-from rewrite import Tree, P, Cursor, list_map, Marker
+from rewrite import Tree, P, Cursor, list_map, Marker, GeneralFormatStyle
 from rewrite.java import J, Space, Comment, TextComment, TrailingComma
-from rewrite.python import PythonVisitor, PySpace, GeneralFormatStyle, PyComment
+from rewrite.python import PythonVisitor, PySpace, PyComment
 from rewrite.visitor import T
 
 J2 = TypeVar('J2', bound=J)
 
 
-class NormalizeLineBreaksVisitor(PythonVisitor):
-    def __init__(self, style: GeneralFormatStyle, stop_after: Tree = None):
+class NormalizeLineBreaksVisitor(PythonVisitor[P]):
+    def __init__(self, style: GeneralFormatStyle, stop_after: Optional[Tree] = None):
         self._stop_after = stop_after
         self._stop = False
         self._style = style
@@ -19,7 +19,7 @@ class NormalizeLineBreaksVisitor(PythonVisitor):
     def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
                     p: P) -> Space:
         if not space or space is Space.EMPTY or not space.whitespace:
-            return space
+            return space  # type: ignore
         s = space.with_whitespace(_normalize_new_lines(space.whitespace, self._style.use_crlf_new_lines))
 
         def process_comment(comment: Comment) -> Comment:
@@ -40,20 +40,17 @@ class NormalizeLineBreaksVisitor(PythonVisitor):
             self._stop = True
         return tree
 
-    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[T]:
-        return tree if self._stop else super().visit(tree, p, parent)
+    def visit(self, tree: Optional[Tree], p: P, parent: Optional[Cursor] = None) -> Optional[J]:
+        return cast(J, tree) if self._stop else super().visit(tree, p, parent)
 
     def visit_marker(self, marker: Marker, p: P) -> Marker:
-        m = cast(Marker, super().visit_marker(marker, p))
+        m = super().visit_marker(marker, p)
         if isinstance(m, TrailingComma):
             return m.with_suffix(self.visit_space(m.suffix, None, p))
         return m
 
 
-STR = TypeVar('STR', bound=Optional[str])
-
-
-def _normalize_new_lines(text: STR, use_crlf: bool) -> STR:
+def _normalize_new_lines(text: str, use_crlf: bool) -> str:
     """
     Normalize the line breaks in the given text to either use of CRLF or LF.
 
