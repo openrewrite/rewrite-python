@@ -45,7 +45,6 @@ class TreeVisitingPrinter(PythonVisitor):
 
     def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
                     p: P) -> Space:
-        print("Loc", loc, "el,", self._print_element(self.cursor.parent.value))
         return super().visit_space(space, loc, p)
 
     def _print_tree(self) -> str:
@@ -109,8 +108,7 @@ class TreeVisitingPrinter(PythonVisitor):
     def print_tree_all(tree: "Tree") -> str:
         visitor = TreeVisitingPrinter()
         visitor.visit(tree, None, None)
-        print(visitor._print_tree())
-        return ""
+        return visitor._print_tree()
 
     def find_diff_pos(self, cursor_stack, last_cursor_stack):
         diff_pos = -1
