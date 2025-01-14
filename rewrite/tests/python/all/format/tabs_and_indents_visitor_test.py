@@ -713,9 +713,9 @@ def test_string_literal_assignment_in_function():
             '''
             def my_function():
                 a = """
-                This is a string that
-                should align with the function body.
-                """
+             This is a string that
+             should align with the function body.
+             """
                 return None
             '''
         ),
