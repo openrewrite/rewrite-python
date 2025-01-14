@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import sys
+import textwrap
 from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
 from rewrite import Tree, Cursor, list_map
-from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Case, WhileLoop, \
-    Block, If, Label, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, NewArray
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Block, Label, ArrayDimension, \
+    ClassDeclaration, Empty, \
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, \
+    NewArray, Literal
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
-    CollectionLiteral, ForLoop, ExpressionStatement, CompilationUnit, OtherStyle, IntelliJ, ComprehensionExpression
+    CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression
 from rewrite.visitor import P, T
 
 J2 = TypeVar('J2', bound=J)
@@ -54,13 +56,16 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         return super().visit(tree, p)
 
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
-        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration, ExpressionStatement)):
+        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration)):
             self.cursor.put_message("indent_type", self.IndentType.ALIGN)
         elif isinstance(tree, Block):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
         elif isinstance(tree, (DictLiteral, CollectionLiteral, NewArray, ComprehensionExpression)):
             self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT
             if self._other.use_continuation_indent.collections_and_comprehensions else self.IndentType.INDENT)
+        elif isinstance(tree, ExpressionStatement):
+            self.cursor.put_message("indent_type", self.IndentType.INDENT
+            if self._is_doc_comment(tree, self.cursor) else self.IndentType.ALIGN)
         elif isinstance(tree, Expression):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
 
@@ -262,6 +267,25 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         if container.padding.elements is js and container.before is before:
             return container
         return JContainer(before, js, container.markers)
+
+    @staticmethod
+    def _is_doc_comment(expression_statement: ExpressionStatement, cursor: Cursor) -> bool:
+        expr = expression_statement.expression
+        return isinstance(expr, Literal) and isinstance(expr.value_source, str) and (
+                (expr.value_source.startswith('"""') and expr.value_source.endswith('"""')) or
+                (expr.value_source.startswith("'''") and expr.value_source.endswith("'''"))) and \
+            cursor.first_enclosing(Block) is not None
+
+    def visit_expression_statement(self, expression_statement: ExpressionStatement, p: P) -> J:
+        if self._is_doc_comment(expression_statement, self.cursor):
+            prefix_before = len(expression_statement.prefix.last_whitespace.split("\n")[-1])
+            stm = cast(ExpressionStatement, super().visit_expression_statement(expression_statement, p))
+            literal = cast(Literal, stm.expression)
+            shift = len(stm.prefix.last_whitespace.split("\n")[-1]) - prefix_before
+            return stm.with_expression(
+                literal.with_value_source(textwrap.indent(str(literal.value_source), shift * " ")[shift:]))
+
+        return super().visit_expression_statement(expression_statement, p)
 
     def _indent_to(self, space: Space, column: int, space_location: Optional[Union[PySpace.Location, Space.Location]]) -> Space:
         s = space

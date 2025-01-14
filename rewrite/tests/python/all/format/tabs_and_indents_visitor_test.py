@@ -729,6 +729,7 @@ def test_string_literal_comment():
         # language=python
         python(
             '''
+            1+1
             """
             This is a comment that
             should not be modified.
@@ -739,7 +740,7 @@ def test_string_literal_comment():
     )
 
 
-def test_int_literal_comment():
+def test_int_literal():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     rewrite_run(
         # language=python
@@ -759,11 +760,11 @@ def test_docstring_alignment():
         python(
             '''
             def my_function():
-             """
-             This is a docstring that
-             should align with the function body.
-             """
-             return None
+              """
+              This is a docstring that
+              should align with the function body.
+              """
+              return None
             ''',
             '''
             def my_function():
