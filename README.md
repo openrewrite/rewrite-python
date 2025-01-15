@@ -84,12 +84,12 @@ In the setup described here it is at the time of writing important that the GitH
 (tested using ```PyCharm 2024.3.1.1 (Community Edition)```)
 
 In order to conveniently perform development and run tests from within PyCharm one can:
-1. Open the `~/git/openrewrite/rewrite-python` as project.
+1. Open the `~/git/openrewrite/rewrite-python/rewrite` as project.
 2. Configure the virtual environment interpret with:
     - PyCharm | Settings | Project: rewrite-python | Python Interpreter | Add Interpreter | Add Local Interpreter
     - Select Existing
-    - Python path - navigate to `rewrite-python/rewrite/.venv/bin/python`
-3. (Right-click to) mark `rewrite` (not `rewrite/rewrite`) as Sources Root
+    - Python path - navigate to `~/git/openrewrite/rewrite-python/rewrite/.venv/bin/python`
+3. (Right-click to) mark the top directory as Sources Root (not `rewrite/` subdirectory)
 4. (Right-click to) mark `rewrite/tests/python/all` as Test Sources Root
 
 
