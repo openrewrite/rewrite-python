@@ -9,9 +9,10 @@ from typing import Optional, Callable, Iterable, List, TypeVar, Any, cast
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
-    ExecutionContext, Recipe, TreeVisitor, SourceFile
+    ExecutionContext, Recipe, TreeVisitor, SourceFile, PrintOutputCapture
 from rewrite.execution import InMemoryLargeSourceSet
 from rewrite.python.parser import PythonParserBuilder
+from rewrite.python.printer import PythonPrinter
 
 S = TypeVar('S', bound=SourceFile)
 
@@ -111,11 +112,15 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                     else parser.source_path_from_source_text(Path('.'), source_spec.before)
                 for source_file in parser.parse_inputs(
                         [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
+                    c = PrintOutputCapture(0)
+                    PythonPrinter().visit(source_file, c)
+                    print("Printed:", c.get_out())
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'  # type: ignore
                     remoting_context.reset()
                     remoting_context.client.reset()
                     assert source_file.print_all() == source_spec.before
+                    assert c.get_out() == source_spec.before
 
                     spec_by_source_file[source_file] = source_spec
 
