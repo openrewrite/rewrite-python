@@ -865,7 +865,8 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY
             ),
             JContainer.empty(),
-            self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
+            self.__pad_right(self.__convert_block(node.body), Space.EMPTY),
+            None
         )
 
     def visit_MatchValue(self, node):

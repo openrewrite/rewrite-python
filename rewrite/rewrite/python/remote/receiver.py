@@ -432,9 +432,10 @@ class PythonReceiver(Receiver):
             case = case.with_prefix(ctx.receive_node(case.prefix, PythonReceiver.receive_space))
             case = case.with_markers(ctx.receive_node(case.markers, ctx.receive_markers))
             case = case.with_type(ctx.receive_value(case.type, Case.Type))
-            case = case.padding.with_expressions(ctx.receive_node(case.padding.expressions, PythonReceiver.receive_container))
+            case = case.padding.with_case_labels(ctx.receive_node(case.padding.case_labels, PythonReceiver.receive_container))
             case = case.padding.with_statements(ctx.receive_node(case.padding.statements, PythonReceiver.receive_container))
             case = case.padding.with_body(ctx.receive_node(case.padding.body, PythonReceiver.receive_right_padded_tree))
+            case = case.with_guard(ctx.receive_node(case.guard, ctx.receive_tree))
             return case
 
         def visit_class_declaration(self, class_declaration: ClassDeclaration, ctx: ReceiverContext) -> J:
@@ -1396,7 +1397,8 @@ class PythonReceiver(Receiver):
                     ctx.receive_value(None, Case.Type),
                     ctx.receive_node(None, PythonReceiver.receive_container),
                     ctx.receive_node(None, PythonReceiver.receive_container),
-                    ctx.receive_node(None, PythonReceiver.receive_right_padded_tree)
+                    ctx.receive_node(None, PythonReceiver.receive_right_padded_tree),
+                    ctx.receive_node(None, ctx.receive_tree)
                 )
 
             if type in ["rewrite.python.tree.ClassDeclaration", "org.openrewrite.java.tree.J$ClassDeclaration"]:
