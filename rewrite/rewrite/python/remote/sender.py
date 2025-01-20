@@ -426,9 +426,10 @@ class PythonSender(Sender):
             ctx.send_node(case, attrgetter('_prefix'), PythonSender.send_space)
             ctx.send_node(case, attrgetter('_markers'), ctx.send_markers)
             ctx.send_value(case, attrgetter('_type'))
-            ctx.send_node(case, attrgetter('_expressions'), PythonSender.send_container)
+            ctx.send_node(case, attrgetter('_case_labels'), PythonSender.send_container)
             ctx.send_node(case, attrgetter('_statements'), PythonSender.send_container)
             ctx.send_node(case, attrgetter('_body'), PythonSender.send_right_padded)
+            ctx.send_node(case, attrgetter('_guard'), ctx.send_tree)
             return case
 
         def visit_class_declaration(self, class_declaration: ClassDeclaration, ctx: SenderContext) -> J:

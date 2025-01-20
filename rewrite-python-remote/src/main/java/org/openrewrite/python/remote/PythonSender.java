@@ -549,9 +549,10 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(case_, J.Case::getPrefix, PythonSender::sendSpace);
             ctx.sendNode(case_, J.Case::getMarkers, ctx::sendMarkers);
             ctx.sendValue(case_, J.Case::getType);
-            ctx.sendNode(case_, e -> e.getPadding().getExpressions(), PythonSender::sendContainer);
+            ctx.sendNode(case_, e -> e.getPadding().getCaseLabels(), PythonSender::sendContainer);
             ctx.sendNode(case_, e -> e.getPadding().getStatements(), PythonSender::sendContainer);
             ctx.sendNode(case_, e -> e.getPadding().getBody(), PythonSender::sendRightPadded);
+            ctx.sendNode(case_, J.Case::getGuard, ctx::sendTree);
             return case_;
         }
 

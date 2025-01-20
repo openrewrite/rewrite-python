@@ -567,9 +567,10 @@ public class PythonReceiver implements Receiver<Py> {
             case_ = case_.withPrefix(ctx.receiveNonNullNode(case_.getPrefix(), PythonReceiver::receiveSpace));
             case_ = case_.withMarkers(ctx.receiveNonNullNode(case_.getMarkers(), ctx::receiveMarkers));
             case_ = case_.withType(ctx.receiveNonNullValue(case_.getType(), J.Case.Type.class));
-            case_ = case_.getPadding().withExpressions(ctx.receiveNonNullNode(case_.getPadding().getExpressions(), PythonReceiver::receiveContainer));
+            case_ = case_.getPadding().withCaseLabels(ctx.receiveNonNullNode(case_.getPadding().getCaseLabels(), PythonReceiver::receiveContainer));
             case_ = case_.getPadding().withStatements(ctx.receiveNonNullNode(case_.getPadding().getStatements(), PythonReceiver::receiveContainer));
             case_ = case_.getPadding().withBody(ctx.receiveNode(case_.getPadding().getBody(), PythonReceiver::receiveRightPaddedTree));
+            case_ = case_.withGuard(ctx.receiveNode(case_.getGuard(), ctx::receiveTree));
             return case_;
         }
 
@@ -1783,7 +1784,8 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, J.Case.Type.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
-                    ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree)
+                    ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree),
+                    ctx.receiveNode(null, ctx::receiveTree)
             );
         }
 

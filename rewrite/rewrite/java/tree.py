@@ -810,14 +810,14 @@ class Case(Statement):
     def with_type(self, type: Type) -> Case:
         return self if type is self._type else replace(self, _type=type)
 
-    _expressions: JContainer[Expression]
+    _case_labels: JContainer[J]
 
     @property
-    def expressions(self) -> List[Expression]:
-        return self._expressions.elements
+    def case_labels(self) -> List[J]:
+        return self._case_labels.elements
 
-    def with_expressions(self, expressions: List[Expression]) -> Case:
-        return self.padding.with_expressions(JContainer.with_elements(self._expressions, expressions))
+    def with_case_labels(self, case_labels: List[J]) -> Case:
+        return self.padding.with_case_labels(JContainer.with_elements(self._case_labels, case_labels))
 
     _statements: JContainer[Statement]
 
@@ -837,6 +837,15 @@ class Case(Statement):
     def with_body(self, body: Optional[J]) -> Case:
         return self.padding.with_body(JRightPadded.with_element(self._body, body))
 
+    _guard: Optional[Expression]
+
+    @property
+    def guard(self) -> Optional[Expression]:
+        return self._guard
+
+    def with_guard(self, guard: Optional[Expression]) -> Case:
+        return self if guard is self._guard else replace(self, _guard=guard)
+
     class Type(Enum):
         Statement = 0
         Rule = 1
@@ -846,11 +855,11 @@ class Case(Statement):
         _t: Case
 
         @property
-        def expressions(self) -> JContainer[Expression]:
-            return self._t._expressions
+        def case_labels(self) -> JContainer[J]:
+            return self._t._case_labels
 
-        def with_expressions(self, expressions: JContainer[Expression]) -> Case:
-            return self._t if self._t._expressions is expressions else replace(self._t, _expressions=expressions)
+        def with_case_labels(self, case_labels: JContainer[J]) -> Case:
+            return self._t if self._t._case_labels is case_labels else replace(self._t, _case_labels=case_labels)
 
         @property
         def statements(self) -> JContainer[Statement]:
