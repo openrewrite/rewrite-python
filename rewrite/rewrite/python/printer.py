@@ -6,11 +6,9 @@ from rewrite.java import JavaVisitor, Space, JContainer, J, MethodDeclaration, \
     ControlParentheses, ParameterizedType, ArrayDimension, NewArray, Modifier, MethodInvocation, Literal, \
     Lambda, Import, If, Identifier, ForEachLoop, \
     ClassDeclaration, Case, Block, \
-    AssignmentOperation, Assignment, Assert, Annotation, Statement, Loop, Empty, Semicolon, TrailingComma, Erroneous, \
-    Unknown, Yield, Wildcard, WhileLoop, TypeParameters, TypeParameter, TypeCast, Synchronized, SwitchExpression, \
-    Return, Primitive, Parentheses, Package, NullableType, NewClass, MultiCatch, MemberReference, Label, \
-    IntersectionType, InstanceOf, ParenthesizedTypeTree, FieldAccess, EnumValueSet, EnumValue, DoWhileLoop, Continue, \
-    Break, ArrayType, AnnotatedType, Comment, TextComment
+    AssignmentOperation, Assignment, Assert, Annotation, Statement, Loop, Empty, Semicolon, TrailingComma, Yield, \
+    WhileLoop, Return, Parentheses, FieldAccess, Continue, \
+    Break, Comment, TextComment
 from rewrite.java import tree as j
 from . import *
 from .support_types import P, Py, PyRightPadded, PySpace, PyLeftPadded, PyContainer, J2
@@ -25,10 +23,9 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         super().__init__()
         self.delegate = PythonJavaPrinter(self)
 
-    def visit(self, tree: Optional[T], p: PrintOutputCapture[P], parent: Optional[Cursor] = None) -> J:
+    def visit(self, tree: Optional[T], p: PrintOutputCapture[P], parent: Optional[Cursor] = None) -> Optional[J]:
         if tree is None:
             return cast(Optional[J], self.default_value(None, p))
-
         if not isinstance(tree, Py):
             return self.delegate.visit(tree, p, parent)
         else:
@@ -43,18 +40,18 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.delegate._cursor = cursor
         self._cursor = cursor
 
-    def visit_right_padded(self, right: Optional[JRightPadded[T]],
-                           loc: Union[PyRightPadded.Location, JRightPadded.Location], p: PrintOutputCapture[P]) -> \
-    Optional[JRightPadded[T]]:
-        if isinstance(loc, JRightPadded.Location):
-            return super().visit_right_padded(right, loc, p)
-        return super().visit_right_padded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p)
-
-    def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: PyLeftPadded.Location, p: PrintOutputCapture[P]) -> \
-    Optional[JLeftPadded[T]]:
-        if isinstance(loc, JLeftPadded.Location):
-            return super().visit_left_padded(left, loc, p)
-        return super().visit_left_padded(self, left, JLeftPadded.Location.LANGUAGE_EXTENSION, p)
+    # def visit_right_padded(self, right: Optional[JRightPadded[T]],
+    #                        loc: Union[PyRightPadded.Location, JRightPadded.Location], p: PrintOutputCapture[P]) -> \
+    # Optional[JRightPadded[T]]:
+    #     if isinstance(loc, JRightPadded.Location):
+    #         return super().visit_right_padded(right, loc, p)
+    #     return super().visit_right_padded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p)
+    #
+    # def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: PyLeftPadded.Location, p: PrintOutputCapture[P]) -> \
+    # Optional[JLeftPadded[T]]:
+    #     if isinstance(loc, JLeftPadded.Location):
+    #         return super().visit_left_padded(left, loc, p)
+    #     return super().visit_left_padded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p)
 
     def visit_async(self, async_: Async, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(async_, PySpace.Location.ASYNC_PREFIX, p)
@@ -462,11 +459,6 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         return pattern
 
     def visit_slice(self, slice: Slice, p: PrintOutputCapture[P]) -> J:
-        # TODO: Check name inconsistency between java and python changed:
-        # SLICE_EXPRESSION -> SLICE_PREFIX
-        # SLICE_EXPRESSION_START -> SLICE_START
-        # SLICE_EXPRESSION_STOP -> SLICE_STOP
-        # SLICE_EXPRESSION_STEP -> SLICE_STEP
         self.before_syntax(slice, PySpace.Location.SLICE_PREFIX, p)
         self.visit_right_padded(slice.padding.start, PyRightPadded.Location.SLICE_START, p)
         p.append(':')
@@ -725,7 +717,6 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         comments = space.comments
         for comment in comments:
             self.visit_markers(comment.markers, p)
-            # TODO: COmment printing required?
             self.print_comment(comment, self.cursor, p)
             # comment.
             p.append(comment.suffix)
@@ -736,7 +727,7 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         if isinstance(comment, PyComment):
             p.append("#").append(comment.text)
         elif isinstance(comment, TextComment):
-            raise NotImplementedError("TextComment not supported")
+            raise NotImplementedError("TextComment not yet supported")
         else:
             raise ValueError(f"Unexpected comment type: {type(comment)}")
 
@@ -746,154 +737,6 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self._visit_left_padded_printer(".", field_access.padding.name, JLeftPadded.Location.FIELD_ACCESS_NAME, p)
         self.after_syntax(field_access, p)
         return field_access
-
-    # def visit_expression(self, expression: Expression, p: P) -> J:
-    #     raise NotImplementedError()
-
-    def visit_statement(self, statement: Statement, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_annotated_type(self, annotated_type: AnnotatedType, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_annotation(self, annotation: Annotation, p: P) -> J:
-        raise NotImplementedError()
-
-    # def visit_array_access(self, array_access: ArrayAccess, p: P) -> J:
-    #     raise NotImplementedError()
-
-    def visit_array_type(self, array_type: ArrayType, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_assert(self, assert_: Assert, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_assignment(self, assignment: Assignment, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_assignment_operation(self, assignment_operation: AssignmentOperation, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_binary(self, binary: Binary, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_block(self, block: Block, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_break(self, break_: Break, p: PrintOutputCapture[P]) -> J:
-        self.before_syntax(break_, Space.Location.BREAK_PREFIX, p)
-        p.append("break")
-        self.visit(break_.label, p)
-        self.after_syntax(break_, p)
-        return break_
-
-    def visit_case(self, case: Case, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_class_declaration(self, class_declaration: ClassDeclaration, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_class_declaration_kind(self, kind: ClassDeclaration.Kind, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_compilation_unit(self, compilation_unit: CompilationUnit, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_continue(self, continue_: Continue, p: PrintOutputCapture[P]) -> J:
-        self.before_syntax(continue_, Space.Location.CONTINUE_PREFIX, p)
-        p.append("continue")
-        self.visit(continue_.label, p)
-        self.after_syntax(continue_, p)
-        return continue_
-
-    def visit_do_while_loop(self, do_while_loop: DoWhileLoop, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_empty(self, empty: Empty, p: PrintOutputCapture[P]) -> J:
-        self.before_syntax(empty, Space.Location.EMPTY_PREFIX, p)
-        self.after_syntax(empty, p)
-        return empty
-
-    def visit_enum_value(self, enum_value: EnumValue, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_enum_value_set(self, enum_value_set: EnumValueSet, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_for_each_loop(self, for_each_loop: ForEachLoop, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_for_each_control(self, control: ForEachLoop.Control, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_for_loop(self, for_loop: ForLoop, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_parenthesized_type_tree(self, parenthesized_type_tree: ParenthesizedTypeTree, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_identifier(self, identifier: Identifier, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_if(self, if_: If, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_else(self, else_: If.Else, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_import(self, import_: Import, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_instance_of(self, instance_of: InstanceOf, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_intersection_type(self, intersection_type: IntersectionType, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_label(self, label: Label, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_lambda(self, lambda_: Lambda, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_lambda_parameters(self, parameters: Lambda.Parameters, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_literal(self, literal: Literal, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_member_reference(self, member_reference: MemberReference, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_method_declaration(self, method_declaration: MethodDeclaration, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_method_invocation(self, method_invocation: MethodInvocation, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_modifier(self, modifier: Modifier, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_multi_catch(self, multi_catch: MultiCatch, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_new_array(self, new_array: NewArray, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_array_dimension(self, array_dimension: ArrayDimension, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_new_class(self, new_class: NewClass, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_nullable_type(self, nullable_type: NullableType, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_package(self, package: Package, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
-        raise NotImplementedError()
 
     def visit_parentheses(self, parens: Parentheses[J2], p: PrintOutputCapture[P]) -> J:
         self.before_syntax(parens, Space.Location.PARENTHESES_PREFIX, p)
@@ -910,11 +753,17 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self.after_syntax(while_loop, p)
         return while_loop
 
-    def visit_control_parentheses(self, control_parentheses: ControlParentheses[J2], p: P) -> J:
-        raise NotImplementedError()
+    def visit_continue(self, continue_: Continue, p: PrintOutputCapture[P]) -> J:
+        self.before_syntax(continue_, Space.Location.CONTINUE_PREFIX, p)
+        p.append("continue")
+        self.visit(continue_.label, p)
+        self.after_syntax(continue_, p)
+        return continue_
 
-    def visit_primitive(self, primitive: Primitive, p: P) -> J:
-        raise NotImplementedError()
+    def visit_empty(self, empty: Empty, p: PrintOutputCapture[P]) -> J:
+        self.before_syntax(empty, Space.Location.EMPTY_PREFIX, p)
+        self.after_syntax(empty, p)
+        return empty
 
     def visit_return(self, return_: Return, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(return_, Space.Location.RETURN_PREFIX, p)
@@ -922,51 +771,6 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self.visit(return_.expression, p)
         self.after_syntax(return_, p)
         return return_
-
-    def visit_switch(self, switch: Switch, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_switch_expression(self, switch_expression: SwitchExpression, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_synchronized(self, synchronized: Synchronized, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_ternary(self, ternary: Ternary, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_throw(self, throw: Throw, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_try(self, try_: Try, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_try_resource(self, resource: Try.Resource, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_catch(self, catch: Try.Catch, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_type_cast(self, type_cast: TypeCast, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_type_parameter(self, type_parameter: TypeParameter, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_type_parameters(self, type_parameters: TypeParameters, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_unary(self, unary: Unary, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_variable_declarations(self, variable_declarations: VariableDeclarations, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
-        raise NotImplementedError()
-
-    def visit_wildcard(self, wildcard: Wildcard, p: P) -> J:
-        raise NotImplementedError()
 
     def visit_yield(self, yield_: Yield, p: PrintOutputCapture[P]) -> Yield:
         self.before_syntax(yield_, Space.Location.YIELD_PREFIX, p)
@@ -976,27 +780,20 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self.after_syntax(yield_, p)
         return yield_
 
-    def visit_unknown(self, unknown: Unknown, p: P) -> J:
-        raise NotImplementedError()
-        return super().visit_unknown(unknown, p)
+    def visit_break(self, break_: Break, p: PrintOutputCapture[P]) -> J:
+        self.before_syntax(break_, Space.Location.BREAK_PREFIX, p)
+        p.append("break")
+        self.visit(break_.label, p)
+        self.after_syntax(break_, p)
+        return break_
 
-    def visit_unknown_source(self, source: Unknown.Source, p: P) -> J:
-        raise NotImplementedError()
-        return super().visit_unknown_source(source, p)
-
-    def visit_erroneous(self, erroneous: Erroneous, p: P) -> J:
-        raise NotImplementedError()
-        return super().visit_erroneous(erroneous, p)
-
-    def visit_container(self, container: Optional[JContainer[J2]], loc: JContainer.Location, p: P) -> JContainer[J2]:
-        raise NotImplementedError()
-        return super().visit_container(container, loc, p)
-
-    def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p: P) -> Optional[
+    def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: JLeftPadded.Location, p: PrintOutputCapture[P]) -> \
+            Optional[
         JLeftPadded[T]]:
         return super().visit_left_padded(left, loc, p)
 
-    def visit_right_padded(self, right: Optional[JRightPadded[T]], loc: JRightPadded.Location, p: P) -> Optional[
+    def visit_right_padded(self, right: Optional[JRightPadded[T]], loc: JRightPadded.Location,
+                           p: PrintOutputCapture[P]) -> Optional[
         JRightPadded[T]]:
         return super().visit_right_padded(right, loc, p)
 
@@ -1010,7 +807,7 @@ class PythonJavaPrinter(JavaPrinter):
     def visit(self, tree: Union[Optional[Tree], List[J2]], p: PrintOutputCapture[P],
               parent: Optional[Cursor] = None) -> Optional[J]:
         if tree is None:
-            return cast(Optional[T], self.default_value(None, p))
+            return cast(Optional[J], self.default_value(None, p))
 
         if isinstance(tree, list):
             for t in tree:
@@ -1084,26 +881,25 @@ class PythonJavaPrinter(JavaPrinter):
 
     def visit_assignment_operation(self, assign_op: AssignmentOperation, p: PrintOutputCapture[P]) -> J:
         operator_map = {
-            'Type.Addition': '+=',
-            'Type.Subtraction': '-=',
-            'Type.Multiplication': '*=',
-            'Type.Division': '/=',
-            'Type.Modulo': '%=',
-            'Type.BitAnd': '&=',
-            'Type.BitOr': '|=',
-            'Type.BitXor': '^=',
-            'Type.LeftShift': '<<=',
-            'Type.RightShift': '>>=',
-            'Type.UnsignedRightShift': '>>>=',
-            'Type.Exponentiation': '**=',
-            'Type.FloorDivision': '//=',
-            'Type.MatrixMultiplication': '@='
+            AssignmentOperation.Type.Addition: '+=',
+            AssignmentOperation.Type.Subtraction: '-=',
+            AssignmentOperation.Type.Multiplication: '*=',
+            AssignmentOperation.Type.Division: '/=',
+            AssignmentOperation.Type.Modulo: '%=',
+            AssignmentOperation.Type.BitAnd: '&=',
+            AssignmentOperation.Type.BitOr: '|=',
+            AssignmentOperation.Type.BitXor: '^=',
+            AssignmentOperation.Type.LeftShift: '<<=',
+            AssignmentOperation.Type.RightShift: '>>=',
+            AssignmentOperation.Type.UnsignedRightShift: '>>>=',
+            AssignmentOperation.Type.Exponentiation: '**=',
+            AssignmentOperation.Type.FloorDivision: '//=',
+            AssignmentOperation.Type.MatrixMultiplication: '@='
         }
 
-        keyword = operator_map.get(str(assign_op.operator), None)
+        keyword = operator_map.get(assign_op.operator, None)
         if keyword is None:
             raise ValueError(f"Unknown assignment operator: {assign_op.operator}")
-
 
         self.before_syntax(assign_op, Space.Location.ASSIGNMENT_OPERATION_PREFIX, p)
         self.visit(assign_op.variable, p)
@@ -1117,28 +913,28 @@ class PythonJavaPrinter(JavaPrinter):
 
     def visit_binary(self, binary: j.Binary, p: PrintOutputCapture[P]) -> J:
         operator_map = {
-            'Type.Addition': '+',
-            'Type.Subtraction': '-',
-            'Type.Multiplication': '*',
-            'Type.Division': '/',
-            'Type.Modulo': '%',
-            'Type.LessThan': '<',
-            'Type.GreaterThan': '>',
-            'Type.LessThanOrEqual': '<=',
-            'Type.GreaterThanOrEqual': '>=',
-            'Type.Equal': '==',
-            'Type.NotEqual': '!=',
-            'Type.BitAnd': '&',
-            'Type.BitOr': '|',
-            'Type.BitXor': '^',
-            'Type.LeftShift': '<<',
-            'Type.RightShift': '>>',
-            'Type.UnsignedRightShift': '>>>',
-            'Type.Or': 'or',
-            'Type.And': 'and'
+            j.Binary.Type.Addition: '+',
+            j.Binary.Type.Subtraction: '-',
+            j.Binary.Type.Multiplication: '*',
+            j.Binary.Type.Division: '/',
+            j.Binary.Type.Modulo: '%',
+            j.Binary.Type.LessThan: '<',
+            j.Binary.Type.GreaterThan: '>',
+            j.Binary.Type.LessThanOrEqual: '<=',
+            j.Binary.Type.GreaterThanOrEqual: '>=',
+            j.Binary.Type.Equal: '==',
+            j.Binary.Type.NotEqual: '!=',
+            j.Binary.Type.BitAnd: '&',
+            j.Binary.Type.BitOr: '|',
+            j.Binary.Type.BitXor: '^',
+            j.Binary.Type.LeftShift: '<<',
+            j.Binary.Type.RightShift: '>>',
+            j.Binary.Type.UnsignedRightShift: '>>>',
+            j.Binary.Type.Or: 'or',
+            j.Binary.Type.And: 'and'
         }
 
-        keyword = operator_map.get(str(binary.operator), None)
+        keyword = operator_map.get(binary.operator, None)
         if not keyword:
             raise ValueError(f"Unknown binary operator: {binary.operator}")
 
@@ -1161,6 +957,7 @@ class PythonJavaPrinter(JavaPrinter):
         return block
 
     def visit_case(self, ca: Case, p: PrintOutputCapture[P]) -> J:
+        # TODO: Case does not have expressions (which it does in Java version), is currently also not triggerd by any test
         self.before_syntax(ca, Space.Location.CASE_PREFIX, p)
         elem = ca.expressions[0]
         if not (isinstance(elem, Identifier) and elem.simple_name == "default"):
@@ -1268,7 +1065,6 @@ class PythonJavaPrinter(JavaPrinter):
     def visit_identifier(self, ident: Identifier, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(ident, Space.Location.IDENTIFIER_PREFIX, p)
         quoted = ident.markers.find_first(Quoted)
-        # TODO: Ensure this works
         style = {
             Quoted.Style.SINGLE: "'",
             Quoted.Style.DOUBLE: '"',
@@ -1363,8 +1159,6 @@ class PythonJavaPrinter(JavaPrinter):
 
         # TODO: In java the method name is a J.Literal, which we can visit here its a string.
         # Maybe we won't need to visit the name at all.
-        # TODO::
-        #
         self.visit(method._name.identifier, p)
         self._visit_container_printer("(", method.padding.parameters,
                                       JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p)
@@ -1457,10 +1251,7 @@ class PythonJavaPrinter(JavaPrinter):
         is_with_statement = tryable.resources is not None and len(tryable.resources) > 0
 
         self.before_syntax(tryable, Space.Location.TRY_PREFIX, p)
-        if is_with_statement:
-            p.append("with")
-        else:
-            p.append("try")
+        p.append("with") if is_with_statement else p.append("try")
 
         resources = tryable.padding.resources
         if is_with_statement and resources is not None:
@@ -1587,7 +1378,3 @@ class PythonJavaPrinter(JavaPrinter):
 
         self.after_syntax(multi_variable, p)
         return multi_variable
-
-    def print_statement_terminator(self, statement: Statement, p: PrintOutputCapture[P]) -> None:
-        # optional semicolons are handled in `visit_marker()`
-        pass
