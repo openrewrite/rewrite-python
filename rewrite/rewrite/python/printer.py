@@ -40,19 +40,6 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.delegate._cursor = cursor
         self._cursor = cursor
 
-    # def visit_right_padded(self, right: Optional[JRightPadded[T]],
-    #                        loc: Union[PyRightPadded.Location, JRightPadded.Location], p: PrintOutputCapture[P]) -> \
-    # Optional[JRightPadded[T]]:
-    #     if isinstance(loc, JRightPadded.Location):
-    #         return super().visit_right_padded(right, loc, p)
-    #     return super().visit_right_padded(right, JRightPadded.Location.LANGUAGE_EXTENSION, p)
-    #
-    # def visit_left_padded(self, left: Optional[JLeftPadded[T]], loc: PyLeftPadded.Location, p: PrintOutputCapture[P]) -> \
-    # Optional[JLeftPadded[T]]:
-    #     if isinstance(loc, JLeftPadded.Location):
-    #         return super().visit_left_padded(left, loc, p)
-    #     return super().visit_left_padded(left, JLeftPadded.Location.LANGUAGE_EXTENSION, p)
-
     def visit_async(self, async_: Async, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(async_, PySpace.Location.ASYNC_PREFIX, p)
         p.append("async")
@@ -504,14 +491,12 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_container(self, container: Optional[JContainer[J2]],
                         loc: Union[PyContainer.Location, JContainer.Location], p: PrintOutputCapture[P]) -> JContainer[
         J2]:
-        raise NotImplementedError("Probably need print logic here")
-        # return super().visit_container(container, loc, p)
+        raise NotImplementedError("Should not be triggered")
 
     def visit_space(self, space: Optional[Space], loc: Optional[Union[PySpace.Location, Space.Location]],
                     p: PrintOutputCapture[P]) -> Space:
-        return self.delegate.visit_space(space, Space.Location.LANGUAGE_EXTENSION if isinstance(loc,
-                                                                                                PySpace.Location) else loc,
-                                         p)
+        loc_ = Space.Location.LANGUAGE_EXTENSION if isinstance(loc, PySpace.Location) else loc
+        return self.delegate.visit_space(space, loc_, p)  # pyright: ignore [reportArgumentType]
 
     def _is_py_instance(self, obj: Any) -> TypeGuard[Py]:
         """Type guard to check if an object is an instance of Py"""

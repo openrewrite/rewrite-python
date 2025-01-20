@@ -98,7 +98,8 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
     remoting_context = RemotingContext()
     register_remoting_factories()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 65432))
+    if USE_REMOTE:
+        s.connect(('localhost', 65432))
     remoting_context.connect(s)
     RemotePrinterFactory(remoting_context.client).set_current()
 
@@ -119,8 +120,10 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'  # type: ignore
-                    remoting_context.reset()
-                    remoting_context.client.reset()
+
+                    if USE_REMOTE:
+                        remoting_context.reset()
+                        remoting_context.client.reset()
 
                     before_printed = source_file.print_all() if USE_REMOTE else print_source_file(source_file)
                     assert before_printed == source_spec.before
