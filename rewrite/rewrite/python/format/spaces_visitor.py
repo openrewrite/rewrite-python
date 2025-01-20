@@ -4,7 +4,7 @@ import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
-    Import, ParameterizedType
+    Import, ParameterizedType, Parentheses
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
     ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression
 from rewrite.visitor import P
@@ -329,6 +329,12 @@ class SpacesVisitor(PythonVisitor):
         )
 
         return pt
+
+    def visit_parentheses(self, parentheses: Parentheses, p: P) -> J:
+        p2 = cast(Parentheses, super().visit_parentheses(parentheses, p))
+        p2 = p2.with_prefix(update_space(p2.prefix, False))
+        p2 = p2.padding.with_tree(p2.padding.tree.with_after(update_space(p2.padding.tree.after, False)))
+        return p2
 
     def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
         cl = cast(CollectionLiteral, super().visit_collection_literal(collection_literal, p))
