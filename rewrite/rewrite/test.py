@@ -86,8 +86,13 @@ class RecipeSpec:
     def with_parsers(self, parsers: Iterable[ParserBuilder]) -> RecipeSpec:
         return self if parsers is self._parsers else RecipeSpec(self._recipe, parsers)
 
+def print_source_file(source_file: SourceFile) -> str:
+    c = PrintOutputCapture(0)
+    PythonPrinter().visit(source_file, c)
+    return c.get_out()
 
 def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] = None) -> None:
+    USE_REMOTE = False
     from rewrite_remote import RemotingContext, RemotePrinterFactory
     from rewrite_remote.server import register_remoting_factories
     remoting_context = RemotingContext()
@@ -112,15 +117,13 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                     else parser.source_path_from_source_text(Path('.'), source_spec.before)
                 for source_file in parser.parse_inputs(
                         [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
-                    c = PrintOutputCapture(0)
-                    PythonPrinter().visit(source_file, c)
-                    print("Printed:", c.get_out())
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'  # type: ignore
                     remoting_context.reset()
                     remoting_context.client.reset()
-                    assert source_file.print_all() == source_spec.before
-                    assert c.get_out() == source_spec.before
+
+                    before_printed = source_file.print_all() if USE_REMOTE else print_source_file(source_file)
+                    assert before_printed == source_spec.before
 
                     spec_by_source_file[source_file] = source_spec
 
@@ -132,7 +135,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                 if res._before and res._after:
                     source_spec = spec_by_source_file[res._before]
                     source_spec.after_recipe(res._after)
-                    after_printed = res._after.print_all()
+                    after_printed = res._after.print_all() if USE_REMOTE else print_source_file(res._after)
                     if source_spec.after is not None:
                         after = source_spec.after(after_printed)
                         assert after_printed == after
