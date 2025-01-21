@@ -145,7 +145,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
             self.visit_right_padded(statement, PyRightPadded.Location.TOP_LEVEL_STATEMENT_SUFFIX, p)
 
         self.visit_space(cu.eof, Space.Location.COMPILATION_UNIT_EOF, p)
-        # TODO: SuppressNewline markers seems to not exist?
+        # TODO: The SuppressNewline marker used in the PythonPrinter does not exist?
         # if any(isinstance(marker, SuppressNewline) for marker in cu.markers.markers):
         #     out = p.get_out()
         #     if out and out[-1] == '\n':
@@ -406,11 +406,6 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_match_case_pattern(self, pattern: MatchCase.Pattern, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(pattern, PySpace.Location.MATCH_PATTERN_PREFIX, p)
         children = pattern.padding.children
-
-        # TODO: Check name inconsistency between java and python:
-        # Changed: MATCH_PATTERN_ELEMENTS -> MATCH_CASE_PATTERN_CHILDREN
-        # Changed: MATCH_PATTERN_ELEMENT_PREFIX -> MATCH_CASE_PATTERN_PREFIX but this could also be MATCH_CASE_PATTERN_CHILDREN_PREFIX\
-        # Changed: MATCH_PATTERN_ELEMENT -> MATCH_CASE_PATTERN_CHILD
         if pattern.kind == MatchCase.Pattern.Kind.AS:
             self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "as", "", p)
         elif pattern.kind in {MatchCase.Pattern.Kind.CAPTURE, MatchCase.Pattern.Kind.LITERAL}:
