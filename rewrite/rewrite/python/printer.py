@@ -82,7 +82,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         elif binary.operator == Binary.Type.Power:
             p.append("**")
         elif binary.operator == Binary.Type.StringConcatenation:
-            pass
+            pass  # empty
         else:
             raise ValueError(f"Unexpected binary operator: {binary.operator}")
 
@@ -347,12 +347,12 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_del(self, del_: Del, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(del_, PySpace.Location.DEL_PREFIX, p)
         p.append("del")
-        # TODO: Unknown location for DEL_ELEMENT, can't find a direct match probably should be DEL_TARGETS?
+        # Note: PythonPrinter.java uses PyRightPadded.Location.DEL_ELEMENTS here but that doesn't exist in Python.
+        # Instead we use PyRightPadded.Location.DEL_TARGETS as both actually point to PySpace.Location.DEL_TARGET_SUFFIX.
         self._visit_right_padded_printer(del_.padding.targets, PyRightPadded.Location.DEL_TARGETS, ",", p)
         return del_
 
     def visit_special_parameter(self, special_parameter: SpecialParameter, p: PrintOutputCapture[P]) -> J:
-        # TODO: Check name inconsistency between java and python SPECIAL_PARAMETER_PREFIX vs SPECIAL_PARAMETER
         self.before_syntax(special_parameter, PySpace.Location.SPECIAL_PARAMETER_PREFIX, p)
         if special_parameter.kind == 'ARGS':
             p.append("*")
@@ -445,16 +445,16 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
 
         return pattern
 
-    def visit_slice(self, slice: Slice, p: PrintOutputCapture[P]) -> J:
-        self.before_syntax(slice, PySpace.Location.SLICE_PREFIX, p)
-        self.visit_right_padded(slice.padding.start, PyRightPadded.Location.SLICE_START, p)
+    def visit_slice(self, slice_: Slice, p: PrintOutputCapture[P]) -> J:
+        self.before_syntax(slice_, PySpace.Location.SLICE_PREFIX, p)
+        self.visit_right_padded(slice_.padding.start, PyRightPadded.Location.SLICE_START, p)
         p.append(':')
-        if slice.padding.stop is not None:
-            self.visit_right_padded(slice.padding.stop, PyRightPadded.Location.SLICE_STOP, p)
-            if slice.padding.step is not None:
+        if slice_.padding.stop is not None:
+            self.visit_right_padded(slice_.padding.stop, PyRightPadded.Location.SLICE_STOP, p)
+            if slice_.padding.step is not None:
                 p.append(':')
-                self.visit_right_padded(slice.padding.step, PyRightPadded.Location.SLICE_STEP, p)
-        return slice
+                self.visit_right_padded(slice_.padding.step, PyRightPadded.Location.SLICE_STEP, p)
+        return slice_
 
     # CUSTOM VISIT METHODS FOR VISIT CONTAINER, VISIT SPACE, VISIT RIGHT PADDED, VISIT LEFT PADDED
     def _visit_container_printer(self, before: str, container: Optional[JContainer[J2]],
@@ -476,7 +476,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
             if i < len(nodes) - 1:
                 p.append(suffix_between)
 
-    def _visit_left_padded_printer(self, s: str, left: JLeftPadded[J2], loc: PyLeftPadded.Location,
+    def _visit_left_padded_printer(self, s: str, left: JLeftPadded[J2], _: PyLeftPadded.Location,
                                    p: PrintOutputCapture[P]) -> None:
         self.delegate.visit_space(left.before, Space.Location.LANGUAGE_EXTENSION, p)
         p.append(s)
@@ -490,6 +490,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
 
     def visit_container(self, container: Optional[JContainer[J2]],
                         loc: Union[PyContainer.Location, JContainer.Location], p: PrintOutputCapture[P]) -> JContainer[
+        # pyright: ignore
         J2]:
         raise NotImplementedError("Should not be triggered")
 
@@ -498,11 +499,13 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         loc_ = Space.Location.LANGUAGE_EXTENSION if isinstance(loc, PySpace.Location) else loc
         return self.delegate.visit_space(space, loc_, p)  # pyright: ignore [reportArgumentType]
 
-    def _is_py_instance(self, obj: Any) -> TypeGuard[Py]:
+    @staticmethod
+    def _is_py_instance(obj: Any) -> TypeGuard[Py]:
         """Type guard to check if an object is an instance of Py"""
         return isinstance(obj, Py)
 
-    def _is_space_location(self, loc: Any) -> TypeGuard[PySpace.Location]:
+    @staticmethod
+    def _is_space_location(loc: Any) -> TypeGuard[PySpace.Location]:
         """Type guard to check if location is PySpace.Location"""
         return isinstance(loc, PySpace.Location)
 
@@ -557,7 +560,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         Implementation of the common before_syntax logic
         """
         for marker in markers.markers:
-            p.append(p._marker_printer.before_prefix(
+            p.append(p.marker_printer.before_prefix(
                 marker,
                 Cursor(self.cursor, marker),
                 JAVA_MARKER_WRAPPER
@@ -569,7 +572,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.visit_markers(markers, p)
 
         for marker in markers.markers:
-            p.append(p._marker_printer.before_syntax(
+            p.append(p.marker_printer.before_syntax(
                 marker,
                 Cursor(self.cursor, marker),
                 JAVA_MARKER_WRAPPER
@@ -589,7 +592,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         markers = arg.markers if isinstance(arg, Py) else arg
 
         for marker in markers.markers:
-            p.append(p._marker_printer.after_syntax(
+            p.append(p.marker_printer.after_syntax(
                 marker,
                 Cursor(self.cursor, marker),
                 JAVA_MARKER_WRAPPER
@@ -611,22 +614,17 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
 
             # Process markers before prefix
             for marker in markers_list:
-                p.append(p._marker_printer.before_prefix(
+                p.append(p.marker_printer.before_prefix(
                     marker,
                     Cursor(self.cursor, marker),
                     JAVA_MARKER_WRAPPER
                 ))
 
-            # Visit space if location is provided
             if loc is not None:
                 self.visit_space(j_or_prefix, loc, p)
-
-            # Visit markers
             self.visit_markers(markers, p)
-
-            # Process markers before syntax
             for marker in markers_list:
-                p.append(p._marker_printer.before_syntax(
+                p.append(p.marker_printer.before_syntax(
                     marker,
                     Cursor(self.cursor, marker),
                     JAVA_MARKER_WRAPPER
@@ -638,7 +636,7 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
 
         markers_list = markers.markers
         for marker in markers_list:
-            p.append(p._marker_printer.after_syntax(
+            p.append(p.marker_printer.after_syntax(
                 marker,
                 Cursor(self.cursor, marker),
                 JAVA_MARKER_WRAPPER
@@ -697,18 +695,17 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
             self.visit(left_padded.element, p)
             self.after_syntax(left_padded.markers, p)
 
-    def visit_space(self, space: Space, loc: Optional[Space.Location], p: PrintOutputCapture[P]) -> Space:
+    def visit_space(self, space: Space, _: Optional[Space.Location], p: PrintOutputCapture[P]) -> Space:
         p.append(space.whitespace)
         comments = space.comments
         for comment in comments:
             self.visit_markers(comment.markers, p)
-            self.print_comment(comment, self.cursor, p)
-            # comment.
+            self.print_comment(comment, p)
             p.append(comment.suffix)
         return space
 
     @staticmethod
-    def print_comment(comment: Comment, cursor: Cursor, p: PrintOutputCapture[P]):
+    def print_comment(comment: Comment, p: PrintOutputCapture[P]):
         if isinstance(comment, PyComment):
             p.append("#").append(comment.text)
         elif isinstance(comment, TextComment):
@@ -806,10 +803,6 @@ class PythonJavaPrinter(JavaPrinter):
             else:
                 return super().visit(tree, p, parent)
 
-    def set_cursor(self, cursor: Cursor) -> None:
-        self.cursor = cursor
-        self.outer_printer.cursor = cursor
-
     @property
     def cursor(self) -> Cursor:
         return super().cursor
@@ -818,9 +811,6 @@ class PythonJavaPrinter(JavaPrinter):
     def cursor(self, cursor: Cursor) -> None:
         self.outer_printer._cursor = cursor
         self._cursor = cursor
-
-    def internal_set_cursor(self, cursor) -> None:
-        self.cursor = cursor
 
     def visit_annotation(self, annotation: Annotation, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(annotation, Space.Location.ANNOTATION_PREFIX, p)
@@ -1354,12 +1344,12 @@ class PythonJavaPrinter(JavaPrinter):
 
         nodes = multi_variable.padding.variables
         for i, node in enumerate(nodes):
-            self.set_cursor(Cursor(self.cursor, node))
+            self.cursor = Cursor(self.cursor, node)
             self.visit(node.element, p)
             self.visit_markers(node.markers, p)
             if i < len(nodes) - 1:
                 p.append(",")
-            self.set_cursor(self.cursor.parent)  # pyright: ignore [reportArgumentType]
+            self.cursor = self.cursor.parent  # pyright: ignore [reportAttributeAccessIssue]
 
         self.after_syntax(multi_variable, p)
         return multi_variable
