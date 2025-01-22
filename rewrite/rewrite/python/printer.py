@@ -923,12 +923,11 @@ class PythonJavaPrinter(JavaPrinter):
         return block
 
     def visit_case(self, ca: Case, p: PrintOutputCapture[P]) -> J:
-        # TODO: Case does not have expressions (which it does in Java version), is currently also not triggerd by any test
         self.before_syntax(ca, Space.Location.CASE_PREFIX, p)
-        elem = ca.expressions[0]
+        elem = ca.case_labels[0]
         if not (isinstance(elem, Identifier) and elem.simple_name == "default"):
             p.append("case")
-        self._print_container("", ca.padding.expressions,
+        self._print_container("", ca.padding.case_labels,
                               JContainer.Location.CASE_EXPRESSION, ",", "", p)
         self.visit_space(ca.padding.statements.before, Space.Location.CASE, p)
         self.visit_statements(ca.padding.statements.padding.elements,
