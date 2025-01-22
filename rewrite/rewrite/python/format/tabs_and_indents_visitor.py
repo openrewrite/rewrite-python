@@ -158,14 +158,42 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                     else:
                         container: JContainer[J] = cast(JContainer[J], self.cursor.parent_or_throw.value)
                         elements: List[J] = container.elements
+                        first_arg: J = elements[0]
                         last_arg: J = elements[-1]
 
                         # TODO: style.MethodDeclarationParameters doesn't exist for Python
                         # but should be self._style.method_declaration_parameters.align_when_multiple
-                        elem = self.visit_and_cast(elem, J, p)
-                        after = self._indent_to(right.after,
-                                                indent if t is last_arg else self._style.continuation_indent,
-                                                loc.after_location)
+                        if self._style.method_declaration_parameters.align_multiline_parameters:
+                            method = self.cursor.first_enclosing(MethodDeclaration)
+                            if method is not None:
+                                if "\n" in first_arg.prefix.last_whitespace:
+                                    if self._other.use_continuation_indent.method_declaration_parameters:
+                                        align_to = self._get_length_of_whitespace(method.prefix.last_whitespace) + self._style.continuation_indent
+                                    else:
+                                        align_to = self._get_length_of_whitespace(first_arg.prefix.last_whitespace)
+                                else:
+                                    c = PrintOutputCapture(0)
+                                    PythonPrinter().visit(method, c, self.cursor)
+                                    method_source = c.get_out()
+
+                                    c = PrintOutputCapture(0)
+                                    PythonPrinter().visit(first_arg, c, self.cursor)
+                                    arg_source = c.get_out()
+
+                                    first_arg_index = method_source.index(arg_source)
+                                    line_break_index = method_source.rfind('\n', 0, first_arg_index)
+                                    align_to = (first_arg_index - (0 if line_break_index == -1 else line_break_index)) - 1
+                                self.cursor.parent_or_throw.put_message("last_indent", align_to - self._style.continuation_indent)
+                                elem = self.visit_and_cast(elem, J, p)
+                                self.cursor.parent_or_throw.put_message("last_indent", indent)
+                                after = self._indent_to(right.after, indent if t is last_arg else align_to, loc.after_location)
+                            else:
+                                after = right.after
+                        else:
+                            elem = self.visit_and_cast(elem, J, p)
+                            after = self._indent_to(right.after,
+                                                    indent if t is last_arg else self._style.continuation_indent,
+                                                    loc.after_location)
 
                 elif loc == JRightPadded.Location.METHOD_INVOCATION_ARGUMENT:
                     elem, after = self._visit_method_invocation_argument_j_type(elem, right, indent, loc, p)

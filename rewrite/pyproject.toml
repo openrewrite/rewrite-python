@@ -44,3 +44,6 @@ check-types = "mypy ./rewrite"
 format = "black ./rewrite ./tests"
 test = "pytest"
 lint = "pylint ./rewrite/**/*.py ./tests/**/*.py"
+
+[tool.pyright]
+reportIncompatibleMethodOverride = false
