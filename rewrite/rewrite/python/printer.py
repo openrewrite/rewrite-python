@@ -29,13 +29,9 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         if not isinstance(tree, Py):
             return self.delegate.visit(tree, p, parent)
         else:
-            return super().visit(tree, p)
+            return super().visit(tree, p, parent)
 
-    @property
-    def cursor(self) -> Cursor:
-        return super().cursor
-
-    @cursor.setter
+    @PythonVisitor.cursor.setter
     def cursor(self, cursor: Cursor) -> None:
         self.delegate._cursor = cursor
         self._cursor = cursor
@@ -93,8 +89,8 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_chained_assignment(self, chained_assignment: ChainedAssignment, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(chained_assignment, PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p)
         # TODO: Check name inconsistency between java and python CHAINED_ASSIGNMENT_VARIABLES vs CHAINED_ASSIGNMENT_VARIABLE
-        self._visit_right_padded_printer(chained_assignment.padding.variables,
-                                         PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, "=", p)
+        self._print_right_padded(chained_assignment.padding.variables,
+                                 PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, "=", p)
         p.append('=')
         self.visit(chained_assignment.assignment, p)
         self.after_syntax(chained_assignment, p)
@@ -111,7 +107,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.before_syntax(for_loop, PySpace.Location.FOR_LOOP_PREFIX, p)
         p.append("for")
         self.visit(for_loop.target, p)
-        self._visit_left_padded_printer("in", for_loop.padding.iterable, PyLeftPadded.Location.FOR_LOOP_ITERABLE, p)
+        self._print_visit_left_padded("in", for_loop.padding.iterable, PyLeftPadded.Location.FOR_LOOP_ITERABLE, p)
         self.visit_right_padded(for_loop.padding.body, PyRightPadded.Location.FOR_LOOP_BODY, p)
         return for_loop
 
@@ -162,10 +158,10 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         p.append("import")
 
         if multi_import.parenthesized:
-            self._visit_container_printer("(", multi_import.padding.names, PyContainer.Location.MULTI_IMPORT_NAMES, ",",
+            self._print_container("(", multi_import.padding.names, PyContainer.Location.MULTI_IMPORT_NAMES, ",",
                                           ")", p)
         else:
-            self._visit_container_printer("", multi_import.padding.names, PyContainer.Location.MULTI_IMPORT_NAMES, ",",
+            self._print_container("", multi_import.padding.names, PyContainer.Location.MULTI_IMPORT_NAMES, ",",
                                           "", p)
 
         self.after_syntax(multi_import, p)
@@ -181,9 +177,9 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
 
     def visit_dict_literal(self, dict_literal: DictLiteral, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(dict_literal, PySpace.Location.DICT_LITERAL_PREFIX, p)
-        self._visit_container_printer("{", dict_literal.padding.elements, PyContainer.Location.DICT_LITERAL_ELEMENTS,
+        self._print_container("{", dict_literal.padding.elements, PyContainer.Location.DICT_LITERAL_ELEMENTS,
                                       ",", "}",
-                                      p)
+                              p)
         self.after_syntax(dict_literal, p)
         return dict_literal
 
@@ -192,16 +188,16 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         elements = collection_literal.padding.elements
 
         if collection_literal.kind == CollectionLiteral.Kind.LIST:
-            self._visit_container_printer("[", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "]", p)
+            self._print_container("[", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "]", p)
         elif collection_literal.kind == CollectionLiteral.Kind.SET:
-            self._visit_container_printer("{", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "}", p)
+            self._print_container("{", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "}", p)
         elif collection_literal.kind == CollectionLiteral.Kind.TUPLE:
             if elements.markers.find_first(OmitParentheses) is not None:
-                self._visit_container_printer("", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "",
-                                              p)
+                self._print_container("", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", "",
+                                      p)
             else:
-                self._visit_container_printer("(", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", ")",
-                                              p)
+                self._print_container("(", elements, PyContainer.Location.COLLECTION_LITERAL_ELEMENTS, ",", ")",
+                                      p)
 
         self.after_syntax(collection_literal, p)
         return collection_literal
@@ -315,7 +311,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.before_syntax(type_alias, PySpace.Location.UNION_TYPE_PREFIX, p)
         p.append("type")
         self.visit(type_alias.name, p)
-        self._visit_left_padded_printer("=", type_alias.padding.value, PyLeftPadded.Location.TYPE_ALIAS_VALUE, p)
+        self._print_visit_left_padded("=", type_alias.padding.value, PyLeftPadded.Location.TYPE_ALIAS_VALUE, p)
         self.after_syntax(type_alias, p)
         return type_alias
 
@@ -328,7 +324,7 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_union_type(self, union_type: UnionType, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(union_type, PySpace.Location.UNION_TYPE_PREFIX, p)
         # TODO: Check name inconsistency between java and python UNION_TYPE_TYPES vs UNION_TYPE_TYPE
-        self._visit_right_padded_printer(union_type.padding.types, PyRightPadded.Location.UNION_TYPE_TYPES, "|", p)
+        self._print_right_padded(union_type.padding.types, PyRightPadded.Location.UNION_TYPE_TYPES, "|", p)
         self.after_syntax(union_type, p)
         return union_type
 
@@ -340,8 +336,8 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
             p.append("nonlocal")
 
         # TODO: Check name inconsistency between java and python VARIABLE_SCOPE_ELEMENTS vs VARIABLE_SCOPE_NAME_SUFFIX
-        self._visit_right_padded_printer(variable_scope.padding.names, PyRightPadded.Location.VARIABLE_SCOPE_NAMES, ",",
-                                         p)
+        self._print_right_padded(variable_scope.padding.names, PyRightPadded.Location.VARIABLE_SCOPE_NAMES, ",",
+                                 p)
         return variable_scope
 
     def visit_del(self, del_: Del, p: PrintOutputCapture[P]) -> J:
@@ -349,14 +345,14 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         p.append("del")
         # Note: PythonPrinter.java uses PyRightPadded.Location.DEL_ELEMENTS here but that doesn't exist in Python.
         # Instead we use PyRightPadded.Location.DEL_TARGETS as both actually point to PySpace.Location.DEL_TARGET_SUFFIX.
-        self._visit_right_padded_printer(del_.padding.targets, PyRightPadded.Location.DEL_TARGETS, ",", p)
+        self._print_right_padded(del_.padding.targets, PyRightPadded.Location.DEL_TARGETS, ",", p)
         return del_
 
     def visit_special_parameter(self, special_parameter: SpecialParameter, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(special_parameter, PySpace.Location.SPECIAL_PARAMETER_PREFIX, p)
-        if special_parameter.kind == 'ARGS':
+        if special_parameter.kind == SpecialParameter.Kind.ARGS:
             p.append("*")
-        elif special_parameter.kind == 'KWARGS':
+        elif special_parameter.kind == SpecialParameter.Kind.KWARGS:
             p.append("**")
         self.after_syntax(special_parameter, p)
         return special_parameter
@@ -374,8 +370,8 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
     def visit_named_argument(self, named_argument: NamedArgument, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(named_argument, PySpace.Location.NAMED_ARGUMENT, p)
         self.visit(named_argument.name, p)
-        self._visit_left_padded_printer("=", named_argument.padding.value, PyLeftPadded.Location.NAMED_ARGUMENT_VALUE,
-                                        p)
+        self._print_visit_left_padded("=", named_argument.padding.value, PyLeftPadded.Location.NAMED_ARGUMENT_VALUE,
+                                      p)
         return named_argument
 
     def visit_type_hinted_expression(self, type_hinted_expression: TypeHintedExpression, p: PrintOutputCapture[P]) -> J:
@@ -407,36 +403,36 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         self.before_syntax(pattern, PySpace.Location.MATCH_PATTERN_PREFIX, p)
         children = pattern.padding.children
         if pattern.kind == MatchCase.Pattern.Kind.AS:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "as", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "as", "", p)
         elif pattern.kind in {MatchCase.Pattern.Kind.CAPTURE, MatchCase.Pattern.Kind.LITERAL}:
             self.visit_container(children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, p)
         elif pattern.kind == MatchCase.Pattern.Kind.CLASS:
             self.visit_space(children.before, PySpace.Location.MATCH_CASE_PATTERN_PREFIX, p)
             self.visit_right_padded(children.padding.elements[0], PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD, p)
-            self._visit_container_printer("(", JContainer(Space.EMPTY, children.padding.elements[1:], Markers.EMPTY),
-                                          PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", ")", p)
+            self._print_container("(", JContainer(Space.EMPTY, children.padding.elements[1:], Markers.EMPTY),
+                                  PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", ")", p)
         elif pattern.kind == MatchCase.Pattern.Kind.DOUBLE_STAR:
-            self._visit_container_printer("**", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
+            self._print_container("**", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.KEY_VALUE:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ":", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ":", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.KEYWORD:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "=", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "=", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.MAPPING:
-            self._visit_container_printer("{", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "}", p)
+            self._print_container("{", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "}", p)
         elif pattern.kind == MatchCase.Pattern.Kind.OR:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "|", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "|", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.SEQUENCE:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.SEQUENCE_LIST:
-            self._visit_container_printer("[", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "]", p)
+            self._print_container("[", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", "]", p)
         elif pattern.kind in {MatchCase.Pattern.Kind.GROUP, MatchCase.Pattern.Kind.SEQUENCE_TUPLE}:
-            self._visit_container_printer("(", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", ")", p)
+            self._print_container("(", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, ",", ")", p)
         elif pattern.kind == MatchCase.Pattern.Kind.STAR:
-            self._visit_container_printer("*", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
+            self._print_container("*", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.VALUE:
-            self._visit_container_printer("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
+            self._print_container("", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
         elif pattern.kind == MatchCase.Pattern.Kind.WILDCARD:
-            self._visit_container_printer("_", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
+            self._print_container("_", children, PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN, "", "", p)
 
         return pattern
 
@@ -452,18 +448,18 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         return slice_
 
     # CUSTOM VISIT METHODS FOR VISIT CONTAINER, VISIT SPACE, VISIT RIGHT PADDED, VISIT LEFT PADDED
-    def _visit_container_printer(self, before: str, container: Optional[JContainer[J2]],
-                                 loc: PyContainer.Location, suffix_between: str, after: str,
-                                 p: PrintOutputCapture[P]) -> None:
+    def _print_container(self, before: str, container: Optional[JContainer[J2]],
+                         loc: PyContainer.Location, suffix_between: str, after: str,
+                         p: PrintOutputCapture[P]) -> None:
         if container is None:
             return None
         self.visit_space(container.before, loc.before_location, p)
         p.append(before)
-        self._visit_right_padded_printer(container.padding.elements, loc.element_location, suffix_between, p)
+        self._print_right_padded(container.padding.elements, loc.element_location, suffix_between, p)
         p.append("" if after is None else after)
 
-    def _visit_right_padded_printer(self, nodes: List[JRightPadded[J2]], location: PyRightPadded.Location,
-                                    suffix_between: str, p: PrintOutputCapture[P]) -> None:
+    def _print_right_padded(self, nodes: List[JRightPadded[J2]], location: PyRightPadded.Location,
+                            suffix_between: str, p: PrintOutputCapture[P]) -> None:
         for i, node in enumerate(nodes):
             self.visit(node.element, p)
             self.visit_space(node.after, location.after_location, p)
@@ -471,8 +467,8 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
             if i < len(nodes) - 1:
                 p.append(suffix_between)
 
-    def _visit_left_padded_printer(self, s: str, left: JLeftPadded[J2], _: PyLeftPadded.Location,
-                                   p: PrintOutputCapture[P]) -> None:
+    def _print_visit_left_padded(self, s: str, left: JLeftPadded[J2], _: PyLeftPadded.Location,
+                                 p: PrintOutputCapture[P]) -> None:
         self.delegate.visit_space(left.before, Space.Location.LANGUAGE_EXTENSION, p)
         p.append(s)
         self.cursor = Cursor(self.cursor, left)
@@ -640,10 +636,10 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
     def visit_statements(self, statements: List[JRightPadded[Statement]], location: JRightPadded.Location,
                          p: PrintOutputCapture[P]) -> None:
         for padded_stat in statements:
-            self._visit_statement_printer(padded_stat, location, p)
+            self._print_statement(padded_stat, location, p)
 
-    def _visit_statement_printer(self, padded_stat: Optional[JRightPadded[Statement]], location: JRightPadded.Location,
-                                 p: PrintOutputCapture[P]) -> None:
+    def _print_statement(self, padded_stat: Optional[JRightPadded[Statement]], location: JRightPadded.Location,
+                         p: PrintOutputCapture[P]) -> None:
         if padded_stat is None:
             return
 
@@ -651,19 +647,19 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self.visit_space(padded_stat.after, location.after_location, p)
         self.visit_markers(padded_stat.markers, p)
 
-    def _visit_container_printer(self, before: str, container: Optional[JContainer[J2]], location: JContainer.Location,
-                                 suffix_between: str, after: Optional[str], p: PrintOutputCapture[P]) -> None:
+    def _print_container(self, before: str, container: Optional[JContainer[J2]], location: JContainer.Location,
+                         suffix_between: str, after: Optional[str], p: PrintOutputCapture[P]) -> None:
         if container is None:
             return
         self.before_syntax(container.before, location.before_location, p, markers=container.markers)
         p.append(before)
-        self._visit_right_padded_printer_list(container.padding.elements, location.element_location, suffix_between, p)
+        self._print_right_padded_list(container.padding.elements, location.element_location, suffix_between, p)
         self.after_syntax(container.markers, p)
         p.append("" if after is None else after)
 
-    def _visit_right_padded_printer_list(self, nodes: List[JRightPadded[J2]], location: JRightPadded.Location,
-                                         suffix_between: str,
-                                         p: PrintOutputCapture[P]) -> None:
+    def _print_right_padded_list(self, nodes: List[JRightPadded[J2]], location: JRightPadded.Location,
+                                 suffix_between: str,
+                                 p: PrintOutputCapture[P]) -> None:
         for i, node in enumerate(nodes):
             self.visit(node.element, p)
             self.visit_space(node.after, location.after_location, p)
@@ -671,8 +667,8 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
             if i < len(nodes) - 1:
                 p.append(suffix_between)
 
-    def _visit_right_padded_printer(self, right_padded: Optional[JRightPadded[J2]], location: JRightPadded.Location,
-                                    suffix: Optional[str], p: PrintOutputCapture[P]) -> None:
+    def _print_right_padded(self, right_padded: Optional[JRightPadded[J2]], location: JRightPadded.Location,
+                            suffix: Optional[str], p: PrintOutputCapture[P]) -> None:
         if right_padded is not None:
             self.before_syntax(Space.EMPTY, None, p, right_padded.markers)
             self.visit(right_padded.element, p)
@@ -681,8 +677,8 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
             if suffix is not None:
                 p.append(suffix)
 
-    def _visit_left_padded_printer(self, prefix: Optional[str], left_padded: Optional[JLeftPadded[J2]],
-                                   location: JLeftPadded.Location, p: PrintOutputCapture[P]) -> None:
+    def _print_left_padded(self, prefix: Optional[str], left_padded: Optional[JLeftPadded[J2]],
+                           location: JLeftPadded.Location, p: PrintOutputCapture[P]) -> None:
         if left_padded is not None:
             self.before_syntax(left_padded.before, location.before_location, p, left_padded.markers)
             if prefix is not None:
@@ -711,14 +707,14 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
     def visit_field_access(self, field_access: FieldAccess, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(field_access, Space.Location.FIELD_ACCESS_PREFIX, p)
         self.visit(field_access.target, p)
-        self._visit_left_padded_printer(".", field_access.padding.name, JLeftPadded.Location.FIELD_ACCESS_NAME, p)
+        self._print_left_padded(".", field_access.padding.name, JLeftPadded.Location.FIELD_ACCESS_NAME, p)
         self.after_syntax(field_access, p)
         return field_access
 
     def visit_parentheses(self, parens: Parentheses[J2], p: PrintOutputCapture[P]) -> J:
         self.before_syntax(parens, Space.Location.PARENTHESES_PREFIX, p)
         p.append('(')
-        self._visit_right_padded_printer(parens.padding.tree, JRightPadded.Location.PARENTHESES, ")", p)
+        self._print_right_padded(parens.padding.tree, JRightPadded.Location.PARENTHESES, ")", p)
         self.after_syntax(parens, p)
         return parens
 
@@ -726,7 +722,7 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
         self.before_syntax(while_loop, Space.Location.WHILE_PREFIX, p)
         p.append("while")
         self.visit(while_loop.condition, p)
-        self._visit_statement_printer(while_loop.padding.body, JRightPadded.Location.WHILE_BODY, p)
+        self._print_statement(while_loop.padding.body, JRightPadded.Location.WHILE_BODY, p)
         self.after_syntax(while_loop, p)
         return while_loop
 
@@ -776,10 +772,10 @@ class JavaPrinter(JavaVisitor[PrintOutputCapture[P]]):
 
 
 class PythonJavaPrinter(JavaPrinter):
-    outer_printer: PythonPrinter
+    delegate: PythonPrinter
 
-    def __init__(self, outer_printer: PythonPrinter):
-        self.outer_printer = outer_printer
+    def __init__(self, delegate: PythonPrinter):
+        self.delegate = delegate
 
     def visit(self, tree: Union[Optional[Tree], List[J2]], p: PrintOutputCapture[P],
               parent: Optional[Cursor] = None) -> Optional[J]:
@@ -789,12 +785,12 @@ class PythonJavaPrinter(JavaPrinter):
         if isinstance(tree, list):
             for t in tree:
                 if isinstance(t, Py):
-                    self.outer_printer.visit(t, p)
+                    self.delegate.visit(t, p)
                 else:
                     super().visit(t, p, parent)
         else:
             if isinstance(tree, Py):
-                return self.outer_printer.visit(tree, p)
+                return self.delegate.visit(tree, p)
             else:
                 return super().visit(tree, p, parent)
 
@@ -804,23 +800,23 @@ class PythonJavaPrinter(JavaPrinter):
 
     @cursor.setter
     def cursor(self, cursor: Cursor) -> None:
-        self.outer_printer._cursor = cursor
+        self.delegate._cursor = cursor
         self._cursor = cursor
 
     def visit_annotation(self, annotation: Annotation, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(annotation, Space.Location.ANNOTATION_PREFIX, p)
         p.append("@")
         self.visit(annotation.annotation_type, p)
-        self._visit_container_printer("(", annotation.padding.arguments,
-                                      JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p)
+        self._print_container("(", annotation.padding.arguments,
+                              JContainer.Location.ANNOTATION_ARGUMENTS, ",", ")", p)
         self.after_syntax(annotation, p)
         return annotation
 
     def visit_array_dimension(self, array_dimension: ArrayDimension, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(array_dimension, Space.Location.DIMENSION_PREFIX, p)
         p.append("[")
-        self._visit_right_padded_printer(array_dimension.padding.index,
-                                         JRightPadded.Location.ARRAY_INDEX, "]", p)
+        self._print_right_padded(array_dimension.padding.index,
+                                 JRightPadded.Location.ARRAY_INDEX, "]", p)
         self.after_syntax(array_dimension, p)
         return array_dimension
 
@@ -829,8 +825,8 @@ class PythonJavaPrinter(JavaPrinter):
         p.append("assert")
         self.visit(assert_.condition, p)
         if assert_.detail is not None:
-            self._visit_left_padded_printer(",", assert_.detail,
-                                            JLeftPadded.Location.ASSERT_DETAIL, p)
+            self._print_left_padded(",", assert_.detail,
+                                    JLeftPadded.Location.ASSERT_DETAIL, p)
         self.after_syntax(assert_, p)
         return assert_
 
@@ -844,8 +840,8 @@ class PythonJavaPrinter(JavaPrinter):
 
         self.before_syntax(assignment, Space.Location.ASSIGNMENT_PREFIX, p)
         self.visit(assignment.variable, p)
-        self._visit_left_padded_printer(symbol, assignment.padding.assignment,
-                                        JLeftPadded.Location.ASSIGNMENT, p)
+        self._print_left_padded(symbol, assignment.padding.assignment,
+                                JLeftPadded.Location.ASSIGNMENT, p)
         self.after_syntax(assignment, p)
         return assignment
 
@@ -932,8 +928,8 @@ class PythonJavaPrinter(JavaPrinter):
         elem = ca.expressions[0]
         if not (isinstance(elem, Identifier) and elem.simple_name == "default"):
             p.append("case")
-        self._visit_container_printer("", ca.padding.expressions,
-                                      JContainer.Location.CASE_EXPRESSION, ",", "", p)
+        self._print_container("", ca.padding.expressions,
+                              JContainer.Location.CASE_EXPRESSION, ",", "", p)
         self.visit_space(ca.padding.statements.before, Space.Location.CASE, p)
         self.visit_statements(ca.padding.statements.padding.elements,
                               JRightPadded.Location.CASE, p)
@@ -941,8 +937,8 @@ class PythonJavaPrinter(JavaPrinter):
             self.visit_right_padded(ca.padding.body,
                                     JRightPadded.Location.LANGUAGE_EXTENSION, p)
         else:
-            self._visit_right_padded_printer(ca.padding.body,
-                                             JRightPadded.Location.CASE_BODY, ";", p)
+            self._print_right_padded(ca.padding.body,
+                                     JRightPadded.Location.CASE_BODY, ";", p)
         self.after_syntax(ca, p)
         return ca
 
@@ -982,9 +978,9 @@ class PythonJavaPrinter(JavaPrinter):
         if class_decl.padding.implements is not None:
             omit_parens = class_decl.padding.implements.markers.find_first(
                 OmitParentheses) is not None
-            self._visit_container_printer("" if omit_parens else "(",
-                                          class_decl.padding.implements,
-                                          JContainer.Location.IMPLEMENTS, ",",
+            self._print_container("" if omit_parens else "(",
+                                  class_decl.padding.implements,
+                                  JContainer.Location.IMPLEMENTS, ",",
                                           "" if omit_parens else ")", p)
 
         self.visit(class_decl.body, p)
@@ -993,8 +989,8 @@ class PythonJavaPrinter(JavaPrinter):
 
     def visit_control_parentheses(self, control_parens: ControlParentheses[J], p: PrintOutputCapture[P]) -> J:
         self.before_syntax(control_parens, Space.Location.CONTROL_PARENTHESES_PREFIX, p)
-        self._visit_right_padded_printer(control_parens.padding.tree,
-                                         JRightPadded.Location.PARENTHESES, "", p)
+        self._print_right_padded(control_parens.padding.tree,
+                                 JRightPadded.Location.PARENTHESES, "", p)
         self.after_syntax(control_parens, p)
         return control_parens
 
@@ -1058,7 +1054,7 @@ class PythonJavaPrinter(JavaPrinter):
         then_part = iff.padding.then_part
         if not isinstance(then_part.element, Block):
             p.append(":")
-        self._visit_statement_printer(then_part, JRightPadded.Location.IF_THEN, p)
+        self._print_statement(then_part, JRightPadded.Location.IF_THEN, p)
         self.visit(iff.else_part, p)
         self.after_syntax(iff, p)
         return iff
@@ -1069,8 +1065,8 @@ class PythonJavaPrinter(JavaPrinter):
             self.visit(im.qualid.name, p)
         else:
             self.visit(im.qualid, p)
-        self._visit_left_padded_printer("as", im.padding.alias,
-                                        JLeftPadded.Location.IMPORT_ALIAS_PREFIX, p)
+        self._print_left_padded("as", im.padding.alias,
+                                JLeftPadded.Location.IMPORT_ALIAS_PREFIX, p)
         self.after_syntax(im, p)
         return im
 
@@ -1080,8 +1076,8 @@ class PythonJavaPrinter(JavaPrinter):
         self.visit_space(lambda_.parameters.prefix,
                          Space.Location.LAMBDA_PARAMETERS_PREFIX, p)
         self.visit_markers(lambda_.parameters.markers, p)
-        self._visit_right_padded_printer_list(lambda_.parameters.padding.parameters,
-                                              JRightPadded.Location.LAMBDA_PARAM, ",", p)
+        self._print_right_padded_list(lambda_.parameters.padding.parameters,
+                                      JRightPadded.Location.LAMBDA_PARAM, ",", p)
         self.visit_space(lambda_.arrow, Space.Location.LAMBDA_ARROW_PREFIX, p)
         p.append(":")
         self.visit(lambda_.body, p)
@@ -1118,7 +1114,7 @@ class PythonJavaPrinter(JavaPrinter):
         return literal
 
     def visit_marker(self, marker: Marker, p: PrintOutputCapture[P]) -> Marker:
-        return self.outer_printer.visit_marker(marker, p)
+        return self.delegate.visit_marker(marker, p)
 
     def visit_method_declaration(self, method: MethodDeclaration, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(method, Space.Location.METHOD_DECLARATION_PREFIX, p)
@@ -1130,8 +1126,8 @@ class PythonJavaPrinter(JavaPrinter):
         # TODO: In java the method name is a J.Literal, which we can visit here its a string.
         # Maybe we won't need to visit the name at all.
         self.visit(method._name.identifier, p)
-        self._visit_container_printer("(", method.padding.parameters,
-                                      JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p)
+        self._print_container("(", method.padding.parameters,
+                              JContainer.Location.METHOD_DECLARATION_PARAMETERS, ",", ")", p)
         self.visit(method.return_type_expression, p)
         self.visit(method.body, p)
         self.after_syntax(method, p)
@@ -1139,11 +1135,11 @@ class PythonJavaPrinter(JavaPrinter):
 
     def visit_method_invocation(self, method: MethodInvocation, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(method, Space.Location.METHOD_INVOCATION_PREFIX, p)
-        self._visit_right_padded_printer(method.padding.select,
-                                         JRightPadded.Location.METHOD_SELECT,
+        self._print_right_padded(method.padding.select,
+                                 JRightPadded.Location.METHOD_SELECT,
                                          "" if method.name.simple_name == "" else ".", p)
-        self._visit_container_printer("<", method.padding.type_parameters,
-                                      JContainer.Location.TYPE_PARAMETERS, ",", ">", p)
+        self._print_container("<", method.padding.type_parameters,
+                              JContainer.Location.TYPE_PARAMETERS, ",", ">", p)
         self.visit(method.name, p)
 
         if method.markers.find_first(OmitParentheses) is not None:
@@ -1153,8 +1149,8 @@ class PythonJavaPrinter(JavaPrinter):
             before = "("
             after = ")"
 
-        self._visit_container_printer(before, method.padding.arguments,
-                                      JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p)
+        self._print_container(before, method.padding.arguments,
+                              JContainer.Location.METHOD_INVOCATION_ARGUMENTS, ",", after, p)
         self.after_syntax(method, p)
         return method
 
@@ -1177,16 +1173,16 @@ class PythonJavaPrinter(JavaPrinter):
 
     def visit_new_array(self, new_array: NewArray, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(new_array, Space.Location.NEW_ARRAY_PREFIX, p)
-        self._visit_container_printer("[", new_array.padding.initializer,
-                                      JContainer.Location.NEW_ARRAY_INITIALIZER, ",", "]", p)
+        self._print_container("[", new_array.padding.initializer,
+                              JContainer.Location.NEW_ARRAY_INITIALIZER, ",", "]", p)
         self.after_syntax(new_array, p)
         return new_array
 
     def visit_parameterized_type(self, type_: ParameterizedType, p: PrintOutputCapture[P]) -> J:
         self.before_syntax(type_, Space.Location.PARAMETERIZED_TYPE_PREFIX, p)
         self.visit(type_.clazz, p)
-        self._visit_container_printer("[", type_.padding.type_parameters,
-                                      JContainer.Location.TYPE_PARAMETERS, ",", "]", p)
+        self._print_container("[", type_.padding.type_parameters,
+                              JContainer.Location.TYPE_PARAMETERS, ",", "]", p)
         self.after_syntax(type_, p)
         return type_
 
@@ -1205,8 +1201,8 @@ class PythonJavaPrinter(JavaPrinter):
                          Space.Location.TERNARY_TRUE, p)
         p.append("if")
         self.visit(ternary.condition, p)
-        self._visit_left_padded_printer("else", ternary.padding.false_part,
-                                        JLeftPadded.Location.TERNARY_FALSE, p)
+        self._print_left_padded("else", ternary.padding.false_part,
+                                JLeftPadded.Location.TERNARY_FALSE, p)
         self.after_syntax(ternary, p)
         return ternary
 
@@ -1274,7 +1270,7 @@ class PythonJavaPrinter(JavaPrinter):
             p.append("else")
             self.visit(else_wrapper.else_block, p)
 
-        self._visit_left_padded_printer("finally", tryable.padding.finally_, JLeftPadded.Location.TRY_FINALLY, p)
+        self._print_left_padded("finally", tryable.padding.finally_, JLeftPadded.Location.TRY_FINALLY, p)
         self.after_syntax(tryable, p)
         return tryable
 
@@ -1321,8 +1317,8 @@ class PythonJavaPrinter(JavaPrinter):
                                  JRightPadded.Location.NAMED_VARIABLE.after_location, p)
                 p.append(':')
                 self.visit(type_, p)
-            self._visit_left_padded_printer("=", variable.padding.initializer,
-                                            JLeftPadded.Location.VARIABLE_INITIALIZER, p)
+            self._print_left_padded("=", variable.padding.initializer,
+                                    JLeftPadded.Location.VARIABLE_INITIALIZER, p)
         self.after_syntax(variable, p)
         return variable
 
