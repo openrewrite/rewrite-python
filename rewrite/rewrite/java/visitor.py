@@ -144,9 +144,10 @@ class JavaVisitor(TreeVisitor[J, P]):
             return temp_statement
         case = cast(Case, temp_statement)
         case = case.with_markers(self.visit_markers(case.markers, p))
-        case = case.padding.with_expressions(self.visit_container(case.padding.expressions, JContainer.Location.CASE_EXPRESSION, p))
+        case = case.padding.with_case_labels(self.visit_container(case.padding.case_labels, JContainer.Location.CASE_CASE_LABELS, p))
         case = case.padding.with_statements(self.visit_container(case.padding.statements, JContainer.Location.CASE, p))
         case = case.padding.with_body(self.visit_right_padded(case.padding.body, JRightPadded.Location.CASE_BODY, p))
+        case = case.with_guard(self.visit_and_cast(case.guard, Expression, p))
         return case
 
     def visit_class_declaration(self, class_declaration: ClassDeclaration, p: P) -> J:

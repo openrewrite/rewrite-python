@@ -7,3 +7,7 @@ allprojects {
     group = "org.openrewrite"
     description = "Rewrite Python"
 }
+
+repositories {
+    mavenCentral()
+}
