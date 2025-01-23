@@ -93,15 +93,17 @@ def print_source_file(source_file: SourceFile) -> str:
 
 def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] = None) -> None:
     USE_REMOTE = False
-    from rewrite_remote import RemotingContext, RemotePrinterFactory
-    from rewrite_remote.server import register_remoting_factories
-    remoting_context = RemotingContext()
-    register_remoting_factories()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
     if USE_REMOTE:
+        from rewrite_remote import RemotingContext, RemotePrinterFactory
+        from rewrite_remote.server import register_remoting_factories
+        remoting_context = RemotingContext()
+        register_remoting_factories()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # if USE_REMOTE:
         s.connect(('localhost', 65432))
-    remoting_context.connect(s)
-    RemotePrinterFactory(remoting_context.client).set_current()
+        remoting_context.connect(s)
+        RemotePrinterFactory(remoting_context.client).set_current()
 
     try:
         ctx = InMemoryExecutionContext()
@@ -153,7 +155,8 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
     except Exception:
         raise
     finally:
-        remoting_context.close()
+        if USE_REMOTE:
+            remoting_context.close()
 
 
 S2 = TypeVar('S2', bound=SourceFile)

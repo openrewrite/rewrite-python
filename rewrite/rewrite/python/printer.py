@@ -10,6 +10,7 @@ from rewrite.java import JavaVisitor, Space, JContainer, J, MethodDeclaration, \
     WhileLoop, Return, Parentheses, FieldAccess, Continue, \
     Break, Comment, TextComment
 from rewrite.java import tree as j
+from ..visitor import T
 from . import *
 from .support_types import P, Py, PyRightPadded, PySpace, PyLeftPadded, PyContainer, J2
 from .. import PrintOutputCapture, Cursor, Markers, Tree, Marker
