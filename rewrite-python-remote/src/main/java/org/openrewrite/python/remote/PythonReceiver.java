@@ -985,6 +985,7 @@ public class PythonReceiver implements Receiver<Py> {
             switchExpression = switchExpression.withMarkers(ctx.receiveNonNullNode(switchExpression.getMarkers(), ctx::receiveMarkers));
             switchExpression = switchExpression.withSelector(ctx.receiveNonNullNode(switchExpression.getSelector(), ctx::receiveTree));
             switchExpression = switchExpression.withCases(ctx.receiveNonNullNode(switchExpression.getCases(), ctx::receiveTree));
+            switchExpression = switchExpression.withType(ctx.receiveValue(switchExpression.getType(), JavaType.class));
             return switchExpression;
         }
 
@@ -2219,7 +2220,8 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
-                    ctx.receiveNonNullNode(null, ctx::receiveTree)
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
             );
         }
 
