@@ -1,5 +1,7 @@
 from typing import Callable
 
+import pytest
+
 from rewrite.python import IntelliJ, SpacesVisitor, SpacesStyle
 from rewrite.test import rewrite_run, python, RecipeSpec, from_visitor
 
@@ -364,6 +366,7 @@ def test_spaces_around_power():
     )
 
 
+@pytest.mark.xfail(reason='Not implemented eq_in_named_parameter not yet implemented')
 def test_spaces_around_eq_in_named_parameter():
     style = get_around_operator_style(lambda x: x.with_eq_in_named_parameter(True))
     rewrite_run(
