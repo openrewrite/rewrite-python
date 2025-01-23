@@ -86,11 +86,6 @@ class RecipeSpec:
     def with_parsers(self, parsers: Iterable[ParserBuilder]) -> RecipeSpec:
         return self if parsers is self._parsers else RecipeSpec(self._recipe, parsers)
 
-def print_source_file(source_file: SourceFile) -> str:
-    c = PrintOutputCapture(0)
-    PythonPrinter().visit(source_file, c)
-    return c.get_out()
-
 def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] = None) -> None:
     USE_REMOTE = False
 
@@ -127,7 +122,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         remoting_context.reset()
                         remoting_context.client.reset()
 
-                    before_printed = source_file.print_all() if USE_REMOTE else print_source_file(source_file)
+                    before_printed = source_file.print_all()
                     assert before_printed == source_spec.before
 
                     spec_by_source_file[source_file] = source_spec
@@ -140,7 +135,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                 if res._before and res._after:
                     source_spec = spec_by_source_file[res._before]
                     source_spec.after_recipe(res._after)
-                    after_printed = res._after.print_all() if USE_REMOTE else print_source_file(res._after)
+                    after_printed = res._after.print_all()
                     if source_spec.after is not None:
                         after = source_spec.after(after_printed)
                         assert after_printed == after
