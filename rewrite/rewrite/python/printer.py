@@ -1,5 +1,5 @@
-from typing import Optional, Any, List, cast
-from typing import Union, TypeGuard, Callable
+from typing import Optional, List, cast
+from typing import Union, Callable
 
 from rewrite.java import JavaVisitor, Space, JContainer, J, MethodDeclaration, \
     OmitParentheses, Try, JRightPadded, JLeftPadded, VariableDeclarations, Unary, Throw, Ternary, Switch, \
@@ -13,7 +13,7 @@ from rewrite.java import tree as j
 from . import *
 from .support_types import P, Py, PyRightPadded, PySpace, PyLeftPadded, PyContainer, J2
 from .. import PrintOutputCapture, Cursor, Markers, Tree, Marker
-from ..visitor import T
+from .visitor import PythonVisitor
 
 JAVA_MARKER_WRAPPER: Callable[[str], str] = lambda out: f"/*~~{out}{'~~' if out else ''}>*/"""
 
@@ -490,57 +490,20 @@ class PythonPrinter(PythonVisitor[PrintOutputCapture[P]]):
         loc_ = Space.Location.LANGUAGE_EXTENSION if isinstance(loc, PySpace.Location) else loc
         return self.delegate.visit_space(space, loc_, p)  # pyright: ignore [reportArgumentType]
 
-    @staticmethod
-    def _is_py_instance(obj: Any) -> TypeGuard[Py]:
-        """Type guard to check if an object is an instance of Py"""
-        return isinstance(obj, Py)
-
-    @staticmethod
-    def _is_space_location(loc: Any) -> TypeGuard[PySpace.Location]:
-        """Type guard to check if location is PySpace.Location"""
-        return isinstance(loc, PySpace.Location)
-
     def before_syntax(
             self,
-            first_arg: Union[Py, Space],
-            second_arg: Union[Space.Location, PySpace.Location, Markers],
-            third_arg: Optional[Union[Space.Location, PrintOutputCapture]] = None,
-            fourth_arg: Optional[PrintOutputCapture] = None
+            py: Py,
+            loc: Union[Space.Location, PySpace.Location],
+            p: PrintOutputCapture[P],
     ) -> None:
         """
         Unified before_syntax method that handles all cases from Java overloads.
-        Usage patterns:
         1. before_syntax(py: Py, loc: Location, p: PrintOutputCapture)
         2. before_syntax(py: Py, loc: PySpace.Location, p: PrintOutputCapture)
-        3. before_syntax(prefix: Space, markers: Markers, loc: Optional[Union[Location, PySpace.Location]], p: PrintOutputCapture)
         """
-        # Case 1 & 2: first_arg is Py instance
-        if self._is_py_instance(first_arg):
-            py = first_arg
-            loc = second_arg
-            p = third_arg
-            if not isinstance(p, PrintOutputCapture):
-                raise TypeError("Expected PrintOutputCapture as third argument when first argument is Py")
+        return self._before_syntax_internal(py.prefix, py.markers, loc, p)
 
-            self._before_syntax_impl(py.prefix, py.markers, loc, p)
-
-        # Case 3: first_arg is Space instance
-        elif isinstance(first_arg, Space):
-            prefix = first_arg
-            if not isinstance(second_arg, Markers):
-                raise TypeError("Expected Markers as second argument when first argument is Space")
-            markers = second_arg
-            loc = third_arg
-            p = fourth_arg
-            if not isinstance(p, PrintOutputCapture):
-                raise TypeError("Expected PrintOutputCapture as fourth argument when first argument is Space")
-
-            self._before_syntax_impl(prefix, markers, loc, p)
-
-        else:
-            raise TypeError(f"Unexpected type for first_arg: {type(first_arg)}")
-
-    def _before_syntax_impl(
+    def _before_syntax_internal(
             self,
             prefix: Space,
             markers: Markers,
