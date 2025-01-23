@@ -788,6 +788,7 @@ class PythonSender(Sender):
             ctx.send_node(switch_expression, attrgetter('_markers'), ctx.send_markers)
             ctx.send_node(switch_expression, attrgetter('_selector'), ctx.send_tree)
             ctx.send_node(switch_expression, attrgetter('_cases'), ctx.send_tree)
+            ctx.send_typed_value(switch_expression, attrgetter('_type'))
             return switch_expression
 
         def visit_synchronized(self, synchronized: Synchronized, ctx: SenderContext) -> J:

@@ -497,6 +497,7 @@ class JavaReceiver(Receiver):
             switch_expression = switch_expression.with_markers(ctx.receive_node(switch_expression.markers, ctx.receive_markers))
             switch_expression = switch_expression.with_selector(ctx.receive_node(switch_expression.selector, ctx.receive_tree))
             switch_expression = switch_expression.with_cases(ctx.receive_node(switch_expression.cases, ctx.receive_tree))
+            switch_expression = switch_expression.with_type(ctx.receive_value(switch_expression.type, JavaType))
             return switch_expression
 
         def visit_synchronized(self, synchronized: Synchronized, ctx: ReceiverContext) -> J:
@@ -1172,7 +1173,8 @@ class JavaReceiver(Receiver):
                     ctx.receive_node(None, JavaReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
                     ctx.receive_node(None, ctx.receive_tree),
-                    ctx.receive_node(None, ctx.receive_tree)
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
                 )
 
             if type in ["rewrite.java.tree.Synchronized", "org.openrewrite.java.tree.J$Synchronized"]:

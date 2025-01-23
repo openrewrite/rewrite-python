@@ -4324,6 +4324,15 @@ class SwitchExpression(Expression, TypedTree):
     def with_cases(self, cases: Block) -> SwitchExpression:
         return self if cases is self._cases else replace(self, _cases=cases)
 
+    _type: Optional[JavaType]
+
+    @property
+    def type(self) -> Optional[JavaType]:
+        return self._type
+
+    def with_type(self, type: Optional[JavaType]) -> SwitchExpression:
+        return self if type is self._type else replace(self, _type=type)
+
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_switch_expression(self, p)
 
