@@ -297,6 +297,15 @@ class JavaSender(Sender):
             ctx.send_typed_value(instance_of, attrgetter('_type'))
             return instance_of
 
+        def visit_deconstruction_pattern(self, deconstruction_pattern: DeconstructionPattern, ctx: SenderContext) -> J:
+            ctx.send_value(deconstruction_pattern, attrgetter('_id'))
+            ctx.send_node(deconstruction_pattern, attrgetter('_prefix'), JavaSender.send_space)
+            ctx.send_node(deconstruction_pattern, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(deconstruction_pattern, attrgetter('_deconstructor'), ctx.send_tree)
+            ctx.send_node(deconstruction_pattern, attrgetter('_nested'), JavaSender.send_container)
+            ctx.send_typed_value(deconstruction_pattern, attrgetter('_type'))
+            return deconstruction_pattern
+
         def visit_intersection_type(self, intersection_type: IntersectionType, ctx: SenderContext) -> J:
             ctx.send_value(intersection_type, attrgetter('_id'))
             ctx.send_node(intersection_type, attrgetter('_prefix'), JavaSender.send_space)

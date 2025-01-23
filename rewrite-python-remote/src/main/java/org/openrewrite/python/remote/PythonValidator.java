@@ -495,6 +495,13 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
     }
 
     @Override
+    public J.DeconstructionPattern visitDeconstructionPattern(J.DeconstructionPattern deconstructionPattern, P p) {
+        visitAndValidateNonNull(deconstructionPattern.getDeconstructor(), Expression.class, p);
+        visitAndValidate(deconstructionPattern.getNested(), J.class, p);
+        return deconstructionPattern;
+    }
+
+    @Override
     public J.IntersectionType visitIntersectionType(J.IntersectionType intersectionType, P p) {
         visitAndValidate(intersectionType.getBounds(), TypeTree.class, p);
         return intersectionType;

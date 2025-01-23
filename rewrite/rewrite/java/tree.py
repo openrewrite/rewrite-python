@@ -1289,7 +1289,8 @@ class CompilationUnit(JavaSourceFile, SourceFile):
         return p
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
-        return PrinterFactory.current().create_printer(cursor)
+        factory = PrinterFactory.current()
+        return factory.create_printer(cursor) if factory else JavaPrinter[PrintOutputCapture[P]]()
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)
@@ -2486,6 +2487,93 @@ class InstanceOf(Expression, TypedTree):
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_instance_of(self, p)
+
+# noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
+@dataclass(frozen=True, eq=False)
+class DeconstructionPattern(TypedTree):
+    _id: UUID
+
+    @property
+    def id(self) -> UUID:
+        return self._id
+
+    def with_id(self, id: UUID) -> DeconstructionPattern:
+        return self if id is self._id else replace(self, _id=id)
+
+    _prefix: Space
+
+    @property
+    def prefix(self) -> Space:
+        return self._prefix
+
+    def with_prefix(self, prefix: Space) -> DeconstructionPattern:
+        return self if prefix is self._prefix else replace(self, _prefix=prefix)
+
+    _markers: Markers
+
+    @property
+    def markers(self) -> Markers:
+        return self._markers
+
+    def with_markers(self, markers: Markers) -> DeconstructionPattern:
+        return self if markers is self._markers else replace(self, _markers=markers)
+
+    _deconstructor: Expression
+
+    @property
+    def deconstructor(self) -> Expression:
+        return self._deconstructor
+
+    def with_deconstructor(self, deconstructor: Expression) -> DeconstructionPattern:
+        return self if deconstructor is self._deconstructor else replace(self, _deconstructor=deconstructor)
+
+    _nested: JContainer[J]
+
+    @property
+    def nested(self) -> List[J]:
+        return self._nested.elements
+
+    def with_nested(self, nested: List[J]) -> DeconstructionPattern:
+        return self.padding.with_nested(JContainer.with_elements(self._nested, nested))
+
+    _type: JavaType
+
+    @property
+    def type(self) -> JavaType:
+        return self._type
+
+    def with_type(self, type: JavaType) -> DeconstructionPattern:
+        return self if type is self._type else replace(self, _type=type)
+
+    @dataclass
+    class PaddingHelper:
+        _t: DeconstructionPattern
+
+        @property
+        def nested(self) -> JContainer[J]:
+            return self._t._nested
+
+        def with_nested(self, nested: JContainer[J]) -> DeconstructionPattern:
+            return self._t if self._t._nested is nested else replace(self._t, _nested=nested)
+
+    _padding: weakref.ReferenceType[PaddingHelper] = None
+
+    @property
+    def padding(self) -> PaddingHelper:
+        p: DeconstructionPattern.PaddingHelper
+        if self._padding is None:
+            p = DeconstructionPattern.PaddingHelper(self)
+            object.__setattr__(self, '_padding', weakref.ref(p))
+        else:
+            p = self._padding()
+            # noinspection PyProtectedMember
+            if p is None or p._t != self:
+                p = DeconstructionPattern.PaddingHelper(self)
+                object.__setattr__(self, '_padding', weakref.ref(p))
+        return p
+
+    def accept_java(self, v: JavaVisitor[P], p: P) -> J:
+        return v.visit_deconstruction_pattern(self, p)
 
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
