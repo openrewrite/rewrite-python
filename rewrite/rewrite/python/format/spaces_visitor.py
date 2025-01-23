@@ -1,11 +1,10 @@
 from typing import Optional, cast, List, TypeVar
 
 import rewrite.java as j
-from java import WhileLoop
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
-    Import, ParameterizedType, Parentheses
+    Import, ParameterizedType, Parentheses, WhileLoop
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
     ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression
 from rewrite.visitor import P
