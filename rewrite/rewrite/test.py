@@ -122,8 +122,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         remoting_context.reset()
                         remoting_context.client.reset()
 
-                    before_printed = source_file.print_all()
-                    assert before_printed == source_spec.before
+                    assert source_file.print_all() == source_spec.before
 
                     spec_by_source_file[source_file] = source_spec
 
