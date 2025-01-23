@@ -303,6 +303,15 @@ class JavaReceiver(Receiver):
             instance_of = instance_of.with_type(ctx.receive_value(instance_of.type, JavaType))
             return instance_of
 
+        def visit_deconstruction_pattern(self, deconstruction_pattern: DeconstructionPattern, ctx: ReceiverContext) -> J:
+            deconstruction_pattern = deconstruction_pattern.with_id(ctx.receive_value(deconstruction_pattern.id, UUID))
+            deconstruction_pattern = deconstruction_pattern.with_prefix(ctx.receive_node(deconstruction_pattern.prefix, JavaReceiver.receive_space))
+            deconstruction_pattern = deconstruction_pattern.with_markers(ctx.receive_node(deconstruction_pattern.markers, ctx.receive_markers))
+            deconstruction_pattern = deconstruction_pattern.with_deconstructor(ctx.receive_node(deconstruction_pattern.deconstructor, ctx.receive_tree))
+            deconstruction_pattern = deconstruction_pattern.padding.with_nested(ctx.receive_node(deconstruction_pattern.padding.nested, JavaReceiver.receive_container))
+            deconstruction_pattern = deconstruction_pattern.with_type(ctx.receive_value(deconstruction_pattern.type, JavaType))
+            return deconstruction_pattern
+
         def visit_intersection_type(self, intersection_type: IntersectionType, ctx: ReceiverContext) -> J:
             intersection_type = intersection_type.with_id(ctx.receive_value(intersection_type.id, UUID))
             intersection_type = intersection_type.with_prefix(ctx.receive_node(intersection_type.prefix, JavaReceiver.receive_space))
@@ -497,6 +506,7 @@ class JavaReceiver(Receiver):
             switch_expression = switch_expression.with_markers(ctx.receive_node(switch_expression.markers, ctx.receive_markers))
             switch_expression = switch_expression.with_selector(ctx.receive_node(switch_expression.selector, ctx.receive_tree))
             switch_expression = switch_expression.with_cases(ctx.receive_node(switch_expression.cases, ctx.receive_tree))
+            switch_expression = switch_expression.with_type(ctx.receive_value(switch_expression.type, JavaType))
             return switch_expression
 
         def visit_synchronized(self, synchronized: Synchronized, ctx: ReceiverContext) -> J:
@@ -957,6 +967,16 @@ class JavaReceiver(Receiver):
                     ctx.receive_value(None, JavaType)
                 )
 
+            if type in ["rewrite.java.tree.DeconstructionPattern", "org.openrewrite.java.tree.J$DeconstructionPattern"]:
+                return DeconstructionPattern(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, JavaReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_node(None, JavaReceiver.receive_container),
+                    ctx.receive_value(None, JavaType)
+                )
+
             if type in ["rewrite.java.tree.IntersectionType", "org.openrewrite.java.tree.J$IntersectionType"]:
                 return IntersectionType(
                     ctx.receive_value(None, UUID),
@@ -1172,7 +1192,8 @@ class JavaReceiver(Receiver):
                     ctx.receive_node(None, JavaReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
                     ctx.receive_node(None, ctx.receive_tree),
-                    ctx.receive_node(None, ctx.receive_tree)
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
                 )
 
             if type in ["rewrite.java.tree.Synchronized", "org.openrewrite.java.tree.J$Synchronized"]:

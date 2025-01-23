@@ -351,6 +351,13 @@ class JavaVisitor(TreeVisitor[J, P]):
         instance_of = instance_of.with_pattern(self.visit_and_cast(instance_of.pattern, J, p))
         return instance_of
 
+    def visit_deconstruction_pattern(self, deconstruction_pattern: DeconstructionPattern, p: P) -> J:
+        deconstruction_pattern = deconstruction_pattern.with_prefix(self.visit_space(deconstruction_pattern.prefix, Space.Location.DECONSTRUCTION_PATTERN_PREFIX, p))
+        deconstruction_pattern = deconstruction_pattern.with_markers(self.visit_markers(deconstruction_pattern.markers, p))
+        deconstruction_pattern = deconstruction_pattern.with_deconstructor(self.visit_and_cast(deconstruction_pattern.deconstructor, Expression, p))
+        deconstruction_pattern = deconstruction_pattern.padding.with_nested(self.visit_container(deconstruction_pattern.padding.nested, JContainer.Location.DECONSTRUCTION_PATTERN_NESTED, p))
+        return deconstruction_pattern
+
     def visit_intersection_type(self, intersection_type: IntersectionType, p: P) -> J:
         intersection_type = intersection_type.with_prefix(self.visit_space(intersection_type.prefix, Space.Location.INTERSECTION_TYPE_PREFIX, p))
         temp_expression = cast(Expression, self.visit_expression(intersection_type, p))

@@ -44,6 +44,7 @@ __all__ = [
     'ClassDeclaration',
     'CompilationUnit',
     'Continue',
+    'DeconstructionPattern',
     'DoWhileLoop',
     'Empty',
     'EnumValue',
