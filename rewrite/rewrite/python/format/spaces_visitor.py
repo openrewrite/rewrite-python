@@ -1,6 +1,7 @@
 from typing import Optional, cast, List, TypeVar
 
 import rewrite.java as j
+from java import WhileLoop
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
@@ -299,6 +300,10 @@ class SpacesVisitor(PythonVisitor):
         fl = fl.padding.with_iterable(space_before_left_padded(fl.padding.iterable, True))
         fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
         return fl
+
+    def visit_while_loop(self, while_loop: WhileLoop, p: P) -> J:
+        w = cast(WhileLoop, super().visit_while_loop(while_loop, p))
+        return w.with_condition(space_before(w.condition, True))
 
     def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
         pt = cast(ParameterizedType, super().visit_parameterized_type(parameterized_type, p))
