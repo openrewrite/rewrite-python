@@ -704,6 +704,7 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
         factory = PrinterFactory.current()
+        from .printer import PythonPrinter
         return factory.create_printer(cursor) if factory else PythonPrinter[PrintOutputCapture[P]]()
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:

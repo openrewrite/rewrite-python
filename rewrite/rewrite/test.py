@@ -9,9 +9,10 @@ from typing import Optional, Callable, Iterable, List, TypeVar, Any, cast
 from uuid import UUID
 
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
-    ExecutionContext, Recipe, TreeVisitor, SourceFile
+    ExecutionContext, Recipe, TreeVisitor, SourceFile, PrintOutputCapture
 from rewrite.execution import InMemoryLargeSourceSet
 from rewrite.python.parser import PythonParserBuilder
+from rewrite.python.printer import PythonPrinter
 
 S = TypeVar('S', bound=SourceFile)
 
@@ -85,16 +86,19 @@ class RecipeSpec:
     def with_parsers(self, parsers: Iterable[ParserBuilder]) -> RecipeSpec:
         return self if parsers is self._parsers else RecipeSpec(self._recipe, parsers)
 
-
 def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] = None) -> None:
-    from rewrite_remote import RemotingContext, RemotePrinterFactory
-    from rewrite_remote.server import register_remoting_factories
-    remoting_context = RemotingContext()
-    register_remoting_factories()
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('localhost', 65432))
-    remoting_context.connect(s)
-    RemotePrinterFactory(remoting_context.client).set_current()
+    USE_REMOTE = False
+
+    if USE_REMOTE:
+        from rewrite_remote import RemotingContext, RemotePrinterFactory
+        from rewrite_remote.server import register_remoting_factories
+        remoting_context = RemotingContext()
+        register_remoting_factories()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # if USE_REMOTE:
+        s.connect(('localhost', 65432))
+        remoting_context.connect(s)
+        RemotePrinterFactory(remoting_context.client).set_current()
 
     try:
         ctx = InMemoryExecutionContext()
@@ -113,8 +117,11 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
                         [ParserInput(source_path, None, True, lambda: StringIO(source_spec.before))], None, ctx):
                     if isinstance(source_file, ParseError):
                         assert False, f'Parser threw an exception:\n%{source_file.markers.find_first(ParseExceptionResult).message}'  # type: ignore
-                    remoting_context.reset()
-                    remoting_context.client.reset()
+
+                    if USE_REMOTE:
+                        remoting_context.reset()
+                        remoting_context.client.reset()
+
                     assert source_file.print_all() == source_spec.before
 
                     spec_by_source_file[source_file] = source_spec
@@ -142,7 +149,8 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
     except Exception:
         raise
     finally:
-        remoting_context.close()
+        if USE_REMOTE:
+            remoting_context.close()
 
 
 S2 = TypeVar('S2', bound=SourceFile)
