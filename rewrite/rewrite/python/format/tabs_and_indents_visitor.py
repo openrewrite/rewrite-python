@@ -5,11 +5,11 @@ from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
 from rewrite import Tree, Cursor, list_map
-from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Case, WhileLoop, \
-    Block, If, Label, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, NewArray
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
+    Block, Label, ArrayDimension, ClassDeclaration, Empty, \
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
-    CollectionLiteral, ForLoop, ExpressionStatement, CompilationUnit, OtherStyle, IntelliJ, ComprehensionExpression
+    CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
 from rewrite.visitor import P, T
 
 J2 = TypeVar('J2', bound=J)
@@ -301,10 +301,10 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             last_indent: str = space.whitespace[space.whitespace.rfind('\n') + 1:]
             indent = self._get_length_of_whitespace(whitespace_indent(last_indent))
 
-            if indent != final_column:
+            if indent != final_column or s.comments:
                 if (has_file_leading_comment or ("\n" in whitespace)) and (
                         # Do not shift single-line comments at column 0.
-                        not (s.comments and isinstance(s.comments[0], TextComment) and
+                        not (s.comments and isinstance(s.comments[0], PyComment) and
                              not s.comments[0].multiline and self._get_length_of_whitespace(s.whitespace) == 0)):
                     shift = final_column - indent
                     s = s.with_whitespace(whitespace[:whitespace.rfind('\n') + 1] + self._indent(last_indent, shift))
@@ -313,7 +313,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 last_comment_pos = len(s.comments) - 1
 
                 def _process_comment(i: int, c: Comment) -> Comment:
-                    if isinstance(c, TextComment) and not c.multiline:
+                    if isinstance(c, PyComment) and not c.multiline:
                         # Do not shift single line comments at col 0.
                         if i != last_comment_pos and self._get_length_of_whitespace(c.suffix) == 0:
                             return c
