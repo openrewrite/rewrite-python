@@ -450,6 +450,48 @@ def test_multiline_func_def_with_positional_nested():
     )
 
 
+def test_multiline_func_def_with_positional_nested_with_async():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               async def long_function_name_1(
+                 var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+
+               @dec_with_async_in_name
+               async def long_function_name_2(var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+            """,
+            """
+            class A:
+                async def long_function_name_1(
+                        var_one, var_two,
+                        var_three,
+                        var_four):
+                    print(var_one)
+
+                @dec_with_async_in_name
+                async def long_function_name_2(var_one, var_two,
+                                               var_three,
+                                               var_four):
+                    print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
 def test_multiline_func_def_with_positional_args_after_linebreak():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     # noinspection PyInconsistentIndentation
@@ -889,4 +931,30 @@ def test_method_select_suffix():
                  .startswith("f"))
             """),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_method_with_decorator():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               @property
+               def long_function_name(self):
+                 return self
+            """,
+            """
+            class A:
+                @property
+                def long_function_name(self):
+                    return self
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
     )
