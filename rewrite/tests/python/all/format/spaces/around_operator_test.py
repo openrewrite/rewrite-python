@@ -366,7 +366,6 @@ def test_spaces_around_power():
     )
 
 
-@pytest.mark.xfail(reason='Not implemented eq_in_named_parameter not yet implemented')
 def test_spaces_around_eq_in_named_parameter():
     style = get_around_operator_style(lambda x: x.with_eq_in_named_parameter(True))
     rewrite_run(
@@ -377,12 +376,16 @@ def test_spaces_around_eq_in_named_parameter():
             def func(a=  1): pass
             def func(a  =1): pass
             def func(a=1): pass
+            def func(a: int=1): pass
+            def func(a: int    =1): pass
             """,
             """
             def func(a = 1): pass
             def func(a = 1): pass
             def func(a = 1): pass
             def func(a = 1): pass
+            def func(a: int = 1): pass
+            def func(a: int = 1): pass
             """
         ),
         spec=RecipeSpec()
@@ -398,18 +401,21 @@ def test_spaces_around_eq_in_named_parameter():
             def func(a=  1): pass
             def func(a  =1): pass
             def func(a=1): pass
+            def func(a : int =1): pass
+            def func(a : int    =1): pass
             """,
             """
             def func(a=1): pass
             def func(a=1): pass
             def func(a=1): pass
             def func(a=1): pass
+            def func(a: int = 1): pass
+            def func(a: int = 1): pass
             """
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
-
 
 def test_spaces_around_eq_in_keyword_argument():
     style = get_around_operator_style(lambda x: x.with_eq_in_keyword_argument(True))

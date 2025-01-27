@@ -108,6 +108,20 @@ class SpacesVisitor(PythonVisitor):
                 space_before_left_padded_element(a.padding.value, self._style.around_operators.eq_in_keyword_argument))
         return a
 
+    def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
+        v = cast(VariableDeclarations.NamedVariable, super().visit_variable(named_variable, p))
+
+        if v.padding.initializer is not None and v.padding.initializer.element is not None:
+            use_space = self._style.around_operators.eq_in_named_parameter or v.variable_type is not None
+            # Argument with a typehint will always receive a space e.g. foo(a: int =1) <-> foo(a: int = 1)
+            use_space |= self.cursor.first_enclosing_or_throw(VariableDeclarations).type_expression is not None
+
+            v = v.padding.with_initializer(
+                space_before_left_padded(v.padding.initializer, use_space))
+            v = v.padding.with_initializer(
+                space_before_left_padded_element(v.padding.initializer, use_space))
+        return v
+
     def visit_block(self, block: Block, p: P) -> J:
         b = cast(Block, super().visit_block(block, p))
         b = space_before(b, self._style.other.before_colon)
