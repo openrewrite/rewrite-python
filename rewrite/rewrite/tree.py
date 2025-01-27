@@ -189,6 +189,10 @@ class PrintOutputCapture(Generic[P]):
     def clone(self) -> 'PrintOutputCapture[P]':
         return PrintOutputCapture(self._context, self._marker_printer)
 
+    @property
+    def marker_printer(self) -> MarkerPrinter:
+        return self._marker_printer
+
 
 @dataclass
 class _DefaultMarkerPrinter(PrintOutputCapture.MarkerPrinter):
