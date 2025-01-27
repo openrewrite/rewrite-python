@@ -7,7 +7,8 @@ from typing import TypeVar, Optional, Union, cast, List
 from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunException
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
     Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray, \
+    Annotation
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
 from rewrite.visitor import P, T, TreeVisitor
@@ -78,6 +79,13 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         self._cursor.put_message("last_location", loc)
         parent = self._cursor.parent
+        align_to_annotation = False
+
+        if parent is not None:
+            if isinstance(parent.value, Annotation):
+                parent.parent_or_throw.put_message("after_annotation", True)
+            elif not any([isinstance(_, Annotation) for _ in parent.get_path()]):
+                align_to_annotation = self.cursor.poll_nearest_message("after_annotation", False)
 
         if loc == Space.Location.METHOD_SELECT_SUFFIX:
             chained_indent = cast(int, self.cursor.parent_tree_cursor().get_message("chained_indent", None))
@@ -111,7 +119,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 Space.Location.EXTENDS == self.cursor.parent_or_throw.get_message("last_location", None):
             indent_type = self.IndentType.CONTINUATION_INDENT
 
-        if align_block_prefix_to_parent or align_block_to_parent:
+        if align_block_prefix_to_parent or align_block_to_parent or align_to_annotation:
             indent_type = self.IndentType.ALIGN
 
         if indent_type == self.IndentType.INDENT:
@@ -128,7 +136,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         return s
 
     @staticmethod
-    def compute_first_parameter_offset(method: j.MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
+    def compute_first_parameter_offset(method: MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
         class FirstArgPrinter(PrintOutputCapture[TreeVisitor]):
             def append(self, text: Optional[str] = None) -> PrintOutputCapture[P]:
                 if self._context.cursor.value is first_arg:
@@ -141,8 +149,8 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             printer.visit(method, capture, cursor.parent_or_throw)
         except RecipeRunException:
             source = capture.get_out()
-            def_idx = source.index("def")
-            async_idx = source.find("async")
+            def_idx = source.index("def ")
+            async_idx = source.find("async ")
             start_idx = async_idx if async_idx != -1 and async_idx < def_idx else def_idx
             return len(source[start_idx:]) + len(first_arg.prefix.last_whitespace)
 

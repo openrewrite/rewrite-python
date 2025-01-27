@@ -942,13 +942,13 @@ def test_method_with_decorator():
         python(
             """
             class A:
-               @property
+               @staticmethod
                def long_function_name(self):
                  return self
             """,
             """
             class A:
-                @property
+                @staticmethod
                 def long_function_name(self):
                     return self
             """
