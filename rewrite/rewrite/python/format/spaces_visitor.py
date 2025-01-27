@@ -89,6 +89,9 @@ class SpacesVisitor(PythonVisitor):
             )
         )
 
+        if m.return_type_expression is not None:
+            m = m.with_return_type_expression(space_before(m.return_type_expression, True))
+
         # TODO: Type parameters are not supported yet
         if m.padding.type_parameters is not None:
             raise NotImplementedError("Type parameters are not supported yet")
@@ -415,18 +418,29 @@ class SpacesVisitor(PythonVisitor):
     def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
         mi: MultiImport = cast(MultiImport, super().visit_multi_import(multi_import, p))
 
-        _space_on_first_import = lambda idx: mi.padding.from_ is None if idx == 0 else self._style.other.after_comma
-
-        mi = mi.padding.with_names(
-            mi.padding.names.with_elements(
-                list_map(lambda x, idx: space_before(x, _space_on_first_import(idx)),
-                         mi.padding.names.elements)
+        # Space after from
+        if mi.padding.from_ is not None:
+            mi = mi.padding.with_from(
+                space_before_right_padded_element(mi.padding.from_, True)
             )
+
+        # Single space after import keyword
+        mi = mi.padding.with_names(
+            space_before_container(mi.padding.names, True)
         )
+
         _names = mi.padding.names
+
+        # Will handle space after import name before comma e.g. import foo   , bar <-> import foo, bar
         _names = _names.padding.with_elements(
-            list_map(lambda x: space_after(x, self._style.other.before_comma), _names.padding.elements)
+            list_map(lambda x, idx: space_after_right_padded(x, self._style.other.before_comma),
+                     _names.padding.elements)
         )
+        _names = _names.padding.with_elements(
+            list_map(lambda x, idx: space_before_right_padded_element(x, self._style.other.after_comma and idx != 0),
+                     _names.padding.elements)
+        )
+
         return mi.padding.with_names(_names)
 
     def visit_import(self, import_: Import, p: P) -> J:
@@ -494,12 +508,17 @@ J2 = TypeVar('J2', bound=j.J)
 
 
 def space_before(j: J2, add_space: bool) -> J2:
-    space: Space = cast(Space, j.prefix)
-    if space.comments or '\\' in space.whitespace:
-        # don't touch whitespaces with comments or continuation characters
+    prefix: Space = cast(Space, j.prefix)
+
+    if prefix.comments or ('\n' in prefix.whitespace):
         return j
 
-    return j.with_prefix(Space.SINGLE_SPACE if add_space else Space.EMPTY)
+    if add_space and not_single_space(prefix.whitespace):
+        return j.with_prefix(prefix.with_whitespace(" "))  # pyright: ignore [reportReturnType]
+    elif not add_space and only_spaces_and_not_empty(prefix.whitespace):
+        return j.with_prefix(prefix.with_whitespace(""))  # pyright: ignore [reportReturnType]
+
+    return j
 
 
 def space_before_container(container: j.JContainer, add_space: bool) -> j.JContainer:

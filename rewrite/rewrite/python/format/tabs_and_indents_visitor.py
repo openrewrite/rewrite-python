@@ -4,13 +4,13 @@ import sys
 from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
-from rewrite import Tree, Cursor, list_map
+from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunException
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
-    Block, Label, ArrayDimension, ClassDeclaration, Empty, \
+    Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
     Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
-from rewrite.visitor import P, T
+from rewrite.visitor import P, T, TreeVisitor
 
 J2 = TypeVar('J2', bound=J)
 
@@ -127,6 +127,24 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         return s
 
+    @staticmethod
+    def compute_first_parameter_offset(method: j.MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
+        class FirstArgPrinter(PrintOutputCapture[TreeVisitor]):
+            def append(self, text: Optional[str] = None) -> PrintOutputCapture[P]:
+                if self._context.cursor.value is first_arg:
+                    raise RecipeRunException()
+                return super().append(text)
+
+        printer = method.printer(cursor)
+        capture = FirstArgPrinter(printer)
+        try:
+            printer.visit(method, capture, cursor.parent_or_throw)
+        except RecipeRunException:
+            source = capture.get_out()
+            def_idx = source.index("def")
+            async_idx = source.find("async")
+            start_idx = async_idx if async_idx != -1 and async_idx < def_idx else def_idx
+            return len(source[start_idx:]) + len(first_arg.prefix.last_whitespace)
 
     def visit_right_padded(self, right: Optional[JRightPadded[T]],
                            loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[
@@ -168,21 +186,12 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                             if method is not None:
                                 if "\n" in first_arg.prefix.last_whitespace:
                                     if self._other.use_continuation_indent.method_declaration_parameters:
-                                        align_to = self._get_length_of_whitespace(method.prefix.last_whitespace) + self._style.continuation_indent
+                                        align_to = indent + self._style.continuation_indent
                                     else:
                                         align_to = self._get_length_of_whitespace(first_arg.prefix.last_whitespace)
                                 else:
-                                    c = PrintOutputCapture(0)
-                                    PythonPrinter().visit(method, c, self.cursor)
-                                    method_source = c.get_out()
-
-                                    c = PrintOutputCapture(0)
-                                    PythonPrinter().visit(first_arg, c, self.cursor)
-                                    arg_source = c.get_out()
-
-                                    first_arg_index = method_source.index(arg_source)
-                                    line_break_index = method_source.rfind('\n', 0, first_arg_index)
-                                    align_to = (first_arg_index - (0 if line_break_index == -1 else line_break_index)) - 1
+                                    align_to = indent + self.compute_first_parameter_offset(method, first_arg,
+                                                                                            self.cursor)
                                 self.cursor.parent_or_throw.put_message("last_indent", align_to - self._style.continuation_indent)
                                 elem = self.visit_and_cast(elem, J, p)
                                 self.cursor.parent_or_throw.put_message("last_indent", indent)

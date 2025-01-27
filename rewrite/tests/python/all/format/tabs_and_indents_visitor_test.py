@@ -410,6 +410,46 @@ def test_multiline_func_def_with_positional_args():
     )
 
 
+def test_multiline_func_def_with_positional_nested():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               def long_function_name_1(
+                 var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+
+               def long_function_name_2(var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+            """,
+            """
+            class A:
+                def long_function_name_1(
+                        var_one, var_two,
+                        var_three,
+                        var_four):
+                    print(var_one)
+
+                def long_function_name_2(var_one, var_two,
+                                         var_three,
+                                         var_four):
+                    print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
 def test_multiline_func_def_with_positional_args_after_linebreak():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     # noinspection PyInconsistentIndentation
@@ -438,7 +478,8 @@ def test_multiline_func_def_with_positional_args_after_linebreak():
     )
 
 
-def test_multiline_func_def_with_positional_args_no_align_multiline():
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_no_align_multiline(first_line: str):
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     style = style.with_method_declaration_parameters(
         style.method_declaration_parameters.with_align_multiline_parameters(False))
@@ -446,13 +487,13 @@ def test_multiline_func_def_with_positional_args_no_align_multiline():
     rewrite_run(
         # language=python
         python(
-            """
+            first_line + """\
             def long_function_name(var_one, var_two,
                     var_three,
                     var_four):
                 print(var_one)
             """,
-            """
+            first_line + """\
             def long_function_name(var_one, var_two,
                     var_three,
                     var_four):
@@ -466,7 +507,8 @@ def test_multiline_func_def_with_positional_args_no_align_multiline():
     )
 
 
-def test_multiline_func_def_with_positional_args_and_no_arg_first_line():
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_and_no_arg_first_line(first_line: str):
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     style = style.with_method_declaration_parameters(
         style.method_declaration_parameters.with_align_multiline_parameters(False))
@@ -474,14 +516,14 @@ def test_multiline_func_def_with_positional_args_and_no_arg_first_line():
     rewrite_run(
         # language=python
         python(
-            """
+            first_line + """\
             def long_function_name(
                 var_one,
                         var_two, var_three,
                     var_four):
                 print(var_one)
             """,
-            """
+            first_line + """\
             def long_function_name(
                     var_one,
                     var_two, var_three,
@@ -496,7 +538,8 @@ def test_multiline_func_def_with_positional_args_and_no_arg_first_line():
     )
 
 
-def test_mm():
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_and_extra_space(first_line):
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     # style = style.with_method_declaration_parameters(
     #     style.method_declaration_parameters.with_align_multiline_parameters(True))
@@ -504,16 +547,16 @@ def test_mm():
     rewrite_run(
         # language=python
         python(
-        """
-        def vax_one(var_one,
-                    var_three,
+            first_line + """\
+        def vax_one(     var_one,
+        var_three,
                  var_four):
             print(var_one)
         """,
-        """
-        def vax_one(var_one,
-                    var_three,
-                    var_four):
+            first_line + """\
+        def vax_one(     var_one,
+                         var_three,
+                         var_four):
             print(var_one)
         """
         ),
@@ -522,7 +565,6 @@ def test_mm():
             from_visitor(TabsAndIndentsVisitor(style))
         )
     )
-
 
 def test_multiline_call_with_args_without_multiline_align():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
