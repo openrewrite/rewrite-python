@@ -464,7 +464,7 @@ def test_multiline_func_def_with_positional_nested_with_async():
                         var_four):
                  print(var_one)
 
-               @dec_with_async_in_name
+               @dec_with_async
                async def long_function_name_2(var_one, var_two,
                         var_three,
                         var_four):
@@ -478,7 +478,7 @@ def test_multiline_func_def_with_positional_nested_with_async():
                         var_four):
                     print(var_one)
 
-                @dec_with_async_in_name
+                @dec_with_async
                 async def long_function_name_2(var_one, var_two,
                                                var_three,
                                                var_four):

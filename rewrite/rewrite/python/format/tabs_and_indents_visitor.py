@@ -137,6 +137,8 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
     @staticmethod
     def compute_first_parameter_offset(method: MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
+        # Clear any annotations to avoid them affecting the offset calculation
+        method = method.with_leading_annotations([])
         class FirstArgPrinter(PrintOutputCapture[TreeVisitor]):
             def append(self, text: Optional[str] = None) -> PrintOutputCapture[P]:
                 if self._context.cursor.value is first_arg:
@@ -149,8 +151,8 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             printer.visit(method, capture, cursor.parent_or_throw)
         except RecipeRunException:
             source = capture.get_out()
-            def_idx = source.index("def ")
-            async_idx = source.find("async ")
+            def_idx = source.index("def")
+            async_idx = source.find("async")
             start_idx = async_idx if async_idx != -1 and async_idx < def_idx else def_idx
             return len(source[start_idx:]) + len(first_arg.prefix.last_whitespace)
 
