@@ -63,11 +63,13 @@ class Cursor:
             yield c.value
             c = c.parent
 
-    def get_path_as_cursors(self) -> Generator[Cursor]:
+    def get_path_as_cursors(self, levels: int = -1) -> Generator[Cursor]:
         c = self
-        while c is not None:
+        level_count = levels
+        while c is not None and level_count != 0:
             yield c
             c = c.parent
+            level_count -= 1
 
     def get_nearest_message(self, key: str) -> Optional[object]:
         for c in self.get_path_as_cursors():

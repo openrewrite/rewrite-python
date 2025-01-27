@@ -111,6 +111,11 @@ class SpacesVisitor(PythonVisitor):
     def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
         v = cast(VariableDeclarations.NamedVariable, super().visit_variable(named_variable, p))
 
+        # Check if the variable is a named parameter in a method declaration
+        cursors = list(self.cursor.get_path_as_cursors(levels=6))
+        if len(cursors) != 6 or not isinstance(cursors[5].value, MethodDeclaration):
+            return v
+
         if v.padding.initializer is not None and v.padding.initializer.element is not None:
             use_space = self._style.around_operators.eq_in_named_parameter or v.variable_type is not None
             # Argument with a typehint will always receive a space e.g. foo(a: int =1) <-> foo(a: int = 1)
