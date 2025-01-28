@@ -384,7 +384,7 @@ def test_multiline_list():
     )
 
 
-def test_multiline_call_with_positional_args_no_align_multiline():
+def test_multiline_func_def_with_positional_args():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     # noinspection PyInconsistentIndentation
     rewrite_run(
@@ -398,8 +398,8 @@ def test_multiline_call_with_positional_args_no_align_multiline():
             """,
             """
             def long_function_name(var_one, var_two,
-                    var_three,
-                    var_four):
+                                   var_three,
+                                   var_four):
                 print(var_one)
             """
         ),
@@ -410,7 +410,89 @@ def test_multiline_call_with_positional_args_no_align_multiline():
     )
 
 
-def test_multiline_call_with_positional_args_and_no_arg_first_line():
+def test_multiline_func_def_with_positional_nested():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               def long_function_name_1(
+                 var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+
+               def long_function_name_2(var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+            """,
+            """
+            class A:
+                def long_function_name_1(
+                        var_one, var_two,
+                        var_three,
+                        var_four):
+                    print(var_one)
+
+                def long_function_name_2(var_one, var_two,
+                                         var_three,
+                                         var_four):
+                    print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
+def test_multiline_func_def_with_positional_nested_with_async():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               async def long_function_name_1(
+                 var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+
+               @dec_with_async
+               async def long_function_name_2(var_one, var_two,
+                        var_three,
+                        var_four):
+                 print(var_one)
+            """,
+            """
+            class A:
+                async def long_function_name_1(
+                        var_one, var_two,
+                        var_three,
+                        var_four):
+                    print(var_one)
+
+                @dec_with_async
+                async def long_function_name_2(var_one, var_two,
+                                               var_three,
+                                               var_four):
+                    print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
+def test_multiline_func_def_with_positional_args_after_linebreak():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     # noinspection PyInconsistentIndentation
     rewrite_run(
@@ -437,6 +519,94 @@ def test_multiline_call_with_positional_args_and_no_arg_first_line():
         )
     )
 
+
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_no_align_multiline(first_line: str):
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    style = style.with_method_declaration_parameters(
+        style.method_declaration_parameters.with_align_multiline_parameters(False))
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            first_line + """\
+            def long_function_name(var_one, var_two,
+                    var_three,
+                    var_four):
+                print(var_one)
+            """,
+            first_line + """\
+            def long_function_name(var_one, var_two,
+                    var_three,
+                    var_four):
+                print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_and_no_arg_first_line(first_line: str):
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    style = style.with_method_declaration_parameters(
+        style.method_declaration_parameters.with_align_multiline_parameters(False))
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            first_line + """\
+            def long_function_name(
+                var_one,
+                        var_two, var_three,
+                    var_four):
+                print(var_one)
+            """,
+            first_line + """\
+            def long_function_name(
+                    var_one,
+                    var_two, var_three,
+                    var_four):
+                print(var_one)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
+
+
+@pytest.mark.parametrize("first_line", ["", "\n"])
+def test_multiline_func_def_with_positional_args_and_extra_space(first_line):
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # style = style.with_method_declaration_parameters(
+    #     style.method_declaration_parameters.with_align_multiline_parameters(True))
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            first_line + """\
+        def vax_one(     var_one,
+        var_three,
+                 var_four):
+            print(var_one)
+        """,
+            first_line + """\
+        def vax_one(     var_one,
+                         var_three,
+                         var_four):
+            print(var_one)
+        """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
+    )
 
 def test_multiline_call_with_args_without_multiline_align():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
@@ -486,6 +656,7 @@ def test_multiline_list_inside_function():
         ),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
     )
+
 
 def test_multiline_list_inside_function_with_trailing_comma():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
@@ -832,4 +1003,30 @@ def test_method_select_suffix():
                  .startswith("f"))
             """),
         spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_method_with_decorator():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    # noinspection PyInconsistentIndentation
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class A:
+               @staticmethod
+               def long_function_name(self):
+                 return self
+            """,
+            """
+            class A:
+                @staticmethod
+                def long_function_name(self):
+                    return self
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipes(
+            from_visitor(TabsAndIndentsVisitor(style))
+        )
     )

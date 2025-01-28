@@ -29,9 +29,17 @@ public class TabsAndIndentsStyle implements PythonStyle {
     int indentSize;
     int continuationIndent;
     boolean keepIndentsOnEmptyLines;
+    MethodDeclarationParameters methodDeclarationParameters;
+
 
     @Override
     public Style applyDefaults() {
         return StyleHelper.merge(IntelliJ.tabsAndIndents(), this);
+    }
+
+    @Value
+    @With
+    public static class MethodDeclarationParameters {
+        boolean alignMultilineParameters;
     }
 }

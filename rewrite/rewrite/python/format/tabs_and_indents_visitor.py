@@ -5,14 +5,14 @@ import textwrap
 from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
-from rewrite import Tree, Cursor, list_map
-from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Block, Label, ArrayDimension, \
-    ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, \
-    NewArray, Literal
+from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunException
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
+    Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray, \
+    Annotation
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
-from rewrite.visitor import P, T
+from rewrite.visitor import P, T, TreeVisitor
 
 J2 = TypeVar('J2', bound=J)
 
@@ -83,6 +83,13 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         self._cursor.put_message("last_location", loc)
         parent = self._cursor.parent
+        align_to_annotation = False
+
+        if parent is not None:
+            if isinstance(parent.value, Annotation):
+                parent.parent_or_throw.put_message("after_annotation", True)
+            elif not any([isinstance(_, Annotation) for _ in parent.get_path()]):
+                align_to_annotation = self.cursor.poll_nearest_message("after_annotation", False)
 
         if loc == Space.Location.METHOD_SELECT_SUFFIX:
             chained_indent = cast(int, self.cursor.parent_tree_cursor().get_message("chained_indent", None))
@@ -116,7 +123,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 Space.Location.EXTENDS == self.cursor.parent_or_throw.get_message("last_location", None):
             indent_type = self.IndentType.CONTINUATION_INDENT
 
-        if align_block_prefix_to_parent or align_block_to_parent:
+        if align_block_prefix_to_parent or align_block_to_parent or align_to_annotation:
             indent_type = self.IndentType.ALIGN
 
         if indent_type == self.IndentType.INDENT:
@@ -132,6 +139,26 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         return s
 
+    @staticmethod
+    def compute_first_parameter_offset(method: MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
+        # Clear any annotations to avoid them affecting the offset calculation
+        method = method.with_leading_annotations([])
+        class FirstArgPrinter(PrintOutputCapture[TreeVisitor]):
+            def append(self, text: Optional[str] = None) -> PrintOutputCapture[P]:
+                if self._context.cursor.value is first_arg:
+                    raise RecipeRunException()
+                return super().append(text)
+
+        printer = method.printer(cursor)
+        capture = FirstArgPrinter(printer)
+        try:
+            printer.visit(method, capture, cursor.parent_or_throw)
+        except RecipeRunException:
+            source = capture.get_out()
+            def_idx = source.index("def")
+            async_idx = source.find("async")
+            start_idx = async_idx if async_idx != -1 and async_idx < def_idx else def_idx
+            return len(source[start_idx:]) + len(first_arg.prefix.last_whitespace)
 
     def visit_right_padded(self, right: Optional[JRightPadded[T]],
                            loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[
@@ -163,14 +190,33 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                     else:
                         container: JContainer[J] = cast(JContainer[J], self.cursor.parent_or_throw.value)
                         elements: List[J] = container.elements
+                        first_arg: J = elements[0]
                         last_arg: J = elements[-1]
 
                         # TODO: style.MethodDeclarationParameters doesn't exist for Python
                         # but should be self._style.method_declaration_parameters.align_when_multiple
-                        elem = self.visit_and_cast(elem, J, p)
-                        after = self._indent_to(right.after,
-                                                indent if t is last_arg else self._style.continuation_indent,
-                                                loc.after_location)
+                        if self._style.method_declaration_parameters.align_multiline_parameters:
+                            method = self.cursor.first_enclosing(MethodDeclaration)
+                            if method is not None:
+                                if "\n" in first_arg.prefix.last_whitespace:
+                                    if self._other.use_continuation_indent.method_declaration_parameters:
+                                        align_to = indent + self._style.continuation_indent
+                                    else:
+                                        align_to = self._get_length_of_whitespace(first_arg.prefix.last_whitespace)
+                                else:
+                                    align_to = indent + self.compute_first_parameter_offset(method, first_arg,
+                                                                                            self.cursor)
+                                self.cursor.parent_or_throw.put_message("last_indent", align_to - self._style.continuation_indent)
+                                elem = self.visit_and_cast(elem, J, p)
+                                self.cursor.parent_or_throw.put_message("last_indent", indent)
+                                after = self._indent_to(right.after, indent if t is last_arg else align_to, loc.after_location)
+                            else:
+                                after = right.after
+                        else:
+                            elem = self.visit_and_cast(elem, J, p)
+                            after = self._indent_to(right.after,
+                                                    indent if t is last_arg else self._style.continuation_indent,
+                                                    loc.after_location)
 
                 elif loc == JRightPadded.Location.METHOD_INVOCATION_ARGUMENT:
                     elem, after = self._visit_method_invocation_argument_j_type(elem, right, indent, loc, p)
