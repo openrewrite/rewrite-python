@@ -852,6 +852,78 @@ def test_comment_alignment_if_and_return():
     return None
 
 
+def test_string_literal_assignment():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            '''
+             a = """
+             This is a string that
+             should not be modified.
+             """
+            '''
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_string_literal_assignment_in_function():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            '''
+            def my_function():
+             a = """
+             This is a string that
+             should align with the function body.
+             """
+             return None
+            ''',
+            '''
+            def my_function():
+                a = """
+             This is a string that
+             should align with the function body.
+             """
+                return None
+            '''
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_string_literal_comment():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            '''
+            1+1
+            """
+            This is a comment that
+            should not be modified.
+            """
+            '''
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
+def test_int_literal():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            '''
+            1
+            '''
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
 def test_docstring_alignment():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4)
     rewrite_run(
@@ -859,11 +931,11 @@ def test_docstring_alignment():
         python(
             '''
             def my_function():
-             """
-             This is a docstring that
-             should align with the function body.
-             """
-             return None
+              """
+              This is a docstring that
+              should align with the function body.
+              """
+              return None
             ''',
             '''
             def my_function():
