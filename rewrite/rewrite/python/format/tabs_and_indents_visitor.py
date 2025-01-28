@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import sys
+import textwrap
 from enum import Enum, auto
 from typing import TypeVar, Optional, Union, cast, List
 
-from rewrite import Tree, Cursor, list_map
-from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, Case, WhileLoop, \
-    Block, If, Label, ArrayDimension, ClassDeclaration, Empty, \
-    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, TextComment, Comment, TrailingComma, Expression, NewArray
+from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunException
+from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
+    Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
+    Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray, \
+    Annotation, Literal
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
-    CollectionLiteral, ForLoop, ExpressionStatement, CompilationUnit, OtherStyle, IntelliJ, ComprehensionExpression
-from rewrite.visitor import P, T
+    CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
+from rewrite.visitor import P, T, TreeVisitor
 
 J2 = TypeVar('J2', bound=J)
 
@@ -54,13 +56,16 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         return super().visit(tree, p)
 
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
-        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration, ExpressionStatement)):
+        if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration)):
             self.cursor.put_message("indent_type", self.IndentType.ALIGN)
         elif isinstance(tree, Block):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
         elif isinstance(tree, (DictLiteral, CollectionLiteral, NewArray, ComprehensionExpression)):
             self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT
             if self._other.use_continuation_indent.collections_and_comprehensions else self.IndentType.INDENT)
+        elif isinstance(tree, ExpressionStatement):
+            self.cursor.put_message("indent_type", self.IndentType.INDENT
+            if self._is_doc_comment(tree, self.cursor) else self.IndentType.ALIGN)
         elif isinstance(tree, Expression):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
 
@@ -78,6 +83,13 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         self._cursor.put_message("last_location", loc)
         parent = self._cursor.parent
+        align_to_annotation = False
+
+        if parent is not None:
+            if isinstance(parent.value, Annotation):
+                parent.parent_or_throw.put_message("after_annotation", True)
+            elif not any([isinstance(_, Annotation) for _ in parent.get_path()]):
+                align_to_annotation = self.cursor.poll_nearest_message("after_annotation", False)
 
         if loc == Space.Location.METHOD_SELECT_SUFFIX:
             chained_indent = cast(int, self.cursor.parent_tree_cursor().get_message("chained_indent", None))
@@ -111,7 +123,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 Space.Location.EXTENDS == self.cursor.parent_or_throw.get_message("last_location", None):
             indent_type = self.IndentType.CONTINUATION_INDENT
 
-        if align_block_prefix_to_parent or align_block_to_parent:
+        if align_block_prefix_to_parent or align_block_to_parent or align_to_annotation:
             indent_type = self.IndentType.ALIGN
 
         if indent_type == self.IndentType.INDENT:
@@ -127,6 +139,26 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
 
         return s
 
+    @staticmethod
+    def compute_first_parameter_offset(method: MethodDeclaration, first_arg: J, cursor: Cursor) -> int:
+        # Clear any annotations to avoid them affecting the offset calculation
+        method = method.with_leading_annotations([])
+        class FirstArgPrinter(PrintOutputCapture[TreeVisitor]):
+            def append(self, text: Optional[str] = None) -> PrintOutputCapture[P]:
+                if self._context.cursor.value is first_arg:
+                    raise RecipeRunException()
+                return super().append(text)
+
+        printer = method.printer(cursor)
+        capture = FirstArgPrinter(printer)
+        try:
+            printer.visit(method, capture, cursor.parent_or_throw)
+        except RecipeRunException:
+            source = capture.get_out()
+            def_idx = source.index("def")
+            async_idx = source.find("async")
+            start_idx = async_idx if async_idx != -1 and async_idx < def_idx else def_idx
+            return len(source[start_idx:]) + len(first_arg.prefix.last_whitespace)
 
     def visit_right_padded(self, right: Optional[JRightPadded[T]],
                            loc: Union[PyRightPadded.Location, JRightPadded.Location], p: P) -> Optional[
@@ -158,14 +190,33 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                     else:
                         container: JContainer[J] = cast(JContainer[J], self.cursor.parent_or_throw.value)
                         elements: List[J] = container.elements
+                        first_arg: J = elements[0]
                         last_arg: J = elements[-1]
 
                         # TODO: style.MethodDeclarationParameters doesn't exist for Python
                         # but should be self._style.method_declaration_parameters.align_when_multiple
-                        elem = self.visit_and_cast(elem, J, p)
-                        after = self._indent_to(right.after,
-                                                indent if t is last_arg else self._style.continuation_indent,
-                                                loc.after_location)
+                        if self._style.method_declaration_parameters.align_multiline_parameters:
+                            method = self.cursor.first_enclosing(MethodDeclaration)
+                            if method is not None:
+                                if "\n" in first_arg.prefix.last_whitespace:
+                                    if self._other.use_continuation_indent.method_declaration_parameters:
+                                        align_to = indent + self._style.continuation_indent
+                                    else:
+                                        align_to = self._get_length_of_whitespace(first_arg.prefix.last_whitespace)
+                                else:
+                                    align_to = indent + self.compute_first_parameter_offset(method, first_arg,
+                                                                                            self.cursor)
+                                self.cursor.parent_or_throw.put_message("last_indent", align_to - self._style.continuation_indent)
+                                elem = self.visit_and_cast(elem, J, p)
+                                self.cursor.parent_or_throw.put_message("last_indent", indent)
+                                after = self._indent_to(right.after, indent if t is last_arg else align_to, loc.after_location)
+                            else:
+                                after = right.after
+                        else:
+                            elem = self.visit_and_cast(elem, J, p)
+                            after = self._indent_to(right.after,
+                                                    indent if t is last_arg else self._style.continuation_indent,
+                                                    loc.after_location)
 
                 elif loc == JRightPadded.Location.METHOD_INVOCATION_ARGUMENT:
                     elem, after = self._visit_method_invocation_argument_j_type(elem, right, indent, loc, p)
@@ -263,6 +314,25 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             return container
         return JContainer(before, js, container.markers)
 
+    @staticmethod
+    def _is_doc_comment(expression_statement: ExpressionStatement, cursor: Cursor) -> bool:
+        expr = expression_statement.expression
+        return isinstance(expr, Literal) and isinstance(expr.value_source, str) and (
+                (expr.value_source.startswith('"""') and expr.value_source.endswith('"""')) or
+                (expr.value_source.startswith("'''") and expr.value_source.endswith("'''"))) and \
+            cursor.first_enclosing(Block) is not None
+
+    def visit_expression_statement(self, expression_statement: ExpressionStatement, p: P) -> J:
+        if self._is_doc_comment(expression_statement, self.cursor):
+            prefix_before = len(expression_statement.prefix.last_whitespace.split("\n")[-1])
+            stm = cast(ExpressionStatement, super().visit_expression_statement(expression_statement, p))
+            literal = cast(Literal, stm.expression)
+            shift = len(stm.prefix.last_whitespace.split("\n")[-1]) - prefix_before
+            return stm.with_expression(
+                literal.with_value_source(textwrap.indent(str(literal.value_source), shift * " ")[shift:]))
+
+        return super().visit_expression_statement(expression_statement, p)
+
     def _indent_to(self, space: Space, column: int, space_location: Optional[Union[PySpace.Location, Space.Location]]) -> Space:
         s = space
         whitespace = s.whitespace
@@ -301,10 +371,10 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
             last_indent: str = space.whitespace[space.whitespace.rfind('\n') + 1:]
             indent = self._get_length_of_whitespace(whitespace_indent(last_indent))
 
-            if indent != final_column:
+            if indent != final_column or s.comments:
                 if (has_file_leading_comment or ("\n" in whitespace)) and (
                         # Do not shift single-line comments at column 0.
-                        not (s.comments and isinstance(s.comments[0], TextComment) and
+                        not (s.comments and isinstance(s.comments[0], PyComment) and
                              not s.comments[0].multiline and self._get_length_of_whitespace(s.whitespace) == 0)):
                     shift = final_column - indent
                     s = s.with_whitespace(whitespace[:whitespace.rfind('\n') + 1] + self._indent(last_indent, shift))
@@ -313,7 +383,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                 last_comment_pos = len(s.comments) - 1
 
                 def _process_comment(i: int, c: Comment) -> Comment:
-                    if isinstance(c, TextComment) and not c.multiline:
+                    if isinstance(c, PyComment) and not c.multiline:
                         # Do not shift single line comments at col 0.
                         if i != last_comment_pos and self._get_length_of_whitespace(c.suffix) == 0:
                             return c

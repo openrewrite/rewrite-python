@@ -4,10 +4,10 @@ import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
-    Import, ParameterizedType
+    Import, ParameterizedType, Parentheses, WhileLoop
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
-    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression
-from rewrite.visitor import P
+    ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression, NamedArgument
+from rewrite.visitor import P, Cursor
 
 
 class SpacesVisitor(PythonVisitor):
@@ -89,6 +89,9 @@ class SpacesVisitor(PythonVisitor):
             )
         )
 
+        if m.return_type_expression is not None:
+            m = m.with_return_type_expression(space_before(m.return_type_expression, True))
+
         # TODO: Type parameters are not supported yet
         if m.padding.type_parameters is not None:
             raise NotImplementedError("Type parameters are not supported yet")
@@ -98,6 +101,39 @@ class SpacesVisitor(PythonVisitor):
                 Space.SINGLE_SPACE if self._before_parentheses.method_declaration else Space.EMPTY
             )
         )
+
+    def visit_named_argument(self, named_argument: NamedArgument, p: P) -> J:
+        a = cast(NamedArgument, super().visit_named_argument(named_argument, p))
+        if a.padding.value is not None:
+            a = a.padding.with_value(
+                space_before_left_padded(a.padding.value, self._style.around_operators.eq_in_keyword_argument))
+            return a.padding.with_value(
+                space_before_left_padded_element(a.padding.value, self._style.around_operators.eq_in_keyword_argument))
+        return a
+
+    @staticmethod
+    def _part_of_method_header(cursor: Cursor) -> bool:
+        if (c := cursor.parent_tree_cursor()) and isinstance(c.value, VariableDeclarations):
+            return c.parent_tree_cursor() is not None and isinstance(c.parent_tree_cursor().value, MethodDeclaration)
+        return False
+
+    def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
+        v = cast(VariableDeclarations.NamedVariable, super().visit_variable(named_variable, p))
+
+        # Check if the variable is a named parameter in a method declaration
+        if not self._part_of_method_header(self.cursor):
+            return v
+
+        if v.padding.initializer is not None and v.padding.initializer.element is not None:
+            use_space = self._style.around_operators.eq_in_named_parameter or v.variable_type is not None
+            # Argument with a typehint will always receive a space e.g. foo(a: int =1) <-> foo(a: int = 1)
+            use_space |= self.cursor.first_enclosing_or_throw(VariableDeclarations).type_expression is not None
+
+            v = v.padding.with_initializer(
+                space_before_left_padded(v.padding.initializer, use_space))
+            v = v.padding.with_initializer(
+                space_before_left_padded_element(v.padding.initializer, use_space))
+        return v
 
     def visit_block(self, block: Block, p: P) -> J:
         b = cast(Block, super().visit_block(block, p))
@@ -226,8 +262,10 @@ class SpacesVisitor(PythonVisitor):
             b = self._apply_binary_space_around(b, self._style.around_operators.additive)
         elif op in [j.Binary.Type.Multiplication, j.Binary.Type.Division, j.Binary.Type.Modulo]:
             b = self._apply_binary_space_around(b, self._style.around_operators.multiplicative)
+        elif op in [j.Binary.Type.Equal, j.Binary.Type.NotEqual]:
+            b = self._apply_binary_space_around(b, self._style.around_operators.equality)
         elif op in [j.Binary.Type.LessThan, j.Binary.Type.GreaterThan, j.Binary.Type.LessThanOrEqual,
-                    j.Binary.Type.GreaterThanOrEqual, j.Binary.Type.Equal, j.Binary.Type.NotEqual]:
+                    j.Binary.Type.GreaterThanOrEqual]:
             b = self._apply_binary_space_around(b, self._style.around_operators.relational)
         elif op in [j.Binary.Type.BitAnd, j.Binary.Type.BitOr, j.Binary.Type.BitXor]:
             b = self._apply_binary_space_around(b, self._style.around_operators.bitwise)
@@ -246,10 +284,13 @@ class SpacesVisitor(PythonVisitor):
         if op == Binary.Type.In or op == Binary.Type.Is or op == Binary.Type.IsNot or op == Binary.Type.NotIn:
             # TODO: Not sure what style options to use for these operators
             b = self._apply_binary_space_around(b, True)
-        elif op == Binary.Type.FloorDivision or op == Binary.Type.MatrixMultiplication or op == Binary.Type.Power:
+        elif op in [Binary.Type.FloorDivision, Binary.Type.MatrixMultiplication]:
             b = self._apply_binary_space_around(b, self._style.around_operators.multiplicative)
         elif op == Binary.Type.StringConcatenation:
             b = self._apply_binary_space_around(b, self._style.around_operators.additive)
+        elif op == Binary.Type.Power:
+            b = self._apply_binary_space_around(b, self._style.around_operators.power)
+
         return b
 
     def visit_if(self, if_stm: If, p: P) -> J:
@@ -300,6 +341,10 @@ class SpacesVisitor(PythonVisitor):
         fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
         return fl
 
+    def visit_while_loop(self, while_loop: WhileLoop, p: P) -> J:
+        w = cast(WhileLoop, super().visit_while_loop(while_loop, p))
+        return w.with_condition(space_before(w.condition, True))
+
     def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
         pt = cast(ParameterizedType, super().visit_parameterized_type(parameterized_type, p))
 
@@ -329,6 +374,12 @@ class SpacesVisitor(PythonVisitor):
         )
 
         return pt
+
+    def visit_parentheses(self, parentheses: Parentheses, p: P) -> J:
+        p2 = cast(Parentheses, super().visit_parentheses(parentheses, p))
+        p2 = p2.with_prefix(update_space(p2.prefix, False))
+        p2 = p2.padding.with_tree(p2.padding.tree.with_after(update_space(p2.padding.tree.after, False)))
+        return p2
 
     def visit_collection_literal(self, collection_literal: CollectionLiteral, p: P) -> J:
         cl = cast(CollectionLiteral, super().visit_collection_literal(collection_literal, p))
@@ -405,18 +456,29 @@ class SpacesVisitor(PythonVisitor):
     def visit_multi_import(self, multi_import: MultiImport, p: P) -> J:
         mi: MultiImport = cast(MultiImport, super().visit_multi_import(multi_import, p))
 
-        _space_on_first_import = lambda idx: mi.padding.from_ is None if idx == 0 else self._style.other.after_comma
-
-        mi = mi.padding.with_names(
-            mi.padding.names.with_elements(
-                list_map(lambda x, idx: space_before(x, _space_on_first_import(idx)),
-                         mi.padding.names.elements)
+        # Space after from
+        if mi.padding.from_ is not None:
+            mi = mi.padding.with_from(
+                space_before_right_padded_element(mi.padding.from_, True)
             )
+
+        # Single space after import keyword
+        mi = mi.padding.with_names(
+            space_before_container(mi.padding.names, True)
         )
+
         _names = mi.padding.names
+
+        # Will handle space after import name before comma e.g. import foo   , bar <-> import foo, bar
         _names = _names.padding.with_elements(
-            list_map(lambda x: space_after(x, self._style.other.before_comma), _names.padding.elements)
+            list_map(lambda x, idx: space_after_right_padded(x, self._style.other.before_comma),
+                     _names.padding.elements)
         )
+        _names = _names.padding.with_elements(
+            list_map(lambda x, idx: space_before_right_padded_element(x, self._style.other.after_comma and idx != 0),
+                     _names.padding.elements)
+        )
+
         return mi.padding.with_names(_names)
 
     def visit_import(self, import_: Import, p: P) -> J:
@@ -484,12 +546,17 @@ J2 = TypeVar('J2', bound=j.J)
 
 
 def space_before(j: J2, add_space: bool) -> J2:
-    space: Space = cast(Space, j.prefix)
-    if space.comments or '\\' in space.whitespace:
-        # don't touch whitespaces with comments or continuation characters
+    prefix: Space = cast(Space, j.prefix)
+
+    if prefix.comments or ('\n' in prefix.whitespace):
         return j
 
-    return j.with_prefix(Space.SINGLE_SPACE if add_space else Space.EMPTY)
+    if add_space and not_single_space(prefix.whitespace):
+        return j.with_prefix(prefix.with_whitespace(" "))  # pyright: ignore [reportReturnType]
+    elif not add_space and only_spaces_and_not_empty(prefix.whitespace):
+        return j.with_prefix(prefix.with_whitespace(""))  # pyright: ignore [reportReturnType]
+
+    return j
 
 
 def space_before_container(container: j.JContainer, add_space: bool) -> j.JContainer:

@@ -44,7 +44,7 @@ def test_import_multi_import_spaces():
         # language=python
         python(
             """
-            from os import path   ,    system , environ
+            from os import   path   ,    system , environ
             """,
             """
             from os import path, system, environ

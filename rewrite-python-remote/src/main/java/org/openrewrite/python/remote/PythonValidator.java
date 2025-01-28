@@ -362,9 +362,10 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
 
     @Override
     public J.Case visitCase(J.Case case_, P p) {
-        visitAndValidate(case_.getExpressions(), Expression.class, p);
+        visitAndValidate(case_.getCaseLabels(), J.class, p);
         visitAndValidate(case_.getStatements(), Statement.class, p);
         visitAndValidate(case_.getBody(), J.class, p);
+        visitAndValidate(case_.getGuard(), Expression.class, p);
         return case_;
     }
 
@@ -491,6 +492,13 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
         visitAndValidateNonNull(instanceOf.getClazz(), J.class, p);
         visitAndValidate(instanceOf.getPattern(), J.class, p);
         return instanceOf;
+    }
+
+    @Override
+    public J.DeconstructionPattern visitDeconstructionPattern(J.DeconstructionPattern deconstructionPattern, P p) {
+        visitAndValidateNonNull(deconstructionPattern.getDeconstructor(), Expression.class, p);
+        visitAndValidate(deconstructionPattern.getNested(), J.class, p);
+        return deconstructionPattern;
     }
 
     @Override

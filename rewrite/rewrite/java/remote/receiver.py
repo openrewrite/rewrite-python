@@ -124,9 +124,10 @@ class JavaReceiver(Receiver):
             case = case.with_prefix(ctx.receive_node(case.prefix, JavaReceiver.receive_space))
             case = case.with_markers(ctx.receive_node(case.markers, ctx.receive_markers))
             case = case.with_type(ctx.receive_value(case.type, Case.Type))
-            case = case.padding.with_expressions(ctx.receive_node(case.padding.expressions, JavaReceiver.receive_container))
+            case = case.padding.with_case_labels(ctx.receive_node(case.padding.case_labels, JavaReceiver.receive_container))
             case = case.padding.with_statements(ctx.receive_node(case.padding.statements, JavaReceiver.receive_container))
             case = case.padding.with_body(ctx.receive_node(case.padding.body, JavaReceiver.receive_right_padded_tree))
+            case = case.with_guard(ctx.receive_node(case.guard, ctx.receive_tree))
             return case
 
         def visit_class_declaration(self, class_declaration: ClassDeclaration, ctx: ReceiverContext) -> J:
@@ -301,6 +302,15 @@ class JavaReceiver(Receiver):
             instance_of = instance_of.with_pattern(ctx.receive_node(instance_of.pattern, ctx.receive_tree))
             instance_of = instance_of.with_type(ctx.receive_value(instance_of.type, JavaType))
             return instance_of
+
+        def visit_deconstruction_pattern(self, deconstruction_pattern: DeconstructionPattern, ctx: ReceiverContext) -> J:
+            deconstruction_pattern = deconstruction_pattern.with_id(ctx.receive_value(deconstruction_pattern.id, UUID))
+            deconstruction_pattern = deconstruction_pattern.with_prefix(ctx.receive_node(deconstruction_pattern.prefix, JavaReceiver.receive_space))
+            deconstruction_pattern = deconstruction_pattern.with_markers(ctx.receive_node(deconstruction_pattern.markers, ctx.receive_markers))
+            deconstruction_pattern = deconstruction_pattern.with_deconstructor(ctx.receive_node(deconstruction_pattern.deconstructor, ctx.receive_tree))
+            deconstruction_pattern = deconstruction_pattern.padding.with_nested(ctx.receive_node(deconstruction_pattern.padding.nested, JavaReceiver.receive_container))
+            deconstruction_pattern = deconstruction_pattern.with_type(ctx.receive_value(deconstruction_pattern.type, JavaType))
+            return deconstruction_pattern
 
         def visit_intersection_type(self, intersection_type: IntersectionType, ctx: ReceiverContext) -> J:
             intersection_type = intersection_type.with_id(ctx.receive_value(intersection_type.id, UUID))
@@ -496,6 +506,7 @@ class JavaReceiver(Receiver):
             switch_expression = switch_expression.with_markers(ctx.receive_node(switch_expression.markers, ctx.receive_markers))
             switch_expression = switch_expression.with_selector(ctx.receive_node(switch_expression.selector, ctx.receive_tree))
             switch_expression = switch_expression.with_cases(ctx.receive_node(switch_expression.cases, ctx.receive_tree))
+            switch_expression = switch_expression.with_type(ctx.receive_value(switch_expression.type, JavaType))
             return switch_expression
 
         def visit_synchronized(self, synchronized: Synchronized, ctx: ReceiverContext) -> J:
@@ -760,7 +771,8 @@ class JavaReceiver(Receiver):
                     ctx.receive_value(None, Case.Type),
                     ctx.receive_node(None, JavaReceiver.receive_container),
                     ctx.receive_node(None, JavaReceiver.receive_container),
-                    ctx.receive_node(None, JavaReceiver.receive_right_padded_tree)
+                    ctx.receive_node(None, JavaReceiver.receive_right_padded_tree),
+                    ctx.receive_node(None, ctx.receive_tree)
                 )
 
             if type in ["rewrite.java.tree.ClassDeclaration", "org.openrewrite.java.tree.J$ClassDeclaration"]:
@@ -952,6 +964,16 @@ class JavaReceiver(Receiver):
                     ctx.receive_node(None, JavaReceiver.receive_right_padded_tree),
                     ctx.receive_node(None, ctx.receive_tree),
                     ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
+                )
+
+            if type in ["rewrite.java.tree.DeconstructionPattern", "org.openrewrite.java.tree.J$DeconstructionPattern"]:
+                return DeconstructionPattern(
+                    ctx.receive_value(None, UUID),
+                    ctx.receive_node(None, JavaReceiver.receive_space),
+                    ctx.receive_node(None, ctx.receive_markers),
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_node(None, JavaReceiver.receive_container),
                     ctx.receive_value(None, JavaType)
                 )
 
@@ -1170,7 +1192,8 @@ class JavaReceiver(Receiver):
                     ctx.receive_node(None, JavaReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
                     ctx.receive_node(None, ctx.receive_tree),
-                    ctx.receive_node(None, ctx.receive_tree)
+                    ctx.receive_node(None, ctx.receive_tree),
+                    ctx.receive_value(None, JavaType)
                 )
 
             if type in ["rewrite.java.tree.Synchronized", "org.openrewrite.java.tree.J$Synchronized"]:

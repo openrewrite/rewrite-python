@@ -567,9 +567,10 @@ public class PythonReceiver implements Receiver<Py> {
             case_ = case_.withPrefix(ctx.receiveNonNullNode(case_.getPrefix(), PythonReceiver::receiveSpace));
             case_ = case_.withMarkers(ctx.receiveNonNullNode(case_.getMarkers(), ctx::receiveMarkers));
             case_ = case_.withType(ctx.receiveNonNullValue(case_.getType(), J.Case.Type.class));
-            case_ = case_.getPadding().withExpressions(ctx.receiveNonNullNode(case_.getPadding().getExpressions(), PythonReceiver::receiveContainer));
+            case_ = case_.getPadding().withCaseLabels(ctx.receiveNonNullNode(case_.getPadding().getCaseLabels(), PythonReceiver::receiveContainer));
             case_ = case_.getPadding().withStatements(ctx.receiveNonNullNode(case_.getPadding().getStatements(), PythonReceiver::receiveContainer));
             case_ = case_.getPadding().withBody(ctx.receiveNode(case_.getPadding().getBody(), PythonReceiver::receiveRightPaddedTree));
+            case_ = case_.withGuard(ctx.receiveNode(case_.getGuard(), ctx::receiveTree));
             return case_;
         }
 
@@ -755,6 +756,17 @@ public class PythonReceiver implements Receiver<Py> {
             instanceOf = instanceOf.withPattern(ctx.receiveNode(instanceOf.getPattern(), ctx::receiveTree));
             instanceOf = instanceOf.withType(ctx.receiveValue(instanceOf.getType(), JavaType.class));
             return instanceOf;
+        }
+
+        @Override
+        public J.DeconstructionPattern visitDeconstructionPattern(J.DeconstructionPattern deconstructionPattern, ReceiverContext ctx) {
+            deconstructionPattern = deconstructionPattern.withId(ctx.receiveNonNullValue(deconstructionPattern.getId(), UUID.class));
+            deconstructionPattern = deconstructionPattern.withPrefix(ctx.receiveNonNullNode(deconstructionPattern.getPrefix(), PythonReceiver::receiveSpace));
+            deconstructionPattern = deconstructionPattern.withMarkers(ctx.receiveNonNullNode(deconstructionPattern.getMarkers(), ctx::receiveMarkers));
+            deconstructionPattern = deconstructionPattern.withDeconstructor(ctx.receiveNonNullNode(deconstructionPattern.getDeconstructor(), ctx::receiveTree));
+            deconstructionPattern = deconstructionPattern.getPadding().withNested(ctx.receiveNonNullNode(deconstructionPattern.getPadding().getNested(), PythonReceiver::receiveContainer));
+            deconstructionPattern = deconstructionPattern.withType(ctx.receiveValue(deconstructionPattern.getType(), JavaType.class));
+            return deconstructionPattern;
         }
 
         @Override
@@ -984,6 +996,7 @@ public class PythonReceiver implements Receiver<Py> {
             switchExpression = switchExpression.withMarkers(ctx.receiveNonNullNode(switchExpression.getMarkers(), ctx::receiveMarkers));
             switchExpression = switchExpression.withSelector(ctx.receiveNonNullNode(switchExpression.getSelector(), ctx::receiveTree));
             switchExpression = switchExpression.withCases(ctx.receiveNonNullNode(switchExpression.getCases(), ctx::receiveTree));
+            switchExpression = switchExpression.withType(ctx.receiveValue(switchExpression.getType(), JavaType.class));
             return switchExpression;
         }
 
@@ -1238,6 +1251,7 @@ public class PythonReceiver implements Receiver<Py> {
                 if (type == J.If.Else.class) return Factory::createJIfElse;
                 if (type == J.Import.class) return Factory::createJImport;
                 if (type == J.InstanceOf.class) return Factory::createJInstanceOf;
+                if (type == J.DeconstructionPattern.class) return Factory::createJDeconstructionPattern;
                 if (type == J.IntersectionType.class) return Factory::createJIntersectionType;
                 if (type == J.Label.class) return Factory::createJLabel;
                 if (type == J.Lambda.class) return Factory::createJLambda;
@@ -1783,7 +1797,8 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullValue(null, J.Case.Type.class),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
-                    ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree)
+                    ctx.receiveNode(null, PythonReceiver::receiveRightPaddedTree),
+                    ctx.receiveNode(null, ctx::receiveTree)
             );
         }
 
@@ -1977,6 +1992,17 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveRightPaddedTree),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
                     ctx.receiveNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
+            );
+        }
+
+        private static J.DeconstructionPattern createJDeconstructionPattern(ReceiverContext ctx) {
+            return new J.DeconstructionPattern(
+                    ctx.receiveNonNullValue(null, UUID.class),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
+                    ctx.receiveNonNullNode(null, ctx::receiveMarkers),
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveNonNullNode(null, PythonReceiver::receiveContainer),
                     ctx.receiveValue(null, JavaType.class)
             );
         }
@@ -2217,7 +2243,8 @@ public class PythonReceiver implements Receiver<Py> {
                     ctx.receiveNonNullNode(null, PythonReceiver::receiveSpace),
                     ctx.receiveNonNullNode(null, ctx::receiveMarkers),
                     ctx.receiveNonNullNode(null, ctx::receiveTree),
-                    ctx.receiveNonNullNode(null, ctx::receiveTree)
+                    ctx.receiveNonNullNode(null, ctx::receiveTree),
+                    ctx.receiveValue(null, JavaType.class)
             );
         }
 

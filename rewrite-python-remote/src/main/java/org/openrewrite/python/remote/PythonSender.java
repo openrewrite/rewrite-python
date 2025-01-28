@@ -549,9 +549,10 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(case_, J.Case::getPrefix, PythonSender::sendSpace);
             ctx.sendNode(case_, J.Case::getMarkers, ctx::sendMarkers);
             ctx.sendValue(case_, J.Case::getType);
-            ctx.sendNode(case_, e -> e.getPadding().getExpressions(), PythonSender::sendContainer);
+            ctx.sendNode(case_, e -> e.getPadding().getCaseLabels(), PythonSender::sendContainer);
             ctx.sendNode(case_, e -> e.getPadding().getStatements(), PythonSender::sendContainer);
             ctx.sendNode(case_, e -> e.getPadding().getBody(), PythonSender::sendRightPadded);
+            ctx.sendNode(case_, J.Case::getGuard, ctx::sendTree);
             return case_;
         }
 
@@ -745,6 +746,17 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(instanceOf, J.InstanceOf::getPattern, ctx::sendTree);
             ctx.sendTypedValue(instanceOf, J.InstanceOf::getType);
             return instanceOf;
+        }
+
+        @Override
+        public J.DeconstructionPattern visitDeconstructionPattern(J.DeconstructionPattern deconstructionPattern, SenderContext ctx) {
+            ctx.sendValue(deconstructionPattern, J.DeconstructionPattern::getId);
+            ctx.sendNode(deconstructionPattern, J.DeconstructionPattern::getPrefix, PythonSender::sendSpace);
+            ctx.sendNode(deconstructionPattern, J.DeconstructionPattern::getMarkers, ctx::sendMarkers);
+            ctx.sendNode(deconstructionPattern, J.DeconstructionPattern::getDeconstructor, ctx::sendTree);
+            ctx.sendNode(deconstructionPattern, e -> e.getPadding().getNested(), PythonSender::sendContainer);
+            ctx.sendTypedValue(deconstructionPattern, J.DeconstructionPattern::getType);
+            return deconstructionPattern;
         }
 
         @Override
@@ -987,6 +999,7 @@ public class PythonSender implements Sender<Py> {
             ctx.sendNode(switchExpression, J.SwitchExpression::getMarkers, ctx::sendMarkers);
             ctx.sendNode(switchExpression, J.SwitchExpression::getSelector, ctx::sendTree);
             ctx.sendNode(switchExpression, J.SwitchExpression::getCases, ctx::sendTree);
+            ctx.sendTypedValue(switchExpression, J.SwitchExpression::getType);
             return switchExpression;
         }
 

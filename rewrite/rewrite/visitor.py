@@ -75,6 +75,12 @@ class Cursor:
                 return c.messages[key]
         return None
 
+    def poll_nearest_message(self, key: str, default_value=None) -> Optional[object]:
+        for c in self.get_path_as_cursors():
+            if c.messages is not None and key in c.messages:
+                return c.messages.pop(key)
+        return default_value
+
     @property
     def parent_or_throw(self) -> Cursor:
         if self.parent is None:

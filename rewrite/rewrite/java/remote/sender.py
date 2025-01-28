@@ -118,9 +118,10 @@ class JavaSender(Sender):
             ctx.send_node(case, attrgetter('_prefix'), JavaSender.send_space)
             ctx.send_node(case, attrgetter('_markers'), ctx.send_markers)
             ctx.send_value(case, attrgetter('_type'))
-            ctx.send_node(case, attrgetter('_expressions'), JavaSender.send_container)
+            ctx.send_node(case, attrgetter('_case_labels'), JavaSender.send_container)
             ctx.send_node(case, attrgetter('_statements'), JavaSender.send_container)
             ctx.send_node(case, attrgetter('_body'), JavaSender.send_right_padded)
+            ctx.send_node(case, attrgetter('_guard'), ctx.send_tree)
             return case
 
         def visit_class_declaration(self, class_declaration: ClassDeclaration, ctx: SenderContext) -> J:
@@ -295,6 +296,15 @@ class JavaSender(Sender):
             ctx.send_node(instance_of, attrgetter('_pattern'), ctx.send_tree)
             ctx.send_typed_value(instance_of, attrgetter('_type'))
             return instance_of
+
+        def visit_deconstruction_pattern(self, deconstruction_pattern: DeconstructionPattern, ctx: SenderContext) -> J:
+            ctx.send_value(deconstruction_pattern, attrgetter('_id'))
+            ctx.send_node(deconstruction_pattern, attrgetter('_prefix'), JavaSender.send_space)
+            ctx.send_node(deconstruction_pattern, attrgetter('_markers'), ctx.send_markers)
+            ctx.send_node(deconstruction_pattern, attrgetter('_deconstructor'), ctx.send_tree)
+            ctx.send_node(deconstruction_pattern, attrgetter('_nested'), JavaSender.send_container)
+            ctx.send_typed_value(deconstruction_pattern, attrgetter('_type'))
+            return deconstruction_pattern
 
         def visit_intersection_type(self, intersection_type: IntersectionType, ctx: SenderContext) -> J:
             ctx.send_value(intersection_type, attrgetter('_id'))
@@ -494,6 +504,7 @@ class JavaSender(Sender):
             ctx.send_node(switch_expression, attrgetter('_markers'), ctx.send_markers)
             ctx.send_node(switch_expression, attrgetter('_selector'), ctx.send_tree)
             ctx.send_node(switch_expression, attrgetter('_cases'), ctx.send_tree)
+            ctx.send_typed_value(switch_expression, attrgetter('_type'))
             return switch_expression
 
         def visit_synchronized(self, synchronized: Synchronized, ctx: SenderContext) -> J:

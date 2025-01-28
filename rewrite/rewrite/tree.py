@@ -67,11 +67,8 @@ class PrinterFactory(ABC):
     _thread_local = threading.local()
 
     @classmethod
-    def current(cls) -> PrinterFactory:
-        result = getattr(PrinterFactory._thread_local, 'context', None)
-        if result is None:
-            raise ValueError("No PrinterFactory has been set")
-        return result
+    def current(cls) -> Optional[PrinterFactory]:
+        return getattr(PrinterFactory._thread_local, 'context', None)
 
     def set_current(self):
         PrinterFactory._thread_local.context = self
@@ -191,6 +188,10 @@ class PrintOutputCapture(Generic[P]):
 
     def clone(self) -> 'PrintOutputCapture[P]':
         return PrintOutputCapture(self._context, self._marker_printer)
+
+    @property
+    def marker_printer(self) -> MarkerPrinter:
+        return self._marker_printer
 
 
 @dataclass
