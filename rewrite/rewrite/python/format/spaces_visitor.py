@@ -7,7 +7,7 @@ from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, Member
     Import, ParameterizedType, Parentheses, WhileLoop
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
     ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression, NamedArgument
-from rewrite.visitor import P
+from rewrite.visitor import P, Cursor
 
 
 class SpacesVisitor(PythonVisitor):
@@ -108,12 +108,17 @@ class SpacesVisitor(PythonVisitor):
                 space_before_left_padded_element(a.padding.value, self._style.around_operators.eq_in_keyword_argument))
         return a
 
+    @staticmethod
+    def _part_of_method_header(cursor: Cursor) -> bool:
+        if (c := cursor.parent_tree_cursor()) and isinstance(c.value, VariableDeclarations):
+            return c.parent_tree_cursor() is not None and isinstance(c.parent_tree_cursor().value, MethodDeclaration)
+        return False
+
     def visit_variable(self, named_variable: VariableDeclarations.NamedVariable, p: P) -> J:
         v = cast(VariableDeclarations.NamedVariable, super().visit_variable(named_variable, p))
 
         # Check if the variable is a named parameter in a method declaration
-        cursors = list(self.cursor.get_path_as_cursors(levels=6))
-        if len(cursors) != 6 or not isinstance(cursors[5].value, MethodDeclaration):
+        if not self._part_of_method_header(self.cursor):
             return v
 
         if v.padding.initializer is not None and v.padding.initializer.element is not None:
