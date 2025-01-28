@@ -9,7 +9,7 @@ from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunExcepti
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
     Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
     Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray, \
-    Annotation
+    Annotation, Literal
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
 from rewrite.visitor import P, T, TreeVisitor
