@@ -117,15 +117,15 @@ def test_spaces_after_within_method_declaration_type_hints():
         # language=python
         python(
             """
-            def x(a :   int   , b : int = 2):
+            def x(a :   int   , b = "foo", c : int=2):
                 pass
-            def y(a :int   , b : int = 2):
+            def y(a :int   , b = "foo", c : int=2):
                 pass
             """,
             """
-            def x(a: int, b: int = 2):
+            def x(a: int, b="foo", c: int = 2):
                 pass
-            def y(a: int, b: int = 2):
+            def y(a: int, b="foo", c: int = 2):
                 pass
             """
         ),
