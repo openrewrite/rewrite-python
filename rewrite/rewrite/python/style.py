@@ -347,6 +347,30 @@ class TabsAndIndentsStyle(PythonStyle):
     def with_keep_indents_on_empty_lines(self, keep_indents_on_empty_lines: bool) -> TabsAndIndentsStyle:
         return self if keep_indents_on_empty_lines is self._keep_indents_on_empty_lines else replace(self, _keep_indents_on_empty_lines=keep_indents_on_empty_lines)
 
+    @dataclass(frozen=True)
+    class MethodDeclarationParameters:
+        _align_multiline_parameters: bool
+
+        @property
+        def align_multiline_parameters(self) -> bool:
+            return self._align_multiline_parameters
+
+        def with_align_multiline_parameters(self,
+                                            align_multiline_parameters: bool) -> TabsAndIndentsStyle.MethodDeclarationParameters:
+            return self if align_multiline_parameters is self._align_multiline_parameters else replace(self,
+                                                                                                       _align_multiline_parameters=align_multiline_parameters)
+
+    _method_declaration_parameters: MethodDeclarationParameters
+
+    @property
+    def method_declaration_parameters(self) -> MethodDeclarationParameters:
+        return self._method_declaration_parameters
+
+    def with_method_declaration_parameters(self,
+                                           method_declaration_parameters: MethodDeclarationParameters) -> TabsAndIndentsStyle:
+        return self if method_declaration_parameters is self._method_declaration_parameters else replace(self,
+                                                                                                         _method_declaration_parameters=method_declaration_parameters)
+
 
 @dataclass(frozen=True)
 class WrappingAndBracesStyle(PythonStyle):
@@ -561,6 +585,9 @@ class IntelliJ(NamedStyles):
             _indent_size=4,
             _continuation_indent=8,
             _keep_indents_on_empty_lines=False,
+            _method_declaration_parameters=TabsAndIndentsStyle.MethodDeclarationParameters(
+                _align_multiline_parameters=True,
+            ),
         )
 
     @classmethod

@@ -2,7 +2,7 @@ from rewrite.python import AutoFormat
 from rewrite.test import rewrite_run, python, RecipeSpec
 
 
-def test_remove_leading_module_blank_lines():
+def test_full_formatter():
     rewrite_run(
         # language=python
         python(
@@ -29,15 +29,21 @@ def test_remove_leading_module_blank_lines():
                def method_spaces_test(self,a,    b,c):
                    return a+b*c>>2|4
 
-               def multiline_method (
+               def multiline_method_one(self, very_long_parameter_name: int,
+                       another_long_parameter: str)-> Tuple[int,    str]:
+                   return very_long_parameter_name,     another_long_parameter
+
+               def multiline_method_two(
                self,
                    very_long_parameter_name: int,
                        another_long_parameter: str)-> Tuple[int,str]:
                    return very_long_parameter_name,     another_long_parameter
 
                def list_comprehension_test(self):
+                   a = [x    *2 for x in range(10)    if x>5]
+
                    return [x    *2 for x in range(10)
-                       if x>5]
+                        if x>5]
 
                def dict_comprehension_test(self):
                    keys    =['a','b','c']
@@ -131,13 +137,19 @@ def test_remove_leading_module_blank_lines():
                 def method_spaces_test(self, a, b, c):
                     return a + b * c >> 2 | 4
 
-                def multiline_method(
+                def multiline_method_one(self, very_long_parameter_name: int,
+                                         another_long_parameter: str) -> Tuple[int, str]:
+                    return very_long_parameter_name, another_long_parameter
+
+                def multiline_method_two(
                         self,
                         very_long_parameter_name: int,
                         another_long_parameter: str) -> Tuple[int, str]:
                     return very_long_parameter_name, another_long_parameter
 
                 def list_comprehension_test(self):
+                    a = [x * 2 for x in range(10) if x > 5]
+
                     return [x * 2 for x in range(10)
                             if x > 5]
 

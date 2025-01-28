@@ -132,3 +132,27 @@ def test_spaces_after_within_method_declaration_type_hints():
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
+
+
+def test_spaces_after_within_method_declaration_return_type():
+    style = IntelliJ.spaces()
+
+    rewrite_run(
+        # language=python
+        python(
+            """
+            def x() -> int:
+                pass
+            def y(a :   int   , b : int = 2) -> int:
+                pass
+            """,
+            """
+            def x() -> int:
+                pass
+            def y(a: int, b: int = 2) -> int:
+                pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )

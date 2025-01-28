@@ -96,7 +96,8 @@ public class IntelliJ extends NamedStyles {
                 4,     // tabSize
                 4,     // indentSize
                 8,     // continuationIndent
-                false  // keepIndentsOnEmptyLines
+                false, // keepIndentsOnEmptyLines
+                new TabsAndIndentsStyle.MethodDeclarationParameters(true)
         );
     }
 
