@@ -105,13 +105,44 @@ def test_spaces_with_dict_comprehension(within_braces):
             """\
             a = {i: i*2 for i   in  range(0, 10)}
             a = {i: i for i   in  [1, 2, 3]}
-            a = {k: v*2 for k,v   in  {   "a": 2, "b": 4}.items( ) }
+            a = {k:   v*2 for k,v   in  {   "a": 2, "b": 4}.items( ) }
             """,
             """\
             a = {i: i * 2 for i in range(0, 10)}
             a = {i: i for i in [1, 2, 3]}
             a = {k: v * 2 for k, v in {"a": 2, "b": 4}.items()}
             """.replace("{", "{" + _s).replace("}", _s + "}")
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )
+
+
+def test_spaces_with_dict_comprehension():
+    style = IntelliJ.spaces()
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            a = {k:   1 }
+            a = {k:   1 ** 2}
+            def dict_comprehension_test(self):
+                keys = ['a', 'b', 'c']
+                values = [1, 2, 3]
+                return {k  :     v ** 2
+                        for k, v in zip(keys, values)
+                        }
+            """,
+            """\
+            a = {k: 1}
+            a = {k: 1 ** 2}
+            def dict_comprehension_test(self):
+                keys = ['a', 'b', 'c']
+                values = [1, 2, 3]
+                return {k: v ** 2
+                        for k, v in zip(keys, values)
+                        }
+            """
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
