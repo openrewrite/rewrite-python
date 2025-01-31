@@ -9,7 +9,7 @@ from rewrite import Tree, Cursor, list_map, PrintOutputCapture, RecipeRunExcepti
 from rewrite.java import J, Space, JRightPadded, JLeftPadded, JContainer, JavaSourceFile, \
     Block, Label, ArrayDimension, ClassDeclaration, Empty, MethodDeclaration, \
     Binary, MethodInvocation, FieldAccess, Identifier, Lambda, Comment, TrailingComma, Expression, NewArray, \
-    Annotation, Literal
+    Annotation, Literal, If
 from rewrite.python import PythonVisitor, TabsAndIndentsStyle, PySpace, PyContainer, PyRightPadded, DictLiteral, \
     CollectionLiteral, ExpressionStatement, OtherStyle, IntelliJ, ComprehensionExpression, PyComment
 from rewrite.visitor import P, T, TreeVisitor
@@ -58,7 +58,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
     def pre_visit(self, tree: T, p: P) -> Optional[T]:
         if isinstance(tree, (JavaSourceFile, Label, ArrayDimension, ClassDeclaration)):
             self.cursor.put_message("indent_type", self.IndentType.ALIGN)
-        elif isinstance(tree, Block):
+        elif isinstance(tree, (Block, If)):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
         elif isinstance(tree, (DictLiteral, CollectionLiteral, NewArray, ComprehensionExpression)):
             self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT

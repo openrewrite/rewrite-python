@@ -127,6 +127,24 @@ def test_if_else_statement_no_else_multi_return_values_as_tuple():
     )
 
 
+def test_top_level_if_statement():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            if True:
+              pass
+            """,
+            """
+            if True:
+                pass
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
 def test_if_elif_else_statement():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
