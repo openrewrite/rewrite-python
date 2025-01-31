@@ -206,6 +206,11 @@ class SpacesVisitor(PythonVisitor):
         Handle assignment operator e.g. a = 1 <-> a=1
         """
         a: Assignment = cast(Assignment, super().visit_assignment(assignment, p))
+
+        # ignore assignments of the form `<value> as x` in `with` statements
+        if isinstance(self.cursor.parent_tree_cursor().value, j.Try.Resource):
+            return a
+
         a = a.padding.with_assignment(
             space_before_left_padded(a.padding.assignment, self._style.around_operators.assignment))
         a = a.padding.with_assignment(
