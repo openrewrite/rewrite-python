@@ -63,10 +63,7 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
         elif isinstance(tree, (DictLiteral, CollectionLiteral, NewArray, ComprehensionExpression)):
             self.cursor.put_message("indent_type", self.IndentType.CONTINUATION_INDENT
             if self._other.use_continuation_indent.collections_and_comprehensions else self.IndentType.INDENT)
-        elif isinstance(tree, ExpressionStatement):
-            self.cursor.put_message("indent_type", self.IndentType.INDENT
-            if self._is_doc_comment(tree, self.cursor) else self.IndentType.ALIGN)
-        elif isinstance(tree, Expression):
+        elif isinstance(tree, Expression) and not isinstance(tree, ExpressionStatement):
             self.cursor.put_message("indent_type", self.IndentType.INDENT)
 
         return tree

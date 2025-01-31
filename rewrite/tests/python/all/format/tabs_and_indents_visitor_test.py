@@ -263,6 +263,28 @@ def test_class_statement():
     )
 
 
+def test_class_with_field():
+    style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
+    rewrite_run(
+        # language=python
+        python(
+            """
+            class MyClass:
+             _foo: int
+             def __init__(self, foo):
+              self._foo = foo
+            """,
+            """
+            class MyClass:
+                _foo: int
+                def __init__(self, foo):
+                    self._foo = foo
+            """
+        ),
+        spec=RecipeSpec().with_recipes(from_visitor(TabsAndIndentsVisitor(style)))
+    )
+
+
 def test_with_statement():
     style = IntelliJ.tabs_and_indents().with_use_tab_character(False).with_tab_size(4).with_indent_size(4)
     rewrite_run(
