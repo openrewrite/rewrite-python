@@ -163,3 +163,19 @@ def test_spaces_within_array_access_brackets_slice_with_expressions():
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
 
+
+def test_spaces_with_tuple():
+    style = IntelliJ.spaces()
+    rewrite_run(
+        # language=python
+        python(
+            """
+            a=   (1, 2, 3)
+            """,
+            """
+            a = (1, 2, 3)
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(SpacesVisitor(style)))
+    )

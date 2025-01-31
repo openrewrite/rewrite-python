@@ -235,6 +235,11 @@ class TabsAndIndentsVisitor(PythonVisitor[P]):
                         right = right.with_markers(right.markers.compute_by_type(TrailingComma, lambda t: trailing_comma))
                 elif loc == JRightPadded.Location.ANNOTATION_ARGUMENT:
                     raise NotImplementedError("Annotation argument not implemented")
+                elif loc == PyRightPadded.Location.MULTI_IMPORT_NAME:
+                    self.cursor.parent_or_throw.put_message("indent_type", self.IndentType.INDENT)
+                    elem = self.visit_and_cast(elem, J, p)
+                    self.cursor.parent_or_throw.put_message("indent_type", self.IndentType.ALIGN)
+                    after = self.visit_space(right.after, loc.after_location, p)
                 else:
                     elem = self.visit_and_cast(elem, J, p)
                     after = self.visit_space(right.after, loc.after_location, p)
