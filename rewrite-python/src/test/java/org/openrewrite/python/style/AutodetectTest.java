@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python.style;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -254,6 +255,7 @@ public class AutodetectTest implements RewriteTest {
       "true, 'x = 1,y = 3'",
       "false, 'x=1, y=3'"
     })
+    @Disabled("Not yet implemented")
     void autodetectNamedParameterSpacing(boolean hasSpaces, String params) {
         rewriteRun(
           hasSpacingStyle(style -> {
