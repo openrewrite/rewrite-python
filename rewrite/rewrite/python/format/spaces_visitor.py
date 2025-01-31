@@ -4,7 +4,7 @@ import rewrite.java as j
 from rewrite import Tree, list_map
 from rewrite.java import J, Assignment, JLeftPadded, AssignmentOperation, MemberReference, MethodInvocation, \
     MethodDeclaration, Empty, ArrayAccess, Space, If, Block, ClassDeclaration, VariableDeclarations, JRightPadded, \
-    Import, ParameterizedType, Parentheses, WhileLoop
+    Import, ParameterizedType, Parentheses, Try, ControlParentheses, J2
 from rewrite.python import PythonVisitor, SpacesStyle, Binary, ChainedAssignment, Slice, CollectionLiteral, \
     ForLoop, DictLiteral, KeyValue, TypeHint, MultiImport, ExpressionTypeTree, ComprehensionExpression, NamedArgument
 from rewrite.visitor import P, Cursor
@@ -101,6 +101,17 @@ class SpacesVisitor(PythonVisitor):
                 Space.SINGLE_SPACE if self._before_parentheses.method_declaration else Space.EMPTY
             )
         )
+
+    def visit_catch(self, catch: Try.Catch, p: P) -> J:
+        c = cast(Try.Catch, super().visit_catch(catch, p))
+        # c = c.with_parameter(c.parameter.with_tree(space_before(c.parameter.tree, True)))
+        return c
+
+    def visit_control_parentheses(self, control_parentheses: ControlParentheses[J2], p: P) -> J:
+        cp = cast(ControlParentheses[J2], super().visit_control_parentheses(control_parentheses, p))
+        cp = space_before(cp, False)
+        cp = cp.with_tree(space_before(cp.tree, True))
+        return cp
 
     def visit_named_argument(self, named_argument: NamedArgument, p: P) -> J:
         a = cast(NamedArgument, super().visit_named_argument(named_argument, p))
@@ -301,9 +312,6 @@ class SpacesVisitor(PythonVisitor):
     def visit_if(self, if_stm: If, p: P) -> J:
         if_: j.If = cast(If, super().visit_if(if_stm, p))
 
-        # Handle space before if condition e.g. if    True: <-> if True:
-        if_ = if_.with_if_condition(space_before(if_._if_condition, True))
-
         # Handle space before if colon e.g. if True:    pass <-> if True: pass
         if_ = if_.with_if_condition(
             if_.if_condition.padding.with_tree(
@@ -345,10 +353,6 @@ class SpacesVisitor(PythonVisitor):
         fl = fl.padding.with_iterable(space_before_left_padded(fl.padding.iterable, True))
         fl = fl.padding.with_iterable(space_before_right_padded_element(fl.padding.iterable, True))
         return fl
-
-    def visit_while_loop(self, while_loop: WhileLoop, p: P) -> J:
-        w = cast(WhileLoop, super().visit_while_loop(while_loop, p))
-        return w.with_condition(space_before(w.condition, True))
 
     def visit_parameterized_type(self, parameterized_type: ParameterizedType, p: P) -> J:
         pt = cast(ParameterizedType, super().visit_parameterized_type(parameterized_type, p))
