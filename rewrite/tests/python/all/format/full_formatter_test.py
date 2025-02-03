@@ -182,9 +182,9 @@ def test_full_formatter():
                     try:
                         result = y << 2 * z
                         return result
-                    except    ZeroDivisionError as e:
+                    except ZeroDivisionError as e:
                         raise e
-                    except(ValueError, TypeError):
+                    except (ValueError, TypeError):
                         return 0
                     finally:
                         self.cleanup()

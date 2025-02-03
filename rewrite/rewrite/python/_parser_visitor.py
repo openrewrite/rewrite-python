@@ -791,6 +791,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_ExceptHandler(self, node):
         prefix = self.__source_before('except')
+        type_prefix = self.__whitespace()
         except_type = self.__convert_type(node.type) if node.type else j.Empty(random_id(), Space.EMPTY,
                                                                                Markers.EMPTY)
         if node.name:
@@ -820,7 +821,7 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 self.__pad_right(j.VariableDeclarations(
                     random_id(),
-                    Space.EMPTY,
+                    type_prefix,
                     Markers.EMPTY,
                     [], [],
                     except_type,
