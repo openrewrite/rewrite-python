@@ -1070,3 +1070,23 @@ def test_method_with_decorator():
             from_visitor(TabsAndIndentsVisitor(style))
         )
     )
+
+def test_import_with_tuple():
+    style = IntelliJ.tabs_and_indents()
+    rewrite_run(
+        # language=python
+        python(
+            """
+            from os import (
+                   path, system, environ
+            )
+            """,
+            """
+            from os import (
+                path, system, environ
+            )
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(TabsAndIndentsVisitor(style)))
+    )

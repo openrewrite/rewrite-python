@@ -413,7 +413,8 @@ class SpacesVisitor(PythonVisitor):
         elif cl.kind == CollectionLiteral.Kind.LIST:
             _space_style = self._style.within.brackets
         elif cl.kind == CollectionLiteral.Kind.TUPLE:
-            _space_style = self._style.within.brackets if self.cursor.first_enclosing(ExpressionTypeTree) else False
+            _space_style = False
+            cl = cl.padding.with_elements(cl.padding.elements.with_before(Space.EMPTY))
 
         cl = cl.padding.with_elements(
             cl.padding.elements.padding.with_elements(

@@ -9,8 +9,9 @@ def test_full_formatter():
             """\
             from typing import Tuple
             from dataclasses import   dataclass
-            import os,sys
-
+            from os import (
+                path,  system,environ
+            )
 
             @dataclass
             class Test:
@@ -56,6 +57,12 @@ def test_full_formatter():
                    return {"key":[1,2,
                        3],"other":{
                            "nested":4}}
+
+               def tuples(self):
+                   a= (
+                         1, 2, 3
+                    )
+                   b= (1, 2, 3)
 
                def operators_test(self):
                    a, b, c,d,   e, f = 1, 2, 3, 4, 5, 6
@@ -117,7 +124,9 @@ def test_full_formatter():
             """\
             from typing import Tuple
             from dataclasses import dataclass
-            import os, sys
+            from os import (
+                path, system, environ
+            )
 
 
             @dataclass
@@ -164,6 +173,12 @@ def test_full_formatter():
                     return {"key": [1, 2,
                                     3], "other": {
                         "nested": 4}}
+
+                def tuples(self):
+                    a = (
+                        1, 2, 3
+                    )
+                    b = (1, 2, 3)
 
                 def operators_test(self):
                     a, b, c, d, e, f = 1, 2, 3, 4, 5, 6
