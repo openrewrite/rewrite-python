@@ -915,7 +915,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitCase(J.Case ca, PrintOutputCapture<P> p) {
             beforeSyntax(ca, Location.CASE_PREFIX, p);
-            Expression elem = ca.getCaseLabels().get(0);
+            J elem = ca.getCaseLabels().get(0);
             if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
                 p.append("case");
             }
