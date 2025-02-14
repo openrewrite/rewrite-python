@@ -38,4 +38,5 @@ class PythonTemplateParser:
 
     def parse_expression(self, scope: Cursor, template: str, loc: Space.Location) -> J:
         cu: CompilationUnit = next(iter(self.parser_builder.build().parse_strings(template)))
-        return cast(ExpressionStatement, cu.statements[0]).expression if isinstance(cu.statements[0], ExpressionStatement) else cu.statements[0]
+        j = cast(ExpressionStatement, cu.statements[0]).expression if isinstance(cu.statements[0], ExpressionStatement) else cu.statements[0]
+        return j.with_prefix(cast(J, scope.value).prefix)

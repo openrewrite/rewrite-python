@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
 from rewrite.java import Literal, P, J, Expression
-from rewrite.python import PythonVisitor, PythonTemplate, PythonParserBuilder
+from rewrite.python import PythonVisitor, PythonTemplate
 from rewrite.test import from_visitor, RecipeSpec, rewrite_run, python
 
 
@@ -22,6 +22,5 @@ class ExpressionTemplatingVisitor(PythonVisitor[Any]):
     def visit_expression(self, expr: Expression, p: P) -> J:
         if self.match(expr):
             return PythonTemplate(self.code) \
-                .apply(self.cursor, expr.get_coordinates().replace()) \
-                .with_prefix(expr.prefix)
+                .apply(self.cursor, expr.get_coordinates().replace())
         return super().visit_expression(expr, p)
