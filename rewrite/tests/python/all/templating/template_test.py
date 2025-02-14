@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from rewrite.java import Literal, P, J, Expression
@@ -14,13 +15,12 @@ def test_simple():
     )
 
 
+@dataclass
 class ExpressionTemplatingVisitor(PythonVisitor[Any]):
-    def __init__(self, match: Callable[[J], bool], code: str):
-        self.match = match
-        self.code = code
+    match: Callable[[J], bool]
+    code: str
 
     def visit_expression(self, expr: Expression, p: P) -> J:
-        if self.match(expr):
-            return PythonTemplate(self.code) \
-                .apply(self.cursor, expr.get_coordinates().replace())
-        return super().visit_expression(expr, p)
+        return PythonTemplate(self.code) \
+            .apply(self.cursor, expr.get_coordinates().replace()) \
+            if self.match(expr) else expr
