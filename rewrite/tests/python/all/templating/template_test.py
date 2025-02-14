@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Any, Callable
 
-from rewrite.java import Literal, P, J
+from rewrite.java import Literal, P, J, Expression
 from rewrite.python import PythonVisitor, PythonTemplate, PythonParserBuilder
 from rewrite.test import from_visitor, RecipeSpec, rewrite_run, python
 
@@ -10,12 +10,18 @@ def test_simple():
     rewrite_run(
         python("a = 1", "a = 2"),
         spec=RecipeSpec()
-        .with_recipe(from_visitor(TemplatingVisitor()))
+        .with_recipe(from_visitor(ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '2')))
     )
 
 
-class TemplatingVisitor(PythonVisitor[Any]):
-    def visit_literal(self, literal: Literal, p: P) -> J:
-        return PythonTemplate('2') \
-            .apply(self.cursor, literal.get_coordinates().replace()) \
-            .with_prefix(literal.prefix)
+class ExpressionTemplatingVisitor(PythonVisitor[Any]):
+    def __init__(self, match: Callable[[J], bool], code: str):
+        self.match = match
+        self.code = code
+
+    def visit_expression(self, expr: Expression, p: P) -> J:
+        if self.match(expr):
+            return PythonTemplate(self.code) \
+                .apply(self.cursor, expr.get_coordinates().replace()) \
+                .with_prefix(expr.prefix)
+        return super().visit_expression(expr, p)
