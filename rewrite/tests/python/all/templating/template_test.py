@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Callable
+from dataclasses import dataclass, field
+from typing import Any, Callable, List
 
 from rewrite.java import Literal, P, J, Expression
 from rewrite.python import PythonVisitor, PythonTemplate
@@ -14,7 +14,7 @@ def test_simple():
             "a = 2",
         ),
         spec=RecipeSpec()
-        .with_recipe(from_visitor(ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '2')))
+        .with_recipe(from_visitor(ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{}', [2])))
     )
 
 
@@ -22,8 +22,15 @@ def test_simple():
 class ExpressionTemplatingVisitor(PythonVisitor[P]):
     match: Callable[[J], bool]
     code: str
+    params: List[Any] = field(default_factory=list)
+    debug: bool = False
+    _template: PythonTemplate = field(init=False, repr=False)
+
+    def __post_init__(self):
+        self._template = PythonTemplate(
+            self.code,
+            on_after_variable_substitution=lambda code: print(code) if self.debug else None
+        )
 
     def visit_expression(self, expr: Expression, p: P) -> J:
-        return PythonTemplate(self.code) \
-            .apply(self.cursor, expr.get_coordinates().replace()) \
-            if self.match(expr) else expr
+        return self._template.apply(self.cursor, expr.get_coordinates().replace(), self.params) if self.match(expr) else expr
