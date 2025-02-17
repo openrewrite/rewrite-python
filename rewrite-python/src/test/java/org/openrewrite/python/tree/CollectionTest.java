@@ -37,7 +37,7 @@ class CollectionTest implements RewriteTest {
           python("xs = []")
         );
     }
-    
+
     @Test
     void tupleExpression() {
         rewriteRun(

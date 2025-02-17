@@ -142,4 +142,3 @@ def test_function_parameter_with_quoted_type_hint():
                 pass
             """
         ))
-

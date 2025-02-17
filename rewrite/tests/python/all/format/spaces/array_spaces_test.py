@@ -162,4 +162,3 @@ def test_spaces_within_array_access_brackets_slice_with_expressions():
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
-

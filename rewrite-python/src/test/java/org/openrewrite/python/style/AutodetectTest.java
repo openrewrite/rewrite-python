@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.python.Assertions.python;
 
-public class AutodetectTest implements RewriteTest {
+class AutodetectTest implements RewriteTest {
 
     @Test
     void autodetectSpaces2() {
@@ -83,7 +83,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getAroundOperators().getAdditive()).isTrue();
               assertThat(style.getAroundOperators().getMultiplicative()).isTrue();
           }),
-          python("""
+          python(
+                """
             x = 1 + 2
             y = 3 * 4
             z = x + y
@@ -100,7 +101,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getAroundOperators().getAdditive()).isFalse();
               assertThat(style.getAroundOperators().getMultiplicative()).isFalse();
           }),
-          python("""
+          python(
+                """
             x=1+2
             y=3*4
             z=x+y
@@ -116,7 +118,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getBeforeParentheses().getMethodCall()).isTrue();
               assertThat(style.getWithin().getMethodCallParentheses()).isTrue();
           }),
-          python("""
+          python(
+                """
             def test ( x, y ):
                 return x + y
             
@@ -132,7 +135,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getOther().getBeforeColon()).isTrue();
               assertThat(style.getOther().getAfterColon()).isTrue();
           }),
-          python("""
+          python(
+                """
             def calculate(x : int, y : float) -> float:
                 return x + y
             
@@ -168,7 +172,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getWithin().getBrackets()).isTrue();
               assertThat(style.getWithin().getBraces()).isTrue();
           }),
-          python("""
+          python(
+                """
             numbers = [ 1, 2, 3 ]
             data = { "a": 1, "b": 2 }
             matrix = [ [ 1, 2 ], [ 3, 4 ] ]
@@ -183,7 +188,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getWithin().getBrackets()).isTrue();
               assertThat(style.getWithin().getBraces()).isTrue();
           }),
-          python("""
+          python(
+                """
             numbers = [  ]
             data = {  }
             matrix = [ [  ], [  ] ]
@@ -198,7 +204,8 @@ public class AutodetectTest implements RewriteTest {
               assertThat(style.getWithin().getBrackets()).isTrue();
               assertThat(style.getWithin().getBraces()).isTrue();
           }),
-          python("""
+          python(
+                """
             squares = [ x*x for x in range(10) ]
             evens = { x for x in range(20) if x % 2 == 0 }
             """)
@@ -212,11 +219,10 @@ public class AutodetectTest implements RewriteTest {
     })
     void autodetectChainedAssignmentSpacing(boolean hasSpaces, String code) {
         rewriteRun(
-          hasSpacingStyle(style -> {
+          hasSpacingStyle(style ->
               assertThat(style.getAroundOperators().getAssignment())
                 .as("Assignment operators in chained assignments should%s have spaces", hasSpaces ? "" : " not")
-                .isEqualTo(hasSpaces);
-          }),
+                .isEqualTo(hasSpaces)),
           python("""
             %s
             %s
@@ -237,11 +243,10 @@ public class AutodetectTest implements RewriteTest {
     })
     void autodetectAssignmentOperationSpacing(boolean hasSpaces, String operation) {
         rewriteRun(
-          hasSpacingStyle(style -> {
+          hasSpacingStyle(style ->
               assertThat(style.getAroundOperators().getAssignment())
                 .as("Compound assignment operators should%s have spaces", hasSpaces ? "" : " not")
-                .isEqualTo(hasSpaces);
-          }),
+                .isEqualTo(hasSpaces)),
           python("""
             %s
             """.formatted(
@@ -305,10 +310,9 @@ public class AutodetectTest implements RewriteTest {
     })
     void autodetectForLoop(boolean hasSpaces) {
         rewriteRun(
-          hasSpacingStyle(style -> {
+          hasSpacingStyle(style ->
               assertThat(style.getOther().getBeforeColon())
-                .isEqualTo(hasSpaces);
-          }),
+                .isEqualTo(hasSpaces)),
           python("""
             for i in range(10)%s:
                 pass

@@ -97,5 +97,3 @@ def test_type_hint_union_with_space_in_brackets():
         spec=RecipeSpec()
         .with_recipe(from_visitor(SpacesVisitor(style)))
     )
-
-
