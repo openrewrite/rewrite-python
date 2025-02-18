@@ -37,11 +37,11 @@ def test_tree_substitution_named():
         # language=python
         python(
             "a = 1",
-            "a = 2 + 2",
+            "a = 2 + 3 + 2",
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(
-            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{name:any()} + #{name}', [parse_expression('2')])))
+            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{name:any()} + #{any()} + #{name}', [parse_expression('2'), parse_expression('3')])))
     )
 
 
