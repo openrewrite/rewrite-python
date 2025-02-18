@@ -6,6 +6,7 @@ from .visitor import *
 from .markers import *
 from .style import *
 from .format import *
+from .templating import *
 
 __all__ = [
     'Py',
@@ -72,4 +73,7 @@ __all__ = [
     'NormalizeFormatVisitor',
     'NormalizeTabsOrSpacesVisitor',
     'SpacesVisitor',
+
+    # Templating
+    'PythonTemplate',
 ]

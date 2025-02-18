@@ -91,5 +91,9 @@ __all__ = [
     'WhileLoop',
     'Wildcard',
     'Yield',
-    'Unknown'
+    'Unknown',
+
+    # Templating
+    'CoordinateBuilder',
+    'JavaCoordinates',
 ]

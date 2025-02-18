@@ -319,16 +319,63 @@ Space.EMPTY = Space([], '')
 Space.SINGLE_SPACE = Space([], ' ')
 
 
+@dataclass
+class CoordinateBuilder:
+    tree: J
+
+    def before(self, loc: Space.Location) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc, JavaCoordinates.Mode.BEFORE)
+
+    def after(self, loc: Space.Location) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc, JavaCoordinates.Mode.AFTER)
+
+    def replace(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc, JavaCoordinates.Mode.REPLACE)
+
+
+@dataclass
+class _ExpressionCoordinateBuilder(CoordinateBuilder):
+    def replace(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.EXPRESSION_PREFIX, JavaCoordinates.Mode.REPLACE)
+
+
+@dataclass
+class _StatementCoordinateBuilder(CoordinateBuilder):
+    def replace(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.STATEMENT_PREFIX, JavaCoordinates.Mode.REPLACE)
+
+
+CoordinateBuilder.Expression = _ExpressionCoordinateBuilder  # type: ignore
+CoordinateBuilder.Statement = _StatementCoordinateBuilder  # type: ignore
+
+
+@dataclass
+class JavaCoordinates:
+    tree: J
+    loc: Space.Location
+    mode: Mode
+
+    def is_replacement(self) -> bool:
+        return self.mode == JavaCoordinates.Mode.REPLACE
+
+    class Mode(Enum):
+        AFTER = 0,
+        BEFORE = 1,
+        REPLACE = 2,
+
+
 class JavaSourceFile(J, SourceFile):
     pass
 
 
 class Expression(J):
-    pass
+    def get_coordinates(self) -> CoordinateBuilder.Expression:  # type: ignore
+        return CoordinateBuilder.Expression(self)  # type: ignore
 
 
 class Statement(J):
-    pass
+    def get_coordinates(self) -> CoordinateBuilder.Statement:  # type: ignore
+        return CoordinateBuilder.Statement(self)  # type: ignore
 
 
 class TypedTree(J):
