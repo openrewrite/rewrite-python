@@ -1390,7 +1390,7 @@ class ParserVisitor(ast.NodeVisitor):
             self.__map_literal_value(node, tok),
             self._source[start:self._cursor],
             None,
-            self.__map_type(node),
+            JavaType.Primitive.None_,  # FIXME we mustn't use `None`: self.__map_type(node),
         ), next(tokens))
 
     def __map_literal_value(self, node, tok):
