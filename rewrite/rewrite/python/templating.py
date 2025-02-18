@@ -6,7 +6,9 @@ from typing import Any, Callable, Optional, cast, List
 
 from . import CompilationUnit, ExpressionStatement, PythonVisitor
 from .parser import PythonParserBuilder
-from ..java import J, JavaCoordinates, Space, Identifier, P
+from .printer import PythonPrinter
+from .. import PrintOutputCapture
+from ..java import J, JavaCoordinates, Space, Identifier, P, Literal
 from ..parser import ParserBuilder
 from ..visitor import Cursor
 
@@ -55,10 +57,55 @@ class Substitutions:
     parameters: List[Any]
 
     def substitute(self) -> str:
-        result = self.code
-        for i, _ in enumerate(self.parameters):
-            result = result.replace('#{}', f'__p{i}__')
+        result = ""
+        pos = 0
+        param_count = 0
+        named_index = {}
+
+        while True:
+            # Find next #{
+            start = self.code.find('#{', pos)
+            if start == -1:
+                # No more parameters, add remaining code
+                result += self.code[pos:]
+                break
+
+            # Add code before the #{
+            result += self.code[pos:start]
+
+            # Find matching }
+            brace_count = 1
+            i = start + 2  # Skip past #{
+            while i < len(self.code) and brace_count > 0:
+                if self.code[i] == '{':
+                    brace_count += 1
+                elif self.code[i] == '}':
+                    brace_count -= 1
+                i += 1
+
+            if brace_count > 0:
+                raise ValueError("Unmatched { in template")
+            pattern = self.code[start + 2:i - 1].strip()
+            param_index = param_count if not pattern or pattern.find('any()') >= 0 else named_index[pattern]
+            if (sep := pattern.find(':')) >= 0:
+                named_index[pattern[0:sep]] = param_index
+
+            # Replace the #{...} with parameter placeholder
+            result += f'__p{param_index}__' if pattern else self.substitute_untyped(param_index)
+            if not pattern or pattern.find('any()') >= 0:
+                param_count += 1
+
+            pos = i
+
         return result
+
+    def substitute_untyped(self, index: int) -> str:
+        param = self.parameters[index]
+        if isinstance(param, Literal):
+            capture = PrintOutputCapture(0)
+            PythonPrinter().visit(param, capture)
+            return capture.get_out()
+        return str(param)
 
     def unsubstitute(self, parsed: J) -> J:
         return cast(J, UnsubstitutionVisitor(self.parameters).visit(parsed, 0))
@@ -71,5 +118,5 @@ class UnsubstitutionVisitor(PythonVisitor[int]):
 
     def visit_identifier(self, identifier: Identifier, p: P) -> J:
         if match := self._param_pattern.fullmatch(identifier.simple_name):
-            return cast(J, self.parameters[int(match.group(1))])
+            return cast(J, self.parameters[int(match.group(1))]).with_prefix(identifier.prefix)
         return identifier

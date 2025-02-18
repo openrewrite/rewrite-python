@@ -6,16 +6,42 @@ from rewrite.python import PythonVisitor, PythonTemplate, PythonParserBuilder, C
 from rewrite.test import from_visitor, RecipeSpec, rewrite_run, python
 
 
-def test_simple():
-    # language=python
+def test_string_substitution():
     rewrite_run(
+        # language=python
         python(
             "a = 1",
             "a = 2",
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(
-            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '# {}', [parse_expression('2')])))
+            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{}', [2])))
+    )
+
+
+def test_tree_substitution():
+    rewrite_run(
+        # language=python
+        python(
+            "a = 1",
+            "a = 2",
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(
+            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{any()}', [parse_expression('2')])))
+    )
+
+
+def test_tree_substitution_named():
+    rewrite_run(
+        # language=python
+        python(
+            "a = 1",
+            "a = 2 + 2",
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(
+            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{name:any()} + #{name}', [parse_expression('2')])))
     )
 
 
