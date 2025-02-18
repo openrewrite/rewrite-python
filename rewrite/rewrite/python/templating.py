@@ -29,7 +29,7 @@ class PythonTemplate:
         if self.on_after_variable_substitution:
             self.on_after_variable_substitution(substituted)
         parsed = self._template_parser.parse_expression(scope, substituted, coordinates.loc)
-        return substitutions.unsubstitute(parsed)
+        return substitutions.unsubstitute(parsed).with_prefix(cast(J, scope.value).prefix)
 
     def substitutions(self, parameters: List[Any]) -> Substitutions:
         return Substitutions(self.code, parameters)
@@ -67,8 +67,9 @@ class Substitutions:
 @dataclass
 class UnsubstitutionVisitor(PythonVisitor[int]):
     parameters: List[Any]
+    _param_pattern = re.compile('__p(\d+)__')
 
     def visit_identifier(self, identifier: Identifier, p: P) -> J:
-        if match := re.fullmatch('__p(\d+)__', identifier.simple_name):
+        if match := self._param_pattern.fullmatch(identifier.simple_name):
             return cast(J, self.parameters[int(match.group(1))])
         return identifier

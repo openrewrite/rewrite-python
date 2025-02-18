@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any, Callable, List
+from typing import Any, Callable, List, cast
 
 from rewrite.java import Literal, P, J, Expression
-from rewrite.python import PythonVisitor, PythonTemplate
+from rewrite.python import PythonVisitor, PythonTemplate, PythonParserBuilder, CompilationUnit, ExpressionStatement
 from rewrite.test import from_visitor, RecipeSpec, rewrite_run, python
 
 
@@ -14,8 +14,15 @@ def test_simple():
             "a = 2",
         ),
         spec=RecipeSpec()
-        .with_recipe(from_visitor(ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '#{}', [2])))
+        .with_recipe(from_visitor(
+            ExpressionTemplatingVisitor(lambda j: isinstance(j, Literal), '# {}', [parse_expression('2')])))
     )
+
+
+def parse_expression(code: str) -> J:
+    return cast(ExpressionStatement,
+                cast(CompilationUnit, next(iter(PythonParserBuilder().build().parse_strings(code)))).statements[
+                    0]).expression
 
 
 @dataclass
@@ -33,4 +40,5 @@ class ExpressionTemplatingVisitor(PythonVisitor[P]):
         )
 
     def visit_expression(self, expr: Expression, p: P) -> J:
-        return self._template.apply(self.cursor, expr.get_coordinates().replace(), self.params) if self.match(expr) else expr
+        return self._template.apply(self.cursor, expr.get_coordinates().replace(), self.params) if self.match(
+            expr) else expr
