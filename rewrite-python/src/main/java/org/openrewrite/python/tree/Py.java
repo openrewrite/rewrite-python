@@ -115,6 +115,7 @@ public interface Py extends J {
         Expression expression;
 
         @With
+        @Nullable
         JavaType type;
 
         @Override
@@ -323,6 +324,7 @@ public interface Py extends J {
         Markers markers;
 
         @With
+        @Nullable
         JavaType type;
 
         @With
@@ -1696,6 +1698,8 @@ public interface Py extends J {
         Space prefix;
         Markers markers;
         Expression expression;
+
+        @Nullable
         JavaType type;
 
         @Override
@@ -2171,6 +2175,7 @@ public interface Py extends J {
 
         @With
         @Getter
+        @Nullable
         JavaType type;
 
         public Expression getFrom() {
