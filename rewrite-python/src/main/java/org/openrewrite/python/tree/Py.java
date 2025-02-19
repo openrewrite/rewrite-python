@@ -452,6 +452,7 @@ public interface Py extends J {
         Expression literal;
 
         @With
+        @Nullable
         JavaType type;
 
         @Override
