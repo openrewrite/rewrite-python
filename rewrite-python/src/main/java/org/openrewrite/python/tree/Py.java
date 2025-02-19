@@ -479,6 +479,8 @@ public interface Py extends J {
         Markers markers;
         // Using `Expression` to also cater for `None`
         Expression typeTree;
+
+        @Nullable
         JavaType type;
 
         @Override
