@@ -915,11 +915,11 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         @Override
         public J visitCase(J.Case ca, PrintOutputCapture<P> p) {
             beforeSyntax(ca, Location.CASE_PREFIX, p);
-            Expression elem = ca.getExpressions().get(0);
+            J elem = ca.getCaseLabels().get(0);
             if (!(elem instanceof J.Identifier) || !((J.Identifier) elem).getSimpleName().equals("default")) {
                 p.append("case");
             }
-            visitContainer("", ca.getPadding().getExpressions(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
+            visitContainer("", ca.getPadding().getCaseLabels(), JContainer.Location.CASE_EXPRESSION, ",", "", p);
             visitSpace(ca.getPadding().getStatements().getBefore(), Location.CASE, p);
             visitStatements(ca.getPadding().getStatements().getPadding().getElements(), JRightPadded.Location.CASE, p);
             if (ca.getBody() instanceof Statement) {
