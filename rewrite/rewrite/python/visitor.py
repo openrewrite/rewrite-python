@@ -11,6 +11,11 @@ class PythonVisitor(JavaVisitor[P]):
     def is_acceptable(self, source_file: SourceFile, p: P) -> bool:
         return isinstance(source_file, Py)
 
+    def auto_format(self, j: J, p: P, cursor: Optional[Cursor] = None, stop_after: Optional[J] = None) -> J:
+        cursor = cursor or self.cursor.parent_tree_cursor()
+        from .format import AutoFormatVisitor
+        return AutoFormatVisitor(stop_after).visit(j, p, cursor)
+
     def visit_async(self, async_: Async, p: P) -> J:
         async_ = async_.with_prefix(self.visit_space(async_.prefix, PySpace.Location.ASYNC_PREFIX, p))
         temp_statement = cast(Statement, self.visit_statement(async_, p))

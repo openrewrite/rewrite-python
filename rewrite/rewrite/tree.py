@@ -54,6 +54,9 @@ class Tree(ABC):
     def printer(self, cursor: 'Cursor') -> 'TreeVisitor[Any, PrintOutputCapture[P]]':
         return cursor.first_enclosing_or_throw(SourceFile).printer(cursor)
 
+    def is_scope(self, tree: Optional[Tree]) -> bool:
+        return tree and tree.id == self.id
+
     def __eq__(self, other: object) -> bool:
         if self.__class__ == other.__class__:
             return self.id == cast(Tree, other).id

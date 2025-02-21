@@ -10,6 +10,7 @@ T = TypeVar('T')
 
 # Define a type that allows both single and two-argument callables
 FnType = Union[Callable[[T], Union[T, None]], Callable[[T, int], Union[T, None]]]
+FlatMapFnType = Union[Callable[[T], List[T]], Callable[[T, int], List[T]]]
 
 def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
     changed = False
@@ -31,6 +32,24 @@ def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
             mapped_lst.append(original)
 
     return mapped_lst if changed else lst  # type: ignore
+
+
+def list_flat_map(fn: FlatMapFnType[T], lst: List[T]) -> List[T]:
+    changed = False
+    result: List[T] = []
+
+    with_index = len(inspect.signature(fn).parameters) == 2
+    for index, item in enumerate(lst):
+        new_items = fn(item, index) if with_index else fn(item)  # type: ignore
+        if new_items is None:
+            changed = True
+            continue
+
+        if len(new_items) != 1 or new_items[0] is not item:
+            changed = True
+        result.extend(new_items)
+
+    return result if changed else lst
 
 
 def list_map_last(fn: Callable[[T], Union[T, None]], lst: List[T]) -> List[T]:

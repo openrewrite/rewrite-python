@@ -21,7 +21,7 @@ class AutoFormat(Recipe):
         return AutoFormatVisitor()
 
 
-class AutoFormatVisitor(PythonVisitor):
+class AutoFormatVisitor(PythonVisitor[P]):
     def __init__(self, stop_after: Optional[Tree] = None):
         self._stop_after = stop_after
 

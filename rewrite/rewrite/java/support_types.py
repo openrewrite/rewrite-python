@@ -335,12 +335,24 @@ class CoordinateBuilder:
 
 @dataclass
 class _ExpressionCoordinateBuilder(CoordinateBuilder):
+    def after(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.EXPRESSION_PREFIX, JavaCoordinates.Mode.AFTER)
+
+    def before(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.EXPRESSION_PREFIX, JavaCoordinates.Mode.BEFORE)
+
     def replace(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
         return JavaCoordinates(self.tree, loc or Space.Location.EXPRESSION_PREFIX, JavaCoordinates.Mode.REPLACE)
 
 
 @dataclass
 class _StatementCoordinateBuilder(CoordinateBuilder):
+    def after(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.STATEMENT_PREFIX, JavaCoordinates.Mode.AFTER)
+
+    def before(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
+        return JavaCoordinates(self.tree, loc or Space.Location.STATEMENT_PREFIX, JavaCoordinates.Mode.BEFORE)
+
     def replace(self, loc: Optional[Space.Location] = None) -> JavaCoordinates:
         return JavaCoordinates(self.tree, loc or Space.Location.STATEMENT_PREFIX, JavaCoordinates.Mode.REPLACE)
 
