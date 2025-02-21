@@ -48,7 +48,7 @@ def test_add_statement_last():
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(
-            AddLastTemplatingVisitor(
+            GenericTemplatingVisitor(
                 lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 1,
                 'return',
                 coordinate_provider=lambda m: cast(MethodDeclaration, m).body.statements[0].get_coordinates().after())
@@ -72,7 +72,7 @@ def test_add_statement_first():
         ),
         spec=RecipeSpec()
         .with_recipe(from_visitor(
-            AddLastTemplatingVisitor(
+            GenericTemplatingVisitor(
                 lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 1,
                 'pass',
                 coordinate_provider=lambda m: cast(MethodDeclaration, m).body.statements[0].get_coordinates().before())
@@ -125,7 +125,7 @@ class ReplaceTemplatingVisitor(PythonVisitor[P]):
 
 
 @dataclass
-class AddLastTemplatingVisitor(PythonVisitor[P]):
+class GenericTemplatingVisitor(PythonVisitor[P]):
     match: Callable[[J], bool]
     code: str
     coordinate_provider: Callable[[Union[Expression, Statement]], JavaCoordinates] = lambda j: j.get_coordinates().after()
