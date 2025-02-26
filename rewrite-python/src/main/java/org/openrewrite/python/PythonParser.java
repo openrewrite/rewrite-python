@@ -195,8 +195,8 @@ public class PythonParser implements Parser {
                         (current != null ? current + File.pathSeparator : "") + pythonPath.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
             }
             File redirectTo = logFile != null ? logFile.toFile() : new File(System.getProperty("os.name").startsWith("Windows") ? "NULL" : "/dev/null");
-            processBuilder.redirectOutput(redirectTo);
-            processBuilder.redirectError(redirectTo);
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(redirectTo));
+            processBuilder.redirectError(ProcessBuilder.Redirect.appendTo(redirectTo));
 
             pythonProcess = processBuilder.start();
             for (int i = 0; i < 30 && pythonProcess.isAlive(); i++) {
