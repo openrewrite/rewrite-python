@@ -357,8 +357,15 @@ class _StatementCoordinateBuilder(CoordinateBuilder):
         return JavaCoordinates(self.tree, loc or Space.Location.STATEMENT_PREFIX, JavaCoordinates.Mode.REPLACE)
 
 
+@dataclass
+class _BlockCoordinateBuilder(_StatementCoordinateBuilder):
+    def last_statement(self) -> JavaCoordinates:
+        return self.before(Space.Location.BLOCK_END)
+
+
 CoordinateBuilder.Expression = _ExpressionCoordinateBuilder  # type: ignore
 CoordinateBuilder.Statement = _StatementCoordinateBuilder  # type: ignore
+CoordinateBuilder.Block = _BlockCoordinateBuilder  # type: ignore
 
 
 @dataclass

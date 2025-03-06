@@ -1,6 +1,7 @@
 from typing import Optional
 
 from .blank_lines import BlankLinesVisitor
+from .minimum_viable_spacing import MinimumViableSpacingVisitor
 from .normalize_format import NormalizeFormatVisitor
 from .normalize_line_breaks_visitor import NormalizeLineBreaksVisitor
 from .normalize_tabs_or_spaces import NormalizeTabsOrSpacesVisitor
@@ -30,6 +31,8 @@ class AutoFormatVisitor(PythonVisitor[P]):
         cu = tree if isinstance(tree, JavaSourceFile) else self._cursor.first_enclosing_or_throw(JavaSourceFile)
 
         tree = NormalizeFormatVisitor(self._stop_after).visit(tree, p, self._cursor.fork())
+
+        tree = MinimumViableSpacingVisitor(self._stop_after).visit(tree, p, self._cursor.fork())
 
         tree = BlankLinesVisitor(cu.get_style(BlankLinesStyle) or IntelliJ.blank_lines(), self._stop_after).visit(tree, p, self._cursor.fork())
 

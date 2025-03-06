@@ -733,6 +733,9 @@ class Block(Statement):
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_block(self, p)
 
+    def get_coordinates(self) -> CoordinateBuilder.Block:
+        return CoordinateBuilder.Block(self)
+
 # noinspection PyShadowingBuiltins,PyShadowingNames,DuplicatedCode
 @dataclass(frozen=True, eq=False)
 class Break(Statement):
@@ -1289,8 +1292,10 @@ class CompilationUnit(JavaSourceFile, SourceFile):
         return p
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
-        factory = PrinterFactory.current()
-        return factory.create_printer(cursor) if factory else JavaPrinter[PrintOutputCapture[P]]()
+        if factory := PrinterFactory.current():
+            return factory.create_printer(cursor)
+        from .printer import JavaPrinter
+        return JavaPrinter[PrintOutputCapture[P]]()
 
     def accept_java(self, v: JavaVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)

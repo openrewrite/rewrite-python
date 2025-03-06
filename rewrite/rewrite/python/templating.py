@@ -150,6 +150,11 @@ class PythonTemplatePythonExtension(PythonVisitor[int]):
         return expression
 
     def visit_block(self, block: Block, p: P) -> J:
+        if self.loc == Space.Location.BLOCK_END and block.is_scope(self.insertion_point):
+            parsed = self.template_parser.parse_block_statements(Cursor(self.cursor, self.insertion_point), Statement,
+                                                                 self.substituted_template, self.loc, self.mode)
+            gen: List[Statement] = self.substitutions.unsubstitute_all(parsed)
+            return self.auto_format(block.with_statements(block.statements + gen), p, self.cursor.parent) if gen else block
         if self.loc == Space.Location.STATEMENT_PREFIX:
             return self.auto_format(block.with_statements(list_flat_map(lambda s: self.get_replacements(s) if s.is_scope(self.insertion_point) else s, block.statements)), p, self.cursor.parent)
         return super().visit_block(block, p)

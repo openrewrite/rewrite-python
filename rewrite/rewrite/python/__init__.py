@@ -70,6 +70,7 @@ __all__ = [
     # Formatter
     'AutoFormat',
     'BlankLinesVisitor',
+    'MinimumViableSpacingVisitor',
     'NormalizeFormatVisitor',
     'NormalizeTabsOrSpacesVisitor',
     'SpacesVisitor',

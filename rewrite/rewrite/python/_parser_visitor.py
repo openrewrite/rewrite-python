@@ -422,28 +422,25 @@ class ParserVisitor(ast.NodeVisitor):
 
     def visit_If(self, node):
         prefix = self.__source_before('if')
-        single_statement_then_body = len(node.body) == 1
         condition = j.ControlParentheses(random_id(), self.__whitespace(), Markers.EMPTY,
-                                         self.__pad_right(self.__convert(node.test), self.__source_before(
-                                             ':') if single_statement_then_body else Space.EMPTY))
-        then = self.__pad_statement(node.body[0]) if single_statement_then_body else self.__pad_right(
-            self.__convert_block(node.body), Space.EMPTY)
+                                         self.__pad_right(self.__convert(node.test), Space.EMPTY))
+        then = self.__pad_right(self.__convert_block(node.body), Space.EMPTY)
         elze = None
         if len(node.orelse) > 0:
             else_prefix = self.__whitespace()
             if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and self._source.startswith('elif',
                                                                                                         self._cursor):
-                single_statement_else_body = True
+                is_elif = True
                 self._cursor += 2
             else:
-                single_statement_else_body = False
+                is_elif = False
                 self._cursor += 4
 
             elze = j.If.Else(
                 random_id(),
                 else_prefix,
                 Markers.EMPTY,
-                self.__pad_statement(node.orelse[0]) if single_statement_else_body else self.__pad_right(
+                self.__pad_statement(node.orelse[0]) if is_elif else self.__pad_right(
                     self.__convert_block(node.orelse), Space.EMPTY
                 )
             )
@@ -2067,7 +2064,7 @@ class ParserVisitor(ast.NodeVisitor):
     def __convert_all(self, trees: Sequence) -> List[J2]:
         return [self.__convert(tree) for tree in trees]
 
-    def __convert_block(self, statements: Sequence, prefix: str = ':') -> j.Block:
+    def __convert_block(self, statements: Sequence[Statement], prefix: str = ':') -> j.Block:
         prefix = self.__source_before(prefix)
         if statements:
             statements = [self.__pad_statement(cast(ast.stmt, s)) for s in statements]

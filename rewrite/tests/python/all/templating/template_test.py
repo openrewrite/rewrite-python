@@ -32,7 +32,7 @@ def test_tree_substitution():
     )
 
 
-def test_add_statement_last():
+def test_add_statement_after():
     rewrite_run(
         # language=python
         python(
@@ -56,7 +56,31 @@ def test_add_statement_last():
     )
 
 
-def test_add_statement_first():
+def test_add_statement_last():
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            def f():
+                pass
+            """,
+            """\
+            def f():
+                pass
+                return
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(
+            GenericTemplatingVisitor(
+                lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 1,
+                'return',
+                coordinate_provider=lambda m: cast(MethodDeclaration, m).body.get_coordinates().last_statement())
+        ))
+    )
+
+
+def test_add_statement_before():
     rewrite_run(
         # language=python
         python(
