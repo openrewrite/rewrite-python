@@ -7,6 +7,7 @@ from .normalize_format import *
 __all__ = [
     'AutoFormat',
     'BlankLinesVisitor',
+    'MinimumViableSpacingVisitor',
     'NormalizeFormatVisitor',
     'NormalizeTabsOrSpacesVisitor',
     'SpacesVisitor',

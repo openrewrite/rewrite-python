@@ -96,13 +96,13 @@ class Await(Py, Expression):
     def with_expression(self, expression: Expression) -> Await:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> Await:
+    def with_type(self, type: Optional[JavaType]) -> Await:
         return self if type is self._type else replace(self, _type=type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
@@ -340,13 +340,13 @@ class ExceptionType(Py, TypeTree):
     def with_markers(self, markers: Markers) -> ExceptionType:
         return self if markers is self._markers else replace(self, _markers=markers)
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> ExceptionType:
+    def with_type(self, type: Optional[JavaType]) -> ExceptionType:
         return self if type is self._type else replace(self, _type=type)
 
     _exception_group: bool
@@ -503,13 +503,13 @@ class LiteralType(Py, Expression, TypeTree):
     def with_literal(self, literal: Expression) -> LiteralType:
         return self if literal is self._literal else replace(self, _literal=literal)
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> LiteralType:
+    def with_type(self, type: Optional[JavaType]) -> LiteralType:
         return self if type is self._type else replace(self, _type=type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
@@ -554,13 +554,13 @@ class TypeHint(Py, TypeTree):
     def with_type_tree(self, type_tree: Expression) -> TypeHint:
         return self if type_tree is self._type_tree else replace(self, _type_tree=type_tree)
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> TypeHint:
+    def with_type(self, type: Optional[JavaType]) -> TypeHint:
         return self if type is self._type else replace(self, _type=type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
@@ -703,9 +703,10 @@ class CompilationUnit(Py, JavaSourceFile, SourceFile):
         return p
 
     def printer(self, cursor: Cursor) -> TreeVisitor[Tree, PrintOutputCapture[P]]:
-        factory = PrinterFactory.current()
+        if factory := PrinterFactory.current():
+            return factory.create_printer(cursor)
         from .printer import PythonPrinter
-        return factory.create_printer(cursor) if factory else PythonPrinter[PrintOutputCapture[P]]()
+        return PythonPrinter[PrintOutputCapture[P]]()
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
         return v.visit_compilation_unit(self, p)
@@ -1804,13 +1805,13 @@ class YieldFrom(Py, Expression):
     def with_expression(self, expression: Expression) -> YieldFrom:
         return self if expression is self._expression else replace(self, _expression=expression)
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> YieldFrom:
+    def with_type(self, type: Optional[JavaType]) -> YieldFrom:
         return self if type is self._type else replace(self, _type=type)
 
     def accept_python(self, v: PythonVisitor[P], p: P) -> J:
@@ -2368,13 +2369,13 @@ class ErrorFrom(Py, Expression):
     def with_from(self, from_: Expression) -> ErrorFrom:
         return self.padding.with_from(JLeftPadded.with_element(self._from, from_))
 
-    _type: JavaType
+    _type: Optional[JavaType]
 
     @property
-    def type(self) -> JavaType:
+    def type(self) -> Optional[JavaType]:
         return self._type
 
-    def with_type(self, type: JavaType) -> ErrorFrom:
+    def with_type(self, type: Optional[JavaType]) -> ErrorFrom:
         return self if type is self._type else replace(self, _type=type)
 
     @dataclass

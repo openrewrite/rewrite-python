@@ -12,6 +12,13 @@ T = TypeVar('T')
 FnType = Union[Callable[[T], Union[T, None]], Callable[[T, int], Union[T, None]]]
 FlatMapFnType = Union[Callable[[T], List[T]], Callable[[T, int], List[T]]]
 
+def list_find(lst: List[T], t: T) -> int:
+    for i, x in enumerate(lst):
+        if x is t:
+            return i
+    return -1  # or raise ValueError to match list.index() behavior
+
+
 def list_map(fn: FnType[T], lst: List[T]) -> List[T]:
     changed = False
     mapped_lst = None
