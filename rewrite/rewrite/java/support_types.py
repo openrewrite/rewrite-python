@@ -359,6 +359,11 @@ class _StatementCoordinateBuilder(CoordinateBuilder):
 
 @dataclass
 class _BlockCoordinateBuilder(_StatementCoordinateBuilder):
+    def first_statement(self) -> JavaCoordinates:
+        if not self.tree.statements:
+            return self.last_statement()
+        return self.tree.statements[0].get_coordinates().before()
+
     def last_statement(self) -> JavaCoordinates:
         return self.before(Space.Location.BLOCK_END)
 

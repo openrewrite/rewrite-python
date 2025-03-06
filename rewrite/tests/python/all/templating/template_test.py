@@ -82,6 +82,32 @@ def test_add_statement_last():
     )
 
 
+def test_add_statement_first():
+    rewrite_run(
+        # language=python
+        python(
+            """\
+            def f():
+                pass
+                pass
+            """,
+            """\
+            def f():
+                return
+                pass
+                pass
+            """
+        ),
+        spec=RecipeSpec()
+        .with_recipe(from_visitor(
+            GenericTemplatingVisitor(
+                lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 2,
+                'return',
+                coordinate_provider=lambda m: cast(MethodDeclaration, m).body.get_coordinates().first_statement())
+        ))
+    )
+
+
 def test_add_statement_before():
     rewrite_run(
         # language=python

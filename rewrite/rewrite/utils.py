@@ -55,9 +55,10 @@ def list_flat_map(fn: FlatMapFnType[T], lst: List[T]) -> List[T]:
         if isinstance(new_items, list) and (len(new_items) != 1 or new_items[0] is not item):
             changed = True
             result.extend(new_items)
-        elif not isinstance(new_items, list) and new_items is not item:
+        elif not isinstance(new_items, list):
+            if changed or new_items is not item:
+                result.append(new_items)
             changed = True
-            result.append(new_items)
 
     return result if changed else lst
 
