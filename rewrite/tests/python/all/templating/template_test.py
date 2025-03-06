@@ -63,9 +63,11 @@ def test_add_statement_last():
             """\
             def f():
                 pass
+                pass
             """,
             """\
             def f():
+                pass
                 pass
                 return
             """
@@ -73,7 +75,7 @@ def test_add_statement_last():
         spec=RecipeSpec()
         .with_recipe(from_visitor(
             GenericTemplatingVisitor(
-                lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 1,
+                lambda j: isinstance(j, MethodDeclaration) and len(j.body.statements) == 2,
                 'return',
                 coordinate_provider=lambda m: cast(MethodDeclaration, m).body.get_coordinates().last_statement())
         ))

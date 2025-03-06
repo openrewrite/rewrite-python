@@ -10,7 +10,7 @@ T = TypeVar('T')
 
 # Define a type that allows both single and two-argument callables
 FnType = Union[Callable[[T], Union[T, None]], Callable[[T, int], Union[T, None]]]
-FlatMapFnType = Union[Callable[[T], List[T]], Callable[[T, int], List[T]]]
+FlatMapFnType = Union[Callable[[T], Union[T, List[T]]], Callable[[T, int], Union[T, List[T]]]]
 
 def list_find(lst: List[T], t: T) -> int:
     for i, x in enumerate(lst):
@@ -52,9 +52,12 @@ def list_flat_map(fn: FlatMapFnType[T], lst: List[T]) -> List[T]:
             changed = True
             continue
 
-        if len(new_items) != 1 or new_items[0] is not item:
+        if isinstance(new_items, list) and (len(new_items) != 1 or new_items[0] is not item):
             changed = True
-        result.extend(new_items)
+            result.extend(new_items)
+        elif not isinstance(new_items, list) and new_items is not item:
+            changed = True
+            result.append(new_items)
 
     return result if changed else lst
 
