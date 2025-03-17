@@ -17,6 +17,7 @@ from rewrite.java import tree as j
 from . import tree as py
 from .markers import KeywordArguments, KeywordOnlyArguments, Quoted
 from .support_types import PyComment
+from .type_mapping import PythonTypeMapping
 
 T = TypeVar('T')
 J2 = TypeVar('J2', bound=J)
@@ -41,6 +42,7 @@ class ParserVisitor(ast.NodeVisitor):
         self._source = source
         self._cursor = 0
         self._parentheses_stack = []
+        self._type_mapping = PythonTypeMapping(source)
 
     def generic_visit(self, node):
         return super().generic_visit(node)
@@ -1675,6 +1677,8 @@ class ParserVisitor(ast.NodeVisitor):
         )
 
     def visit_Module(self, node: ast.Module) -> py.CompilationUnit:
+        self._type_mapping.resolve_types(node)
+
         cu = py.CompilationUnit(
             random_id(),
             Space.EMPTY,
@@ -2227,7 +2231,7 @@ class ParserVisitor(ast.NodeVisitor):
 
     # noinspection PyUnusedLocal
     def __map_type(self, node) -> Optional[JavaType]:
-        return None
+        return self._type_mapping.type(node)
 
     def _map_unary_operator(self, op) -> Tuple[j.Unary.Type, str]:
         operation_map: Dict[Type[ast], Tuple[j.Unary.Type, str]] = {
