@@ -53,3 +53,5 @@ tests/__pycache__/
 
 # System-specific files (macOS)
 .DS_Store
+
+/.local_python_recipes/
