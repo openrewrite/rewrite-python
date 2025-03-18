@@ -139,7 +139,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitChainedAssignment(Py.ChainedAssignment chainedAssignment, PrintOutputCapture<P> p) {
         beforeSyntax(chainedAssignment, PySpace.Location.CHAINED_ASSIGNMENT_PREFIX, p);
-        visitRightPadded(chainedAssignment.getPadding().getVariables(), PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLE, "=", p);
+        visitRightPadded(chainedAssignment.getPadding().getVariables(), PyRightPadded.Location.CHAINED_ASSIGNMENT_VARIABLES, "=", p);
         p.append('=');
         visit(chainedAssignment.getAssignment(), p);
         afterSyntax(chainedAssignment, p);
@@ -250,7 +250,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitKeyValue(Py.KeyValue keyValue, PrintOutputCapture<P> p) {
         beforeSyntax(keyValue, PySpace.Location.KEY_VALUE_PREFIX, p);
-        visitRightPadded(keyValue.getPadding().getKey(), PyRightPadded.Location.KEY_VALUE_KEY_SUFFIX, p);
+        visitRightPadded(keyValue.getPadding().getKey(), PyRightPadded.Location.KEY_VALUE_KEY, p);
         p.append(':');
         visit(keyValue.getValue(), p);
         afterSyntax(keyValue, p);
@@ -267,7 +267,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitComprehensionExpression(Py.ComprehensionExpression comp, PrintOutputCapture<P> p) {
-        beforeSyntax(comp, PySpace.Location.COMPREHENSION_PREFIX, p);
+        beforeSyntax(comp, PySpace.Location.COMPREHENSION_EXPRESSION_PREFIX, p);
         String open;
         String close;
         switch (comp.getKind()) {
@@ -298,7 +298,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         for (Py.ComprehensionExpression.Clause clause : comp.getClauses()) {
             visit(clause, p);
         }
-        visitSpace(comp.getSuffix(), PySpace.Location.COMPREHENSION_SUFFIX, p);
+        visitSpace(comp.getSuffix(), PySpace.Location.COMPREHENSION_EXPRESSION_SUFFIX, p);
         p.append(close);
 
         afterSyntax(comp, p);
@@ -307,14 +307,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitComprehensionClause(Py.ComprehensionExpression.Clause clause, PrintOutputCapture<P> p) {
-        beforeSyntax(clause, PySpace.Location.COMPREHENSION_CLAUSE_PREFIX, p);
+        beforeSyntax(clause, PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_PREFIX, p);
         if (clause.isAsync()) {
             p.append("async");
-            visitSpace(clause.getPadding().getAsync().getAfter(), PySpace.Location.COMPREHENSION_CLAUSE_ASYNC, p);
+            visitSpace(clause.getPadding().getAsync().getAfter(), PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_ASYNC_SUFFIX, p);
         }
         p.append("for");
         visit(clause.getIteratorVariable(), p);
-        visitSpace(clause.getPadding().getIteratedList().getBefore(), PySpace.Location.COMPREHENSION_IN, p);
+        visitSpace(clause.getPadding().getIteratedList().getBefore(), PySpace.Location.COMPREHENSION_EXPRESSION_CLAUSE_ITERATED_LIST, p);
         p.append("in");
         visit(clause.getIteratedList(), p);
         if (clause.getConditions() != null) {
@@ -327,7 +327,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitComprehensionCondition(Py.ComprehensionExpression.Condition condition, PrintOutputCapture<P> p) {
-        beforeSyntax(condition, PySpace.Location.COMPREHENSION_CONDITION_PREFIX, p);
+        beforeSyntax(condition, PySpace.Location.COMPREHENSION_EXPRESSION_CONDITION_PREFIX, p);
         p.append("if");
         visit(condition.getExpression(), p);
         return condition;
@@ -371,7 +371,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
         visitRightPadded(
                 scope.getPadding().getNames(),
-                PyRightPadded.Location.VARIABLE_SCOPE_ELEMENT,
+                PyRightPadded.Location.VARIABLE_SCOPE_NAMES,
                 ",",
                 p
         );
@@ -384,7 +384,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         p.append("del");
         visitRightPadded(
                 del.getPadding().getTargets(),
-                PyRightPadded.Location.DEL_ELEMENT,
+                PyRightPadded.Location.DEL_TARGETS,
                 ",",
                 p
         );
@@ -433,14 +433,14 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitMatchCasePattern(Py.MatchCase.Pattern pattern, PrintOutputCapture<P> p) {
-        beforeSyntax(pattern, PySpace.Location.MATCH_PATTERN_PREFIX, p);
+        beforeSyntax(pattern, PySpace.Location.MATCH_CASE_PATTERN_PREFIX, p);
         JContainer<Expression> children = pattern.getPadding().getChildren();
         switch (pattern.getKind()) {
             case AS:
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "as",
                         "",
                         p
@@ -450,17 +450,17 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             case LITERAL:
                 visitContainer(
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         p
                 );
                 break;
             case CLASS:
-                visitSpace(children.getBefore(), PySpace.Location.MATCH_PATTERN_ELEMENT_PREFIX, p);
-                visitRightPadded(children.getPadding().getElements().get(0), PyRightPadded.Location.MATCH_PATTERN_ELEMENT, p);
+                visitSpace(children.getBefore(), PySpace.Location.MATCH_CASE_PATTERN_CHILD_PREFIX, p);
+                visitRightPadded(children.getPadding().getElements().get(0), PyRightPadded.Location.MATCH_CASE_PATTERN_CHILD, p);
                 visitContainer(
                         "(",
                         JContainer.build(children.getPadding().getElements().subList(1, children.getElements().size())),
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ",",
                         ")",
                         p
@@ -470,7 +470,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "**",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "",
                         "",
                         p
@@ -480,7 +480,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ":",
                         "",
                         p
@@ -490,7 +490,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "=",
                         "",
                         p
@@ -500,7 +500,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "{",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ",",
                         "}",
                         p
@@ -510,7 +510,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "|",
                         "",
                         p
@@ -520,7 +520,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ",",
                         "",
                         p
@@ -530,7 +530,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "[",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ",",
                         "]",
                         p
@@ -541,7 +541,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "(",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         ",",
                         ")",
                         p
@@ -551,7 +551,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "*",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "",
                         "",
                         p
@@ -561,7 +561,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "",
                         "",
                         p
@@ -571,7 +571,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
                 visitContainer(
                         "_",
                         children,
-                        PyContainer.Location.MATCH_PATTERN_ELEMENTS,
+                        PyContainer.Location.MATCH_CASE_PATTERN_CHILDREN,
                         "",
                         "",
                         p
@@ -583,7 +583,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
 
     @Override
     public J visitSpecialParameter(Py.SpecialParameter param, PrintOutputCapture<P> p) {
-        beforeSyntax(param, PySpace.Location.SPECIAL_PARAM_PREFIX, p);
+        beforeSyntax(param, PySpace.Location.SPECIAL_PARAMETER_PREFIX, p);
         switch (param.getKind()) {
             case ARGS:
                 p.append("*");
@@ -600,20 +600,20 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     public J visitNamedArgument(Py.NamedArgument arg, PrintOutputCapture<P> p) {
         beforeSyntax(arg, PySpace.Location.NAMED_ARGUMENT, p);
         visit(arg.getName(), p);
-        visitLeftPadded("=", arg.getPadding().getValue(), PyLeftPadded.Location.NAMED_ARGUMENT, p);
+        visitLeftPadded("=", arg.getPadding().getValue(), PyLeftPadded.Location.NAMED_ARGUMENT_VALUE, p);
         return arg;
     }
 
     @Override
     public J visitSlice(Py.Slice slice, PrintOutputCapture<P> p) {
-        beforeSyntax(slice, PySpace.Location.SLICE_EXPRESSION_PREFIX, p);
-        visitRightPadded(slice.getPadding().getStart(), PyRightPadded.Location.SLICE_EXPRESSION_START, p);
+        beforeSyntax(slice, PySpace.Location.SLICE_PREFIX, p);
+        visitRightPadded(slice.getPadding().getStart(), PyRightPadded.Location.SLICE_START, p);
         p.append(':');
         if (slice.getPadding().getStop() != null) {
-            visitRightPadded(slice.getPadding().getStop(), PyRightPadded.Location.SLICE_EXPRESSION_STOP, p);
+            visitRightPadded(slice.getPadding().getStop(), PyRightPadded.Location.SLICE_STOP, p);
             if (slice.getPadding().getStep() != null) {
                 p.append(':');
-                visitRightPadded(slice.getPadding().getStep(), PyRightPadded.Location.SLICE_EXPRESSION_STEP, p);
+                visitRightPadded(slice.getPadding().getStep(), PyRightPadded.Location.SLICE_STEP, p);
             }
         }
         return slice;
@@ -688,7 +688,7 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
     @Override
     public J visitUnionType(Py.UnionType unionType, PrintOutputCapture<P> p) {
         beforeSyntax(unionType, PySpace.Location.UNION_TYPE_PREFIX, p);
-        visitRightPadded(unionType.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE_TYPE, "|", p);
+        visitRightPadded(unionType.getPadding().getTypes(), PyRightPadded.Location.UNION_TYPE_TYPES, "|", p);
         afterSyntax(unionType, p);
         return unionType;
     }
