@@ -1199,7 +1199,7 @@ class ParserVisitor(ast.NodeVisitor):
                 Markers.EMPTY,
                 [],
                 node.func.attr,
-                self._type_mapping.type(node.func.value),
+                self._type_mapping.type(node),
                 None
             )
             save_cursor = self._cursor
@@ -1243,7 +1243,7 @@ class ParserVisitor(ast.NodeVisitor):
             name if isinstance(name, j.Identifier) else j.Identifier(random_id(), Space.EMPTY, Markers.EMPTY, [], "",
                                                                      None, None),
             args,
-            self._type_mapping.type(node)
+            name.type if isinstance(name.type, JavaType.Method) else None,
         )
 
     def __sort_call_arguments(self, call: ast.Call) -> List[Union[ast.expr, ast.keyword]]:

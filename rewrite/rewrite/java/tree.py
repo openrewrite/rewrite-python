@@ -4143,6 +4143,10 @@ class Parentheses(Expression, Generic[J2]):
     def with_tree(self, tree: J2) -> Parentheses[J2]:
         return self.padding.with_tree(JRightPadded.with_element(self._tree, tree))
 
+    @property
+    def type(self) -> JavaType:
+        return self.tree.type
+
     @dataclass
     class PaddingHelper:
         _t: Parentheses[J2]
