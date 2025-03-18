@@ -303,7 +303,7 @@ public class PythonVisitor<P> extends JavaVisitor<P> {
         } else {
             pattern = (Py.MatchCase.Pattern) temp;
         }
-        pattern.withChildren(ListUtils.map(
+        pattern = pattern.withChildren(ListUtils.map(
                 pattern.getChildren(),
                 child -> (Expression) visitAndCast(child, p)
         ));
