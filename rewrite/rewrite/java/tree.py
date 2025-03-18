@@ -810,6 +810,10 @@ class Case(Statement):
 
     _type: Type
 
+    @property
+    def type(self) -> Type:
+        return self._type
+
     def with_type(self, type: Type) -> Case:
         return self if type is self._type else replace(self, _type=type)
 
@@ -4269,6 +4273,10 @@ class Primitive(TypeTree, Expression):
         return self if markers is self._markers else replace(self, _markers=markers)
 
     _type: JavaType.Primitive
+
+    @property
+    def type(self) -> JavaType.Primitive:
+        return self._type
 
     def with_type(self, type: JavaType.Primitive) -> Primitive:
         return self if type is self._type else replace(self, _type=type)

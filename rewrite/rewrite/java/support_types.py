@@ -463,6 +463,12 @@ class JavaType(ABC):
         None_ = 10
         Null = 11
 
+        @classmethod
+        def _missing_(cls, value):
+            if value is None:
+                return cls.None_
+            return super()._missing_(value)
+
     @dataclass
     class Method:
         _flags_bit_map: int = field(default=0)

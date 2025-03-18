@@ -57,7 +57,7 @@ def receive_space(space: Optional[Space], _: Optional[str], ctx: ReceiverContext
         space = space.with_whitespace(ctx.receive_value(space.whitespace, str))
     else:
         space = Space(
-            ctx.receive_values(None),
+            ctx.receive_nodes(None, receive_comment),
             ctx.receive_value(None, str)
         )
 

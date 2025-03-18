@@ -1036,7 +1036,8 @@ class PythonReceiver(Receiver):
                 )
 
             if type in ["rewrite.python.tree.CompilationUnit", "org.openrewrite.python.tree.Py$CompilationUnit"]:
-                return CompilationUnit(
+                from rewrite.python import CompilationUnit as PyCompilationUnit
+                return PyCompilationUnit(
                     ctx.receive_value(None, UUID),
                     ctx.receive_node(None, PythonReceiver.receive_space),
                     ctx.receive_node(None, ctx.receive_markers),
