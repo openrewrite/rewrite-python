@@ -1,8 +1,10 @@
+from dataclasses import replace
 from typing import Optional, List, Type, Any
 
 from _cbor2 import break_marker
 from cbor2 import CBOREncoder, CBORDecoder
-from rewrite_remote import RemotingContext, SerializationContext, DeserializationContext
+from rewrite_remote import RemotingContext, SerializationContext, DeserializationContext, INDEFINITE_MAP_START, \
+    BREAK_MARKER
 
 from ..tree import JavaType
 
@@ -113,25 +115,25 @@ def deserialize_java_method(_: str, decoder: CBORDecoder, context: Deserializati
         if key == '@ref':
             context.remoting_context.add_by_id(decoder.decode(), method)
         elif key == 'flagsBitMap':
-            setattr(method, '_flags_bit_map', decoder.decode())
+            method._flags_bit_map = decoder.decode()
         elif key == 'declaringType':
-            setattr(method, '_declaring_type', context.deserialize(JavaType.FullyQualified, decoder))
+            method._declaring_type = context.deserialize(JavaType.FullyQualified, decoder)
         elif key == 'name':
-            setattr(method, '_name', decoder.decode())
+            method._name = decoder.decode()
         elif key == 'returnType':
-            setattr(method, '_return_type', context.deserialize(JavaType, decoder))
+            method._return_type = context.deserialize(JavaType, decoder)
         elif key == 'parameterNames':
-            setattr(method, '_parameter_names', context.deserialize(List[str], decoder))
+            method._parameter_names = context.deserialize(List[str], decoder)
         elif key == 'parameterTypes':
-            setattr(method, '_parameter_types', context.deserialize(List[JavaType], decoder))
+            method._parameter_types = context.deserialize(List[JavaType], decoder)
         elif key == 'thrownExceptions':
-            setattr(method, '_thrown_exceptions', context.deserialize(List[JavaType.FullyQualified], decoder))
+            method._thrown_exceptions = context.deserialize(List[JavaType.FullyQualified], decoder)
         elif key == 'annotations':
-            setattr(method, '_annotations', context.deserialize(List[JavaType.FullyQualified], decoder))
+            method._annotations = context.deserialize(List[JavaType.FullyQualified], decoder)
         elif key == 'defaultValue':
-            setattr(method, '_default_value', context.deserialize(List[str], decoder))
+            method._default_value = context.deserialize(List[str], decoder)
         elif key == 'declaredFormalTypeNames':
-            setattr(method, '_declared_formal_type_names', context.deserialize(List[str], decoder))
+            method._declared_formal_type_names = context.deserialize(List[str], decoder)
         else:
             raise ValueError(f"Unexpected key: {key}")
     return method
@@ -231,7 +233,44 @@ def serialize_java_class(value: JavaType.Class, type_name: Optional[str], encode
 
 def serialize_java_method(value: JavaType.Method, type_name: Optional[str], encoder: CBOREncoder,
                           context: SerializationContext) -> None:
-    pass
+    if id := context.remoting_context.try_get_id(value):
+        encoder.encode(id)
+        return
+
+    encoder.write(INDEFINITE_MAP_START)
+    encoder.encode_string('@c')
+    encoder.encode_string('org.openrewrite.java.tree.JavaType$Method')
+    encoder.encode_string('@ref')
+    encoder.encode_int(context.remoting_context.add(value))
+    encoder.encode_string('flagsBitMap')
+    encoder.encode_int(value.flags_bit_map)
+    if value.declaring_type:
+        encoder.encode_string('declaringType')
+        context.serialize(value.declaring_type, None, encoder)
+    encoder.encode_string('name')
+    encoder.encode_string(value.name)
+    if value.return_type:
+        encoder.encode_string('returnType')
+        context.serialize(value.return_type, None, encoder)
+    if value.parameter_names:
+        encoder.encode_string('parameterNames')
+        context.serialize(value.parameter_names, None, encoder)
+    if value.parameter_types:
+        encoder.encode_string('parameterTypes')
+        context.serialize(value.parameter_types, None, encoder)
+    if value.thrown_exceptions:
+        encoder.encode_string('thrownExceptions')
+        context.serialize(value.thrown_exceptions, None, encoder)
+    if value.annotations:
+        encoder.encode_string('annotations')
+        context.serialize(value.annotations, None, encoder)
+    if value.default_value:
+        encoder.encode_string('defaultValue')
+        context.serialize(value.default_value, None, encoder)
+    if value.declared_formal_type_names:
+        encoder.encode_string('declaredFormalTypeNames')
+        context.serialize(value.declared_formal_type_names, None, encoder)
+    encoder.write(BREAK_MARKER)
 
 
 def serialize_java_variable(value: JavaType.Variable, type_name: Optional[str], encoder: CBOREncoder,

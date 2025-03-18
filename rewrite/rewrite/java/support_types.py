@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import weakref
 from abc import abstractmethod, ABC
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from enum import Enum, auto
 from typing import List, Optional, TypeVar, Generic, ClassVar, Dict, Any, TYPE_CHECKING, Iterable, cast
 from uuid import UUID
@@ -463,8 +463,58 @@ class JavaType(ABC):
         None_ = 10
         Null = 11
 
+    @dataclass
     class Method:
-        pass
+        _flags_bit_map: int = field(default=0)
+        _declaring_type: Optional[JavaType.FullyQualified] = field(default=None)
+        _name: str = field(default="")
+        _return_type: Optional[JavaType] = field(default=None)
+        _parameter_names: Optional[List[str]] = field(default=None)
+        _parameter_types: Optional[List[JavaType]] = field(default=None)
+        _thrown_exceptions: Optional[List[JavaType]] = field(default=None)
+        _annotations: Optional[List[JavaType.FullyQualified]] = field(default=None)
+        _default_value: Optional[List[str]] = field(default=None)
+        _declared_formal_type_names: Optional[List[str]] = field(default=None)
+
+        @property
+        def flags_bit_map(self) -> int:
+            return self._flags_bit_map
+
+        @property
+        def declaring_type(self) -> Optional[JavaType.FullyQualified]:
+            return self._declaring_type
+
+        @property
+        def name(self) -> str:
+            return self._name
+
+        @property
+        def return_type(self) -> Optional[JavaType]:
+            return self._return_type
+
+        @property
+        def parameter_names(self) -> Optional[List[str]]:
+            return self._parameter_names
+
+        @property
+        def parameter_types(self) -> Optional[List[JavaType]]:
+            return self._parameter_types
+
+        @property
+        def thrown_exceptions(self) -> Optional[List[JavaType]]:
+            return self._thrown_exceptions
+
+        @property
+        def annotations(self) -> Optional[List[JavaType.FullyQualified]]:
+            return self._annotations
+
+        @property
+        def default_value(self) -> Optional[List[str]]:
+            return self._default_value
+
+        @property
+        def declared_formal_type_names(self) -> Optional[List[str]]:
+            return self._declared_formal_type_names
 
     class Variable:
         pass
