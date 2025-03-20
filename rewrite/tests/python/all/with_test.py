@@ -40,6 +40,18 @@ def test_with_parens():
     )
 
 
+def test_with_multiple_no_parens():
+    # language=python
+    rewrite_run(
+        python(
+            """\
+            with open('/dev/null') as x, open('/dev/null') as y:
+                pass
+            """
+        )
+    )
+
+
 def test_with_multiple_in_parens():
     # language=python
     rewrite_run(

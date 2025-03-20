@@ -26,12 +26,12 @@ class PythonTypeMapping:
     def type(self, node) -> Optional[JavaType]:
         if isinstance(node, ast.Call):
             return self.method_invocation_type(node)
-        if hasattr(node, 'resolved_type'):
+        if self.__enabled and hasattr(node, 'resolved_type'):
             return self.__map_type(node.resolved_type, node)
         return None
 
     def method_invocation_type(self, node) -> Optional[JavaType.Method]:
-        return self.__map_type(node.func.resolved_type, node)
+        return self.__map_type(node.func.resolved_type, node) if self.__enabled else None
 
     def __map_type(self, type, node):
         if isinstance(type, CallableType):
