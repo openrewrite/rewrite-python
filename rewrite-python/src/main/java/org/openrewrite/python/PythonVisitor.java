@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the original author or authors.
+ * Copyright 2024 the original author or authors.
  * <p>
  * Licensed under the Moderne Source Available License (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@
 package org.openrewrite.python;
 
 import org.jspecify.annotations.Nullable;
-import org.openrewrite.*;
+import org.openrewrite.Cursor;
+import org.openrewrite.SourceFile;
 import org.openrewrite.internal.ListUtils;
-import org.openrewrite.marker.Markers;
-import org.openrewrite.tree.*;
 import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.tree.*;
+import org.openrewrite.marker.Markers;
 import org.openrewrite.python.tree.*;
 
 import java.util.List;
@@ -554,6 +554,12 @@ public class PythonVisitor<P> extends JavaVisitor<P>
     }
 
     public Space visitSpace(Space space, PySpace.Location loc, P p) {
+        //noinspection ConstantValue
+        if (space == Space.EMPTY || space == Space.SINGLE_SPACE || space == null) {
+            return space;
+        } else if (space.getComments().isEmpty()) {
+            return space;
+        }
         return visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
     }
 }
