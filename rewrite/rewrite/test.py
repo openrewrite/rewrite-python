@@ -11,6 +11,7 @@ from uuid import UUID
 from rewrite import InMemoryExecutionContext, ParserInput, ParserBuilder, random_id, ParseError, ParseExceptionResult, \
     ExecutionContext, Recipe, TreeVisitor, SourceFile, PrintOutputCapture
 from rewrite.execution import InMemoryLargeSourceSet
+from rewrite.python import CompilationUnit
 from rewrite.python.parser import PythonParserBuilder
 from rewrite.python.printer import PythonPrinter
 
@@ -153,9 +154,7 @@ def rewrite_run(*source_specs: Iterable[SourceSpec], spec: Optional[RecipeSpec] 
             remoting_context.close()
 
 
-S2 = TypeVar('S2', bound=SourceFile)
-
-def python(before: str, after: Optional[str] = None, after_recipe: Optional[Callable[[S2], None]] = lambda s: None) -> list[SourceSpec]:
+def python(before: str, after: Optional[str] = None, after_recipe: Optional[Callable[[CompilationUnit], None]] = lambda s: None) -> list[SourceSpec]:
     return [SourceSpec(
         random_id(),
         PythonParserBuilder(),

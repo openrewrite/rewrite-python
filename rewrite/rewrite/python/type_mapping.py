@@ -24,9 +24,20 @@ class PythonTypeMapping:
             type_visitor.visit(node)
 
     def type(self, node) -> Optional[JavaType]:
-        if isinstance(node, ast.Call):
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, str):
+                return JavaType.Primitive.String
+            elif isinstance(node.value, bool):
+                return JavaType.Primitive.Boolean
+            elif isinstance(node.value, int):
+                return JavaType.Primitive.Int
+            elif isinstance(node.value, float):
+                return JavaType.Primitive.Double
+            else:
+                return JavaType.Primitive.None_
+        elif isinstance(node, ast.Call):
             return self.method_invocation_type(node)
-        if self.__enabled and hasattr(node, 'resolved_type'):
+        elif self.__enabled and hasattr(node, 'resolved_type'):
             return self.__map_type(node.resolved_type, node)
         return None
 
