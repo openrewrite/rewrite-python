@@ -9,76 +9,49 @@ T = TypeVar('T', bound=Tree)
 
 
 def test_none():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.None_
-
     # language=python
-    rewrite_run(python("assert None", after_recipe=after_recipe))
+    rewrite_run(python("assert None", after_recipe=check_first_literal_type(JavaType.Primitive.None_)))
 
 
 def test_boolean():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Boolean
-
     # language=python
-    rewrite_run(python("assert True", after_recipe=after_recipe))
-    rewrite_run(python("assert False", after_recipe=after_recipe))
+    rewrite_run(python("assert True", after_recipe=check_first_literal_type(JavaType.Primitive.Boolean)))
+    rewrite_run(python("assert False", after_recipe=check_first_literal_type(JavaType.Primitive.Boolean)))
 
 
 def test_dec_int():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Int
-
     # language=python
-    rewrite_run(python("assert 0", after_recipe=after_recipe))
+    rewrite_run(python("assert 0", after_recipe=check_first_literal_type(JavaType.Primitive.Int)))
 
 
 def test_hex_int():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Int
-
     # language=python
-    rewrite_run(python("assert 0x1f", after_recipe=after_recipe))
+    rewrite_run(python("assert 0x1f", after_recipe=check_first_literal_type(JavaType.Primitive.Int)))
 
 
 def test_fraction():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Double
-
     # language=python
-    rewrite_run(python("assert 0.000", after_recipe=after_recipe))
+    rewrite_run(python("assert 0.000", after_recipe=check_first_literal_type(JavaType.Primitive.Double)))
 
 
 def test_fraction_leading_dot():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Double
-
     # language=python
-    rewrite_run(python("assert .0", after_recipe=after_recipe))
+    rewrite_run(python("assert .0", after_recipe=check_first_literal_type(JavaType.Primitive.Double)))
 
 
 def test_large_int():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Int
-
     # language=python
-    rewrite_run(python("assert 0xC03A0019", after_recipe=after_recipe))
+    rewrite_run(python("assert 0xC03A0019", after_recipe=check_first_literal_type(JavaType.Primitive.Int)))
 
 
 def test_byte_string_concatenation():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Double
-
     # language=python
-    rewrite_run(python("assert b'hello' b'world'", after_recipe=after_recipe))
+    rewrite_run(python("assert b'hello' b'world'", after_recipe=check_first_literal_type(JavaType.Primitive.String)))
 
 
 def test_bigint():
-    def after_recipe(cu):
-        assert find_first(cu, Literal).type == JavaType.Primitive.Int
-
     # language=python
-    rewrite_run(python("assert 9223372036854775808", after_recipe=after_recipe))
+    rewrite_run(python("assert 9223372036854775808", after_recipe=check_first_literal_type(JavaType.Primitive.Int)))
 
 
 def test_single_quoted_string():
@@ -194,3 +167,9 @@ def find_first(tree: Tree, clazz: Type[T]) -> T:
     found = []
     Find().visit(tree, found)
     return found[0]
+
+def check_first_literal_type(expected_type):
+    def after_recipe(cu):
+        assert find_first(cu, Literal).type == expected_type
+    return after_recipe
+
