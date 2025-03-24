@@ -435,13 +435,23 @@ class JavaType(ABC):
         pass
 
     class Class(FullyQualified):
-        pass
+        _flags_bit_map: int
+        _fully_qualified_name: str
+        _kind: FullyQualified.Kind
+        _type_parameters: Optional[List[JavaType]]
+        _supertype: Optional[JavaType.FullyQualified]
+        _owning_class: Optional[JavaType.FullyQualified]
+        _annotations: Optional[List[JavaType.FullyQualified]]
+        _interfaces: Optional[List[JavaType.FullyQualified]]
+        _members: Optional[List[JavaType.Variable]]
+        _methods: Optional[List[JavaType.Method]]
 
     class ShallowClass(Class):
         pass
 
     class Parameterized(FullyQualified):
-        pass
+        _type: JavaType.FullyQualified
+        _type_parameters: Optional[List[JavaType]]
 
     class GenericTypeVariable:
         class Variance(Enum):
