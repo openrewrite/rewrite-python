@@ -34,6 +34,7 @@ class ChangeMethodNameTest implements RewriteTest {
     @Test
     void renameMethod() {
         rewriteRun(
+          spec -> spec.parser(PythonParser.builder().logCompilationWarningsAndErrors(true)),
           python(
             """
             class Foo:
