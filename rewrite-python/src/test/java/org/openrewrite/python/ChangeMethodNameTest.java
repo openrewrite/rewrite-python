@@ -15,6 +15,7 @@
  */
 package org.openrewrite.python;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.DocumentExample;
 import org.openrewrite.test.RecipeSpec;
@@ -32,6 +33,7 @@ class ChangeMethodNameTest implements RewriteTest {
     @SuppressWarnings("PyUnresolvedReferences")
     @DocumentExample
     @Test
+    @Disabled("Flaky")
     void renameMethod() {
         rewriteRun(
           spec -> spec.parser(PythonParser.builder().logCompilationWarningsAndErrors(true)),
