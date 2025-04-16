@@ -33,7 +33,8 @@ class AutodetectTest implements RewriteTest {
     void autodetectSpaces2() {
         rewriteRun(
           hasIndentation(2),
-          python("""
+          python(
+                """
           if 1 > 0:
            print("This one-space indent will be effectively ignored")
 
@@ -42,7 +43,8 @@ class AutodetectTest implements RewriteTest {
             for j in range(1, i):
               x = j * j
               print(i, j)
-          """)
+          """
+          )
         );
     }
 
@@ -50,7 +52,8 @@ class AutodetectTest implements RewriteTest {
     void autodetectSpaces4() {
         rewriteRun(
           hasIndentation(4),
-          python("""
+          python(
+                """
           if 1 > 0:
            print("This one-space indent will be effectively ignored")
 
@@ -59,7 +62,8 @@ class AutodetectTest implements RewriteTest {
               for j in range(1, i):
                   x = j * j
                   print(i, j)
-          """)
+          """
+          )
         );
     }
 
@@ -89,7 +93,8 @@ class AutodetectTest implements RewriteTest {
             y = 3 * 4
             z = x + y
             result = (x + y) * z
-            """)
+            """
+          )
         );
     }
 
@@ -107,7 +112,8 @@ class AutodetectTest implements RewriteTest {
             y=3*4
             z=x+y
             result=(x+y)*z
-            """)
+            """
+          )
         );
     }
 
@@ -124,7 +130,8 @@ class AutodetectTest implements RewriteTest {
                 return x + y
             
             result = test ( 1, 2 )
-            """)
+            """
+          )
         );
     }
 
@@ -141,7 +148,8 @@ class AutodetectTest implements RewriteTest {
                 return x + y
             
             result : float = calculate(1, 2.0)
-            """)
+            """
+          )
         );
     }
 
@@ -177,7 +185,8 @@ class AutodetectTest implements RewriteTest {
             numbers = [ 1, 2, 3 ]
             data = { "a": 1, "b": 2 }
             matrix = [ [ 1, 2 ], [ 3, 4 ] ]
-            """)
+            """
+          )
         );
     }
 
@@ -193,7 +202,8 @@ class AutodetectTest implements RewriteTest {
             numbers = [  ]
             data = {  }
             matrix = [ [  ], [  ] ]
-            """)
+            """
+          )
         );
     }
 
@@ -208,7 +218,8 @@ class AutodetectTest implements RewriteTest {
                 """
             squares = [ x*x for x in range(10) ]
             evens = { x for x in range(20) if x % 2 == 0 }
-            """)
+            """
+          )
         );
     }
 

@@ -112,7 +112,8 @@ class ImportTest implements RewriteTest {
              import sys
              
              import math
-             """)
+             """
+          )
         );
     }
 
@@ -126,7 +127,8 @@ class ImportTest implements RewriteTest {
                  sin,
                  cos
              )
-             """)
+             """
+          )
         );
     }
 

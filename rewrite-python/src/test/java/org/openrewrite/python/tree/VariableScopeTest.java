@@ -59,7 +59,8 @@ class VariableScopeTest implements RewriteTest {
             import pygenie
             
             pygenie.conf.DEFAULT_GENIE_URL = "http://genie:8080"
-            """)
+            """
+          )
         );
     }
 }
