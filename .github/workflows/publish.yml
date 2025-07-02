@@ -15,8 +15,8 @@ env:
   GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"'
   GRADLE_SWITCHES: --console=plain --info --stacktrace --warning-mode=all --no-daemon
   GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.gradle_enterprise_access_key }}
-  ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ossrh_username }}
-  ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ossrh_token }}
+  ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
+  ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_TOKEN }}
   ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ossrh_signing_key }}
   ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ossrh_signing_password }}
 
