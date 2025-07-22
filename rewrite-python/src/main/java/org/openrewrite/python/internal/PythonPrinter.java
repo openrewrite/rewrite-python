@@ -50,10 +50,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
         if (!(tree instanceof Py)) {
             // re-route printing to the Java printer
             return delegate.visitNonNull(requireNonNull(tree), p);
-        } else {
-            //noinspection DataFlowIssue
-            return super.visit(tree, p);
         }
+        //noinspection DataFlowIssue
+        return super.visit(tree, p);
     }
 
     @Override
@@ -704,10 +703,9 @@ public class PythonPrinter<P> extends PythonVisitor<PrintOutputCapture<P>> {
             if (tree instanceof Py) {
                 // re-route printing back up to Python printer
                 return PythonPrinter.this.visitNonNull(tree, p);
-            } else {
-                //noinspection DataFlowIssue
-                return super.visit(tree, p);
             }
+            //noinspection DataFlowIssue
+            return super.visit(tree, p);
         }
 
         @Override

@@ -749,9 +749,10 @@ public interface Py extends J {
         @Override
         public @Nullable JavaType getType() {
             if (reference instanceof Expression) {
-                return ((Expression) reference).getType();
-            } else if (reference instanceof TypedTree) {
-                return ((TypedTree) reference).getType();
+                return ((Expression)reference).getType();
+            }
+            if (reference instanceof TypedTree) {
+                return ((TypedTree)reference).getType();
             }
             return null;
         }
@@ -760,9 +761,10 @@ public interface Py extends J {
         @Override
         public ExpressionTypeTree withType(@Nullable JavaType type) {
             if (reference instanceof Expression) {
-                return withReference(((Expression) reference).withType(type));
-            } else if (reference instanceof TypedTree) {
-                return withReference(((TypedTree) reference).withType(type));
+                return withReference(((Expression)reference).withType(type));
+            }
+            if (reference instanceof TypedTree) {
+                return withReference(((TypedTree)reference).withType(type));
             }
             return this;
         }
