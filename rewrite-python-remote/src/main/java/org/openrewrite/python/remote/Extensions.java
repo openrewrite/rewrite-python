@@ -152,7 +152,7 @@ public final class Extensions {
                 return (leftPadded, type, ctx) -> {
                     if (leftPadded != null) {
                         leftPadded = leftPadded.withBefore(ctx.receiveNonNullNode(leftPadded.getBefore(), Extensions::receiveSpace));
-                        leftPadded = leftPadded.withElement(ctx.receiveNonNullNode((Space) leftPadded.getElement(), Extensions::receiveSpace));
+                        leftPadded = leftPadded.withElement(ctx.receiveNonNullNode((Space)leftPadded.getElement(), Extensions::receiveSpace));
                         leftPadded = leftPadded.withMarkers(ctx.receiveNonNullNode(leftPadded.getMarkers(), ctx::receiveMarkers));
                     } else {
                         leftPadded = new JLeftPadded<>(
@@ -163,9 +163,8 @@ public final class Extensions {
                     }
                     return leftPadded;
                 };
-            } else {
-                throw new IllegalArgumentException("Unsupported type: " + nodeType);
             }
+            throw new IllegalArgumentException("Unsupported type: " + nodeType);
         }
     };
 
@@ -218,7 +217,7 @@ public final class Extensions {
             if (nodeType == Space.class) {
                 return (rightPadded, type, ctx) -> {
                     if (rightPadded != null) {
-                        rightPadded = rightPadded.withElement(ctx.receiveNonNullNode((Space) rightPadded.getElement(), Extensions::receiveSpace));
+                        rightPadded = rightPadded.withElement(ctx.receiveNonNullNode((Space)rightPadded.getElement(), Extensions::receiveSpace));
                         rightPadded = rightPadded.withAfter(ctx.receiveNonNullNode(rightPadded.getAfter(), Extensions::receiveSpace));
                         rightPadded = rightPadded.withMarkers(ctx.receiveNonNullNode(rightPadded.getMarkers(), ctx::receiveMarkers));
                     } else {
@@ -230,9 +229,8 @@ public final class Extensions {
                     }
                     return rightPadded;
                 };
-            } else {
-                throw new IllegalArgumentException("Unsupported type: " + nodeType);
             }
+            throw new IllegalArgumentException("Unsupported type: " + nodeType);
         }
     };
 
