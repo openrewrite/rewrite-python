@@ -557,7 +557,8 @@ public class PythonVisitor<P> extends JavaVisitor<P>
         //noinspection ConstantValue
         if (space == Space.EMPTY || space == Space.SINGLE_SPACE || space == null) {
             return space;
-        } else if (space.getComments().isEmpty()) {
+        }
+        if (space.getComments().isEmpty()) {
             return space;
         }
         return visitSpace(space, Space.Location.LANGUAGE_EXTENSION, p);
