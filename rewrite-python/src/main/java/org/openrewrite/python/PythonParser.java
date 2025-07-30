@@ -42,10 +42,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -192,7 +193,7 @@ public class PythonParser implements Parser {
             if (!pythonPath.isEmpty()) {
                 Map<String, String> environment = processBuilder.environment();
                 environment.compute("PYTHONPATH", (k, current) ->
-                        (current != null ? current + File.pathSeparator : "") + pythonPath.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
+                        (current != null ? current + File.pathSeparator : "") + pythonPath.stream().map(Path::toString).collect(joining(File.pathSeparator)));
             }
             if (logCompilationWarningsAndErrors) {
                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
@@ -281,7 +282,7 @@ public class PythonParser implements Parser {
         }
 
         try (InputStream inputStream = requireNonNull(PythonParser.class.getClassLoader().getResourceAsStream("META-INF/python-requirements.txt"))) {
-            List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().filter(l -> !l.isEmpty()).collect(Collectors.toList());
+            List<String> packages = new BufferedReader(new InputStreamReader(inputStream)).lines().filter(l -> !l.isEmpty()).collect(toList());
 
             List<String> command = new ArrayList<>(Arrays.asList(executable, "-m", "pip", "install", "--target", dir.toString()));
             command.addAll(packages);

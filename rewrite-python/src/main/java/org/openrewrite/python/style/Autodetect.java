@@ -25,7 +25,16 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.style.Style;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+
+import static java.util.Collections.emptySet;
+import static java.util.Collections.max;
 
 public class Autodetect extends NamedStyles implements PythonStyle {
     public Autodetect(UUID id, Collection<Style> styles) {
@@ -33,7 +42,7 @@ public class Autodetect extends NamedStyles implements PythonStyle {
                 "org.openrewrite.python.Autodetect",
                 "Auto-detected",
                 "Automatically detect styles from a repository's existing code.",
-                Collections.emptySet(),
+                emptySet(),
                 styles);
     }
 
@@ -96,7 +105,7 @@ public class Autodetect extends NamedStyles implements PythonStyle {
         private final Map<Integer, Integer> countsByIndentSize = new HashMap<>();
 
         private <T> T keyWithHighestCount(Map<T, Integer> counts) {
-            int max = Collections.max(counts.values());
+            int max = max(counts.values());
             return counts.entrySet()
                     .stream()
                     .filter(entry -> entry.getValue() == max)

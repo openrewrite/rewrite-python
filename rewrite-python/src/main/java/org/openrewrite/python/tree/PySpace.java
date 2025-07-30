@@ -22,8 +22,9 @@ import org.openrewrite.java.tree.Space;
 import org.openrewrite.marker.Markers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 public final class PySpace {
 
@@ -79,7 +80,7 @@ public final class PySpace {
             finishComment();
             Space space = Space.build(
                     initialWhitespace == null ? "" : initialWhitespace,
-                    comments == null ? Collections.emptyList() : comments
+                    comments == null ? emptyList() : comments
             );
             reset();
             return space;
@@ -139,7 +140,7 @@ public final class PySpace {
     public static Space reindent(Space original, String indentWithoutNewline, IndentStartMode startMode, IndentEndMode endMode) {
 
         if (indentWithoutNewline.contains("\n")) {
-            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, Collections.emptyList()));
+            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, emptyList()));
         }
 
         if (indentWithoutNewline.isEmpty()) {
@@ -165,7 +166,7 @@ public final class PySpace {
                 break;
         }
 
-        Space space = Space.build(original.getWhitespace(), Collections.emptyList());
+        Space space = Space.build(original.getWhitespace(), emptyList());
 
         List<Comment> originalComments = original.getComments();
 
@@ -202,7 +203,7 @@ public final class PySpace {
 
     public static Space deindent(Space original, String indentWithoutNewline, IndentStartMode startMode, IndentEndMode endMode) {
         if (indentWithoutNewline.contains("\n")) {
-            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, Collections.emptyList()));
+            throw new IllegalArgumentException("argument to `deindent` should not contain newline: " + Space.build(indentWithoutNewline, emptyList()));
         }
 
         if (indentWithoutNewline.isEmpty()) {
@@ -241,7 +242,7 @@ public final class PySpace {
             } else {
                 // weird coincidence; maybe not possible?
                 currentlyIndented = false;
-                space = Space.build(original.getWhitespace(), Collections.emptyList());
+                space = Space.build(original.getWhitespace(), emptyList());
             }
         } else if (original.getWhitespace().endsWith(indentWithNewline)) {
             currentlyIndented = true;
@@ -250,11 +251,11 @@ public final class PySpace {
                             // just keep the newline
                             0, original.getWhitespace().length() - indentWithoutNewline.length()
                     ),
-                    Collections.emptyList()
+                    emptyList()
             );
         } else {
             currentlyIndented = false;
-            space = Space.build(original.getWhitespace(), Collections.emptyList());
+            space = Space.build(original.getWhitespace(), emptyList());
         }
 
         List<Comment> originalComments = original.getComments();

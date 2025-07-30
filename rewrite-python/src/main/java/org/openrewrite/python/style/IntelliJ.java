@@ -18,8 +18,8 @@ package org.openrewrite.python.style;
 import org.openrewrite.style.NamedStyles;
 
 import java.util.Arrays;
-import java.util.Collections;
 
+import static java.util.Collections.emptySet;
 import static org.openrewrite.Tree.randomId;
 
 
@@ -31,7 +31,7 @@ public class IntelliJ extends NamedStyles {
                 "org.openrewrite.python.style.IntelliJ",
                 "IntelliJ IDEA",
                 "IntelliJ IDEA default Python style.",
-                Collections.emptySet(),
+                emptySet(),
                 Arrays.asList(
                         spaces(),
                         wrappingAndBraces(),
