@@ -277,7 +277,7 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
 
     @Override
     public Py.MatchCase.Pattern visitMatchCasePattern(Py.MatchCase.Pattern pattern, P p) {
-        visitAndValidate(pattern.getChildren(), Expression.class, p);
+        visitAndValidate(pattern.getChildren(), J.VariableDeclarations.class, p);
         return pattern;
     }
 
