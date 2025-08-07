@@ -129,8 +129,8 @@ class SwitchTest implements RewriteTest {
         );
     }
 
-    @Test
     @ExpectedToFail
+    @Test
     void mapping() {
         rewriteRun(
           python(

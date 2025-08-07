@@ -153,11 +153,11 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest
     @CsvSource({
       "True, False",
       "False, True"
     })
+    @ParameterizedTest
     void autodetectCommaSpacing(Boolean spaceAfterComma, Boolean spaceBeforeComma) {
         rewriteRun(
           hasSpacingStyle(style -> {
@@ -223,11 +223,11 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest(name = "Chained Assignment - with spaces={0}")
     @CsvSource({
       "true, x = y = z = 1",
       "false, x=y=z=1"
     })
+    @ParameterizedTest(name = "Chained Assignment - with spaces={0}")
     void autodetectChainedAssignmentSpacing(boolean hasSpaces, String code) {
         rewriteRun(
           hasSpacingStyle(style ->
@@ -241,7 +241,6 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest(name = "Assignment Operations - with spaces={0}")
     @CsvSource({
       "true,x += 1",
       "true,x -= 1",
@@ -252,6 +251,7 @@ class AutodetectTest implements RewriteTest {
       "false,x=1",
       "false,x*=1",
     })
+    @ParameterizedTest(name = "Assignment Operations - with spaces={0}")
     void autodetectAssignmentOperationSpacing(boolean hasSpaces, String operation) {
         rewriteRun(
           hasSpacingStyle(style ->
@@ -266,12 +266,12 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest(name = "Named Parameters - with spaces={0}")
     @CsvSource({
       "true, 'x = 1,y = 3'",
       "false, 'x=1, y=3'"
     })
     @Disabled("Not yet implemented")
+    @ParameterizedTest(name = "Named Parameters - with spaces={0}")
     void autodetectNamedParameterSpacing(boolean hasSpaces, String params) {
         rewriteRun(
           hasSpacingStyle(style -> {
@@ -291,11 +291,11 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest(name = "Mixed Operators - with spaces={0}")
     @CsvSource({
       "true",
       "false"
     })
+    @ParameterizedTest(name = "Mixed Operators - with spaces={0}")
     void autodetectMixedOperatorSpacing(boolean hasSpaces) {
         rewriteRun(
           hasSpacingStyle(style -> {
@@ -314,11 +314,11 @@ class AutodetectTest implements RewriteTest {
         );
     }
 
-    @ParameterizedTest(name = "For Loop Semi-colon - with spaces={0}")
     @CsvSource({
       "true",
       "false"
     })
+    @ParameterizedTest(name = "For Loop Semi-colon - with spaces={0}")
     void autodetectForLoop(boolean hasSpaces) {
         rewriteRun(
           hasSpacingStyle(style ->

@@ -93,11 +93,11 @@ public class PythonSpacesVisitor<P> extends PythonIsoVisitor<P> {
 
         if (spaceBefore && notSingleSpace(container.getBefore().getWhitespace()) && doesNotContainNewLine(container.getBefore().getWhitespace())) {
             return container.withBefore(container.getBefore().withWhitespace(" "));
-        } else if (!spaceBefore && onlySpacesAndNotEmpty(container.getBefore().getWhitespace()) && doesNotContainNewLine(container.getBefore().getWhitespace())) {
-            return container.withBefore(container.getBefore().withWhitespace(""));
-        } else {
-            return container;
         }
+        if (!spaceBefore && onlySpacesAndNotEmpty(container.getBefore().getWhitespace()) && doesNotContainNewLine(container.getBefore().getWhitespace())) {
+            return container.withBefore(container.getBefore().withWhitespace(""));
+        }
+        return container;
     }
 
     private static List<Comment> spaceLastCommentSuffix(List<Comment> comments, boolean spaceSuffix) {
@@ -108,11 +108,11 @@ public class PythonSpacesVisitor<P> extends PythonIsoVisitor<P> {
     private static Comment spaceSuffix(Comment comment, boolean spaceSuffix) {
         if (spaceSuffix && notSingleSpace(comment.getSuffix()) && doesNotContainNewLine(comment.getSuffix())) {
             return comment.withSuffix(" ");
-        } else if (!spaceSuffix && onlySpacesAndNotEmpty(comment.getSuffix()) && doesNotContainNewLine(comment.getSuffix())) {
-            return comment.withSuffix("");
-        } else {
-            return comment;
         }
+        if (!spaceSuffix && onlySpacesAndNotEmpty(comment.getSuffix()) && doesNotContainNewLine(comment.getSuffix())) {
+            return comment.withSuffix("");
+        }
+        return comment;
     }
 
     <T extends J> T spaceBefore(T j, boolean spaceBefore) {
@@ -122,11 +122,11 @@ public class PythonSpacesVisitor<P> extends PythonIsoVisitor<P> {
 
         if (spaceBefore && notSingleSpace(j.getPrefix().getWhitespace()) && doesNotContainNewLine(j.getPrefix().getWhitespace())) {
             return j.withPrefix(j.getPrefix().withWhitespace(" "));
-        } else if (!spaceBefore && onlySpacesAndNotEmpty(j.getPrefix().getWhitespace()) && doesNotContainNewLine(j.getPrefix().getWhitespace())) {
-            return j.withPrefix(j.getPrefix().withWhitespace(""));
-        } else {
-            return j;
         }
+        if (!spaceBefore && onlySpacesAndNotEmpty(j.getPrefix().getWhitespace()) && doesNotContainNewLine(j.getPrefix().getWhitespace())) {
+            return j.withPrefix(j.getPrefix().withWhitespace(""));
+        }
+        return j;
     }
 
     <T extends J> JRightPadded<T> spaceAfter(JRightPadded<T> container, boolean spaceAfter) {
@@ -138,11 +138,11 @@ public class PythonSpacesVisitor<P> extends PythonIsoVisitor<P> {
 
         if (spaceAfter && notSingleSpace(container.getAfter().getWhitespace()) && doesNotContainNewLine(container.getAfter().getWhitespace())) {
             return container.withAfter(container.getAfter().withWhitespace(" "));
-        } else if (!spaceAfter && onlySpacesAndNotEmpty(container.getAfter().getWhitespace()) && doesNotContainNewLine(container.getAfter().getWhitespace())) {
-            return container.withAfter(container.getAfter().withWhitespace(""));
-        } else {
-            return container;
         }
+        if (!spaceAfter && onlySpacesAndNotEmpty(container.getAfter().getWhitespace()) && doesNotContainNewLine(container.getAfter().getWhitespace())) {
+            return container.withAfter(container.getAfter().withWhitespace(""));
+        }
+        return container;
     }
 
     /**

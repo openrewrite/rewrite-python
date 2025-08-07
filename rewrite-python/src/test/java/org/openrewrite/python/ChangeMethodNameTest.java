@@ -30,10 +30,10 @@ class ChangeMethodNameTest implements RewriteTest {
         spec.recipe(new ChangeMethodName("print", "println", true));
     }
 
-    @SuppressWarnings("PyUnresolvedReferences")
-    @DocumentExample
-    @Test
     @Disabled("Flaky")
+    @DocumentExample
+    @SuppressWarnings("PyUnresolvedReferences")
+    @Test
     void renameMethod() {
         rewriteRun(
           spec -> spec.parser(PythonParser.builder().logCompilationWarningsAndErrors(true)),

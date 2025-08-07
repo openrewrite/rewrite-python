@@ -38,11 +38,10 @@ public final class PySpace {
         private String finishWhitespace() {
             if (whitespaceBuilder == null) {
                 return "";
-            } else {
-                String ws = whitespaceBuilder.toString();
-                whitespaceBuilder.setLength(0);
-                return ws;
             }
+            String ws = whitespaceBuilder.toString();
+            whitespaceBuilder.setLength(0);
+            return ws;
         }
 
         private void finishComment() {
@@ -102,11 +101,10 @@ public final class PySpace {
                             comment -> comment.withSuffix(comment.getSuffix() + whitespace)
                     )
             );
-        } else {
-            return space.withWhitespace(
-                    space.getWhitespace() + whitespace
-            );
         }
+        return space.withWhitespace(
+                space.getWhitespace() + whitespace
+        );
     }
 
     public static Space appendComment(Space space, String commentWithHash) {

@@ -23,12 +23,13 @@
 package org.openrewrite.python.remote;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.jspecify.annotations.Nullable;
-import org.openrewrite.*;
-import org.openrewrite.remote.model.*;
-import org.openrewrite.tree.*;
+import org.openrewrite.Checksum;
+import org.openrewrite.FileAttributes;
 import org.openrewrite.java.tree.*;
-import org.openrewrite.python.tree.*;
+import org.openrewrite.python.tree.Py;
+import org.openrewrite.remote.model.LstModel;
+import org.openrewrite.remote.model.LstProperty;
+import org.openrewrite.remote.model.LstType;
 
 import java.util.List;
 

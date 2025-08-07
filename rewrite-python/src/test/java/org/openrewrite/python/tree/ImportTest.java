@@ -132,8 +132,8 @@ class ImportTest implements RewriteTest {
         );
     }
 
-    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     //language=py
     @ValueSource(strings = {
       "from math import sin, cos # stuff\n\n",
