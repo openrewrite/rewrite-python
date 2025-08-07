@@ -375,10 +375,12 @@ public interface Py extends J {
 
         JRightPadded<Statement> body;
 
+        @Override
         public Statement getBody() {
             return this.body.getElement();
         }
 
+        @Override
         public Py.ForLoop withBody(Statement body) {
             return this.getPadding().withBody(this.body.withElement(body));
         }
@@ -751,7 +753,8 @@ public interface Py extends J {
         public @Nullable JavaType getType() {
             if (reference instanceof Expression) {
                 return ((Expression) reference).getType();
-            } else if (reference instanceof TypedTree) {
+            }
+            if (reference instanceof TypedTree) {
                 return ((TypedTree) reference).getType();
             }
             return null;
@@ -762,7 +765,8 @@ public interface Py extends J {
         public ExpressionTypeTree withType(@Nullable JavaType type) {
             if (reference instanceof Expression) {
                 return withReference(((Expression) reference).withType(type));
-            } else if (reference instanceof TypedTree) {
+            }
+            if (reference instanceof TypedTree) {
                 return withReference(((TypedTree) reference).withType(type));
             }
             return this;

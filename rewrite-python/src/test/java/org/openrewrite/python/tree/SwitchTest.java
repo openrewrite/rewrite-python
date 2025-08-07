@@ -15,10 +15,10 @@
  */
 package org.openrewrite.python.tree;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junitpioneer.jupiter.ExpectedToFail;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.python.Assertions.python;
@@ -129,8 +129,8 @@ class SwitchTest implements RewriteTest {
         );
     }
 
+    @Disabled("When parsing and printing the source code back to text without modifications, the printed source didn't match the original source code.")
     @Test
-    @ExpectedToFail
     void mapping() {
         rewriteRun(
           python(

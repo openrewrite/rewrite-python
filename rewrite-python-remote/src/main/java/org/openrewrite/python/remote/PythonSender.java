@@ -26,10 +26,9 @@ import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.Tree;
-import org.openrewrite.python.PythonVisitor;
-import org.openrewrite.python.tree.*;
-import org.openrewrite.java.*;
 import org.openrewrite.java.tree.*;
+import org.openrewrite.python.PythonVisitor;
+import org.openrewrite.python.tree.Py;
 import org.openrewrite.remote.Sender;
 import org.openrewrite.remote.SenderContext;
 
@@ -1206,10 +1205,6 @@ public class PythonSender implements Sender<Py> {
 
     private static void sendSpace(Space space, SenderContext ctx) {
         Extensions.sendSpace(space, ctx);
-    }
-
-    private static void sendComment(Comment comment, SenderContext ctx) {
-        Extensions.sendComment(comment, ctx);
     }
 
 }

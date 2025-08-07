@@ -68,8 +68,8 @@ class WhitespaceTest implements RewriteTest {
         rewriteRun(python("print(42)%sprint(2)".formatted(ending)));
     }
 
-    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ValueSource(strings = {
       "",
       " ",
@@ -94,8 +94,8 @@ class WhitespaceTest implements RewriteTest {
         ));
     }
 
-    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ParameterizedTest
+    @SuppressWarnings("TrailingWhitespacesInTextBlock")
     @ValueSource(strings = {
       "",
       " ",

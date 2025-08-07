@@ -193,8 +193,8 @@ public class Autodetect extends NamedStyles implements PythonStyle {
     private static class FindSpaceVisitor extends PythonIsoVisitor<SpacesStatistics> {
 
         private static boolean variableIsPartOfMethodHeader(Cursor cursor) {
-            return cursor.getParentTreeCursor().getValue() instanceof J.VariableDeclarations
-                   && cursor.getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.MethodDeclaration;
+            return cursor.getParentTreeCursor().getValue() instanceof J.VariableDeclarations &&
+                   cursor.getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.MethodDeclaration;
         }
 
         private static int hasSpace(@Nullable Space space) {

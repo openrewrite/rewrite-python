@@ -25,7 +25,6 @@ import static org.openrewrite.python.Assertions.python;
 
 class TryTest implements RewriteTest {
 
-    @ParameterizedTest
     @CsvSource(textBlock = """
       "" ,       ""
       " ",       ""
@@ -37,6 +36,7 @@ class TryTest implements RewriteTest {
       "" ,       " TypeError as  e"
       "" ,       " TypeError as e "
     """, quoteCharacter = '"')
+    @ParameterizedTest
     void tryExcept(String afterTry, String afterExcept) {
         rewriteRun(python(
           """
@@ -48,8 +48,6 @@ class TryTest implements RewriteTest {
         ));
     }
 
-    @Disabled
-    @ParameterizedTest
     @CsvSource(textBlock = """
       "" ,       "* TypeError"
       "" ,       " * TypeError"
@@ -59,6 +57,8 @@ class TryTest implements RewriteTest {
       "" ,       "*TypeError"
       "" ,       " *TypeError"
     """, quoteCharacter = '"')
+    @Disabled
+    @ParameterizedTest
     void tryStarExcept(String afterTry, String afterExcept) {
         rewriteRun(python(
           """
@@ -70,12 +70,12 @@ class TryTest implements RewriteTest {
         ));
     }
 
-    @ParameterizedTest
     @CsvSource(textBlock = """
       " TypeError"          , " OSError"
       " TypeError "          , " OSError"
       " TypeError"          , " OSError "
     """, quoteCharacter = '"')
+    @ParameterizedTest
     void tryMultiExcept(String afterFirstExcept, String afterSecondExcept) {
         rewriteRun(python(
           """

@@ -23,14 +23,11 @@
 package org.openrewrite.python.remote;
 
 import org.jspecify.annotations.Nullable;
-import org.openrewrite.*;
+import org.openrewrite.Tree;
 import org.openrewrite.internal.ListUtils;
-import org.openrewrite.marker.Markers;
-import org.openrewrite.tree.*;
-import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.python.PythonIsoVisitor;
-import org.openrewrite.python.tree.*;
+import org.openrewrite.python.tree.Py;
 
 import java.util.List;
 import java.util.Objects;
@@ -280,7 +277,7 @@ class PythonValidator<P> extends PythonIsoVisitor<P> {
 
     @Override
     public Py.MatchCase.Pattern visitMatchCasePattern(Py.MatchCase.Pattern pattern, P p) {
-        visitAndValidate(pattern.getChildren(), Expression.class, p);
+        visitAndValidate(pattern.getChildren(), J.class, p);
         return pattern;
     }
 

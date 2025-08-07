@@ -163,9 +163,8 @@ public final class Extensions {
                     }
                     return leftPadded;
                 };
-            } else {
-                throw new IllegalArgumentException("Unsupported type: " + nodeType);
             }
+            throw new IllegalArgumentException("Unsupported type: " + nodeType);
         }
     };
 
@@ -230,9 +229,8 @@ public final class Extensions {
                     }
                     return rightPadded;
                 };
-            } else {
-                throw new IllegalArgumentException("Unsupported type: " + nodeType);
             }
+            throw new IllegalArgumentException("Unsupported type: " + nodeType);
         }
     };
 

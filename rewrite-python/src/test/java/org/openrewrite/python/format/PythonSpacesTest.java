@@ -29,6 +29,33 @@ class PythonSpacesTest implements RewriteTest {
         spec.recipe(new PythonSpaces());
     }
 
+    @DocumentExample
+    @Test
+    void formatAfterWithNewLines() {
+        rewriteRun(
+          python(
+            """
+              class Foo:
+                  def foo(
+                      a ,
+                      b ,
+                      c
+                  ):
+                      pass
+              """,
+            """
+            class Foo:
+                def foo(
+                    a,
+                    b,
+                    c
+                ):
+                    pass
+            """
+          )
+        );
+    }
+
     @Test
     void emptyParameters() {
         rewriteRun(
@@ -81,33 +108,6 @@ class PythonSpacesTest implements RewriteTest {
                   ):
                       pass
               """
-          )
-        );
-    }
-
-    @DocumentExample
-    @Test
-    void formatAfterWithNewLines() {
-        rewriteRun(
-          python(
-            """
-              class Foo:
-                  def foo(
-                      a ,
-                      b ,
-                      c
-                  ):
-                      pass
-              """,
-            """
-            class Foo:
-                def foo(
-                    a,
-                    b,
-                    c
-                ):
-                    pass
-            """
           )
         );
     }
