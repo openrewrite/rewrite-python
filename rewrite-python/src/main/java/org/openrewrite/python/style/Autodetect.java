@@ -25,13 +25,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.style.NamedStyles;
 import org.openrewrite.style.Style;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.max;
