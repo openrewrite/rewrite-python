@@ -29,7 +29,6 @@ import org.openrewrite.Cursor;
 import org.openrewrite.FileAttributes;
 import org.openrewrite.Tree;
 import org.openrewrite.java.tree.*;
-import org.openrewrite.marker.Markers;
 import org.openrewrite.python.PythonVisitor;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.remote.Receiver;
