@@ -15,13 +15,17 @@
  */
 package org.openrewrite.python;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.openrewrite.ParseExceptionResult;
+import org.openrewrite.SourceFile;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.test.RewriteTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.python.Assertions.python;
 
+@DisabledIfEnvironmentVariable(named = "CI", matches = "true", disabledReason = "No remote client/server available")
 class PythonParserTest implements RewriteTest {
 
     @Test
@@ -29,13 +33,32 @@ class PythonParserTest implements RewriteTest {
         rewriteRun(
           python(
             """
-            import sys
-            print(sys.path)
-            """,
-            spec -> spec.afterRecipe(cu -> {
-                assertThat(cu).isInstanceOf(Py.CompilationUnit.class);
-            })
+              import sys
+              print(sys.path)
+              """,
+            spec -> spec.afterRecipe(cu -> SoftAssertions.assertSoftly(softly -> {
+                  softly.assertThat(cu).isInstanceOf(Py.CompilationUnit.class);
+                  softly.assertThat(cu.getMarkers().getMarkers()).isEmpty();
+              })
+            )
           )
         );
+    }
+
+    @Test
+    void parseStringWithParser() {
+        SourceFile sf = PythonParser.builder().build()
+          .parse(
+            //language=python
+            """
+              import sys
+              print(sys.path)
+              """)
+          .findFirst()
+          .get();
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(sf).isInstanceOf(Py.CompilationUnit.class);
+            softly.assertThat(sf.getMarkers().getMarkers()).isEmpty();
+        });
     }
 }
