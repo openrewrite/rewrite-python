@@ -35,7 +35,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: set-up-gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Install Python
         uses: actions/setup-python@v6
