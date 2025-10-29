@@ -36,7 +36,7 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic:1.2.+")
     testImplementation("org.openrewrite:rewrite-test")
 
-    testRuntimeOnly("org.openrewrite:rewrite-java-17")
+    testRuntimeOnly("org.openrewrite:rewrite-java-21")
 }
 
 
