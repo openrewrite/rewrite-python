@@ -15,7 +15,7 @@
 type: specs.openrewrite.org/v1beta/example
 recipeName: org.openrewrite.python.ChangeMethodName
 examples:
-- description: ''
+- description: '`ChangeMethodNameTest#renameMethod`'
   parameters:
   - print
   - println
@@ -34,7 +34,7 @@ examples:
 type: specs.openrewrite.org/v1beta/example
 recipeName: org.openrewrite.python.format.PythonSpaces
 examples:
-- description: ''
+- description: '`PythonSpacesTest#formatAfterWithNewLines`'
   sources:
   - before: |
       class Foo:

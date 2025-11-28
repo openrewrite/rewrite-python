@@ -18,7 +18,6 @@ package org.openrewrite.python;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.openrewrite.ParseExceptionResult;
 import org.openrewrite.SourceFile;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.test.RewriteTest;
