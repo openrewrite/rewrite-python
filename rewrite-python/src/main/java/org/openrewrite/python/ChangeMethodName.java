@@ -45,15 +45,9 @@ public class ChangeMethodName extends Recipe {
     @Nullable
     Boolean ignoreDefinition;
 
-    @Override
-    public String getDisplayName() {
-        return "Change method name";
-    }
+    String displayName = "Change method name";
 
-    @Override
-    public String getDescription() {
-        return "Renames a method.";
-    }
+    String description = "Renames a method.";
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
